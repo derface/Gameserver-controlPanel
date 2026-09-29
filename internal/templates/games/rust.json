@@ -1,0 +1,26 @@
+{
+  "id": "rust",
+  "name": "Rust",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 258550,
+  "start": "export LD_LIBRARY_PATH=./RustDedicated_Data/Plugins/x86_64:$LD_LIBRARY_PATH; ./RustDedicated -batchmode -nographics +server.ip 0.0.0.0 +server.port {{port}} +rcon.port {{port_2}} +rcon.web 1 +rcon.password \"{{rcon_password}}\" +server.hostname \"{{server_name}}\" +server.maxplayers {{max_players}} +server.worldsize {{world_size}} +server.seed {{seed}} +server.identity panel",
+  "ports": [
+    {"name": "Spiel", "port": 28015, "proto": "udp"},
+    {"name": "RCON", "port": 28016, "proto": "tcp"}
+  ],
+  "vars": [
+    {"key": "server_name", "label": "Servername", "default": "Mein Rust-Server"},
+    {"key": "max_players", "label": "Maximale Spieler", "default": "50", "type": "number"},
+    {"key": "world_size", "label": "Weltgröße", "default": "3000", "type": "number", "help": "1000 bis 6000"},
+    {"key": "seed", "label": "Seed", "default": "12345", "type": "number"},
+    {"key": "rcon_password", "label": "RCON-Passwort", "default": "", "type": "secret", "required": true}
+  ],
+  "memory_mb": 10240,
+  "min_memory_mb": 8192,
+  "console": "stdin",
+  "stop_timeout": 60,
+  "ready": "Server startup complete",
+  "status": "beta",
+  "disk_gb": 12
+}

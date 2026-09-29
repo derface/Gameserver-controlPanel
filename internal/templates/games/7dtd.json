@@ -1,0 +1,23 @@
+{
+  "id": "7dtd",
+  "name": "7 Days to Die",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 294420,
+  "start": "./startserver.sh -configfile=serverconfig.xml",
+  "ports": [
+    {"name": "Spiel", "port": 26900, "proto": "tcp"},
+    {"name": "Spiel", "port": 26900, "proto": "udp"},
+    {"name": "Spiel", "port": 26901, "proto": "udp"},
+    {"name": "Spiel", "port": 26902, "proto": "udp"}
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 8192,
+  "min_memory_mb": 4096,
+  "console": "stdin",
+  "stop_timeout": 60,
+  "status": "beta",
+  "disk_gb": 15,
+  "notes": "Einstellungen in serverconfig.xml im Serverordner. Die Ports sind fest, daher ist nur ein 7DTD-Server pro Rechner möglich."
+}

@@ -1,0 +1,254 @@
+// Package templates loads the game templates that describe how to install
+// and run each game. Adding a game means adding one JSON file.
+package templates
+
+import (
+	"embed"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+//go:embed games/*.json
+var builtin embed.FS
+
+type Port struct {
+	Name  string `json:"name"`
+	Port  int    `json:"port"`
+	Proto string `json:"proto"`
+}
+
+type Var struct {
+	Key     string   `json:"key"`
+	Label   string   `json:"label"`
+	Default string   `json:"default"`
+	Type    string   `json:"type,omitempty"` // text | number | secret | select | bool | slug
+	Options []string `json:"options,omitempty"`
+	Flag    string   `json:"flag,omitempty"` // for bool: text inserted when true
+	Help    string   `json:"help,omitempty"`
+	Needed  bool     `json:"required,omitempty"`
+}
+
+type Template struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Category    string            `json:"category"`
+	Kind        string            `json:"kind"` // steam | image
+	SteamAppID  int               `json:"steam_app_id,omitempty"`
+	SteamBeta   string            `json:"steam_beta,omitempty"`
+	Image       string            `json:"image,omitempty"`
+	Env         map[string]string `json:"env,omitempty"`
+	Start       string            `json:"start,omitempty"`
+	Ports       []Port            `json:"ports"`
+	FixedPorts  bool              `json:"fixed_ports,omitempty"`
+	Vars        []Var             `json:"vars"`
+	MemoryMB    int               `json:"memory_mb"`
+	MinMemoryMB int               `json:"min_memory_mb"`
+	JavaMemEnv  string            `json:"java_memory_env,omitempty"`
+	Console     string            `json:"console"` // stdin | exec
+	ExecPrefix  []string          `json:"exec_prefix,omitempty"`
+	StopSignal  string            `json:"stop_signal,omitempty"`
+	StopTimeout int               `json:"stop_timeout,omitempty"`
+	Ready       string            `json:"ready,omitempty"` // regex in logs meaning "server is up"
+	Status      string            `json:"status"`          // stabil | beta
+	DiskGB      int               `json:"disk_gb,omitempty"`
+	Notes       string            `json:"notes,omitempty"`
+	Custom      bool              `json:"custom,omitempty"` // user supplies app id, start and ports
+}
+
+type Set struct {
+	list []Template
+	byID map[string]Template
+}
+
+// Load reads the built-in templates plus any *.json in extraDir (may be empty).
+func Load(extraDir string) (*Set, error) {
+	s := &Set{byID: map[string]Template{}}
+	entries, err := builtin.ReadDir("games")
+	if err != nil {
+		return nil, err
+	}
+	for _, e := range entries {
+		b, err := builtin.ReadFile("games/" + e.Name())
+		if err != nil {
+			return nil, err
+		}
+		if err := s.add(b, e.Name()); err != nil {
+			return nil, err
+		}
+	}
+	if extraDir != "" {
+		files, _ := filepath.Glob(filepath.Join(extraDir, "*.json"))
+		for _, f := range files {
+			b, err := os.ReadFile(f)
+			if err != nil {
+				continue
+			}
+			if err := s.add(b, f); err != nil {
+				fmt.Fprintf(os.Stderr, "Vorlage %s übersprungen: %v\n", f, err)
+			}
+		}
+	}
+	sort.Slice(s.list, func(i, j int) bool {
+		if s.list[i].Category != s.list[j].Category {
+			return s.list[i].Category < s.list[j].Category
+		}
+		return s.list[i].Name < s.list[j].Name
+	})
+	return s, nil
+}
+
+func (s *Set) add(b []byte, src string) error {
+	var t Template
+	if err := json.Unmarshal(b, &t); err != nil {
+		return fmt.Errorf("%s: %w", src, err)
+	}
+	if t.ID == "" || t.Name == "" || (t.Kind != "steam" && t.Kind != "image") {
+		return fmt.Errorf("%s: id, name und kind (steam|image) sind Pflicht", src)
+	}
+	if t.Kind == "image" && t.Image == "" {
+		return fmt.Errorf("%s: image fehlt", src)
+	}
+	if t.Console == "" {
+		t.Console = "stdin"
+	}
+	if t.MemoryMB == 0 {
+		t.MemoryMB = 4096
+	}
+	if t.MinMemoryMB == 0 {
+		t.MinMemoryMB = 1024
+	}
+	if t.StopTimeout == 0 {
+		t.StopTimeout = 30
+	}
+	if _, dup := s.byID[t.ID]; dup {
+		// later files (user dir) override built-ins
+		for i := range s.list {
+			if s.list[i].ID == t.ID {
+				s.list[i] = t
+			}
+		}
+	} else {
+		s.list = append(s.list, t)
+	}
+	s.byID[t.ID] = t
+	return nil
+}
+
+func (s *Set) All() []Template { return s.list }
+func (s *Set) Get(id string) (Template, bool) {
+	t, ok := s.byID[id]
+	return t, ok
+}
+
+var unsafeChars = regexp.MustCompile("[\"`$\\\\;&|<>\n\r]")
+var slugChars = regexp.MustCompile(`[^A-Za-z0-9_-]`)
+
+// Clean removes characters that could break out of a shell argument.
+func Clean(v string) string { return strings.TrimSpace(unsafeChars.ReplaceAllString(v, "")) }
+
+// ResolveVars fills defaults, validates types and returns the final values.
+func (t Template) ResolveVars(in map[string]string) (map[string]string, error) {
+	out := map[string]string{}
+	for _, v := range t.Vars {
+		val, ok := in[v.Key]
+		if !ok || strings.TrimSpace(val) == "" {
+			val = v.Default
+		}
+		if v.Type == "command" {
+			// the admin writes this shell command on purpose; only keep it on one line
+			val = strings.TrimSpace(strings.NewReplacer("\n", " ", "\r", " ").Replace(val))
+		} else {
+			val = Clean(val)
+		}
+		switch v.Type {
+		case "number":
+			if val != "" {
+				if _, err := strconv.Atoi(val); err != nil {
+					return nil, fmt.Errorf("„%s“ muss eine Zahl sein", v.Label)
+				}
+			}
+		case "select":
+			if val != "" && len(v.Options) > 0 && !contains(v.Options, val) {
+				return nil, fmt.Errorf("„%s“: erlaubt sind %s", v.Label, strings.Join(v.Options, ", "))
+			}
+		case "bool":
+			if val != "true" {
+				val = "false"
+			}
+		case "slug":
+			val = slugChars.ReplaceAllString(val, "")
+		}
+		if v.Needed && val == "" {
+			return nil, fmt.Errorf("„%s“ fehlt", v.Label)
+		}
+		out[v.Key] = val
+	}
+	return out, nil
+}
+
+func contains(xs []string, x string) bool {
+	for _, y := range xs {
+		if y == x {
+			return true
+		}
+	}
+	return false
+}
+
+var placeholder = regexp.MustCompile(`\{\{\s*([a-z0-9_]+)\s*\}\}`)
+
+// Render replaces {{key}} placeholders. ports are the host ports in template order:
+// {{port}} is the first, {{port_2}} the second and so on.
+func (t Template) Render(s string, vars map[string]string, ports []int) string {
+	return placeholder.ReplaceAllStringFunc(s, func(m string) string {
+		key := placeholder.FindStringSubmatch(m)[1]
+		if key == "port" && len(ports) > 0 {
+			return strconv.Itoa(ports[0])
+		}
+		if strings.HasPrefix(key, "port_") {
+			if n, err := strconv.Atoi(strings.TrimPrefix(key, "port_")); err == nil && n >= 1 && n <= len(ports) {
+				return strconv.Itoa(ports[n-1])
+			}
+		}
+		for _, v := range t.Vars {
+			if v.Key == key && v.Type == "bool" {
+				if vars[key] == "true" {
+					return v.Flag
+				}
+				return ""
+			}
+		}
+		return vars[key]
+	})
+}
+
+// ParsePorts parses "27015/udp, 27015/tcp" for custom templates.
+func ParsePorts(s string) ([]Port, error) {
+	var out []Port
+	for _, part := range strings.Split(s, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		num, proto, _ := strings.Cut(part, "/")
+		if proto == "" {
+			proto = "udp"
+		}
+		proto = strings.ToLower(proto)
+		n, err := strconv.Atoi(num)
+		if err != nil || n < 1 || n > 65535 || (proto != "tcp" && proto != "udp") {
+			return nil, fmt.Errorf("Port „%s“ ist ungültig. Beispiel: 27015/udp, 27015/tcp", part)
+		}
+		out = append(out, Port{Port: n, Proto: proto})
+	}
+	if len(out) == 0 {
+		return nil, fmt.Errorf("mindestens ein Port ist nötig")
+	}
+	return out, nil
+}

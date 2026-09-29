@@ -1,0 +1,24 @@
+{
+  "id": "gmod",
+  "name": "Garry's Mod",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 4020,
+  "start": "./srcds_run -game garrysmod -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +gamemode {{gamemode}} +hostname \"{{server_name}}\"",
+  "ports": [
+    {"name": "Spiel", "port": 27015, "proto": "udp"},
+    {"name": "RCON", "port": 27015, "proto": "tcp"}
+  ],
+  "vars": [
+    {"key": "server_name", "label": "Servername", "default": "Mein GMod-Server"},
+    {"key": "map", "label": "Start-Map", "default": "gm_construct", "type": "slug"},
+    {"key": "gamemode", "label": "Spielmodus", "default": "sandbox", "type": "slug"},
+    {"key": "max_players", "label": "Maximale Spieler", "default": "16", "type": "number"}
+  ],
+  "memory_mb": 2048,
+  "min_memory_mb": 1024,
+  "console": "stdin",
+  "ready": "VAC secure mode",
+  "status": "beta",
+  "disk_gb": 5
+}

@@ -1,0 +1,19 @@
+{
+  "id": "steam-custom",
+  "name": "Eigenes Steam-Spiel",
+  "category": "Steam",
+  "kind": "steam",
+  "custom": true,
+  "start": "{{start_command}}",
+  "ports": [],
+  "vars": [
+    {"key": "app_id", "label": "Steam-App-ID des Dedicated Servers", "default": "", "type": "number", "required": true, "help": "Die App-ID des Servers, nicht des Spiels. Zu finden auf steamdb.info"},
+    {"key": "start_command", "label": "Startbefehl (im Serverordner)", "default": "", "type": "command", "required": true, "help": "Beispiel: ./srcds_run -game cstrike -port {{port}} +map de_dust2"},
+    {"key": "ports", "label": "Ports", "default": "27015/udp, 27015/tcp", "required": true, "help": "Kommagetrennt, z. B. 27015/udp, 27015/tcp"}
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Für jedes Spiel mit Linux-Dedicated-Server, das anonym über SteamCMD ladbar ist. {{port}} im Startbefehl wird durch den ersten Port ersetzt."
+}

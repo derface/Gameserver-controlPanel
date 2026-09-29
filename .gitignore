@@ -1,0 +1,8 @@
+# Geheimer Schlüssel zum Erstellen von Lizenzen – NIEMALS committen
+licgen-private.key
+*.key
+dev-license-*.txt
+
+dist/
+devdata/
+*.tmp

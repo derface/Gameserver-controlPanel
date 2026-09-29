@@ -1,0 +1,32 @@
+{
+  "id": "minecraft-bedrock",
+  "name": "Minecraft Bedrock",
+  "category": "Minecraft",
+  "kind": "image",
+  "image": "itzg/minecraft-bedrock-server:latest",
+  "env": {
+    "EULA": "TRUE",
+    "SERVER_NAME": "{{server_name}}",
+    "GAMEMODE": "{{gamemode}}",
+    "DIFFICULTY": "{{difficulty}}",
+    "MAX_PLAYERS": "{{max_players}}",
+    "TZ": "Europe/Berlin"
+  },
+  "ports": [
+    {"name": "Spiel", "port": 19132, "proto": "udp"}
+  ],
+  "vars": [
+    {"key": "server_name", "label": "Servername", "default": "Mein Bedrock-Server"},
+    {"key": "gamemode", "label": "Spielmodus", "default": "survival", "type": "select", "options": ["survival", "creative", "adventure"]},
+    {"key": "difficulty", "label": "Schwierigkeit", "default": "normal", "type": "select", "options": ["peaceful", "easy", "normal", "hard"]},
+    {"key": "max_players", "label": "Maximale Spieler", "default": "10", "type": "number"}
+  ],
+  "memory_mb": 2048,
+  "min_memory_mb": 1024,
+  "console": "exec",
+  "exec_prefix": ["send-command"],
+  "ready": "Server started",
+  "status": "stabil",
+  "disk_gb": 2,
+  "notes": "Für Handy, Konsole und Windows-Edition."
+}

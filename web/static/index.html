@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>[Panel]</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='2' width='12' height='12' rx='3' fill='%23FF5A1F'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- ============ Anmeldung / Ersteinrichtung ============ -->
+<section id="auth" class="auth" hidden>
+  <canvas id="authBg" aria-hidden="true"></canvas>
+  <form id="authForm" class="auth-card" autocomplete="on">
+    <div class="brand big"><i></i>[Panel]</div>
+    <h1 id="authTitle">Anmelden</h1>
+    <p id="authLead" class="muted">Melde dich mit deinem Admin-Konto an.</p>
+    <label class="field"><span>Benutzername</span><input id="authName" name="username" autocomplete="username" required></label>
+    <label class="field"><span>Passwort</span><input id="authPass" name="password" type="password" autocomplete="current-password" required></label>
+    <label class="field" id="authPass2Wrap" hidden><span>Passwort wiederholen</span><input id="authPass2" type="password" autocomplete="new-password"></label>
+    <p id="authErr" class="err" role="alert" hidden></p>
+    <button class="btn-accent wide" type="submit" id="authBtn">Anmelden</button>
+  </form>
+</section>
+
+<!-- ============ Panel ============ -->
+<div id="app" hidden>
+<header class="top" id="top">
+  <div class="top-in">
+    <div class="brand"><i></i>[Panel]</div>
+    <nav class="main" aria-label="Hauptnavigation">
+      <a href="#top" aria-current="page">Übersicht</a>
+      <a href="#server">Server</a>
+      <a href="#ki">KI-Assistent</a>
+      <a href="#konsole">Konsole</a>
+    </nav>
+    <div class="tools">
+      <span class="chip-ed" id="edChip" role="button" tabindex="0"></span>
+      <button class="btn-line" id="openPal" type="button">Suchen<kbd>Strg K</kbd></button>
+      <button class="icon-btn" id="openSettings" type="button" aria-label="Einstellungen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+      <button class="switch" id="motionBtn" type="button" aria-pressed="true" aria-label="Animationen">Bewegung<span class="track"><span class="knob"></span></span></button>
+      <button class="switch" id="themeBtn" type="button" aria-pressed="true">Hell<span class="track"><span class="knob"></span></span>Dunkel</button>
+      <button class="btn-line" id="logoutBtn" type="button">Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<main class="shell">
+  <div class="banner" id="dockerBanner" hidden></div>
+  <div class="grid">
+    <div class="col">
+      <section class="stats" aria-label="Auslastung des Rechners">
+        <div class="stat"><span class="mono muted" id="hostName">CPU</span><span class="v" id="vCpu">–</span><canvas id="sCpu" aria-hidden="true"></canvas></div>
+        <div class="stat"><span class="mono muted">RAM</span><span class="v" id="vRam">–</span><canvas id="sRam" aria-hidden="true"></canvas></div>
+        <div class="stat"><span class="mono muted">Speicher</span><span class="v" id="vDisk">–</span><canvas id="sDisk" aria-hidden="true"></canvas></div>
+        <div class="stat"><span class="mono muted">Server aktiv</span><span class="v" id="vRun">–</span><canvas id="sRun" aria-hidden="true"></canvas></div>
+      </section>
+
+      <section class="stage" id="stage" aria-label="3D-Server-Landschaft">
+        <canvas id="land" aria-label="Drehbare 3D-Ansicht der Gameserver. Server anklicken für Details."></canvas>
+        <div class="labels" id="labels"></div>
+        <div class="stage-head"><div><h2>Server-Landschaft</h2><div class="mono muted">Ziehen zum Drehen · Block anklicken zum Hineinfliegen</div></div></div>
+        <div class="stage-empty" id="stageEmpty" hidden>
+          <p>Noch kein Server. Leg deinen ersten an oder lass die KI einen planen.</p>
+          <button class="btn-accent" type="button" data-act="create">Server anlegen</button>
+        </div>
+        <div class="zoom"><button type="button" id="zIn" aria-label="Näher heranzoomen">+</button><button type="button" id="zOut" aria-label="Herauszoomen">−</button><button type="button" id="zReset" class="txt">Übersicht</button></div>
+        <aside class="detail" id="detail" aria-live="polite"></aside>
+      </section>
+
+      <section id="server" class="col tight">
+        <div class="sec-head">
+          <h2>Gameserver</h2><span class="mono muted" id="modCount"></span>
+          <span class="grow"></span>
+          <button class="btn-line" type="button" data-act="ai">Mit KI anlegen</button>
+          <button class="btn-accent" type="button" data-act="create">Server anlegen</button>
+        </div>
+        <div class="mods" id="mods"></div>
+      </section>
+    </div>
+
+    <aside class="col" aria-label="KI und Konsole">
+      <section class="core-card" id="ki" data-state="idle">
+        <div class="core-top"><h2>KI-Kern</h2><span class="core-state mono"><i></i><span id="coreState">Bereit</span></span></div>
+        <canvas id="core" aria-hidden="true"></canvas>
+        <div class="core-body" id="coreBody">
+          <div class="chat" id="chat"></div>
+          <div class="plan" id="plan" hidden></div>
+          <div class="chips" id="chips">
+            <button type="button">Minecraft mit Create-Mods für 8 Freunde</button>
+            <button type="button">Valheim-Server mit Crossplay für 5 Leute</button>
+            <button type="button">Palworld für 4 Spieler</button>
+          </div>
+          <form class="ask" id="askForm">
+            <label class="sr" for="askInput">Nachricht an den KI-Kern</label>
+            <input id="askInput" autocomplete="off" placeholder="Beschreibe deinen Server …">
+            <button type="submit" aria-label="Senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+          </form>
+        </div>
+      </section>
+
+      <section class="lcd" id="konsole" aria-label="Konsole">
+        <div class="lcd-head mono"><span id="conName">Konsole</span><span class="live" id="conLive" hidden><i></i>Live</span></div>
+        <div class="lines" id="lines"><div class="dim">Wähle einen Server, um seine Konsole zu sehen.</div></div>
+        <form class="lcd-in" id="cmdForm">
+          <span aria-hidden="true">›</span>
+          <label class="sr" for="cmdInput">Befehl an den Server senden</label>
+          <input id="cmdInput" autocomplete="off" placeholder="Befehl senden" disabled>
+        </form>
+      </section>
+    </aside>
+  </div>
+</main>
+</div>
+
+<!-- ============ Dialoge ============ -->
+<dialog id="dlgCreate" class="dlg">
+  <form id="createForm" method="dialog">
+    <div class="dlg-head"><h2 id="createTitle">Server anlegen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <label class="field"><span>Spiel</span><select id="cTpl" required></select></label>
+    <p class="note" id="cNotes" hidden></p>
+    <label class="field"><span>Name im Panel</span><input id="cName" maxlength="40" required></label>
+    <div class="field"><span>Arbeitsspeicher <b id="cMemV" class="mono"></b></span><input id="cMem" type="range" step="256"></div>
+    <div id="cVars" class="vars"></div>
+    <label class="check"><input type="checkbox" id="cStart" checked> Nach dem Anlegen direkt starten</label>
+    <p class="err" id="cErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="cSubmit">Anlegen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgEdit" class="dlg">
+  <form id="editForm" method="dialog">
+    <div class="dlg-head"><h2>Server bearbeiten</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <label class="field"><span>Name</span><input id="eName" maxlength="40" required></label>
+    <div class="field"><span>Arbeitsspeicher <b id="eMemV" class="mono"></b></span><input id="eMem" type="range" step="256"></div>
+    <div id="eVars" class="vars"></div>
+    <label class="check" id="eUpdWrap"><input type="checkbox" id="eUpd"> Bei jedem Start per SteamCMD aktualisieren</label>
+    <p class="note">Beim Speichern wird der Container mit den neuen Werten neu angelegt. Spielstände bleiben erhalten.</p>
+    <p class="err" id="eErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgDelete" class="dlg small">
+  <form id="deleteForm" method="dialog">
+    <div class="dlg-head"><h2>Server löschen?</h2></div>
+    <p id="delText"></p>
+    <label class="check"><input type="checkbox" id="delWipe"> Auch alle Spieldaten und Spielstände löschen</label>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-danger">Löschen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgSettings" class="dlg">
+  <div class="dlg-head"><h2>Einstellungen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <form id="aiForm" class="set-block">
+    <h3>KI-Assistent</h3>
+    <p class="muted small">Du nutzt deinen eigenen API-Key. Die Kosten rechnet dein Anbieter direkt mit dir ab. Ollama läuft kostenlos auf deinem eigenen Rechner.</p>
+    <label class="field"><span>Anbieter</span>
+      <select id="sProv"><option value="">Aus</option><option value="anthropic">Anthropic (Claude)</option><option value="openai">OpenAI</option><option value="ollama">Ollama (lokal)</option></select></label>
+    <label class="field" data-prov="anthropic"><span>Anthropic-API-Key</span><input id="sAnt" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
+    <label class="field" data-prov="openai"><span>OpenAI-API-Key</span><input id="sOai" type="password" autocomplete="off" placeholder="sk-…"></label>
+    <label class="field" data-prov="ollama"><span>Ollama-Adresse</span><input id="sOll" placeholder="http://192.168.178.20:11434"></label>
+    <label class="field" data-prov="any"><span>Modell <em class="muted" id="sModelHint"></em></span><input id="sModel" placeholder="leer = Standard"></label>
+    <label class="field"><span>Adresse für Spieler (optional)</span><input id="sHost" placeholder="z. B. play.meine-domain.de"></label>
+    <p class="err" id="sErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="sTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="licForm" class="set-block">
+    <h3>Lizenz</h3>
+    <p id="licStatus"></p>
+    <label class="field"><span>Lizenzschlüssel</span><textarea id="licKey" rows="3" placeholder="GP1.…" spellcheck="false"></textarea></label>
+    <p class="err" id="licErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
+  </form>
+  <p class="mono muted small" id="verLine"></p>
+</dialog>
+
+<div class="scrim" id="pal" hidden>
+  <div class="pal" role="dialog" aria-modal="true" aria-label="Befehle suchen">
+    <label class="sr" for="palInput">Befehl suchen</label>
+    <input id="palInput" autocomplete="off" placeholder="Befehl oder Server suchen …">
+    <ul id="palList"></ul>
+  </div>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "id": "satisfactory",
+  "name": "Satisfactory",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1690800,
+  "start": "./FactoryServer.sh -Port={{port}} -ReliablePort={{port_3}} -multihome=0.0.0.0 -unattended",
+  "ports": [
+    {"name": "Spiel", "port": 7777, "proto": "udp"},
+    {"name": "API", "port": 7777, "proto": "tcp"},
+    {"name": "Zuverlässig", "port": 8888, "proto": "tcp"}
+  ],
+  "vars": [],
+  "memory_mb": 8192,
+  "min_memory_mb": 6144,
+  "console": "stdin",
+  "stop_timeout": 45,
+  "status": "beta",
+  "disk_gb": 12,
+  "notes": "Nach dem Start im Spiel über „Server Manager“ die Adresse eintragen und den Server beanspruchen."
+}

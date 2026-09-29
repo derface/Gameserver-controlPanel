@@ -1,0 +1,28 @@
+{
+  "id": "valheim",
+  "name": "Valheim",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 896660,
+  "start": "export LD_LIBRARY_PATH=./linux64:$LD_LIBRARY_PATH; export SteamAppId=892970; ./valheim_server.x86_64 -nographics -batchmode -name \"{{server_name}}\" -port {{port}} -world \"{{world}}\" -password \"{{password}}\" -public {{public}} -savedir /data/saves {{crossplay}}",
+  "ports": [
+    {"name": "Spiel", "port": 2456, "proto": "udp"},
+    {"name": "Abfrage", "port": 2457, "proto": "udp"}
+  ],
+  "vars": [
+    {"key": "server_name", "label": "Name in der Serverliste", "default": "Mein Valheim-Server"},
+    {"key": "world", "label": "Weltname", "default": "Midgard", "type": "slug"},
+    {"key": "password", "label": "Passwort (mind. 5 Zeichen)", "default": "", "type": "secret", "required": true},
+    {"key": "public", "label": "In der Serverliste zeigen", "default": "1", "type": "select", "options": ["0", "1"]},
+    {"key": "crossplay", "label": "Crossplay (Xbox/Game Pass)", "default": "false", "type": "bool", "flag": "-crossplay"}
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "stop_signal": "SIGINT",
+  "stop_timeout": 60,
+  "ready": "Game server connected",
+  "status": "stabil",
+  "disk_gb": 2,
+  "notes": "Speichert beim Stoppen die Welt. Spielstände liegen unter saves/."
+}

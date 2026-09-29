@@ -1,0 +1,24 @@
+{
+  "id": "palworld",
+  "name": "Palworld",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2394010,
+  "start": "./PalServer.sh -port={{port}} -players={{max_players}} -useperfthreads -NoAsyncLoadingThread -UseMultithreadForDS {{community}}",
+  "ports": [
+    {"name": "Spiel", "port": 8211, "proto": "udp"},
+    {"name": "Abfrage", "port": 27015, "proto": "udp"}
+  ],
+  "vars": [
+    {"key": "max_players", "label": "Maximale Spieler", "default": "16", "type": "number"},
+    {"key": "community", "label": "Als Community-Server listen", "default": "false", "type": "bool", "flag": "-publiclobby"}
+  ],
+  "memory_mb": 8192,
+  "min_memory_mb": 6144,
+  "console": "stdin",
+  "stop_timeout": 45,
+  "ready": "Running Palworld dedicated server",
+  "status": "beta",
+  "disk_gb": 6,
+  "notes": "Palworld braucht viel RAM, 16 GB sind für volle Server empfehlenswert. Einstellungen in Pal/Saved/Config/LinuxServer/PalWorldSettings.ini."
+}
