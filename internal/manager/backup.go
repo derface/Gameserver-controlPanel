@@ -314,15 +314,20 @@ func (m *Manager) restore(ctx context.Context, id, archive string) error {
 	}
 	dir := m.ServerDir(id)
 	wasRunning := m.isRunning(ctx, sv)
-	m.setJob(id, "Sicherung des aktuellen Stands")
-	if roots, _ := scopeRoots(dir, tpl); len(roots) > 0 {
-		if _, err := m.createBackup(ctx, id, KindRestore); err != nil {
-			return err
-		}
-	}
+	// Erst stoppen: viele Spiele (z. B. Valheim) speichern die Welt erst
+	// beim Beenden. So enthält die Sicherung wirklich den letzten Stand.
 	if wasRunning {
 		m.setJob(id, "Server wird gestoppt")
 		if err := m.dk.Stop(ctx, sv.ContainerID, tpl.StopTimeout); err != nil {
+			return err
+		}
+	}
+	m.setJob(id, "Sicherung des aktuellen Stands")
+	if roots, _ := scopeRoots(dir, tpl); len(roots) > 0 {
+		if _, err := m.createBackup(ctx, id, KindRestore); err != nil {
+			if wasRunning {
+				_ = m.dk.Start(ctx, sv.ContainerID)
+			}
 			return err
 		}
 	}
