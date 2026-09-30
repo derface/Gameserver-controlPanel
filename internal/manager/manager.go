@@ -3,6 +3,7 @@
 package manager
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/docker"
+	"github.com/derface/Gameserver-controlPanel/internal/query"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 	"github.com/derface/Gameserver-controlPanel/internal/templates"
 )
@@ -53,6 +55,9 @@ type live struct {
 	Msg       string
 	readyFor  string // StartedAt of the run in which the ready line was seen
 	UpdatedAt time.Time
+	Players   int // -1 = unknown
+	MaxPl     int
+	queriedAt time.Time
 }
 
 // Info is what the API returns for one server.
@@ -66,6 +71,8 @@ type Info struct {
 	Progress     float64 `json:"progress,omitempty"`
 	CPU          float64 `json:"cpu"`
 	MemMB        float64 `json:"mem_mb"`
+	Players      int     `json:"players"`     // -1 = unbekannt
+	MaxPlayers   int     `json:"max_players"` // 0 = unbekannt
 	Notes        string  `json:"notes,omitempty"`
 	DataDir      string  `json:"data_dir"`
 }
@@ -378,8 +385,8 @@ func (m *Manager) prepare(id string, start bool) {
 		m.failJob(id, err)
 		return
 	}
+	m.refresh(id) // first the live state, then drop the job, so the UI never sees a gap
 	m.clearJob(id)
-	m.refresh(id)
 }
 
 // ---------- lifecycle ----------
@@ -403,6 +410,11 @@ func (m *Manager) Start(ctx context.Context, id string) error {
 	}
 	if sv.ContainerID == "" {
 		m.setJob(id, "Wird vorbereitet")
+		go m.prepare(id, true)
+		return nil
+	}
+	if m.outdated(ctx, sv) {
+		m.setJob(id, "Laufzeit wurde aktualisiert, Container wird neu angelegt")
 		go m.prepare(id, true)
 		return nil
 	}
@@ -432,12 +444,23 @@ func (m *Manager) Restart(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	if sv.ContainerID == "" {
+	if sv.ContainerID == "" || m.outdated(ctx, sv) {
 		return m.Start(ctx, id)
 	}
 	err = m.dk.Restart(ctx, sv.ContainerID, tpl.StopTimeout)
 	m.refresh(id)
 	return err
+}
+
+// outdated reports whether a Steam server's container was built from an
+// older runtime image than the current one.
+func (m *Manager) outdated(ctx context.Context, sv store.Server) bool {
+	tpl, ok := m.tpls.Get(sv.Template)
+	if !ok || tpl.Kind != "steam" || sv.ContainerID == "" {
+		return false
+	}
+	_, img, err := m.dk.InspectImage(ctx, sv.ContainerID)
+	return err == nil && img != "" && img != SteamImage
 }
 
 // Recreate rebuilds the container with the current settings (keeps data).
@@ -491,6 +514,10 @@ func (m *Manager) Command(ctx context.Context, id, cmd string) (string, error) {
 }
 
 func (m *Manager) Logs(ctx context.Context, id string, follow bool, tail int) (io.ReadCloser, error) {
+	return m.logs(ctx, id, follow, tail, 0)
+}
+
+func (m *Manager) logs(ctx context.Context, id string, follow bool, tail int, since int64) (io.ReadCloser, error) {
 	sv, ok := m.st.Server(id)
 	if !ok {
 		return nil, errors.New("Server nicht gefunden")
@@ -498,7 +525,7 @@ func (m *Manager) Logs(ctx context.Context, id string, follow bool, tail int) (i
 	if sv.ContainerID == "" {
 		return nil, errors.New("Noch kein Container vorhanden")
 	}
-	return m.dk.Logs(ctx, sv.ContainerID, follow, tail)
+	return m.dk.Logs(ctx, sv.ContainerID, follow, tail, since)
 }
 
 // ---------- live state ----------
@@ -519,8 +546,10 @@ func (m *Manager) refresh(id string) {
 	prev := m.live[id]
 	m.mu.RUnlock()
 	l := &live{UpdatedAt: time.Now()}
+	l.Players = -1
 	if prev != nil {
 		l.readyFor = prev.readyFor
+		l.Players, l.MaxPl, l.queriedAt = prev.Players, prev.MaxPl, prev.queriedAt
 	}
 	if err != nil {
 		l.Phase, l.Msg = "error", "Container fehlt. Mit „Starten“ wird er neu angelegt."
@@ -536,6 +565,11 @@ func (m *Manager) refresh(id string) {
 			if l.readyFor != state.StartedAt {
 				l.Phase = m.phaseFromLogs(ctx, sv, tpl, state, l)
 			}
+			if l.Phase == "running" {
+				m.queryPlayers(sv, tpl, l)
+			} else {
+				l.Players, l.MaxPl = -1, 0
+			}
 		case state.OOMKilled:
 			l.Phase, l.Msg = "error", "Zu wenig RAM. Bitte mehr Arbeitsspeicher zuweisen."
 		default:
@@ -550,44 +584,85 @@ func (m *Manager) refresh(id string) {
 	m.mu.Unlock()
 }
 
+// phaseFromLogs scans the log of the current run line by line. It only
+// runs until the ready line was seen once per run, so the cost is small.
 func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templates.Template, state docker.State, l *live) string {
-	rc, err := m.dk.Logs(ctx, sv.ContainerID, false, 120)
+	var since int64
+	if t, err := time.Parse(time.RFC3339Nano, state.StartedAt); err == nil {
+		since = t.Unix() - 1
+	}
+	rc, err := m.dk.Logs(ctx, sv.ContainerID, false, -1, since)
 	if err != nil {
 		return "running"
 	}
-	b, _ := io.ReadAll(io.LimitReader(rc, 256<<10))
-	rc.Close()
-	text := string(b)
-	since := text
-	if tpl.Kind == "steam" {
-		iInst := strings.LastIndex(text, "[panel] SteamCMD")
-		iStart := strings.LastIndex(text, "[panel] Start:")
-		if strings.Contains(text, "[panel] Installation fehlgeschlagen") && iStart < 0 {
-			l.Msg = "SteamCMD-Installation fehlgeschlagen. Details in der Konsole."
-			return "error"
-		}
-		if iInst > iStart {
-			if ms := steamProgress.FindAllStringSubmatch(text[iInst:], -1); len(ms) > 0 {
-				p, _ := strconv.ParseFloat(ms[len(ms)-1][1], 64)
-				l.Progress = p / 100
+	defer rc.Close()
+	var ready *regexp.Regexp
+	if tpl.Ready != "" {
+		ready, _ = regexp.Compile(tpl.Ready)
+	}
+	installing, started, failed, isReady := false, tpl.Kind != "steam", false, false
+	progress := 0.0
+	sc := bufio.NewScanner(io.LimitReader(rc, 64<<20))
+	sc.Buffer(make([]byte, 64<<10), 1<<20)
+	for sc.Scan() {
+		line := sc.Text()
+		switch {
+		case strings.Contains(line, "[panel] SteamCMD"):
+			installing, started, progress = true, false, 0
+		case strings.Contains(line, "[panel] Installation fehlgeschlagen"):
+			failed = true
+		case strings.Contains(line, "[panel] Start:"):
+			installing, started = false, true
+		case installing:
+			if mm := steamProgress.FindStringSubmatch(line); mm != nil {
+				progress, _ = strconv.ParseFloat(mm[1], 64)
 			}
-			l.Msg = "SteamCMD lädt die Serverdateien"
-			return "installing"
+		case started && ready != nil && !isReady:
+			isReady = ready.MatchString(line)
 		}
-		if iStart < 0 {
-			return "starting"
-		}
-		since = text[iStart:]
 	}
-	if tpl.Ready == "" {
-		l.readyFor = state.StartedAt
-		return "running"
-	}
-	if re, err := regexp.Compile(tpl.Ready); err == nil && re.MatchString(since) {
+	switch {
+	case failed && !started:
+		l.Msg = "SteamCMD-Installation fehlgeschlagen. Details in der Konsole."
+		return "error"
+	case installing:
+		l.Progress = progress / 100
+		l.Msg = "SteamCMD lädt die Serverdateien"
+		return "installing"
+	case !started:
+		return "starting"
+	case ready == nil || isReady:
 		l.readyFor = state.StartedAt
 		return "running"
 	}
 	return "starting"
+}
+
+// queryPlayers asks the server for its player count, at most every 10 s.
+func (m *Manager) queryPlayers(sv store.Server, tpl templates.Template, l *live) {
+	if tpl.Query == nil || tpl.Query.Port < 0 || tpl.Query.Port >= len(sv.Ports) {
+		return
+	}
+	if time.Since(l.queriedAt) < 10*time.Second {
+		return
+	}
+	l.queriedAt = time.Now()
+	port := sv.Ports[tpl.Query.Port].Host
+	var r query.Result
+	var err error
+	switch tpl.Query.Type {
+	case "a2s":
+		r, err = query.A2S("127.0.0.1", port)
+	case "minecraft":
+		r, err = query.Minecraft("127.0.0.1", port)
+	default:
+		return
+	}
+	if err != nil {
+		l.Players, l.MaxPl = -1, 0
+		return
+	}
+	l.Players, l.MaxPl = r.Players, r.Max
 }
 
 // Run keeps the live state fresh until ctx ends.
@@ -614,7 +689,7 @@ func (m *Manager) Run(ctx context.Context) {
 
 func (m *Manager) Info(sv store.Server) Info {
 	tpl, _ := m.tpls.Get(sv.Template)
-	in := Info{Server: sv, TemplateName: tpl.Name, Category: tpl.Category, Console: tpl.Console, Notes: tpl.Notes, DataDir: m.ServerDir(sv.ID)}
+	in := Info{Players: -1, Server: sv, TemplateName: tpl.Name, Category: tpl.Category, Console: tpl.Console, Notes: tpl.Notes, DataDir: m.ServerDir(sv.ID)}
 	// never send secrets to the browser in lists
 	in.Vars = map[string]string{}
 	for _, v := range tpl.Vars {
@@ -637,6 +712,10 @@ func (m *Manager) Info(sv store.Server) Info {
 	case l != nil:
 		in.Status, in.Message, in.Progress = l.Phase, l.Msg, l.Progress
 		in.CPU = l.Stats.CPUPercent
+		in.Players, in.MaxPlayers = l.Players, l.MaxPl
+		if l.Phase != "running" {
+			in.Players, in.MaxPlayers = -1, 0
+		}
 		in.MemMB = float64(l.Stats.MemUsed) / 1024 / 1024
 	case sv.ContainerID == "":
 		in.Status = "stopped"

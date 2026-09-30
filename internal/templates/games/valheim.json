@@ -22,6 +22,7 @@
   "stop_signal": "SIGINT",
   "stop_timeout": 60,
   "ready": "Game server connected",
+  "query": {"type": "a2s", "port": 1},
   "status": "stabil",
   "disk_gb": 2,
   "notes": "Speichert beim Stoppen die Welt. Spielstände liegen unter saves/."

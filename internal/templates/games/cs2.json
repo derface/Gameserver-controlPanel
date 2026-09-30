@@ -21,6 +21,7 @@
   "memory_mb": 4096,
   "min_memory_mb": 2048,
   "console": "stdin",
+  "query": {"type": "a2s", "port": 0},
   "status": "beta",
   "disk_gb": 40,
   "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend."

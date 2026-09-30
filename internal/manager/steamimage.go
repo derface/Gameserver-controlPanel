@@ -5,14 +5,16 @@ package manager
 // dedicated servers need. Every Steam game shares this one image; the game
 // itself is downloaded into the server's data folder on first start.
 
-const SteamImage = "gamepanel/steam-runtime:1"
+// Bump the tag whenever the Dockerfile changes: containers built from an
+// older tag are recreated automatically on their next start.
+const SteamImage = "gamepanel/steam-runtime:2"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
 RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl tini procps locales xdg-user-dirs \
       lib32gcc-s1 lib32stdc++6 libc6:i386 libstdc++6:i386 libcurl4 \
-      libatomic1 libpulse0 libsdl2-2.0-0 \
+      libatomic1 libpulse0 libpulse-mainloop-glib0 libsdl2-2.0-0 \
  && sed -i 's/^# *en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen && locale-gen \
  && rm -rf /var/lib/apt/lists/*
 RUN useradd -m -u 1000 -s /bin/bash steam && mkdir -p /opt/steamcmd /data && chown steam:steam /opt/steamcmd /data

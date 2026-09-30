@@ -64,6 +64,8 @@
   const byId = id => S.servers.find(s => s.id === id);
   const addr = () => (S.settings && S.settings.public_host) || location.hostname;
   const portList = s => (s.ports || []).map(p => p.host + '/' + p.proto).join(', ');
+  const pad2 = n => String(n).padStart(2, '0');
+  const hasPl = s => s.status === 'running' && s.players >= 0;
   const load = s => s.status !== 'running' ? 0 : clamp(0.55 * (s.mem_mb / Math.max(1, s.memory_mb)) + 0.45 * Math.min(1, s.cpu / 100), 0, 1);
 
   /* ============ 3D: gemeinsamer Partikel-Kern (KI + Anmeldung) ============ */
@@ -139,6 +141,8 @@
     L.edgeMat = new THREE.LineBasicMaterial();
     L.gridMat = new THREE.LineBasicMaterial({ transparent: true, opacity: .5 });
     L.ringGeo = new THREE.RingGeometry(1.6, 1.68, 48);
+    L.dotGeo = new THREE.SphereGeometry(.09, 10, 10);
+    L.dotMat = new THREE.MeshBasicMaterial();
     L.ray = new THREE.Raycaster(); L.ndc = new THREE.Vector2(); L.v = new THREE.Vector3();
     bindLandInput(cv);
     new ResizeObserver(sizeLand).observe($('#stage')); sizeLand();
@@ -202,7 +206,7 @@
     g.add(mesh, edges, cap, pad, beam, ring);
     L.world.add(g);
     const lab = document.createElement('div'); lab.className = 'lab'; $('#labels').appendChild(lab);
-    const b = { s, g, mesh, edges, cap, pad, beam, ring, lab, h: .01, tx: 0, tz: 0, ph: Math.random() * 3 };
+    const b = { s, g, mesh, edges, cap, pad, beam, ring, lab, h: .01, tx: 0, tz: 0, ph: Math.random() * 3, dots: [] };
     L.blocks.set(s.id, b);
     return b;
   }
@@ -220,6 +224,7 @@
   function applySceneColors() {
     if (L.renderer) {
       L.slabMat.color.set(tok('--panel')); L.edgeMat.color.set(tok('--line')); L.gridMat.color.set(tok('--line'));
+      L.dotMat.color.set(tok('--ink'));
       L.blocks.forEach(tintBlock);
     }
     if (KI.core) KI.core.set(KI.core.state);
@@ -288,6 +293,20 @@
       if (s.status === 'running' && motion) {
         const ph = ((t + b.ph) % 2.6) / 2.6; b.ring.scale.setScalar(1 + ph * 1.4); b.ring.material.opacity = (1 - ph) * .55;
       } else b.ring.material.opacity = 0;
+      const want = hasPl(s) ? Math.min(s.players, 24) : 0;
+      while (b.dots.length < want) {
+        const m = new THREE.Mesh(L.dotGeo, L.dotMat); b.g.add(m);
+        b.dots.push({ m, x: (Math.random() - .5) * 2.2, z: (Math.random() - .5) * 2.2, tx: (Math.random() - .5) * 2.2, tz: (Math.random() - .5) * 2.2, sp: .4 + Math.random() * .5, ph: Math.random() * 6 });
+      }
+      while (b.dots.length > want) b.g.remove(b.dots.pop().m);
+      b.dots.forEach(d => {
+        if (motion) {
+          const dx = d.tx - d.x, dz = d.tz - d.z, dist = Math.hypot(dx, dz);
+          if (dist < .05) { d.tx = (Math.random() - .5) * 2.2; d.tz = (Math.random() - .5) * 2.2; }
+          else { d.x += dx / dist * dt * d.sp; d.z += dz / dist * dt * d.sp; }
+        }
+        d.m.position.set(d.x, h + .1 + (motion ? Math.abs(Math.sin(t * 6 + d.ph)) * .07 : 0), d.z);
+      });
       b.g.getWorldPosition(L.v); L.v.y += h + .6; L.v.project(L.cam);
       const x = (L.v.x * .5 + .5) * L.w, y = (-L.v.y * .5 + .5) * L.h;
       b.lab.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
@@ -327,6 +346,7 @@
         <div><dt>Ports</dt><dd>${esc(portList(s))}</dd></div>
         <div><dt>RAM</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' / ' : ''}${gb(s.memory_mb)} GB</dd></div>
         <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' : '–'}</dd></div>
+        <div><dt>Spieler</dt><dd>${hasPl(s) ? s.players + ' / ' + s.max_players : '–'}</dd></div>
         <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' · KI' : ''}</dd></div>
         <div><dt>ID</dt><dd>${esc(s.id)}</dd></div>
       </dl>
@@ -373,7 +393,10 @@
       const pct = Math.round((s.progress || 0) * 100);
       body = `<div class="mono muted">${esc(s.message || 'Bitte warten')}</div><div class="bar ${pct ? '' : 'indet'}"><b style="width:${pct}%"></b></div>`;
     } else {
-      body = `<div class="mod-foot"><div><span class="k">CPU</span><span class="v">${s.status === 'running' ? Math.round(s.cpu) : '–'}<small> %</small></span></div>
+      const first = hasPl(s)
+        ? `<div><span class="k">Spieler</span><span class="v">${pad2(s.players)}<small>/${pad2(s.max_players)}</small></span></div>`
+        : `<div><span class="k">CPU</span><span class="v">${s.status === 'running' ? Math.round(s.cpu) : '–'}<small> %</small></span></div>`;
+      body = `<div class="mod-foot">${first}
         <div><span class="k">RAM</span><span class="v">${s.status === 'running' ? gb(s.mem_mb) : '–'}<small> / ${gb(s.memory_mb)} GB</small></span></div>
         <button class="power" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></div>
         ${s.message ? `<p class="msg-line ${s.status === 'error' ? 'bad' : ''}">${esc(s.message)}</p>` : ''}`;
@@ -477,12 +500,13 @@
   function renderHost() {
     const h = S.host; if (!h) return;
     const run = S.servers.filter(s => s.status === 'running').length;
-    pushHist('cpu', h.cpu_percent); pushHist('ram', h.mem_used_mb / 1024); pushHist('disk', h.disk_used_gb); pushHist('run', run);
+    const pl = S.servers.reduce((a, s) => a + (hasPl(s) ? s.players : 0), 0);
+    pushHist('cpu', h.cpu_percent); pushHist('ram', h.mem_used_mb / 1024); pushHist('disk', h.disk_used_gb); pushHist('run', pl);
     $('#hostName').textContent = 'CPU · ' + (h.hostname || 'Rechner');
     setV('vCpu', Math.round(h.cpu_percent) + '<small>% · ' + h.cores + ' Kerne</small>');
     setV('vRam', (h.mem_used_mb / 1024).toFixed(1).replace('.', ',') + '<small> / ' + (h.mem_total_mb / 1024).toFixed(0) + ' GB</small>');
     setV('vDisk', Math.round(h.disk_used_gb) + '<small> / ' + Math.round(h.disk_total_gb) + ' GB</small>');
-    setV('vRun', run + '<small> / ' + S.servers.length + '</small>');
+    setV('vRun', pl + '<small> · ' + run + ' von ' + S.servers.length + ' Servern aktiv</small>');
     drawSparks();
   }
   function drawSpark(id, arr, lo, hi) {
@@ -503,7 +527,7 @@
     drawSpark('sCpu', S.hist.cpu, 0, 100);
     drawSpark('sRam', S.hist.ram, 0, h ? h.mem_total_mb / 1024 : null);
     drawSpark('sDisk', S.hist.disk, null, null);
-    drawSpark('sRun', S.hist.run, 0, Math.max(2, S.servers.length));
+    drawSpark('sRun', S.hist.run, 0, Math.max(4, ...S.hist.run) + 1);
   }
 
   /* ---------------- Formular-Bausteine ---------------- */

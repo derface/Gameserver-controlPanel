@@ -294,11 +294,20 @@ type State struct {
 }
 
 func (c *Client) Inspect(ctx context.Context, id string) (State, error) {
+	st, _, err := c.InspectImage(ctx, id)
+	return st, err
+}
+
+// InspectImage also returns the image reference the container was created from.
+func (c *Client) InspectImage(ctx context.Context, id string) (State, string, error) {
 	var out struct {
-		State State `json:"State"`
+		State  State `json:"State"`
+		Config struct {
+			Image string `json:"Image"`
+		} `json:"Config"`
 	}
 	err := c.simple(ctx, "GET", "/containers/"+id+"/json", nil, nil, &out)
-	return out.State, err
+	return out.State, out.Config.Image, err
 }
 
 type Stats struct {
@@ -350,8 +359,16 @@ func (c *Client) Stats(ctx context.Context, id string) (Stats, error) {
 }
 
 // Logs returns a reader of demultiplexed log lines (stdout+stderr).
-func (c *Client) Logs(ctx context.Context, id string, follow bool, tail int) (io.ReadCloser, error) {
-	q := url.Values{"stdout": {"1"}, "stderr": {"1"}, "tail": {fmt.Sprint(tail)}}
+// tail < 0 means all lines; since > 0 limits to lines after that unix time.
+func (c *Client) Logs(ctx context.Context, id string, follow bool, tail int, since int64) (io.ReadCloser, error) {
+	t := "all"
+	if tail >= 0 {
+		t = fmt.Sprint(tail)
+	}
+	q := url.Values{"stdout": {"1"}, "stderr": {"1"}, "tail": {t}}
+	if since > 0 {
+		q.Set("since", fmt.Sprint(since))
+	}
 	if follow {
 		q.Set("follow", "1")
 	}

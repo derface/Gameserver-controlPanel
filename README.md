@@ -40,6 +40,15 @@ Empfehlung: eine **eigene Debian-12-VM** auf Proxmox (nicht in einem unprivilegi
 
 Beim **ersten Steam-Server** baut das Panel einmalig die Steam-Laufzeit (Debian + SteamCMD, 2–5 Minuten), danach lädt SteamCMD das Spiel in den Serverordner. Der Fortschritt steht auf der Karte und in der Konsole.
 
+### Aktualisieren
+
+Wenn das Panel per Git installiert wurde (`/opt/gamepanel-src`):
+```bash
+cd /opt/gamepanel-src && bash scripts/update.sh
+```
+Holt den neuesten Stand, baut das Panel und installiert es neu. Server und Spielstände bleiben erhalten.
+Wurde die Steam-Laufzeit geändert, bekommen Steam-Server beim nächsten Start/Neustart automatisch einen neuen Container.
+
 Nützlich:
 ```bash
 journalctl -u gamepanel -f            # Panel-Logs
@@ -97,7 +106,8 @@ Nur Go-Standardbibliothek, keine externen Abhängigkeiten. Daten liegen in `/var
 ## Stand & Grenzen von 0.1
 
 - Getestet: kompletter Ablauf mit echtem Docker (anlegen, starten, Konsole, Befehle, stoppen, RAM ändern, zweite Instanz mit neuem Port, löschen), Login, Lizenzen.
-- **Noch nicht mit echten Spiel-Downloads getestet** – das ging in der Entwicklungsumgebung nicht. Die Startbefehle der Steam-Vorlagen (Status „Beta“) müssen auf dem Homeserver einmal durchprobiert werden.
+- Auf echter Hardware geprüft (Debian 13, Docker 29): Minecraft Java (Beitritt mit Client), Valheim (SteamCMD-Download, Start). Die übrigen Steam-Vorlagen (Status „Beta“) sind noch ungetestet.
+- Spielerzahlen: Minecraft Java (Server-List-Ping) sowie Valheim, CS2, GMod, TF2, 7DTD (Steam A2S). Übrige Spiele zeigen CPU statt Spieler.
 - Das Panel läuft als root (braucht Docker-Zugriff). Nicht direkt ins Internet stellen – nur im Heimnetz oder hinter Traefik mit HTTPS.
 - API-Keys liegen im Klartext in `panel.json` (nur für root lesbar). Verschlüsselung folgt.
 

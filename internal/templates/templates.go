@@ -59,6 +59,14 @@ type Template struct {
 	DiskGB      int               `json:"disk_gb,omitempty"`
 	Notes       string            `json:"notes,omitempty"`
 	Custom      bool              `json:"custom,omitempty"` // user supplies app id, start and ports
+	Query       *Query            `json:"query,omitempty"`  // how to read the player count
+}
+
+// Query describes how to ask a running server for its player count.
+// Type is "a2s" (Steam) or "minecraft"; Port is the index into Ports.
+type Query struct {
+	Type string `json:"type"`
+	Port int    `json:"port"`
 }
 
 type Set struct {

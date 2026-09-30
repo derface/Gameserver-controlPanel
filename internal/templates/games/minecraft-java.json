@@ -37,6 +37,7 @@
   "exec_prefix": ["rcon-cli"],
   "stop_timeout": 60,
   "ready": "Done \\(",
+  "query": {"type": "minecraft", "port": 0},
   "status": "stabil",
   "disk_gb": 3,
   "notes": "Nutzt das bewährte Image itzg/minecraft-server. Mods werden beim Start automatisch von Modrinth geladen."

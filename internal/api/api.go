@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -409,11 +410,29 @@ func (a *API) console(w http.ResponseWriter, r *http.Request) {
 				fl.Flush()
 				return
 			}
-			l = strings.ReplaceAll(l, "\r", "")
+			l = cleanLine(l)
+			if l == "" || strings.Contains(l, "Thread RCON Client") {
+				continue // leere Zeilen und das Rauschen unserer eigenen RCON-Befehle
+			}
 			fmt.Fprintf(w, "data: %s\n\n", l)
 			fl.Flush()
 		}
 	}
+}
+
+var ansi = regexp.MustCompile(`\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[()][A-Za-z0-9]|\x1b`)
+
+// cleanLine removes terminal colour codes and carriage returns.
+func cleanLine(l string) string {
+	l = ansi.ReplaceAllString(l, "")
+	if i := strings.LastIndex(l, "\r"); i >= 0 {
+		if rest := l[i+1:]; strings.TrimSpace(rest) != "" {
+			l = rest
+		} else {
+			l = strings.ReplaceAll(l, "\r", "")
+		}
+	}
+	return strings.TrimRight(l, " \t")
 }
 
 // ---------- settings, license, ai ----------

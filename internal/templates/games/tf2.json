@@ -17,6 +17,7 @@
   "memory_mb": 2048,
   "min_memory_mb": 1024,
   "console": "stdin",
+  "query": {"type": "a2s", "port": 0},
   "status": "beta",
   "disk_gb": 15
 }
