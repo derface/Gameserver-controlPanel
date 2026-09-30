@@ -100,6 +100,8 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("POST /api/servers/{id}/{action}", a.guard(a.action))
 	mux.HandleFunc("GET /api/servers/{id}/console", a.guard(a.console))
 
+	a.routesManage(mux)
+
 	mux.HandleFunc("GET /api/settings", a.guard(a.getSettings))
 	mux.HandleFunc("PUT /api/settings", a.guard(a.putSettings))
 	mux.HandleFunc("PUT /api/license", a.guard(a.putLicense))

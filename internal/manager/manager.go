@@ -28,11 +28,12 @@ import (
 const containerUID = 1000
 
 type Manager struct {
-	st      *store.Store
-	dk      *docker.Client
-	tpls    *templates.Set
-	dataDir string
-	Limit   func() (maxServers int) // from the license; <0 = unlimited
+	st          *store.Store
+	dk          *docker.Client
+	tpls        *templates.Set
+	dataDir     string
+	Limit       func() (maxServers int) // from the license; <0 = unlimited
+	AutoBackups func() bool             // from the license
 
 	buildMu sync.Mutex
 	opMu    sync.Map // id -> *sync.Mutex
@@ -79,7 +80,7 @@ type Info struct {
 
 func New(st *store.Store, dk *docker.Client, tpls *templates.Set, dataDir string) *Manager {
 	return &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{},
-		Limit: func() int { return -1 }}
+		Limit: func() int { return -1 }, AutoBackups: func() bool { return true }}
 }
 
 func (m *Manager) lock(id string) func() {
@@ -486,6 +487,7 @@ func (m *Manager) Delete(ctx context.Context, id string, wipe bool) error {
 		if strings.HasPrefix(dir, filepath.Join(m.dataDir, "servers")+string(os.PathSeparator)) {
 			_ = os.RemoveAll(dir)
 		}
+		_ = os.RemoveAll(m.backupDir(id))
 	}
 	m.mu.Lock()
 	delete(m.jobs, id)
@@ -667,6 +669,7 @@ func (m *Manager) queryPlayers(sv store.Server, tpl templates.Template, l *live)
 
 // Run keeps the live state fresh until ctx ends.
 func (m *Manager) Run(ctx context.Context) {
+	go m.runSchedule(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {

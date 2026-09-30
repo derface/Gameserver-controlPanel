@@ -178,6 +178,77 @@
   <p class="mono muted small" id="verLine"></p>
 </dialog>
 
+<dialog id="dlgManage" class="dlg wide" aria-labelledby="mgTitle">
+  <div class="dlg-head">
+    <div class="mg-title"><span class="mono muted" id="mgGame"></span><h2 id="mgTitle">Server</h2></div>
+    <div class="tabs" role="tablist" aria-label="Bereich">
+      <button type="button" role="tab" id="tabBackups" aria-selected="true" data-tab="backups">Backups</button>
+      <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files">Dateien</button>
+    </div>
+    <button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button>
+  </div>
+
+  <section class="mg-pane" id="paneBackups" role="tabpanel" aria-labelledby="tabBackups">
+    <div class="bk-top">
+      <button type="button" class="btn-accent" id="bkNow">Backup jetzt erstellen</button>
+      <p class="small muted" id="bkScope"></p>
+    </div>
+    <form class="bk-plan" id="bkPlan">
+      <label class="field"><span>Automatisch</span>
+        <select id="bkEvery"><option value="0">Aus</option><option value="6">Alle 6 Stunden</option><option value="12">Alle 12 Stunden</option><option value="24">Täglich</option></select></label>
+      <label class="field" id="bkAtWrap"><span>Uhrzeit</span><select id="bkAt"></select></label>
+      <label class="field"><span>Automatische behalten</span><input id="bkKeep" type="number" min="1" max="100"></label>
+      <button type="submit" class="btn-line">Plan speichern</button>
+    </form>
+    <p class="note" id="bkPlanNote" hidden></p>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Erstellt</th><th>Art</th><th class="num">Größe</th><th><span class="sr">Aktionen</span></th></tr></thead>
+        <tbody id="bkRows"></tbody>
+      </table>
+    </div>
+    <p class="mono muted small" id="bkTotal"></p>
+  </section>
+
+  <section class="mg-pane" id="paneFiles" role="tabpanel" aria-labelledby="tabFiles" hidden>
+    <div class="fm-bar">
+      <nav class="crumbs" id="fmCrumbs" aria-label="Ordnerpfad"></nav>
+      <span class="grow"></span>
+      <span class="mono muted small" id="fmProgress"></span>
+      <button type="button" class="btn-line" id="fmMkdir">Neuer Ordner</button>
+      <label class="btn-line upl">Hochladen<input type="file" id="fmUpload" multiple></label>
+    </div>
+    <div class="fm-list" id="fmList" aria-live="polite"></div>
+    <div class="fm-editor" id="fmEditor" hidden>
+      <div class="fm-edbar">
+        <span class="mono" id="fmEdPath"></span><span class="mono muted" id="fmEdState"></span>
+        <span class="grow"></span>
+        <button type="button" class="btn-line" id="fmEdClose">Schließen</button>
+        <button type="button" class="btn-accent" id="fmEdSave">Speichern<kbd>Strg S</kbd></button>
+      </div>
+      <label class="sr" for="fmText">Dateiinhalt</label>
+      <textarea id="fmText" spellcheck="false" wrap="off"></textarea>
+      <p class="small muted">Die meisten Spiele lesen Konfigurationen nur beim Start. Nach dem Speichern den Server neu starten.</p>
+    </div>
+  </section>
+</dialog>
+
+<dialog id="dlgConfirm" class="dlg small">
+  <form method="dialog" id="cfForm">
+    <div class="dlg-head"><h2 id="cfTitle">Sicher?</h2></div>
+    <p id="cfText"></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-danger" id="cfOk">OK</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgPrompt" class="dlg small">
+  <form method="dialog" id="prForm">
+    <div class="dlg-head"><h2 id="prTitle">Name</h2></div>
+    <label class="field"><span id="prLabel">Name</span><input id="prInput" required></label>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="prOk">OK</button></div>
+  </form>
+</dialog>
+
 <div class="scrim" id="pal" hidden>
   <div class="pal" role="dialog" aria-modal="true" aria-label="Befehle suchen">
     <label class="sr" for="palInput">Befehl suchen</label>

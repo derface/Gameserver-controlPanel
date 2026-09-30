@@ -60,6 +60,24 @@ type Template struct {
 	Notes       string            `json:"notes,omitempty"`
 	Custom      bool              `json:"custom,omitempty"` // user supplies app id, start and ports
 	Query       *Query            `json:"query,omitempty"`  // how to read the player count
+
+	// Backups: by default a Steam server backs up everything in its data
+	// folder except the game install ("server"); image servers back up all.
+	BackupExclude []string `json:"backup_exclude,omitempty"` // top-level entries to skip
+	BackupInclude []string `json:"backup_include,omitempty"` // extra paths, also inside excluded ones
+	BackupPre     []string `json:"backup_pre,omitempty"`     // console commands before a live backup
+	BackupPost    []string `json:"backup_post,omitempty"`    // console commands afterwards
+}
+
+// Excludes returns the effective top-level excludes for backups.
+func (t Template) Excludes() []string {
+	if t.BackupExclude != nil {
+		return t.BackupExclude
+	}
+	if t.Kind == "steam" {
+		return []string{"server"}
+	}
+	return nil
 }
 
 // Query describes how to ask a running server for its player count.

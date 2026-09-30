@@ -43,6 +43,16 @@ type Server struct {
 	ContainerID string            `json:"container_id,omitempty"`
 	Created     time.Time         `json:"created"`
 	CreatedBy   string            `json:"created_by,omitempty"` // "manual" | "ai"
+	Backup      BackupPlan        `json:"backup"`
+}
+
+// BackupPlan is the automatic backup schedule of one server.
+type BackupPlan struct {
+	EveryHours int       `json:"every_hours"` // 0 = aus, 6, 12 oder 24
+	AtHour     int       `json:"at_hour"`     // Uhrzeit bei täglich
+	Keep       int       `json:"keep"`        // so viele automatische Backups behalten
+	LastAuto   time.Time `json:"last_auto,omitempty"`
+	LastError  string    `json:"last_error,omitempty"`
 }
 
 type Settings struct {

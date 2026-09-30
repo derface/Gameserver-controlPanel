@@ -58,6 +58,7 @@ func main() {
 	webFS, _ := fs.Sub(web.FS, "static")
 	a := &api.API{Auth: auth.New(st), Store: st, Mgr: mgr, Host: host, Docker: dk, Web: webFS, Version: version}
 	mgr.Limit = func() int { return a.License().Edition.MaxServers }
+	mgr.AutoBackups = func() bool { return a.License().Edition.AutoBackup }
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

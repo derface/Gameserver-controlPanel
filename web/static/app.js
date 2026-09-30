@@ -354,6 +354,8 @@
       <div class="acts">
         <button class="btn-accent" type="button" data-d="power" ${busy ? 'disabled' : ''}>${on ? 'Stoppen' : 'Starten'}</button>
         <button class="btn-line" type="button" data-d="restart" ${!on || busy ? 'disabled' : ''}>Neustart</button>
+        <button class="btn-line" type="button" data-d="backups">Backups</button>
+        <button class="btn-line" type="button" data-d="files">Dateien</button>
         <button class="btn-line" type="button" data-d="edit">Bearbeiten</button>
         <button class="btn-line" type="button" data-d="delete">Löschen</button>
         <button class="btn-line" type="button" data-d="back">Zurück</button>
@@ -368,6 +370,8 @@
     if (a === 'power') togglePower(s);
     else if (a === 'restart') act(s, 'restart', 'Neustart ausgelöst');
     else if (a === 'edit') openEdit(s);
+    else if (a === 'backups') openManage(s.id, 'backups');
+    else if (a === 'files') openManage(s.id, 'files');
     else if (a === 'delete') openDelete(s);
     else deselect();
   });
@@ -783,6 +787,250 @@
   $('#askInput').addEventListener('input', e => { if (!KI.busy) setCore(e.target.value.trim() ? 'listening' : 'idle'); });
   $('#chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) ask(b.textContent); });
 
+  /* ---------------- Bestätigen / Name abfragen ---------------- */
+  function confirmBox(title, text, okLabel) {
+    return new Promise(res => {
+      const d = $('#dlgConfirm');
+      $('#cfTitle').textContent = title; $('#cfText').textContent = text; $('#cfOk').textContent = okLabel || 'OK';
+      const done = v => { d.removeEventListener('close', onClose); res(v); };
+      const onClose = () => done(d.returnValue === 'ok');
+      d.returnValue = '';
+      d.addEventListener('close', onClose);
+      $('#cfForm').onsubmit = e => { e.preventDefault(); d.close('ok'); };
+      d.showModal();
+    });
+  }
+  function promptBox(title, label, value, okLabel) {
+    return new Promise(res => {
+      const d = $('#dlgPrompt');
+      $('#prTitle').textContent = title; $('#prLabel').textContent = label; $('#prOk').textContent = okLabel || 'OK';
+      const inp = $('#prInput'); inp.value = value || '';
+      const onClose = () => { d.removeEventListener('close', onClose); res(d.returnValue === 'ok' ? inp.value.trim() : null); };
+      d.returnValue = '';
+      d.addEventListener('close', onClose);
+      $('#prForm').onsubmit = e => { e.preventDefault(); d.close('ok'); };
+      d.showModal(); setTimeout(() => { inp.focus(); inp.select(); }, 30);
+    });
+  }
+  const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(0) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : (b / 1073741824).toFixed(2).replace('.', ',') + ' GB';
+  const fmtDate = d => new Date(d).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const ICON = {
+    dir: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 014.5 5H9l2 2.5h8.5A1.5 1.5 0 0121 9v9.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5z"/></svg>',
+    file: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',
+    dl: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+    ren: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    del: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
+  };
+
+  /* ---------------- Server verwalten: Backups + Dateien ---------------- */
+  const MG = { id: null, tab: 'backups', path: '', edit: null, dirty: false, busy: false };
+  const KIND = { manuell: 'Manuell', auto: 'Automatisch', 'vor-wiederherstellung': 'Vor Wiederherstellung' };
+  $('#bkAt').innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${String(h).padStart(2, '0')}:00 Uhr</option>`).join('');
+
+  function openManage(id, tab) {
+    const s = byId(id); if (!s) return;
+    MG.id = id; MG.path = ''; closeEditor(true);
+    $('#mgTitle').textContent = s.name; $('#mgGame').textContent = s.template_name;
+    mgTab(tab || 'backups');
+    if (!$('#dlgManage').open) $('#dlgManage').showModal();
+  }
+  function mgTab(tab) {
+    MG.tab = tab;
+    $$('#dlgManage .tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    $('#paneBackups').hidden = tab !== 'backups'; $('#paneFiles').hidden = tab !== 'files';
+    if (tab === 'backups') loadBackups(); else loadFiles(MG.path);
+  }
+  $$('#dlgManage .tabs button').forEach(b => b.addEventListener('click', async () => {
+    if (b.dataset.tab !== MG.tab && MG.dirty && !(await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen'))) return;
+    if (b.dataset.tab !== 'files') closeEditor(true);
+    mgTab(b.dataset.tab);
+  }));
+  $('#dlgManage').addEventListener('cancel', async e => {
+    if (!MG.dirty) return;
+    e.preventDefault();
+    if (await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen')) { closeEditor(true); $('#dlgManage').close(); }
+  });
+  $('#dlgManage').addEventListener('click', async e => {
+    if (!e.target.closest('[data-close]') || !MG.dirty) return;
+    e.stopPropagation();
+    if (await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen')) { closeEditor(true); $('#dlgManage').close(); }
+  }, true);
+
+  // Backups
+  async function loadBackups() {
+    const id = MG.id;
+    let d;
+    try { d = await api('GET', `/api/servers/${id}/backups`); } catch (e) { toast(e.message, 'bad'); return; }
+    if (MG.id !== id) return;
+    $('#bkScope').textContent = d.scope && d.scope.length
+      ? 'Gesichert werden: ' + d.scope.join(', ') + '. Die Spieldateien selbst lädt das Panel bei Bedarf neu.'
+      : 'Noch keine Spieldaten vorhanden. Starte den Server einmal, dann gibt es etwas zu sichern.';
+    const p = d.plan || {};
+    $('#bkEvery').value = String(p.every_hours || 0); $('#bkAt').value = String(p.at_hour || 4); $('#bkKeep').value = p.keep || 7;
+    $('#bkEvery').disabled = !d.auto_allowed; $('#bkAtWrap').hidden = +$('#bkEvery').value !== 24;
+    const notes = [];
+    if (!d.auto_allowed) notes.push('Geplante Backups gehören zu Pro und Ultimate. Manuelle Backups gehen immer.');
+    if (p.last_auto && !p.last_auto.startsWith('0001')) notes.push('Letztes automatisches Backup: ' + fmtDate(p.last_auto));
+    if (p.last_error) notes.push('Fehler beim letzten automatischen Backup: ' + p.last_error);
+    $('#bkPlanNote').hidden = !notes.length; $('#bkPlanNote').textContent = notes.join(' · ');
+    $('#bkRows').innerHTML = d.backups.length ? d.backups.map(b => `<tr>
+        <td class="num" style="text-align:left">${fmtDate(b.created)}</td>
+        <td><span class="kind ${esc(b.kind)}">${esc(KIND[b.kind] || b.kind)}</span></td>
+        <td class="num">${fmtSize(b.size)}</td>
+        <td><div class="acts">
+          <a class="btn-line sm" href="/api/servers/${esc(id)}/backups/${esc(b.name)}" download>Herunterladen</a>
+          <button class="btn-line sm" type="button" data-bk="restore" data-name="${esc(b.name)}">Wiederherstellen</button>
+          <button class="icon-btn" type="button" data-bk="delete" data-name="${esc(b.name)}" aria-label="Backup löschen">${ICON.del}</button>
+        </div></td></tr>`).join('')
+      : '<tr class="empty"><td colspan="4">Noch keine Backups. Erstelle oben das erste.</td></tr>';
+    $('#bkTotal').textContent = d.backups.length ? d.backups.length + ' Backups · ' + fmtSize(d.total_size) + ' belegt' : '';
+  }
+  $('#bkEvery').addEventListener('change', () => { $('#bkAtWrap').hidden = +$('#bkEvery').value !== 24; });
+  $('#bkPlan').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      await api('PUT', `/api/servers/${MG.id}/backup-plan`, { every_hours: +$('#bkEvery').value, at_hour: +$('#bkAt').value, keep: +$('#bkKeep').value });
+      toast('Backup-Plan gespeichert', 'ok'); loadBackups(); loadServers();
+    } catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#bkNow').addEventListener('click', async () => {
+    const b = $('#bkNow'); if (b.disabled) return;
+    b.disabled = true; b.textContent = 'Sichert …';
+    try { const r = await api('POST', `/api/servers/${MG.id}/backups`); toast('Backup erstellt · ' + fmtSize(r.size), 'ok'); }
+    catch (err) { toast(err.message, 'bad'); }
+    finally { b.disabled = false; b.textContent = 'Backup jetzt erstellen'; loadBackups(); }
+  });
+  $('#bkRows').addEventListener('click', async e => {
+    const b = e.target.closest('[data-bk]'); if (!b) return;
+    const name = b.dataset.name, id = MG.id, s = byId(id);
+    if (b.dataset.bk === 'delete') {
+      if (!(await confirmBox('Backup löschen?', 'Das Backup vom ' + name.slice(0, 10).split('-').reverse().join('.') + ' wird endgültig gelöscht.', 'Löschen'))) return;
+      try { await api('DELETE', `/api/servers/${id}/backups/${encodeURIComponent(name)}`); toast('Backup gelöscht'); } catch (err) { toast(err.message, 'bad'); }
+      loadBackups();
+    } else {
+      const txt = (s && isOn(s) ? 'Der Server wird dafür kurz gestoppt. ' : '') + 'Der aktuelle Stand wird vorher automatisch gesichert, du kannst also zurück.';
+      if (!(await confirmBox('Backup wiederherstellen?', txt, 'Wiederherstellen'))) return;
+      try { await api('POST', `/api/servers/${id}/backups/${encodeURIComponent(name)}/restore`); toast('Wiederherstellung läuft'); $('#dlgManage').close(); await loadServers(); select(id); }
+      catch (err) { toast(err.message, 'bad'); }
+    }
+  });
+
+  // Dateien
+  const joinPath = (a, b) => (a ? a + '/' : '') + b;
+  async function loadFiles(path) {
+    const id = MG.id;
+    let list;
+    try { list = await api('GET', `/api/servers/${id}/files?path=${encodeURIComponent(path)}`); }
+    catch (e) { toast(e.message, 'bad'); if (path) { MG.path = ''; return loadFiles(''); } return; }
+    if (MG.id !== id) return;
+    MG.path = path;
+    const parts = path ? path.split('/') : [];
+    $('#fmCrumbs').innerHTML = `<button type="button" data-p="">Serverordner</button>` +
+      parts.map((p, i) => `<span>/</span><button type="button" data-p="${esc(parts.slice(0, i + 1).join('/'))}">${esc(p)}</button>`).join('');
+    $('#fmList').innerHTML = list.length ? list.map(f => `<div class="fm-row">
+        <button type="button" class="nm ${f.dir ? 'dir' : ''}" data-f="${f.dir ? 'open' : 'edit'}" data-n="${esc(f.name)}" data-size="${f.size}">${f.dir ? ICON.dir : ICON.file}<span>${esc(f.name)}</span></button>
+        <span class="sz">${f.dir ? '' : fmtSize(f.size)}</span>
+        <span class="dt">${fmtDate(f.mod_time)}</span>
+        <div class="acts">
+          ${f.dir ? '' : `<a class="icon-btn" href="/api/servers/${esc(id)}/files/download?path=${encodeURIComponent(joinPath(path, f.name))}" download aria-label="${esc(f.name)} herunterladen">${ICON.dl}</a>`}
+          <button type="button" class="icon-btn" data-f="rename" data-n="${esc(f.name)}" aria-label="${esc(f.name)} umbenennen">${ICON.ren}</button>
+          <button type="button" class="icon-btn" data-f="delete" data-n="${esc(f.name)}" data-dir="${f.dir}" aria-label="${esc(f.name)} löschen">${ICON.del}</button>
+        </div></div>`).join('')
+      : `<div class="fm-empty">${path ? 'Dieser Ordner ist leer.' : 'Noch keine Dateien. Starte den Server einmal oder lade Dateien hoch.'} Dateien kannst du auch hierher ziehen.</div>`;
+  }
+  $('#fmCrumbs').addEventListener('click', async e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    if (MG.dirty && !(await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen'))) return;
+    closeEditor(true); loadFiles(b.dataset.p);
+  });
+  $('#fmList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    const n = b.dataset.n, p = joinPath(MG.path, n), id = MG.id;
+    const act = b.dataset.f;
+    if (act === 'open') loadFiles(p);
+    else if (act === 'edit') {
+      if (+b.dataset.size > 2 * 1048576) { location.href = `/api/servers/${id}/files/download?path=${encodeURIComponent(p)}`; return; }
+      openEditor(p);
+    } else if (act === 'rename') {
+      const nn = await promptBox('Umbenennen', 'Neuer Name', n, 'Umbenennen'); if (!nn || nn === n) return;
+      try { await api('POST', `/api/servers/${id}/files/rename?path=${encodeURIComponent(p)}`, { name: nn }); toast('Umbenannt', 'ok'); } catch (err) { toast(err.message, 'bad'); }
+      loadFiles(MG.path);
+    } else if (act === 'delete') {
+      const dir = b.dataset.dir === 'true';
+      if (!(await confirmBox(dir ? 'Ordner löschen?' : 'Datei löschen?', `„${n}“${dir ? ' und alles darin' : ''} wird endgültig gelöscht. Ein Backup vorher schadet nicht.`, 'Löschen'))) return;
+      try { await api('DELETE', `/api/servers/${id}/files?path=${encodeURIComponent(p)}`); toast('Gelöscht'); } catch (err) { toast(err.message, 'bad'); }
+      loadFiles(MG.path);
+    }
+  });
+  $('#fmMkdir').addEventListener('click', async () => {
+    const n = await promptBox('Neuer Ordner', 'Ordnername', '', 'Anlegen'); if (!n) return;
+    try { await api('POST', `/api/servers/${MG.id}/files/mkdir?path=${encodeURIComponent(MG.path)}`, { name: n }); } catch (err) { toast(err.message, 'bad'); }
+    loadFiles(MG.path);
+  });
+  function upload(fileList) {
+    const filesArr = [...fileList]; if (!filesArr.length) return;
+    const fd = new FormData(); filesArr.forEach(f => fd.append('file', f, f.name));
+    const xhr = new XMLHttpRequest(), prog = $('#fmProgress');
+    xhr.open('POST', `/api/servers/${MG.id}/files/upload?path=${encodeURIComponent(MG.path)}`);
+    xhr.setRequestHeader('X-Panel', '1');
+    xhr.upload.onprogress = e => { if (e.lengthComputable) prog.textContent = 'Hochladen ' + Math.round(e.loaded / e.total * 100) + ' %'; };
+    xhr.onload = () => {
+      prog.textContent = '';
+      let d = null; try { d = JSON.parse(xhr.responseText); } catch (e) { /* egal */ }
+      if (xhr.status < 300) toast(filesArr.length === 1 ? filesArr[0].name + ' hochgeladen' : filesArr.length + ' Dateien hochgeladen', 'ok');
+      else toast((d && d.error) || 'Hochladen fehlgeschlagen', 'bad');
+      loadFiles(MG.path);
+    };
+    xhr.onerror = () => { prog.textContent = ''; toast('Hochladen fehlgeschlagen. Verbindung prüfen.', 'bad'); };
+    xhr.send(fd);
+  }
+  $('#fmUpload').addEventListener('change', e => { upload(e.target.files); e.target.value = ''; });
+  const fl = $('#fmList');
+  fl.addEventListener('dragover', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); fl.classList.add('drop'); } });
+  fl.addEventListener('dragleave', () => fl.classList.remove('drop'));
+  fl.addEventListener('drop', e => { e.preventDefault(); fl.classList.remove('drop'); upload(e.dataTransfer.files); });
+
+  async function openEditor(p) {
+    let r;
+    try { r = await api('GET', `/api/servers/${MG.id}/files/content?path=${encodeURIComponent(p)}`); }
+    catch (e) { toast(e.message, 'bad'); return; }
+    MG.edit = p; MG.dirty = false;
+    $('#fmEdPath').textContent = p; $('#fmEdState').textContent = '';
+    $('#fmText').value = r.content;
+    $('#fmList').hidden = true; $('#fmEditor').hidden = false; $('#fmMkdir').hidden = true; $('.upl').hidden = true;
+    $('#fmText').focus(); $('#fmText').setSelectionRange(0, 0); $('#fmText').scrollTop = 0;
+  }
+  function closeEditor(force) {
+    if (!force && MG.dirty) return;
+    MG.edit = null; MG.dirty = false;
+    $('#fmEditor').hidden = true; $('#fmList').hidden = false; $('#fmMkdir').hidden = false; $('.upl').hidden = false;
+  }
+  async function saveEditor() {
+    if (!MG.edit) return;
+    const b = $('#fmEdSave'); b.disabled = true;
+    try {
+      await api('PUT', `/api/servers/${MG.id}/files/content?path=${encodeURIComponent(MG.edit)}`, { content: $('#fmText').value });
+      MG.dirty = false; $('#fmEdState').textContent = 'Gespeichert';
+      const s = byId(MG.id);
+      toast(s && isOn(s) ? 'Gespeichert. Starte den Server neu, damit es wirkt.' : 'Gespeichert', 'ok');
+    } catch (err) { toast(err.message, 'bad'); }
+    finally { b.disabled = false; }
+  }
+  $('#fmText').addEventListener('input', () => { if (!MG.dirty) { MG.dirty = true; $('#fmEdState').textContent = '· ungespeichert'; } });
+  $('#fmText').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveEditor(); }
+    if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey) {
+      e.preventDefault();
+      const t = e.target, a = t.selectionStart;
+      t.setRangeText('\t', a, t.selectionEnd, 'end'); t.dispatchEvent(new Event('input'));
+    }
+  });
+  $('#fmEdSave').addEventListener('click', saveEditor);
+  $('#fmEdClose').addEventListener('click', async () => {
+    if (MG.dirty && !(await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen'))) return;
+    closeEditor(true); loadFiles(MG.path);
+  });
+
   /* ---------------- Befehlssuche ---------------- */
   let palItems = [], palIdx = 0;
   function actions() {
@@ -793,6 +1041,8 @@
     S.servers.forEach(s => {
       if (s.status !== 'preparing') a.push({ label: s.name + (isOn(s) ? ' stoppen' : ' starten'), hint: 'Server', run: () => togglePower(s) });
       a.push({ label: 'Zu ' + s.name + ' fliegen', hint: '3D', run: () => { select(s.id); $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
+      a.push({ label: 'Backups von ' + s.name, hint: 'Backup', run: () => openManage(s.id, 'backups') });
+      a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
       a.push({ label: 'Konsole von ' + s.name, hint: 'Konsole', run: () => { openConsole(s.id); $('#konsole').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
     });
     a.push({ label: 'Einstellungen und Lizenz', hint: 'Panel', run: openSettings });

@@ -18,6 +18,7 @@
   "console": "stdin",
   "stop_timeout": 45,
   "ready": "Running Palworld dedicated server",
+  "backup_include": ["server/Pal/Saved"],
   "status": "beta",
   "disk_gb": 6,
   "notes": "Palworld braucht viel RAM, 16 GB sind für volle Server empfehlenswert. Einstellungen in Pal/Saved/Config/LinuxServer/PalWorldSettings.ini."

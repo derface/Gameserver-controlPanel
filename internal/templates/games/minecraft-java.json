@@ -38,6 +38,9 @@
   "stop_timeout": 60,
   "ready": "Done \\(",
   "query": {"type": "minecraft", "port": 0},
+  "backup_exclude": ["libraries", "versions", ".cache", "logs", "crash-reports"],
+  "backup_pre": ["save-off", "save-all flush"],
+  "backup_post": ["save-on"],
   "status": "stabil",
   "disk_gb": 3,
   "notes": "Nutzt das bewährte Image itzg/minecraft-server. Mods werden beim Start automatisch von Modrinth geladen."

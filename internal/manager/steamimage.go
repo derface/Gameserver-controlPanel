@@ -7,7 +7,7 @@ package manager
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:2"
+const SteamImage = "gamepanel/steam-runtime:3"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -47,6 +47,10 @@ if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
     exit 1
   fi
 fi
+# Spiele speichern oft im Home-Verzeichnis (Zomboid, 7 Days to Die,
+# Satisfactory). /data/home liegt im Serverordner und bleibt erhalten.
+mkdir -p /data/home
+export HOME=/data/home
 mkdir -p ~/.steam/sdk64 ~/.steam/sdk32
 cp -f /opt/steamcmd/linux64/steamclient.so ~/.steam/sdk64/ 2>/dev/null || true
 cp -f /opt/steamcmd/linux32/steamclient.so ~/.steam/sdk32/ 2>/dev/null || true

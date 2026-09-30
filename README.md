@@ -56,6 +56,18 @@ docker ps --filter label=gamepanel.id # alle Gameserver-Container
 ls /var/lib/gamepanel/servers/        # Spieldaten, ein Ordner pro Server
 ```
 
+## Backups und Dateien
+
+Auf der Server-Karte bzw. in der Detailansicht: **Backups** und **Dateien**.
+
+- **Backups** liegen unter `/var/lib/gamepanel/backups/<server-id>/` als `.tar.gz`. Gesichert werden die Spieldaten, nicht die per SteamCMD geladenen Spieldateien (die lädt das Panel jederzeit neu). Was genau, steht im Backup-Tab („Gesichert werden: …“) und kommt aus `backup_exclude`/`backup_include` der Vorlage.
+- Minecraft Java wird im laufenden Betrieb konsistent gesichert (`save-off` / `save-all flush` / `save-on`).
+- **Automatisch** alle 6 h, 12 h oder täglich zu einer Uhrzeit (Pro und Ultimate). Alte automatische Backups werden nach „Behalten“ gelöscht, manuelle nie.
+- **Wiederherstellen** sichert vorher den aktuellen Stand („Vor Wiederherstellung“, die letzten 3 bleiben), stoppt den Server, ersetzt die Daten und startet ihn wieder.
+- **Dateien:** Ordner durchsuchen, Textdateien bis 2 MB im Browser bearbeiten (Strg+S), hochladen (auch per Drag & Drop), herunterladen, umbenennen, löschen. Zugriff ist auf den Serverordner beschränkt.
+
+Seit Laufzeit v3 zeigt das Home-Verzeichnis der Steam-Container auf `/data/home` im Serverordner. Spiele, die dort speichern (Project Zomboid, 7 Days to Die, Satisfactory), verlieren ihre Stände dadurch nicht mehr beim Neuanlegen des Containers.
+
 ## Lizenzen
 
 ```bash
@@ -114,8 +126,7 @@ Nur Go-Standardbibliothek, keine externen Abhängigkeiten. Daten liegen in `/var
 ## Nächste Schritte
 
 1. Steam-Vorlagen auf echter Hardware prüfen und korrigieren
-2. Backups (Zeitplan, Wiederherstellen) und Dateimanager
-3. Spielerzahlen über Query-Protokolle (Steam A2S, Minecraft)
-4. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
+2. Backups auf externes Ziel (zweite Platte, S3/Backblaze, SFTP)
+3. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
 5. Mehrere Rechner (Nodes), Mehrbenutzer, Discord-Webhooks
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)

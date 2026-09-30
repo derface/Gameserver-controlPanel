@@ -21,6 +21,7 @@
   "console": "stdin",
   "stop_timeout": 60,
   "ready": "Server startup complete",
+  "backup_include": ["server/server"],
   "status": "beta",
   "disk_gb": 12
 }

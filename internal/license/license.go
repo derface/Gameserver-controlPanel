@@ -23,13 +23,14 @@ type Edition struct {
 	Name       string `json:"name"`
 	MaxServers int    `json:"max_servers"` // -1 = unlimited
 	AI         bool   `json:"ai"`
+	AutoBackup bool   `json:"auto_backup"` // geplante Backups
 }
 
 var Editions = map[string]Edition{
-	"free":     {ID: "free", Name: "Testmodus", MaxServers: 1, AI: true},
-	"starter":  {ID: "starter", Name: "Starter", MaxServers: 3, AI: false},
-	"pro":      {ID: "pro", Name: "Pro", MaxServers: 10, AI: true},
-	"ultimate": {ID: "ultimate", Name: "Ultimate", MaxServers: -1, AI: true},
+	"free":     {ID: "free", Name: "Testmodus", MaxServers: 1, AI: true, AutoBackup: true},
+	"starter":  {ID: "starter", Name: "Starter", MaxServers: 3, AI: false, AutoBackup: false},
+	"pro":      {ID: "pro", Name: "Pro", MaxServers: 10, AI: true, AutoBackup: true},
+	"ultimate": {ID: "ultimate", Name: "Ultimate", MaxServers: -1, AI: true, AutoBackup: true},
 }
 
 type Payload struct {

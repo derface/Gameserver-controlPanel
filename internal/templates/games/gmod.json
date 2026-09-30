@@ -20,6 +20,7 @@
   "console": "stdin",
   "ready": "VAC secure mode",
   "query": {"type": "a2s", "port": 0},
+  "backup_include": ["server/garrysmod/data", "server/garrysmod/cfg", "server/garrysmod/addons"],
   "status": "beta",
   "disk_gb": 5
 }
