@@ -66,6 +66,17 @@ Auf der Server-Karte bzw. in der Detailansicht: **Backups** und **Dateien**.
 - **Wiederherstellen** sichert vorher den aktuellen Stand („Vor Wiederherstellung“, die letzten 3 bleiben), stoppt den Server, ersetzt die Daten und startet ihn wieder.
 - **Dateien:** Ordner durchsuchen, Textdateien bis 2 MB im Browser bearbeiten (Strg+S), hochladen (auch per Drag & Drop), herunterladen, umbenennen, löschen. Zugriff ist auf den Serverordner beschränkt.
 
+### Externe Backups
+
+Einstellungen → **Externe Backups**. Jedes Backup wird nach dem Erstellen zusätzlich kopiert:
+- **Ordner:** z. B. eine zweite Platte oder ein NAS-Share, eingehängt unter `/mnt/backup`. Nicht im Panel-Datenordner.
+- **S3-kompatibel:** Backblaze B2, Wasabi, Hetzner Object Storage, MinIO, AWS S3. Endpunkt, Bucket, Access Key, Secret Key; die Region wird bei den bekannten Anbietern aus dem Endpunkt erkannt. Große Backups werden in 64-MB-Teilen hochgeladen.
+  Beispiel Backblaze: Endpunkt `https://s3.eu-central-003.backblazeb2.com`, Key ID + Application Key eines Keys mit Zugriff auf den Bucket.
+
+Ablage extern: `<unterordner>/<server-id>/<backup>.tar.gz`. Automatische Backups werden extern nach „Extern behalten“ aufgeräumt, manuelle nie. Im Backup-Tab zeigt die Spalte „Ort“, wo ein Backup liegt; nur extern vorhandene Backups lassen sich herunterladen und wiederherstellen. „Löschen“ entfernt ein Backup lokal und extern.
+
+Die S3-Signatur (AWS SigV4) ist gegen botocore geprüft; getestet wurde gegen einen lokalen S3-Nachbau (moto), noch nicht gegen einen echten Anbieter.
+
 Seit Laufzeit v3 zeigt das Home-Verzeichnis der Steam-Container auf `/data/home` im Serverordner. Spiele, die dort speichern (Project Zomboid, 7 Days to Die, Satisfactory), verlieren ihre Stände dadurch nicht mehr beim Neuanlegen des Containers.
 
 ## Lizenzen
@@ -126,7 +137,6 @@ Nur Go-Standardbibliothek, keine externen Abhängigkeiten. Daten liegen in `/var
 ## Nächste Schritte
 
 1. Steam-Vorlagen auf echter Hardware prüfen und korrigieren
-2. Backups auf externes Ziel (zweite Platte, S3/Backblaze, SFTP)
-3. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
+2. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
 5. Mehrere Rechner (Nodes), Mehrbenutzer, Discord-Webhooks
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)

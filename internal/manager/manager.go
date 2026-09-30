@@ -21,6 +21,7 @@ import (
 
 	"github.com/derface/Gameserver-controlPanel/internal/docker"
 	"github.com/derface/Gameserver-controlPanel/internal/query"
+	"github.com/derface/Gameserver-controlPanel/internal/remote"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 	"github.com/derface/Gameserver-controlPanel/internal/templates"
 )
@@ -34,6 +35,8 @@ type Manager struct {
 	dataDir     string
 	Limit       func() (maxServers int) // from the license; <0 = unlimited
 	AutoBackups func() bool             // from the license
+	Remote      func() (remote.Target, remote.Config)
+	up          uploads
 
 	buildMu sync.Mutex
 	opMu    sync.Map // id -> *sync.Mutex
@@ -113,6 +116,8 @@ func (m *Manager) clearJob(id string) {
 	delete(m.jobs, id)
 	m.mu.Unlock()
 }
+
+func (m *Manager) DataDir() string { return m.dataDir }
 
 func (m *Manager) ServerDir(id string) string { return filepath.Join(m.dataDir, "servers", id) }
 

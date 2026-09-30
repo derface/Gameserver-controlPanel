@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,9 +10,12 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/files"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
+	"github.com/derface/Gameserver-controlPanel/internal/remote"
+	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
 
 func (a *API) routesManage(mux *http.ServeMux) {
@@ -21,6 +25,10 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/servers/{id}/backups/{name}", a.guard(a.backupDownload))
 	mux.HandleFunc("DELETE /api/servers/{id}/backups/{name}", a.guard(a.backupDelete))
 	mux.HandleFunc("POST /api/servers/{id}/backups/{name}/restore", a.guard(a.backupRestore))
+	mux.HandleFunc("POST /api/servers/{id}/backups/{name}/upload", a.guard(a.backupUpload))
+	mux.HandleFunc("GET /api/remote", a.guard(a.remoteGet))
+	mux.HandleFunc("PUT /api/remote", a.guard(a.remotePut))
+	mux.HandleFunc("POST /api/remote/test", a.guard(a.remoteTest))
 
 	mux.HandleFunc("GET /api/servers/{id}/files", a.guard(a.fileList))
 	mux.HandleFunc("DELETE /api/servers/{id}/files", a.guard(a.fileDelete))
@@ -41,15 +49,21 @@ func (a *API) backups(w http.ResponseWriter, r *http.Request) {
 		fail(w, 404, errors.New("Server nicht gefunden"))
 		return
 	}
-	list, err := a.Mgr.ListBackups(id)
+	list, remoteErr, err := a.Mgr.BackupsWithRemote(r.Context(), id)
 	if err != nil {
 		fail(w, 500, err)
 		return
 	}
+	remoteName := ""
+	if t, _ := a.Mgr.Remote(); t != nil {
+		remoteName = t.Describe()
+	}
 	scope, _ := a.Mgr.BackupScope(id)
 	var total int64
 	for _, b := range list {
-		total += b.Size
+		if b.Local {
+			total += b.Size
+		}
 	}
 	writeJSON(w, 200, map[string]any{
 		"backups":      list,
@@ -57,6 +71,8 @@ func (a *API) backups(w http.ResponseWriter, r *http.Request) {
 		"scope":        scope,
 		"plan":         sv.Backup,
 		"auto_allowed": a.License().Edition.AutoBackup,
+		"remote":       remoteName,
+		"remote_error": remoteErr,
 	})
 }
 
@@ -92,20 +108,28 @@ func (a *API) backupPlan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) backupDownload(w http.ResponseWriter, r *http.Request) {
-	p, err := a.Mgr.BackupFile(r.PathValue("id"), r.PathValue("name"))
-	if err != nil {
-		fail(w, 404, err)
+	sv, ok := a.Store.Server(r.PathValue("id"))
+	if !ok {
+		fail(w, 404, errors.New("Server nicht gefunden"))
 		return
 	}
-	sv, _ := a.Store.Server(r.PathValue("id"))
 	name := fmt.Sprintf("%s_%s", safeFileName(sv.Name), r.PathValue("name"))
+	p, err := a.Mgr.BackupFile(r.PathValue("id"), r.PathValue("name"))
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": name}))
 	w.Header().Set("Content-Type", "application/gzip")
-	http.ServeFile(w, r, p)
+	if err == nil {
+		http.ServeFile(w, r, p)
+		return
+	}
+	// nur extern vorhanden: durchreichen
+	if err := a.Mgr.StreamRemote(r.Context(), sv.ID, r.PathValue("name"), w); err != nil {
+		w.Header().Del("Content-Disposition")
+		fail(w, 404, err)
+	}
 }
 
 func (a *API) backupDelete(w http.ResponseWriter, r *http.Request) {
-	if err := a.Mgr.DeleteBackup(r.PathValue("id"), r.PathValue("name")); err != nil {
+	if err := a.Mgr.DeleteBackupEverywhere(r.Context(), r.PathValue("id"), r.PathValue("name")); err != nil {
 		fail(w, 400, err)
 		return
 	}
@@ -118,6 +142,81 @@ func (a *API) backupRestore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 202, map[string]bool{"ok": true})
+}
+
+func (a *API) backupUpload(w http.ResponseWriter, r *http.Request) {
+	if err := a.Mgr.UploadBackup(r.PathValue("id"), r.PathValue("name")); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 202, map[string]bool{"ok": true})
+}
+
+// ---------- externes Backup-Ziel ----------
+
+const masked = "••••••••"
+
+func (a *API) remoteCfg() remote.Config {
+	var c remote.Config
+	a.Store.Read(func(d *store.Data) { c = d.Settings.Remote })
+	return c
+}
+
+func (a *API) remoteGet(w http.ResponseWriter, r *http.Request) {
+	c := a.remoteCfg()
+	if c.SecretKey != "" {
+		c.SecretKey = masked
+	}
+	writeJSON(w, 200, c)
+}
+
+// mergeRemote takes the form input and keeps the stored secret if unchanged.
+func (a *API) mergeRemote(r *http.Request) (remote.Config, error) {
+	var in remote.Config
+	if err := decode(r, &in); err != nil {
+		return in, err
+	}
+	if in.SecretKey == masked {
+		in.SecretKey = a.remoteCfg().SecretKey
+	}
+	if in.Keep == 0 {
+		in.Keep = 14
+	}
+	if in.Keep < 1 || in.Keep > 365 {
+		return in, errors.New("Extern behalten: 1 bis 365")
+	}
+	_, err := remote.New(in, a.Mgr.DataDir())
+	return in, err
+}
+
+func (a *API) remotePut(w http.ResponseWriter, r *http.Request) {
+	c, err := a.mergeRemote(r)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	_ = a.Store.Update(func(d *store.Data) error { d.Settings.Remote = c; return nil })
+	a.remoteGet(w, r)
+}
+
+func (a *API) remoteTest(w http.ResponseWriter, r *http.Request) {
+	c, err := a.mergeRemote(r)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	t, _ := remote.New(c, a.Mgr.DataDir())
+	if t == nil {
+		fail(w, 400, errors.New("Kein Ziel ausgewählt"))
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	if err := remote.Test(ctx, t); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]string{"ok": t.Describe()})
 }
 
 func safeFileName(s string) string {

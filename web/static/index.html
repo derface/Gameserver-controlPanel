@@ -168,6 +168,25 @@
     <p class="err" id="sErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="sTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
+  <form id="rmForm" class="set-block">
+    <h3>Externe Backups</h3>
+    <p class="muted small">Jedes Backup wird zusätzlich außerhalb dieses Servers gespeichert. Fällt die Platte aus, sind die Spielstände noch da.</p>
+    <label class="field"><span>Ziel</span>
+      <select id="rmType"><option value="">Aus</option><option value="dir">Ordner (zweite Platte, NAS)</option><option value="s3">S3-kompatibler Speicher (Backblaze B2, Wasabi, Hetzner, MinIO, AWS)</option></select></label>
+    <label class="field" data-rm="dir"><span>Ordner auf diesem Server</span><input id="rmDir" placeholder="/mnt/backup"><small>Muss eingehängt sein, bevor Backups laufen. Nicht im Panel-Datenordner.</small></label>
+    <div class="vars" data-rm="s3">
+      <label class="field full"><span>Endpunkt</span><input id="rmEp" placeholder="https://s3.eu-central-003.backblazeb2.com" autocomplete="off"></label>
+      <label class="field"><span>Bucket</span><input id="rmBucket" autocomplete="off"></label>
+      <label class="field"><span>Region <em class="muted">optional</em></span><input id="rmRegion" placeholder="wird aus dem Endpunkt erkannt" autocomplete="off"></label>
+      <label class="field"><span>Access Key / Key ID</span><input id="rmAk" autocomplete="off"></label>
+      <label class="field"><span>Secret Key / Application Key</span><input id="rmSk" type="password" autocomplete="off"></label>
+      <label class="field"><span>Unterordner <em class="muted">optional</em></span><input id="rmPrefix" placeholder="panel" autocomplete="off"></label>
+      <label class="check"><input type="checkbox" id="rmPath" checked> Pfad-Stil (für Backblaze, MinIO, Hetzner empfohlen)</label>
+    </div>
+    <label class="field" data-rm="any"><span>Automatische Backups extern behalten</span><input id="rmKeep" type="number" min="1" max="365"></label>
+    <p class="err" id="rmErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="rmTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
   <form id="licForm" class="set-block">
     <h3>Lizenz</h3>
     <p id="licStatus"></p>
@@ -201,9 +220,10 @@
       <button type="submit" class="btn-line">Plan speichern</button>
     </form>
     <p class="note" id="bkPlanNote" hidden></p>
+    <p class="note" id="bkRemote"></p>
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th>Erstellt</th><th>Art</th><th class="num">Größe</th><th><span class="sr">Aktionen</span></th></tr></thead>
+        <thead><tr><th>Erstellt</th><th>Art</th><th>Ort</th><th class="num">Größe</th><th><span class="sr">Aktionen</span></th></tr></thead>
         <tbody id="bkRows"></tbody>
       </table>
     </div>

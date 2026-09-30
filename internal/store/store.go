@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/derface/Gameserver-controlPanel/internal/remote"
 )
 
 type User struct {
@@ -56,12 +58,13 @@ type BackupPlan struct {
 }
 
 type Settings struct {
-	AIProvider   string `json:"ai_provider"` // anthropic | openai | ollama | ""
-	AnthropicKey string `json:"anthropic_key,omitempty"`
-	OpenAIKey    string `json:"openai_key,omitempty"`
-	OllamaURL    string `json:"ollama_url,omitempty"`
-	AIModel      string `json:"ai_model,omitempty"`
-	PublicHost   string `json:"public_host,omitempty"` // shown to players, e.g. play.example.com
+	AIProvider   string        `json:"ai_provider"` // anthropic | openai | ollama | ""
+	AnthropicKey string        `json:"anthropic_key,omitempty"`
+	OpenAIKey    string        `json:"openai_key,omitempty"`
+	OllamaURL    string        `json:"ollama_url,omitempty"`
+	AIModel      string        `json:"ai_model,omitempty"`
+	PublicHost   string        `json:"public_host,omitempty"` // shown to players, e.g. play.example.com
+	Remote       remote.Config `json:"remote_backup"`
 }
 
 type Data struct {

@@ -33,6 +33,9 @@ type BackupInfo struct {
 	Kind    string    `json:"kind"`
 	Size    int64     `json:"size"`
 	Created time.Time `json:"created"`
+	Local   bool      `json:"local"`
+	Remote  bool      `json:"remote"`
+	Upload  string    `json:"upload,omitempty"` // "läuft" oder Fehlertext
 }
 
 func (m *Manager) backupDir(id string) string { return filepath.Join(m.dataDir, "backups", id) }
@@ -189,6 +192,7 @@ func (m *Manager) createBackup(ctx context.Context, id, kind string) (BackupInfo
 	}
 	fi, _ := os.Stat(final)
 	m.prune(id)
+	m.uploadAsync(id, name)
 	return BackupInfo{Name: name, Kind: kind, Size: fi.Size(), Created: now}, nil
 }
 
@@ -287,9 +291,17 @@ func (m *Manager) prune(id string) {
 
 // RestoreBackup runs in the background: safety backup, stop, replace, start.
 func (m *Manager) RestoreBackup(id, name string) error {
-	p, err := m.BackupFile(id, name)
-	if err != nil {
-		return err
+	if _, ok := m.st.Server(id); !ok {
+		return errors.New("Server nicht gefunden")
+	}
+	if !backupName.MatchString(name) {
+		return errors.New("Ungültiger Backup-Name")
+	}
+	p, localErr := m.BackupFile(id, name)
+	if localErr != nil {
+		if t, _ := m.target(); t == nil {
+			return localErr
+		}
 	}
 	m.setJob(id, "Backup wird wiederhergestellt")
 	go func() {
@@ -297,6 +309,14 @@ func (m *Manager) RestoreBackup(id, name string) error {
 		defer unlock()
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
 		defer cancel()
+		if localErr != nil {
+			m.setJob(id, "Backup wird vom externen Speicher geladen")
+			var err error
+			if p, err = m.fetchRemote(ctx, id, name); err != nil {
+				m.failJob(id, err)
+				return
+			}
+		}
 		if err := m.restore(ctx, id, p); err != nil {
 			m.failJob(id, fmt.Errorf("Wiederherstellung fehlgeschlagen: %w", err))
 			return

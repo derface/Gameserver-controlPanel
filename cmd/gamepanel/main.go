@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/derface/Gameserver-controlPanel/internal/docker"
 	"github.com/derface/Gameserver-controlPanel/internal/hoststats"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
+	"github.com/derface/Gameserver-controlPanel/internal/remote"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 	"github.com/derface/Gameserver-controlPanel/internal/templates"
 	"github.com/derface/Gameserver-controlPanel/web"
@@ -59,6 +62,21 @@ func main() {
 	a := &api.API{Auth: auth.New(st), Store: st, Mgr: mgr, Host: host, Docker: dk, Web: webFS, Version: version}
 	mgr.Limit = func() int { return a.License().Edition.MaxServers }
 	mgr.AutoBackups = func() bool { return a.License().Edition.AutoBackup }
+	var rmu sync.Mutex
+	var rkey string
+	var rt remote.Target
+	mgr.Remote = func() (remote.Target, remote.Config) {
+		var c remote.Config
+		st.Read(func(d *store.Data) { c = d.Settings.Remote })
+		b, _ := json.Marshal(c)
+		rmu.Lock()
+		defer rmu.Unlock()
+		if string(b) != rkey {
+			rkey = string(b)
+			rt, _ = remote.New(c, *dataDir)
+		}
+		return rt, c
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

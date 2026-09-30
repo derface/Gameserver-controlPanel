@@ -228,6 +228,7 @@ nav.main a[aria-current="page"]{background:var(--ink);color:var(--bg)}
 /* dialogs */
 .dlg{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);color:var(--ink);padding:24px;width:min(620px,calc(100% - 32px));max-height:calc(100% - 32px);box-shadow:0 30px 80px -20px var(--shade)}
 .dlg.small{width:min(440px,calc(100% - 32px))}
+.dlg{overflow:auto;overscroll-behavior:contain}
 .dlg[open]{animation:pop .25s both}
 .dlg::backdrop{background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .dlg form{display:flex;flex-direction:column;gap:14px}
@@ -258,12 +259,19 @@ nav.main a[aria-current="page"]{background:var(--ink);color:var(--bg)}
 .tbl td{padding:8px 14px;border-top:1px solid var(--line);white-space:nowrap}
 .tbl tr:first-child td{border-top:0}
 .tbl .num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
-.tbl .acts{justify-content:flex-end;flex-wrap:nowrap}
+.tbl .acts{justify-content:flex-end;flex-wrap:nowrap;gap:6px}
+.tbl .acts .icon-btn{width:34px;height:34px}
 .tbl .empty td{color:var(--muted);text-align:center;padding:26px;white-space:normal}
 .btn-line.sm{height:34px;padding:0 10px;font-size:11px;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 .kind{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--line);border-radius:999px;padding:3px 8px}
 .kind.auto{border-color:var(--ok);color:var(--ok)}
 .kind.vor-wiederherstellung{border-color:var(--accent)}
+.loc{display:inline-flex;gap:4px;align-items:center}
+.loc span{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:3px 7px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line)}
+.loc span.ext{border-color:var(--ok);color:var(--ok)}
+.loc .busy{color:var(--accent);border-color:var(--accent);animation:blink 1.2s infinite}
+.loc .bad{color:var(--bad);border-color:var(--bad)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
 .fm-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:2px;font-family:var(--font-mono);font-size:13px;min-width:0}
 .crumbs button{background:none;border:0;cursor:pointer;padding:6px 6px;border-radius:6px}

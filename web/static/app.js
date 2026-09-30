@@ -653,6 +653,14 @@
     $('#sOll').value = s.ollama_url || ''; $('#sModel').value = s.ai_model || ''; $('#sHost').value = s.public_host || '';
     provFields(); showErr($('#sErr')); showErr($('#licErr')); $('#licKey').value = '';
     renderLicense();
+    try {
+      const rc = await api('GET', '/api/remote');
+      $('#rmType').value = rc.type || ''; $('#rmDir').value = rc.dir || ''; $('#rmEp').value = rc.endpoint || '';
+      $('#rmBucket').value = rc.bucket || ''; $('#rmRegion').value = rc.region || ''; $('#rmAk').value = rc.access_key || '';
+      $('#rmSk').value = rc.secret_key || ''; $('#rmPrefix').value = rc.prefix || ''; $('#rmPath').checked = rc.type ? !!rc.path_style : true;
+      $('#rmKeep').value = rc.keep || 14;
+    } catch (e) { /* egal */ }
+    rmFields(); showErr($('#rmErr'));
     $('#verLine').textContent = 'Version ' + S.version;
     $('#dlgSettings').showModal();
   }
@@ -688,6 +696,25 @@
     if (l.error) txt += `<br><span class="err">${esc(l.error)}</span>`;
     $('#licStatus').innerHTML = txt;
   }
+  function rmFields() {
+    const t = $('#rmType').value;
+    $$('[data-rm]').forEach(el => { el.hidden = el.dataset.rm === 'any' ? !t : el.dataset.rm !== t; });
+  }
+  $('#rmType').addEventListener('change', rmFields);
+  const rmBody = () => ({ type: $('#rmType').value, dir: $('#rmDir').value, endpoint: $('#rmEp').value, bucket: $('#rmBucket').value, region: $('#rmRegion').value,
+    access_key: $('#rmAk').value, secret_key: $('#rmSk').value, prefix: $('#rmPrefix').value, path_style: $('#rmPath').checked, keep: +$('#rmKeep').value || 14 });
+  $('#rmForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#rmErr'));
+    try { await api('PUT', '/api/remote', rmBody()); toast($('#rmType').value ? 'Externes Backup-Ziel gespeichert' : 'Externe Backups ausgeschaltet', 'ok'); }
+    catch (err) { showErr($('#rmErr'), err.message); }
+  });
+  $('#rmTest').addEventListener('click', async () => {
+    showErr($('#rmErr'));
+    const b = $('#rmTest'); b.disabled = true; b.textContent = 'Teste …';
+    try { const r = await api('POST', '/api/remote/test', rmBody()); toast('Verbindung klappt: ' + r.ok, 'ok'); }
+    catch (err) { showErr($('#rmErr'), err.message); }
+    finally { b.disabled = false; b.textContent = 'Verbindung testen'; }
+  });
   $('#licForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#licErr'));
     try { S.license = await api('PUT', '/api/license', { key: $('#licKey').value }); renderLicense(); renderKI(); toast('Lizenz aktiviert: ' + S.license.edition.name, 'ok'); $('#licKey').value = ''; }
@@ -819,6 +846,7 @@
     file: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',
     dl: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
     ren: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+    up: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 01-.5-8 6 6 0 0111.5 1.5A3.5 3.5 0 0117.5 18"/><path d="M12 12v8M9 15l3-3 3 3"/></svg>',
     del: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
   };
 
@@ -873,17 +901,34 @@
     if (p.last_auto && !p.last_auto.startsWith('0001')) notes.push('Letztes automatisches Backup: ' + fmtDate(p.last_auto));
     if (p.last_error) notes.push('Fehler beim letzten automatischen Backup: ' + p.last_error);
     $('#bkPlanNote').hidden = !notes.length; $('#bkPlanNote').textContent = notes.join(' · ');
+    const hasRemote = !!d.remote;
+    $('#bkRemote').innerHTML = hasRemote
+      ? 'Externe Kopie: ' + esc(d.remote) + (d.remote_error ? ` · <span class="err">${esc(d.remote_error)}</span>` : '')
+      : 'Backups liegen nur auf diesem Server. <button type="button" class="linkbtn" id="bkSetup">Externes Ziel einrichten</button>, damit sie einen Plattendefekt überstehen.';
+    const su = $('#bkSetup'); if (su) su.onclick = () => { $('#dlgManage').close(); openSettings(); setTimeout(() => $('#rmType').focus(), 100); };
+    const loc = b => {
+      const parts = [];
+      if (b.local) parts.push('<span>Lokal</span>');
+      if (b.remote) parts.push('<span class="ext">Extern</span>');
+      else if (b.upload === 'läuft') parts.push('<span class="busy">Wird kopiert</span>');
+      else if (b.upload) parts.push(`<span class="bad" title="${esc(b.upload)}">Kopie fehlgeschlagen</span>`);
+      return '<div class="loc">' + parts.join('') + '</div>';
+    };
+    MG.uploading = d.backups.some(b => b.upload === 'läuft');
+    if (MG.uploading) { clearTimeout(MG.upT); MG.upT = setTimeout(() => { if ($('#dlgManage').open && MG.tab === 'backups' && MG.id === id) loadBackups(); }, 3000); }
     $('#bkRows').innerHTML = d.backups.length ? d.backups.map(b => `<tr>
         <td class="num" style="text-align:left">${fmtDate(b.created)}</td>
         <td><span class="kind ${esc(b.kind)}">${esc(KIND[b.kind] || b.kind)}</span></td>
+        <td>${loc(b)}</td>
         <td class="num">${fmtSize(b.size)}</td>
         <td><div class="acts">
-          <a class="btn-line sm" href="/api/servers/${esc(id)}/backups/${esc(b.name)}" download>Herunterladen</a>
+          ${hasRemote && b.local && !b.remote && b.upload !== 'läuft' ? `<button class="icon-btn" type="button" data-bk="upload" data-name="${esc(b.name)}" aria-label="Extern kopieren" title="Extern kopieren">${ICON.up}</button>` : ''}
+          <a class="icon-btn" href="/api/servers/${esc(id)}/backups/${esc(b.name)}" download aria-label="Herunterladen" title="Herunterladen">${ICON.dl}</a>
           <button class="btn-line sm" type="button" data-bk="restore" data-name="${esc(b.name)}">Wiederherstellen</button>
           <button class="icon-btn" type="button" data-bk="delete" data-name="${esc(b.name)}" aria-label="Backup löschen">${ICON.del}</button>
         </div></td></tr>`).join('')
-      : '<tr class="empty"><td colspan="4">Noch keine Backups. Erstelle oben das erste.</td></tr>';
-    $('#bkTotal').textContent = d.backups.length ? d.backups.length + ' Backups · ' + fmtSize(d.total_size) + ' belegt' : '';
+      : '<tr class="empty"><td colspan="5">Noch keine Backups. Erstelle oben das erste.</td></tr>';
+    $('#bkTotal').textContent = d.backups.length ? d.backups.length + ' Backups · ' + fmtSize(d.total_size) + ' lokal belegt' : '';
   }
   $('#bkEvery').addEventListener('change', () => { $('#bkAtWrap').hidden = +$('#bkEvery').value !== 24; });
   $('#bkPlan').addEventListener('submit', async e => {
@@ -903,8 +948,12 @@
   $('#bkRows').addEventListener('click', async e => {
     const b = e.target.closest('[data-bk]'); if (!b) return;
     const name = b.dataset.name, id = MG.id, s = byId(id);
+    if (b.dataset.bk === 'upload') {
+      try { await api('POST', `/api/servers/${id}/backups/${encodeURIComponent(name)}/upload`); toast('Externe Kopie läuft'); } catch (err) { toast(err.message, 'bad'); }
+      loadBackups(); return;
+    }
     if (b.dataset.bk === 'delete') {
-      if (!(await confirmBox('Backup löschen?', 'Das Backup vom ' + name.slice(0, 10).split('-').reverse().join('.') + ' wird endgültig gelöscht.', 'Löschen'))) return;
+      if (!(await confirmBox('Backup löschen?', 'Das Backup vom ' + name.slice(0, 10).split('-').reverse().join('.') + ' wird endgültig gelöscht, lokal und extern.', 'Löschen'))) return;
       try { await api('DELETE', `/api/servers/${id}/backups/${encodeURIComponent(name)}`); toast('Backup gelöscht'); } catch (err) { toast(err.message, 'bad'); }
       loadBackups();
     } else {
