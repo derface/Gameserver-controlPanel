@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 405100,
-  "start": "./Hurtworld.x86_64 -batchmode -nographics -logfile /data/logs/panel-game.log -exec \"host {{port}} {{defaultmap}} ;queryport {{port_2}};maxplayers {{maxplayers}};servername {{servername}};creativemode 0;addadmin \"",
+  "start": "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/Hurtworld_Data/Plugins/x86_64; ./Hurtworld.x86_64 -batchmode -nographics -logfile /data/logs/panel-game.log -exec \"host {{port}} {{defaultmap}} ;queryport {{port_2}};maxplayers {{maxplayers}};servername {{servername}};creativemode 0;addadmin \"",
   "ports": [
     {
       "name": "Game",
@@ -19,12 +19,6 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "20",
@@ -35,6 +29,12 @@
       "label": "Start-Map",
       "default": "nullius",
       "type": "slug"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 4096,
@@ -48,5 +48,5 @@
     "lib32z1"
   ],
   "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

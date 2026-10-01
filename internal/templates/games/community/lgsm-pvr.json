@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 622970,
-  "start": "cd Pavlov/Binaries/Linux && ./PavlovServer-Linux-Shipping Pavlov {{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} ApiKey= -log",
+  "start": "cd Pavlov/Binaries/Linux && mkdir -p /data/server/linux64; cp -f /usr/lib/x86_64-linux-gnu/libc++.so.1 /data/server/linux64/libc++.so; cp -f /opt/steamcmd/linux64/steamclient.so .; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/linux64; ./PavlovServer-Linux-Shipping Pavlov {{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} ApiKey= -log",
   "ports": [
     {
       "name": "Game",
@@ -28,9 +28,11 @@
   "memory_mb": 8192,
   "min_memory_mb": 512,
   "console": "stdin",
+  "ready": "Bringing up level for play took",
   "packages": [
-    "libc++1"
+    "libc++1",
+    "libc++abi1"
   ],
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

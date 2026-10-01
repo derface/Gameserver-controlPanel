@@ -19,12 +19,6 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "24",
@@ -35,15 +29,22 @@
       "label": "Start-Map",
       "default": "co_core",
       "type": "slug"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 2048,
   "min_memory_mb": 512,
   "console": "stdin",
+  "ready": "Finished loading 'maps/",
   "packages": [
     "libtbb12",
     "speex:i386"
   ],
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

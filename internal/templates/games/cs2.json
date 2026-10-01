@@ -6,24 +6,74 @@
   "steam_app_id": 730,
   "start": "./game/cs2.sh -dedicated -usercon -port {{port}} -maxplayers {{max_players}} +game_type {{game_type}} +game_mode {{game_mode}} +map {{map}} +hostname \"{{server_name}}\" +rcon_password \"{{rcon_password}}\" +sv_setsteamaccount {{gslt}}",
   "ports": [
-    {"name": "Spiel", "port": 27015, "proto": "udp"},
-    {"name": "RCON", "port": 27015, "proto": "tcp"}
+    {
+      "name": "Spiel",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 27015,
+      "proto": "tcp"
+    }
   ],
   "vars": [
-    {"key": "server_name", "label": "Servername", "default": "Mein CS2-Server"},
-    {"key": "map", "label": "Start-Map", "default": "de_dust2", "type": "slug"},
-    {"key": "max_players", "label": "Maximale Spieler", "default": "10", "type": "number"},
-    {"key": "game_type", "label": "game_type", "default": "0", "type": "number", "help": "0 = klassisch"},
-    {"key": "game_mode", "label": "game_mode", "default": "1", "type": "number", "help": "0 = Casual, 1 = Competitive"},
-    {"key": "rcon_password", "label": "RCON-Passwort", "default": "", "type": "secret"},
-    {"key": "gslt", "label": "Game Server Login Token", "default": "", "type": "secret", "help": "Für öffentliche Server nötig: steamcommunity.com/dev/managegameservers (App-ID 730)"}
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "default": "Mein CS2-Server"
+    },
+    {
+      "key": "map",
+      "label": "Start-Map",
+      "default": "de_dust2",
+      "type": "slug"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "default": "10",
+      "type": "number"
+    },
+    {
+      "key": "game_type",
+      "label": "game_type",
+      "default": "0",
+      "type": "number",
+      "help": "0 = klassisch"
+    },
+    {
+      "key": "game_mode",
+      "label": "game_mode",
+      "default": "1",
+      "type": "number",
+      "help": "0 = Casual, 1 = Competitive"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "default": "",
+      "type": "secret"
+    },
+    {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Server nötig: steamcommunity.com/dev/managegameservers (App-ID 730)"
+    }
   ],
   "memory_mb": 4096,
   "min_memory_mb": 2048,
   "console": "stdin",
-  "query": {"type": "a2s", "port": 0},
-  "backup_include": ["server/game/csgo/cfg"],
-  "status": "beta",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "backup_include": [
+    "server/game/csgo/cfg"
+  ],
+  "status": "experimentell",
   "disk_gb": 40,
   "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend."
 }

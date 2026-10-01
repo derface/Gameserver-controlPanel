@@ -38,6 +38,7 @@
     "type": "a2s",
     "port": 1
   },
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "ready": "Bringing up level for play took",
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

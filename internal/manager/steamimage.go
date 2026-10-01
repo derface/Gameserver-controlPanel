@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:4"
+const SteamImage = "gamepanel/steam-runtime:5"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -43,14 +43,31 @@ set -e
 mkdir -p /data/server /data/logs
 PLATFORM=""
 if [ "${GP_PLATFORM}" = "windows" ]; then PLATFORM="+@sSteamCmdForcePlatformType windows"; fi
+steam() { /opt/steamcmd/steamcmd.sh "$@" +quit; }
 if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
   echo "[panel] SteamCMD: App ${GP_APP_ID} wird installiert oder aktualisiert"
   BETA=""
   if [ -n "${GP_BETA}" ]; then BETA="-beta ${GP_BETA}"; fi
-  for i in 1 2 3; do
-    if /opt/steamcmd/steamcmd.sh ${PLATFORM} +force_install_dir /data/server +login anonymous +app_update "${GP_APP_ID}" ${BETA} validate +quit; then
-      touch /data/server/.gp-installed
-      break
+  MOD=""
+  if [ -n "${GP_MOD}" ]; then MOD="+app_set_config 90 mod ${GP_MOD}"; fi
+  for i in 1 2 3 4; do
+    if [ -n "${GP_BASE_APP}" ]; then
+      echo "[panel] SteamCMD: Basis-App ${GP_BASE_APP} nach ${GP_BASE_DIR}"
+      mkdir -p "/data/server/${GP_BASE_DIR}"
+      if ! steam ${PLATFORM} +force_install_dir "/data/server/${GP_BASE_DIR}" +login anonymous +app_update "${GP_BASE_APP}" validate; then
+        echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"; sleep 10; continue
+      fi
+    fi
+    if [ -n "${GP_PREPLATFORM}" ] && [ ! -f /data/server/.gp-preplatform ]; then
+      echo "[panel] SteamCMD: Erstinstallation mit Plattform ${GP_PREPLATFORM}"
+      steam +@sSteamCmdForcePlatformType "${GP_PREPLATFORM}" +force_install_dir /data/server +login anonymous +app_update "${GP_APP_ID}" validate && touch /data/server/.gp-preplatform || true
+    fi
+    if steam ${PLATFORM} +force_install_dir /data/server +login anonymous ${MOD} +app_update "${GP_APP_ID}" ${BETA} validate; then
+      if [ -z "${GP_MOD}" ] || [ -d "/data/server/${GP_MOD}" ]; then
+        touch /data/server/.gp-installed
+        break
+      fi
+      echo "[panel] SteamCMD: Mod ${GP_MOD} fehlt noch"
     fi
     echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"
     sleep 10

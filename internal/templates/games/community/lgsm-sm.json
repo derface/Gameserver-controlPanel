@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 3017300,
-  "start": "cd WS/Binaries/Linux && ./WSServer-Linux-Shipping WS {{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} -EchoPort={{port_4}} -QueryPort={{port_3}} -SteamServerName='{{servername}}' -PSW='{{serverpassword}}' -adminpsw='{{adminpassword}}' -MaxPlayers={{maxplayers}} -initbackup -backupinterval=15 -UTF8Output -forcepassthrough -log",
+  "start": "cd WS/Binaries/Linux && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/linux64; ./WSServer-Linux-Shipping WS {{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} -EchoPort={{port_4}} -QueryPort={{port_3}} -SteamServerName='{{servername}}' -PSW='{{serverpassword}}' -adminpsw='{{adminpassword}}' -MaxPlayers={{maxplayers}} -initbackup -backupinterval=15 -UTF8Output -forcepassthrough -log",
   "ports": [
     {
       "name": "Game",
@@ -29,16 +29,10 @@
   ],
   "vars": [
     {
-      "key": "adminpassword",
-      "label": "Admin-Passwort",
+      "key": "serverpassword",
+      "label": "Server-Passwort",
       "default": "",
       "type": "secret"
-    },
-    {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
     },
     {
       "key": "maxplayers",
@@ -53,10 +47,16 @@
       "type": "slug"
     },
     {
-      "key": "serverpassword",
-      "label": "Server-Passwort",
+      "key": "adminpassword",
+      "label": "Admin-Passwort",
       "default": "",
       "type": "secret"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 6144,
@@ -66,6 +66,7 @@
     "type": "a2s",
     "port": 2
   },
+  "ready": "Bringing up level for play took",
   "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

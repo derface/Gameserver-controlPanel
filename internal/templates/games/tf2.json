@@ -4,21 +4,48 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 232250,
-  "start": "./srcds_run_64 -game tf -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +hostname \"{{server_name}}\"",
+  "start": "./srcds_run_64 -game tf -nohltv -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +hostname \"{{server_name}}\"",
   "ports": [
-    {"name": "Spiel", "port": 27015, "proto": "udp"},
-    {"name": "RCON", "port": 27015, "proto": "tcp"}
+    {
+      "name": "Spiel",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 27015,
+      "proto": "tcp"
+    }
   ],
   "vars": [
-    {"key": "server_name", "label": "Servername", "default": "Mein TF2-Server"},
-    {"key": "map", "label": "Start-Map", "default": "ctf_2fort", "type": "slug"},
-    {"key": "max_players", "label": "Maximale Spieler", "default": "24", "type": "number"}
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "default": "Mein TF2-Server"
+    },
+    {
+      "key": "map",
+      "label": "Start-Map",
+      "default": "ctf_2fort",
+      "type": "slug"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "default": "24",
+      "type": "number"
+    }
   ],
   "memory_mb": 2048,
   "min_memory_mb": 1024,
   "console": "stdin",
-  "query": {"type": "a2s", "port": 0},
-  "backup_include": ["server/tf/cfg"],
-  "status": "beta",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "backup_include": [
+    "server/tf/cfg"
+  ],
+  "status": "experimentell",
   "disk_gb": 15
 }

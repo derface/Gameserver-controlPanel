@@ -69,6 +69,9 @@ Regeln:
 	}
 	b.WriteString("\nVorlagen:\n")
 	for _, t := range tpls {
+		if t.Status == "defekt" {
+			continue
+		}
 		fmt.Fprintf(&b, "- id=%s | %s | RAM %d MB (min %d)", t.ID, t.Name, t.MemoryMB, t.MinMemoryMB)
 		if t.Status != "stabil" {
 			fmt.Fprintf(&b, " | %s", t.Status)

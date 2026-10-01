@@ -19,16 +19,16 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "StationKappa",
       "type": "slug"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 6144,
@@ -39,5 +39,5 @@
     "port": 1
   },
   "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

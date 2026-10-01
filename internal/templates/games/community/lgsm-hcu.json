@@ -19,12 +19,6 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "8",
@@ -35,11 +29,17 @@
       "label": "Start-Map",
       "default": "KidsBedroom",
       "type": "slug"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 6144,
   "min_memory_mb": 512,
   "console": "stdin",
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

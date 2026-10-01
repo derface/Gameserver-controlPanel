@@ -58,16 +58,18 @@ ls /var/lib/gamepanel/servers/        # Spieldaten, ein Ordner pro Server
 
 ## Spiele und Vorlagen
 
-Das Panel bringt **84 Vorlagen** mit:
+Das Panel bringt **75 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe unten):
 
-- **Handgepflegt und getestet** („stabil“): Minecraft Java, Valheim, Palworld.
-- **Handgepflegt** („ungetestet“): Counter-Strike 2, Satisfactory, Project Zomboid, 7 Days to Die, Rust, Garry's Mod, TF2, Minecraft Bedrock, TeamSpeak 3, Factorio, Terraria.
-- **Windows-Server über Wine**: Enshrouded („beta“, Beitritt geprüft), sonst „experimentell“: V Rising, Sons of the Forest, Abiotic Factor. Beim ersten Start wird einmalig Wine von WineHQ in eine eigene Laufzeit-Schicht installiert.
-- **Steam (Community)**, 64 Spiele: automatisch aus den Daten von [LinuxGSM](https://github.com/GameServerManagers/LinuxGSM) erzeugt (MIT-Lizenz, siehe `internal/templates/games/community/LINUXGSM-LICENSE.md`). Dazu gehören u. a. ARK: Survival Evolved, Counter-Strike 1.6/Source/GO, Left 4 Dead 1 und 2, Insurgency (Sandstorm), Squad, Mordhau, Unturned, Core Keeper, The Front, Soulmask, Sven Co-op und viele Source- und GoldSrc-Mods. Alle „ungetestet“.
+- **stabil** (im Spiel erprobt): Minecraft Java, Minecraft Bedrock, Valheim, Palworld.
+- **beta** (Selbsttest bestanden): Enshrouded und Abiotic Factor (beide über Wine), Rust, 7 Days to Die, Project Zomboid, Satisfactory, Factorio, Terraria, TeamSpeak 3 sowie 25 Community-Spiele, u. a. ARK: Survival Evolved, Counter-Strike 1.6 und Source, Left 4 Dead, Squad 44, Soulmask, The Front, Sven Co-op, Black Mesa.
+- **experimentell** (noch nicht bestanden oder nach einer Korrektur noch nicht erneut getestet): CS2, TF2, Garry's Mod, V Rising, Sons of the Forest und die übrigen Community-Spiele.
+- **defekt**: im Selbsttest abgestürzt, Ursache offen. Diese Vorlagen sind im Panel ausgeblendet und für die KI gesperrt, der Selbsttest prüft sie weiter.
+
+Die Community-Vorlagen werden automatisch aus den Daten von [LinuxGSM](https://github.com/GameServerManagers/LinuxGSM) erzeugt (MIT-Lizenz, siehe `internal/templates/games/community/LINUXGSM-LICENSE.md`), inklusive der Nacharbeiten aus LinuxGSMs `fix_*.sh` (Bibliothekspfade, steamclient.so, GoldSrc-Mods per `app_set_config`, Basis-Apps wie TF2 für TF2 Classified).
 
 Neu erzeugen: `git clone --depth 1 https://github.com/GameServerManagers/LinuxGSM /tmp/lgsm && python3 tools/gen_lgsm.py /tmp/lgsm internal/templates/games/community`. Spiele, die einen Steam-Login brauchen oder deren Ports nur in einer Spielkonfiguration stehen, werden übersprungen.
 
-Vorlagen-Felder seit 0.4: `packages` (zusätzliche Debian-Pakete, eigene Image-Schicht je Paketkombination), `runtime: "wine"` + `platform: "windows"` (Windows-Server über Wine), `log_file` (Spiel schreibt in eine Datei, die Konsole liest mit), `data_path` / `data_uid` / `cmd` für Container-Images.
+Vorlagen-Felder seit 0.6: `steam_mod` (GoldSrc-Mod über App 90), `steam_base_app` + `steam_base_dir` (zusätzliche App, die vorher installiert wird), `steam_preplatform` (Erstinstallation einmal mit anderer Plattform, z. B. L4D2), Status `defekt`. Seit 0.4: `packages` (zusätzliche Debian-Pakete, eigene Image-Schicht je Paketkombination), `runtime: "wine"` + `platform: "windows"` (Windows-Server über Wine), `log_file` (Spiel schreibt in eine Datei, die Konsole liest mit), `data_path` / `data_uid` / `cmd` für Container-Images.
 
 ### Selbsttest
 

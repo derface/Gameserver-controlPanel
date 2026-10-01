@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 1110390,
-  "start": "./Unturned_Headless.x86_64 -nographics -batchmode -bind 0.0.0.0 -port {{port}} -maxplayers {{maxplayers}} -perspective first -mode {{gamemode}} -name {{servername}} -map {{defaultmap}} -gslt {{gslt}} +InternetServer/panel",
+  "start": "cp -f /opt/steamcmd/linux64/steamclient.so /data/server/; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/Unturned_Headless_Data/Plugins/x86_64; ./Unturned_Headless.x86_64 -nographics -batchmode -bind 0.0.0.0 -port {{port}} -maxplayers {{maxplayers}} -perspective first -mode {{gamemode}} -name {{servername}} -map {{defaultmap}} -gslt {{gslt}} +InternetServer/panel",
   "ports": [
     {
       "name": "Game",
@@ -19,10 +19,11 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
       "key": "maxplayers",
@@ -37,22 +38,21 @@
       "type": "slug"
     },
     {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
       "key": "gamemode",
       "label": "Spielmodus",
       "default": "normal",
       "type": "slug"
-    },
-    {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 4096,
   "min_memory_mb": 512,
   "console": "stdin",
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

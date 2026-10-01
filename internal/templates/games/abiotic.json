@@ -55,7 +55,7 @@
   "backup_include": [
     "server/AbioticFactor/Saved"
   ],
-  "status": "experimentell",
+  "status": "beta",
   "disk_gb": 4,
   "notes": "Läuft über Wine."
 }

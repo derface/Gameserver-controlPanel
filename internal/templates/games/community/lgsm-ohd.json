@@ -24,12 +24,6 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
@@ -40,6 +34,12 @@
       "label": "Start-Map",
       "default": "AAS-TestMap",
       "type": "slug"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 6144,
@@ -49,6 +49,7 @@
     "type": "a2s",
     "port": 1
   },
+  "ready": "Bringing up level for play took",
   "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

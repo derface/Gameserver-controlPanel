@@ -41,6 +41,10 @@ type Template struct {
 	Kind        string            `json:"kind"` // steam | image
 	SteamAppID  int               `json:"steam_app_id,omitempty"`
 	SteamBeta   string            `json:"steam_beta,omitempty"`
+	SteamMod    string            `json:"steam_mod,omitempty"`         // GoldSrc: +app_set_config 90 mod <name>
+	SteamPrePl  string            `json:"steam_preplatform,omitempty"` // first install once with this platform (L4D2)
+	SteamBase   int               `json:"steam_base_app,omitempty"`    // extra app installed first (TF2 for TF2 Classified)
+	SteamBaseIn string            `json:"steam_base_dir,omitempty"`    // its folder below the server folder
 	Image       string            `json:"image,omitempty"`
 	Env         map[string]string `json:"env,omitempty"`
 	Start       string            `json:"start,omitempty"`
@@ -55,7 +59,7 @@ type Template struct {
 	StopSignal  string            `json:"stop_signal,omitempty"`
 	StopTimeout int               `json:"stop_timeout,omitempty"`
 	Ready       string            `json:"ready,omitempty"` // regex in logs meaning "server is up"
-	Status      string            `json:"status"`          // stabil | beta
+	Status      string            `json:"status"`          // stabil | beta | experimentell | defekt (hidden)
 	DiskGB      int               `json:"disk_gb,omitempty"`
 	Notes       string            `json:"notes,omitempty"`
 	Custom      bool              `json:"custom,omitempty"`    // user supplies app id, start and ports

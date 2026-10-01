@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 17585,
-  "start": "cd bin && ./srcds_run.sh -game \"/data/server/dystopia\" -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +map {{defaultmap}} +sv_setsteamaccount {{gslt}} +servercfgfile panel.cfg -maxplayers {{maxplayers}}",
+  "start": "cd bin && ./srcds_run.sh -game \"/data/server/dystopia\" -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +map {{defaultmap}} +sv_setsteamaccount {{gslt}} +servercfgfile panel.cfg -maxplayers {{maxplayers}} -norestart",
   "ports": [
     {
       "name": "Game",
@@ -24,6 +24,13 @@
   ],
   "vars": [
     {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    },
+    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
@@ -34,13 +41,6 @@
       "label": "Start-Map",
       "default": "dys_broadcast",
       "type": "slug"
-    },
-    {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 1024,
@@ -50,6 +50,6 @@
     "type": "a2s",
     "port": 0
   },
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "defekt",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest 01.10.2026: Segmentation fault beim Start."
 }

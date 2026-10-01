@@ -21,6 +21,6 @@
   "memory_mb": 4096,
   "min_memory_mb": 512,
   "console": "stdin",
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

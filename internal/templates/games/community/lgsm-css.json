@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 232330,
-  "start": "./srcds_run -game cstrike -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +sv_setsteamaccount {{gslt}} +map {{defaultmap}} +servercfgfile panel.cfg -maxplayers {{maxplayers}}",
+  "start": "./srcds_run -game cstrike -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +sv_setsteamaccount {{gslt}} +map {{defaultmap}} +servercfgfile panel.cfg -maxplayers {{maxplayers}} -norestart",
   "ports": [
     {
       "name": "Game",
@@ -24,6 +24,13 @@
   ],
   "vars": [
     {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    },
+    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
@@ -34,13 +41,6 @@
       "label": "Start-Map",
       "default": "de_dust2",
       "type": "slug"
-    },
-    {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 1024,
@@ -54,5 +54,5 @@
     "libtinfo5:i386"
   ],
   "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

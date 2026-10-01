@@ -33,6 +33,10 @@
   "memory_mb": 6144,
   "min_memory_mb": 512,
   "console": "stdin",
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "ready": "Bringing up level for play took",
+  "packages": [
+    "libcurl3-gnutls"
+  ],
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

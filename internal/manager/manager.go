@@ -162,6 +162,9 @@ func (m *Manager) Validate(req CreateReq) (templates.Template, map[string]string
 			return tpl, nil, nil, errors.New("Die Steam-App-ID fehlt")
 		}
 	}
+	if tpl.Status == "defekt" && !req.internal {
+		return tpl, nil, nil, fmt.Errorf("Die Vorlage %s funktioniert derzeit nicht und ist deshalb gesperrt", tpl.Name)
+	}
 	if req.MemoryMB != 0 && req.MemoryMB < tpl.MinMemoryMB {
 		return tpl, nil, nil, fmt.Errorf("%s braucht mindestens %d MB RAM", tpl.Name, tpl.MinMemoryMB)
 	}
@@ -169,6 +172,13 @@ func (m *Manager) Validate(req CreateReq) (templates.Template, map[string]string
 		return tpl, nil, nil, fmt.Errorf("Deine Edition erlaubt %d Server. Für mehr bitte upgraden", lim)
 	}
 	return tpl, vars, ports, nil
+}
+
+func baseApp(t templates.Template) string {
+	if t.SteamBase <= 0 {
+		return ""
+	}
+	return strconv.Itoa(t.SteamBase)
 }
 
 // countServers counts the servers that use up the license (not self-tests).
@@ -367,6 +377,10 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			"GP_UPDATE=" + upd,
 			"GP_BETA=" + tpl.SteamBeta,
 			"GP_PLATFORM=" + tpl.Platform,
+			"GP_MOD=" + tpl.SteamMod,
+			"GP_PREPLATFORM=" + tpl.SteamPrePl,
+			"GP_BASE_APP=" + baseApp(tpl),
+			"GP_BASE_DIR=" + tpl.SteamBaseIn,
 			"GP_LOGFILE=" + tpl.LogFile,
 			"TZ=Europe/Berlin",
 		}

@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 673990,
-  "start": "./srcds_run -game iosoccer -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +map {{defaultmap}} +servercfgfile panel.cfg -maxplayers {{maxplayers}}",
+  "start": "./srcds_run -game iosoccer -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +map {{defaultmap}} +servercfgfile panel.cfg -maxplayers {{maxplayers}} -norestart",
   "ports": [
     {
       "name": "Game",
@@ -43,6 +43,6 @@
     "type": "a2s",
     "port": 0
   },
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "defekt",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest 01.10.2026: Segmentation fault beim Start."
 }

@@ -27,8 +27,9 @@
   },
   "packages": [
     "libxi6",
+    "xauth",
     "xvfb"
   ],
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

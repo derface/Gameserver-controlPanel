@@ -574,16 +574,17 @@
   /* ---------------- Server anlegen ---------------- */
   let createPrefill = null;
   const CAT_ORDER = ['Minecraft', 'Steam', 'Steam (Windows, Wine)', 'Weitere Spiele', 'Sprachserver', 'Steam (Community)'];
-  const STATUS_TAG = { beta: ' · ungetestet', experimentell: ' · experimentell' };
+  const STATUS_TAG = { beta: ' · beta', experimentell: ' · experimentell' };
+  const usable = () => S.tpls.filter(t => t.status !== 'defekt');
   function fillPicker(keep) {
     const q = $('#cSearch').value.trim().toLowerCase();
     const sel = $('#cTpl'), cur = keep || sel.value;
-    const list = S.tpls.filter(t => !q || t.name.toLowerCase().includes(q) || t.id.includes(q) || String(t.steam_app_id || '') === q);
+    const list = usable().filter(t => !q || t.name.toLowerCase().includes(q) || t.id.includes(q) || String(t.steam_app_id || '') === q);
     const cats = {};
     list.forEach(t => { (cats[t.category] = cats[t.category] || []).push(t); });
     const order = Object.keys(cats).sort((a, b) => (CAT_ORDER.indexOf(a) + 99) % 99 - (CAT_ORDER.indexOf(b) + 99) % 99 || a.localeCompare(b));
     sel.innerHTML = order.map(c => `<optgroup label="${esc(c)}">${cats[c].sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${esc(t.id)}">${esc(t.name)}${STATUS_TAG[t.status] || ''}</option>`).join('')}</optgroup>`).join('');
-    $('#cCount').textContent = list.length === S.tpls.length ? S.tpls.length + ' Spiele' : list.length + ' von ' + S.tpls.length;
+    $('#cCount').textContent = list.length === usable().length ? list.length + ' Spiele' : list.length + ' von ' + usable().length;
     if (list.some(t => t.id === cur)) sel.value = cur; else if (list.length) sel.value = list[0].id;
     return list.length;
   }

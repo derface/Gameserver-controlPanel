@@ -19,7 +19,45 @@ SKIP = {"vh", "pw", "cs2", "sf", "pz", "sdtd", "rust", "gmod", "tf2", "mc", "mcb
         "vints",              # braucht .NET 10 aus Microsoft-Quellen
         "dst",                # mehrere Shards, eigene Clusterdateien nötig
         "ts3",
-        "armar"}              # braucht eine eigene JSON-Konfiguration
+        "armar",              # braucht eine eigene JSON-Konfiguration
+        # Moddateien kommen nicht über Steam (LinuxGSM lädt sie von eigenen Servern)
+        "ahl", "bb", "ns", "ts", "vs", "sfc", "zmr",
+        # braucht eine grafische Startoberfläche und eigene Konfigurationsdateien
+        "wurm"}
+
+# Im Selbsttest abgestürzt, Ursache noch offen: bleiben drin, aber "defekt"
+# (im Panel ausgeblendet, der Selbsttest prüft sie weiter).
+BROKEN = {
+    "dab": "Selbsttest 01.10.2026: Segmentation fault beim Start",
+    "ios": "Selbsttest 01.10.2026: Segmentation fault beim Start",
+    "zps": "Selbsttest 01.10.2026: Segmentation fault beim Start",
+    "dys": "Selbsttest 01.10.2026: Segmentation fault beim Start",
+    "nd": "Selbsttest 01.10.2026: gameinfo.txt nicht gefunden",
+    "ti": "Selbsttest 01.10.2026: stürzt beim Laden der Plugins ab",
+}
+
+# Im Selbsttest vom 01.10.2026 bestanden (Download, Start, Spielerabfrage).
+# Nur diese bekommen "beta", alle anderen "experimentell" bis zum nächsten Test.
+PASSED = set("ark bd bmdm bb2 cc cs css dods dodr em fof hl2dm hldms hldm hw jbep3 l4d nmrih ohd pvkii sm squad44 sbots sven tf".split())
+
+# Nacharbeiten, die LinuxGSM in seinen fix_*.sh macht, als Befehle vor dem Start
+# (laufen im Ordner des Programms). Platzhalter: SC32/SC64 = steamclient.so.
+SC32, SC64 = "/opt/steamcmd/linux32/steamclient.so", "/opt/steamcmd/linux64/steamclient.so"
+FIXES = {
+    "csgo": ["[ -f bin/libgcc_s.so.1 ] && mv bin/libgcc_s.so.1 bin/libgcc_s.so.1.bak", "echo -n 730 > steam_appid.txt"],
+    "ins": ["sed -i 's/\\r$//' srcds_run", "mkdir -p bin && cp -f %s bin/" % SC32, "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/bin"],
+    "cmw": ["mkdir -p lib && cp -f %s lib/" % SC32, "echo 219640 > steam_appid.txt"],
+    "pvr": ["mkdir -p /data/server/linux64", "cp -f /usr/lib/x86_64-linux-gnu/libc++.so.1 /data/server/linux64/libc++.so", "cp -f %s ." % SC64,
+            "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/linux64"],
+    "tu": ["cp -f %s ." % SC64],
+    "unt": ["cp -f %s /data/server/" % SC64, "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/Unturned_Headless_Data/Plugins/x86_64"],
+    "sm": ["export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/linux64"],
+    "hw": ["export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/Hurtworld_Data/Plugins/x86_64"],
+    "nmrih": ["for f in vphysics studiorender soundemittersystem shaderapiempty scenefilecache replay materialsystem; do [ -e bin/$f.so ] || ln -s ${f}_srv.so bin/$f.so; done"],
+}
+EXTRA_PKGS = {"ck": ["xauth"], "mh": ["libcurl3-gnutls"], "pvr": ["libc++1", "libc++abi1"], "btl": [], "tf2c": ["libcurl3-gnutls:i386", "libcurl3-gnutls"]}
+# eigene Bereit-Meldungen (sonst bei Unreal-Servern mit -log die Standardzeile)
+READY = {"ns2": r"Finished loading 'maps/", "ns2c": r"Finished loading 'maps/"}
 
 USER_VARS = {
     "servername": ("Servername", "text", None),
@@ -134,6 +172,9 @@ def derived_ports(short, env):
 
 made, skipped = [], []
 os.makedirs(OUT, exist_ok=True)
+for old in os.listdir(OUT):
+    if old.startswith("lgsm-") and old.endswith(".json"):
+        os.remove(os.path.join(OUT, old))
 names = {}
 with open(os.path.join(L, "data", "serverlist.csv")) as f:
     for row in list(csv.reader(f))[1:]:
@@ -245,10 +286,13 @@ for short, (gsname, gamename) in sorted(names.items()):
         skipped.append((short, "kein Programm"))
         continue
     pre = expand(cfg.get("preexecutable", ""), {**env, "javaram": "2048"})
-    start = (f"cd {rel} && " if rel != "." else "") + f"{pre} {exe} {start_args}".strip()
+    if re.search(r'(srcds_run|hlds_run|srcds\.sh|srcds_run\.sh)$', exe) and "-norestart" not in start_args:
+        start_args += " -norestart"  # Absturz soll Docker sehen, nicht srcds_run selbst neu starten
+    fixes = "; ".join(FIXES.get(short, []))
+    start = (f"cd {rel} && " if rel != "." else "") + (fixes + "; " if fixes else "") + f"{pre} {exe} {start_args}".strip()
     # leere Platzhalter (z. B. +sv_setsteamaccount ohne Token) stören die meisten Server nicht
 
-    pkgs = []
+    pkgs = list(EXTRA_PKGS.get(short, []))
     for p in dep_rows.get(short, []):
         p = PKG_MAP.get(p, p)
         if p and p not in BASE_PKGS:
@@ -264,6 +308,17 @@ for short, (gsname, gamename) in sorted(names.items()):
     }
     if cfg.get("branch"):
         tpl["steam_beta"] = cfg["branch"]
+    if cfg.get("appidmod") and appid == "90" and cfg["appidmod"] != "cstrike":
+        tpl["steam_mod"] = cfg["appidmod"]
+    if cfg.get("baseappid"):
+        sd = expand(cfg.get("supportdir", ""), env)
+        if not sd.startswith("/data/server/"):
+            skipped.append((short, "Basis-App ohne Ordner"))
+            continue
+        tpl["steam_base_app"] = int(cfg["baseappid"])
+        tpl["steam_base_dir"] = sd[len("/data/server/"):]
+    if short == "l4d2":
+        tpl["steam_preplatform"] = "windows"  # Linux-Depot lässt sich erst nach einem Windows-Durchlauf laden
     tpl["start"] = start
     tpl["ports"] = ports
     tpl["vars"] = tvars
@@ -274,10 +329,17 @@ for short, (gsname, gamename) in sorted(names.items()):
         tpl["query"] = {"type": "a2s", "port": var_index["queryport"]}
     elif cfg.get("querytype") == "protocol-valve" and engine in ("source", "goldsrc"):
         tpl["query"] = {"type": "a2s", "port": var_index.get("port", 0)}
+    if short in READY:
+        tpl["ready"] = READY[short]
+    elif engine in ("unreal4", "unreal5") and re.search(r'(^|\s)-log(\s|$)', start):
+        tpl["ready"] = "Bringing up level for play took"
     if pkgs:
         tpl["packages"] = sorted(set(pkgs))
-    tpl["status"] = "beta"
-    tpl["notes"] = "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+    tpl["status"] = "beta" if short in PASSED else "experimentell"
+    tpl["notes"] = "Automatisch aus LinuxGSM übernommen." + (" Selbsttest bestanden." if short in PASSED else "")
+    if short in BROKEN:
+        tpl["status"] = "defekt"
+        tpl["notes"] += " " + BROKEN[short] + "."
     with open(os.path.join(OUT, tpl["id"] + ".json"), "w") as f:
         json.dump(tpl, f, ensure_ascii=False, indent=2)
         f.write("\n")

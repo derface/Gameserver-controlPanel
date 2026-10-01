@@ -24,16 +24,11 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
-      "key": "rconpassword",
-      "label": "RCON-Passwort",
+      "key": "gslt",
+      "label": "Game Server Login Token",
       "default": "",
-      "type": "secret"
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
       "key": "maxplayers",
@@ -42,17 +37,22 @@
       "type": "number"
     },
     {
+      "key": "rconpassword",
+      "label": "RCON-Passwort",
+      "default": "",
+      "type": "secret"
+    },
+    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "Oilfield",
       "type": "slug"
     },
     {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 6144,
@@ -62,6 +62,7 @@
     "type": "a2s",
     "port": 1
   },
-  "status": "beta",
-  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+  "ready": "Bringing up level for play took",
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen."
 }

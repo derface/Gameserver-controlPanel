@@ -315,7 +315,7 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 	if need == 0 {
 		need = 10
 	}
-	if free := freeGB(m.dataDir); free < float64(need)*1.5+5 {
+	if free := freeGB(m.dataDir); free < float64(need)*1.2+5 {
 		res.Result, res.Error = "übersprungen", fmt.Sprintf("Zu wenig Platz: %.0f GB frei, etwa %d GB nötig", free, need)
 		return
 	}
@@ -326,7 +326,7 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 
 	vars := map[string]string{}
 	for _, v := range tpl.Vars {
-		if v.Default == "" && (v.Needed || v.Type == "secret") {
+		if v.Default == "" && v.Needed { // optional tokens (GSLT) stay empty: a fake one breaks the start
 			vars[v.Key] = "gpTest4711"
 		}
 	}
@@ -345,13 +345,14 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 	m.testUpdate(func(r *TestRun) { r.ServerID = sv.ID })
 	defer func() {
 		res.DiskMB = dirSizeMB(m.ServerDir(sv.ID))
-		if res.Result != "ok" || len(res.Log) == 0 {
-			res.Log = m.testLog(sv.ID, 40)
-		}
-		for _, l := range res.Log {
+		full := m.testLog(sv.ID, 3000)
+		for _, l := range full {
 			if strings.Contains(l, "[panel] Start:") {
 				res.Download = true
 			}
+		}
+		if res.Result != "ok" || len(res.Log) == 0 {
+			res.Log = lastRun(full, 40)
 		}
 		m.testStep("Wird gelöscht")
 		dctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -438,6 +439,9 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 			continue
 		case "starting":
 			res.Download = true
+			if msg := m.restartLoop(sv.ID); msg != "" {
+				return fail(msg)
+			}
 			if startDeadline.IsZero() {
 				startDeadline = now.Add(startWait)
 			}
@@ -454,6 +458,9 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 			continue
 		}
 
+		if msg := m.restartLoop(sv.ID); msg != "" {
+			return fail(msg)
+		}
 		res.Download, res.Start = true, true
 		res.Ready = tpl.Ready != ""
 		if readyAt.IsZero() {
@@ -511,7 +518,7 @@ var ansiRe = regexp.MustCompile(`\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[()][A-Z0-9]|\r`)
 func (m *Manager) testLog(id string, n int) []string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	rc, err := m.logs(ctx, id, false, 400, 0)
+	rc, err := m.logs(ctx, id, false, max(400, n*2), 0)
 	if err != nil {
 		return nil
 	}
@@ -637,4 +644,53 @@ func humanDur(d time.Duration) string {
 		return fmt.Sprintf("%d Minuten", int(d.Minutes()))
 	}
 	return fmt.Sprintf("%d Sekunden", int(d.Seconds()))
+}
+
+// crash markers of start scripts that restart the game themselves
+var loopMarkers = []string{"Server restart in ", "Server Failed", "Segmentation fault", "FATAL ERROR"}
+
+// restartLoop reports a crash that the game's own start script swallowed.
+func (m *Manager) restartLoop(id string) string {
+	lines := m.testLog(id, 300)
+	started := false
+	for _, l := range lines {
+		if strings.Contains(l, "[panel] Start:") {
+			started = true
+			continue
+		}
+		if !started {
+			continue
+		}
+		for _, mk := range loopMarkers {
+			if strings.Contains(l, mk) {
+				return "Server stürzt nach dem Start ab: " + strings.TrimSpace(l)
+			}
+		}
+	}
+	return ""
+}
+
+// lastRun keeps the lines of the run that crashed: when Docker restarted the
+// container, the log ends with a fresh SteamCMD run that hides the cause.
+func lastRun(lines []string, n int) []string {
+	lastStart := -1
+	for i, l := range lines {
+		if strings.Contains(l, "[panel] Start:") {
+			lastStart = i
+		}
+	}
+	end := len(lines)
+	if lastStart >= 0 {
+		for i := lastStart + 1; i < len(lines); i++ {
+			if strings.Contains(lines[i], "[panel] SteamCMD: App") {
+				end = i
+				break
+			}
+		}
+	}
+	lines = lines[:end]
+	if len(lines) > n {
+		lines = lines[len(lines)-n:]
+	}
+	return lines
 }

@@ -38,5 +38,5 @@
   ],
   "status": "experimentell",
   "disk_gb": 5,
-  "notes": "Läuft über Wine. Einstellungen in userdata/dedicatedserver.cfg (entsteht beim ersten Start)."
+  "notes": "Läuft über Wine. Einstellungen in userdata/dedicatedserver.cfg (entsteht beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht."
 }
