@@ -137,7 +137,7 @@ func (m *Manager) TestSelection(which string, ids []string) []string {
 		case "community":
 			ok = strings.HasPrefix(t.ID, "lgsm-")
 		case "offen":
-			ok = last[t.ID] == "" || last[t.ID] == "fehler" || last[t.ID] == "übersprungen"
+			ok = last[t.ID] != "ok" && t.Status != "stabil"
 		case "auswahl":
 			for _, id := range ids {
 				ok = ok || id == t.ID
