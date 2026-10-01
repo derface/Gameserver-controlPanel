@@ -41,6 +41,11 @@ type Manager struct {
 	buildMu sync.Mutex
 	opMu    sync.Map // id -> *sync.Mutex
 
+	testMu     sync.Mutex
+	test       *TestRun
+	testCancel context.CancelFunc
+	baseCtx    context.Context
+
 	mu   sync.RWMutex
 	jobs map[string]*job
 	live map[string]*live
@@ -130,6 +135,7 @@ type CreateReq struct {
 	MemoryMB  int               `json:"memory_mb"`
 	Start     bool              `json:"start"`
 	CreatedBy string            `json:"-"`
+	internal  bool              // self-test: not counted against the license
 }
 
 // Validate checks a request without creating anything. It returns the
@@ -159,10 +165,21 @@ func (m *Manager) Validate(req CreateReq) (templates.Template, map[string]string
 	if req.MemoryMB != 0 && req.MemoryMB < tpl.MinMemoryMB {
 		return tpl, nil, nil, fmt.Errorf("%s braucht mindestens %d MB RAM", tpl.Name, tpl.MinMemoryMB)
 	}
-	if lim := m.Limit(); lim >= 0 && len(m.st.Servers()) >= lim {
+	if lim := m.Limit(); !req.internal && lim >= 0 && m.countServers() >= lim {
 		return tpl, nil, nil, fmt.Errorf("Deine Edition erlaubt %d Server. Für mehr bitte upgraden", lim)
 	}
 	return tpl, vars, ports, nil
+}
+
+// countServers counts the servers that use up the license (not self-tests).
+func (m *Manager) countServers() int {
+	n := 0
+	for _, s := range m.st.Servers() {
+		if s.CreatedBy != testCreator {
+			n++
+		}
+	}
+	return n
 }
 
 func (m *Manager) Create(req CreateReq) (store.Server, error) {
@@ -703,6 +720,10 @@ func (m *Manager) queryPlayers(sv store.Server, tpl templates.Template, l *live)
 
 // Run keeps the live state fresh until ctx ends.
 func (m *Manager) Run(ctx context.Context) {
+	m.testMu.Lock()
+	m.baseCtx = ctx
+	m.testMu.Unlock()
+	go m.resumeTest()
 	go m.runSchedule(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()

@@ -1,0 +1,22 @@
+{
+ "category": "Test",
+ "kind": "steam",
+ "steam_app_id": 1,
+ "ports": [
+  {
+   "name": "Spiel",
+   "port": 31000,
+   "proto": "udp"
+  }
+ ],
+ "vars": [],
+ "memory_mb": 256,
+ "min_memory_mb": 64,
+ "console": "stdin",
+ "ready": "",
+ "status": "beta",
+ "disk_gb": 1,
+ "id": "fake-bare",
+ "name": "Fake bare",
+ "start": "fake ok {{port}}"
+}

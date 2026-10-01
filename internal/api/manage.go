@@ -29,6 +29,10 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/remote", a.guard(a.remoteGet))
 	mux.HandleFunc("PUT /api/remote", a.guard(a.remotePut))
 	mux.HandleFunc("POST /api/remote/test", a.guard(a.remoteTest))
+	mux.HandleFunc("GET /api/selftest", a.guard(a.selftestGet))
+	mux.HandleFunc("POST /api/selftest", a.guard(a.selftestStart))
+	mux.HandleFunc("DELETE /api/selftest", a.guard(a.selftestStop))
+	mux.HandleFunc("GET /api/selftest/report", a.guard(a.selftestReport))
 
 	mux.HandleFunc("GET /api/servers/{id}/files", a.guard(a.fileList))
 	mux.HandleFunc("DELETE /api/servers/{id}/files", a.guard(a.fileDelete))
@@ -398,4 +402,37 @@ func (a *API) fileDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]bool{"ok": true})
+}
+
+// ---------- self-test ----------
+
+func (a *API) selftestGet(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, a.Mgr.TestStatus())
+}
+
+func (a *API) selftestStart(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Which string   `json:"which"`
+		IDs   []string `json:"ids"`
+	}
+	if err := json.NewDecoder(io.LimitReader(r.Body, 64<<10)).Decode(&req); err != nil {
+		fail(w, 400, errors.New("Ungültige Anfrage"))
+		return
+	}
+	if err := a.Mgr.StartTest(a.Mgr.TestSelection(req.Which, req.IDs)); err != nil {
+		fail(w, 409, err)
+		return
+	}
+	writeJSON(w, 200, a.Mgr.TestStatus())
+}
+
+func (a *API) selftestStop(w http.ResponseWriter, r *http.Request) {
+	a.Mgr.StopTest()
+	writeJSON(w, 200, map[string]bool{"ok": true})
+}
+
+func (a *API) selftestReport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="selbsttest-`+time.Now().Format("2006-01-02")+`.md"`)
+	_, _ = io.WriteString(w, a.Mgr.TestReport())
 }

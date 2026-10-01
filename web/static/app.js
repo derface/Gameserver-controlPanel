@@ -405,7 +405,7 @@
         <button class="power" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></div>
         ${s.message ? `<p class="msg-line ${s.status === 'error' ? 'bad' : ''}">${esc(s.message)}</p>` : ''}`;
     }
-    return `<div class="mod-top"><span class="mono game">${esc(s.template_name)} · ${esc(portList(s))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
+    return `<div class="mod-top"><span class="mono game">${s.created_by === 'selbsttest' ? 'Selbsttest · ' : ''}${esc(s.template_name)} · ${esc(portList(s))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
       <h3>${esc(s.name)}</h3>${body}`;
   }
   function renderCards() {
@@ -733,6 +733,68 @@
     try { S.license = await api('PUT', '/api/license', { key: $('#licKey').value }); renderLicense(); renderKI(); toast('Lizenz aktiviert: ' + S.license.edition.name, 'ok'); $('#licKey').value = ''; }
     catch (err) { showErr($('#licErr'), err.message); }
   });
+  /* ---------------- Selbsttest ---------------- */
+  const TS = { timer: null, open: {} };
+  const fmtDur = sec => sec >= 3600 ? Math.floor(sec / 3600) + ' h ' + pad2(Math.floor(sec % 3600 / 60)) + ' min' : Math.max(1, Math.round(sec / 60)) + ' min';
+  async function openTest() {
+    if ($('#dlgSettings').open) $('#dlgSettings').close();
+    $('#dlgTest').showModal();
+    await pollTest();
+  }
+  async function pollTest() {
+    clearTimeout(TS.timer);
+    let r;
+    try { r = await api('GET', '/api/selftest'); } catch (e) { toast(e.message, 'bad'); return; }
+    renderTest(r);
+    if ($('#dlgTest').open) TS.timer = setTimeout(pollTest, r.running ? 3000 : 15000);
+  }
+  function renderTest(r) {
+    r.queue = r.queue || []; r.results = r.results || [];
+    $('#tsForm').hidden = r.running; $('#tsHint').hidden = r.running; $('#tsRun').hidden = !r.running;
+    $('#tsGo').disabled = false;
+    if (r.running) {
+      const done = r.total - r.queue.length - (r.current ? 1 : 0);
+      $('#tsCount').textContent = `${done + 1} von ${r.total} · läuft seit ${fmtDur((Date.now() - new Date(r.started)) / 1000)} · ${Math.round(r.free_gb)} GB frei`;
+      const t = S.tplById[r.current];
+      $('#tsCur').textContent = r.current ? (t ? t.name : r.current) : 'Wird vorbereitet';
+      $('#tsStep').textContent = r.step ? r.step + (r.step_since ? ' · seit ' + fmtDur((Date.now() - new Date(r.step_since)) / 1000) : '') : '';
+      $('#tsBar').style.width = Math.round(100 * done / Math.max(1, r.total)) + '%';
+    }
+    const c = { ok: 0, unsicher: 0, fehler: 0, 'übersprungen': 0 };
+    (r.results || []).forEach(x => { c[x.result] = (c[x.result] || 0) + 1; });
+    let sum = Object.entries(c).map(([k, v]) => `<span class="ts-res ${k}">${v} ${k}</span>`).join('');
+    if (r.queue && r.queue.length && !r.running) sum += `<span>${r.queue.length} offen</span>`;
+    if (r.stopped) sum += `<span>${esc(r.stopped)}</span>`;
+    $('#tsSum').innerHTML = (r.results || []).length || r.running ? sum : '';
+    $('#tsReport').hidden = !(r.results || []).length;
+    const mk = (ok, has) => !has ? '<span class="muted">–</span>' : ok ? '<span class="ts-yes">✓</span>' : '<span class="ts-no">✗</span>';
+    const order = { fehler: 0, unsicher: 1, 'übersprungen': 2, ok: 3 };
+    const rows = (r.results || []).slice().sort((a, b) => order[a.result] - order[b.result] || a.name.localeCompare(b.name, 'de'));
+    $('#tsRows').innerHTML = rows.length ? rows.map(x => {
+      const det = x.error || x.note || (x.log && x.log.length);
+      const main = `<tr class="${det ? 'has-d' : ''}" data-t="${esc(x.template)}"><td>${esc(x.name)}</td><td><span class="ts-res ${esc(x.result)}">${esc(x.result)}</span></td>
+        <td>${mk(x.download, true)}</td><td>${mk(x.start, true)}</td><td>${mk(x.ready, x.has_ready)}</td><td>${mk(x.query, x.has_query)}${x.players ? ' <span class="mono small muted">' + esc(x.players) + '</span>' : ''}</td>
+        <td class="num">${x.disk_mb ? gb(x.disk_mb) + ' GB' : '–'}</td><td class="num">${fmtDur(x.seconds)}</td></tr>`;
+      const d = det && TS.open[x.template] ? `<tr class="ts-detail"><td colspan="8">${x.error ? '<b>' + esc(x.error) + '</b><br>' : ''}${x.note ? esc(x.note) : ''}${x.log && x.log.length ? '<pre>' + esc(x.log.join('\n')) + '</pre>' : ''}</td></tr>` : '';
+      return main + d;
+    }).join('') : '<tr class="empty"><td colspan="8">Noch keine Ergebnisse.</td></tr>';
+  }
+  $('#tsRows').addEventListener('click', e => {
+    const tr = e.target.closest('tr.has-d'); if (!tr) return;
+    TS.open[tr.dataset.t] = !TS.open[tr.dataset.t]; pollTest();
+  });
+  $('#tsForm').addEventListener('submit', async e => {
+    e.preventDefault(); $('#tsGo').disabled = true;
+    try { renderTest(await api('POST', '/api/selftest', { which: $('#tsWhich').value })); toast('Selbsttest gestartet', 'ok'); pollTest(); loadServers(); }
+    catch (err) { toast(err.message, 'bad'); $('#tsGo').disabled = false; }
+  });
+  $('#tsStop').addEventListener('click', async () => {
+    if (!await confirmBox('Selbsttest abbrechen?', 'Der laufende Testserver wird gelöscht. Bisherige Ergebnisse bleiben erhalten.', 'Test abbrechen')) return;
+    try { await api('DELETE', '/api/selftest'); toast('Wird abgebrochen …'); setTimeout(pollTest, 1500); } catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#dlgTest').addEventListener('close', () => clearTimeout(TS.timer));
+  $('#openTest').onclick = openTest;
+
   $('#openSettings').onclick = openSettings;
   $('#edChip').onclick = openSettings;
   $('#edChip').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSettings(); } };
@@ -1108,6 +1170,7 @@
       a.push({ label: 'Konsole von ' + s.name, hint: 'Konsole', run: () => { openConsole(s.id); $('#konsole').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
     });
     a.push({ label: 'Einstellungen und Lizenz', hint: 'Panel', run: openSettings });
+    a.push({ label: 'Selbsttest der Spielvorlagen', hint: 'Panel', run: openTest });
     a.push({ label: isDark() ? 'Helles Design' : 'Dunkles Design', hint: 'Ansicht', run: toggleTheme });
     a.push({ label: motion ? 'Animationen reduzieren' : 'Animationen einschalten', hint: 'Ansicht', run: toggleMotion });
     return a;

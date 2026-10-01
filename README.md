@@ -62,12 +62,24 @@ Das Panel bringt **84 Vorlagen** mit:
 
 - **Handgepflegt und getestet** („stabil“): Minecraft Java, Valheim, Palworld.
 - **Handgepflegt** („ungetestet“): Counter-Strike 2, Satisfactory, Project Zomboid, 7 Days to Die, Rust, Garry's Mod, TF2, Minecraft Bedrock, TeamSpeak 3, Factorio, Terraria.
-- **Windows-Server über Wine** („experimentell“): Enshrouded, V Rising, Sons of the Forest, Abiotic Factor. Beim ersten Start wird einmalig Wine von WineHQ in eine eigene Laufzeit-Schicht installiert.
+- **Windows-Server über Wine**: Enshrouded („beta“, Beitritt geprüft), sonst „experimentell“: V Rising, Sons of the Forest, Abiotic Factor. Beim ersten Start wird einmalig Wine von WineHQ in eine eigene Laufzeit-Schicht installiert.
 - **Steam (Community)**, 64 Spiele: automatisch aus den Daten von [LinuxGSM](https://github.com/GameServerManagers/LinuxGSM) erzeugt (MIT-Lizenz, siehe `internal/templates/games/community/LINUXGSM-LICENSE.md`). Dazu gehören u. a. ARK: Survival Evolved, Counter-Strike 1.6/Source/GO, Left 4 Dead 1 und 2, Insurgency (Sandstorm), Squad, Mordhau, Unturned, Core Keeper, The Front, Soulmask, Sven Co-op und viele Source- und GoldSrc-Mods. Alle „ungetestet“.
 
 Neu erzeugen: `git clone --depth 1 https://github.com/GameServerManagers/LinuxGSM /tmp/lgsm && python3 tools/gen_lgsm.py /tmp/lgsm internal/templates/games/community`. Spiele, die einen Steam-Login brauchen oder deren Ports nur in einer Spielkonfiguration stehen, werden übersprungen.
 
 Vorlagen-Felder seit 0.4: `packages` (zusätzliche Debian-Pakete, eigene Image-Schicht je Paketkombination), `runtime: "wine"` + `platform: "windows"` (Windows-Server über Wine), `log_file` (Spiel schreibt in eine Datei, die Konsole liest mit), `data_path` / `data_uid` / `cmd` für Container-Images.
+
+### Selbsttest
+
+Einstellungen → Selbsttest (oder Strg+K → „Selbsttest“). Das Panel prüft die Vorlagen auf dem eigenen Rechner, eine nach der anderen, kleine Downloads zuerst:
+
+1. Download über SteamCMD bzw. Image laden
+2. Start, ohne Absturz oder Neustart durch Docker
+3. Bereit-Meldung im Log (falls die Vorlage eine hat)
+4. Antwort auf die Spielerabfrage (A2S bzw. Minecraft-Ping)
+5. 30 Sekunden stabil, danach wird der Testserver samt Dateien gelöscht
+
+Ergebnis je Spiel: **ok**, **unsicher** (läuft, aber Abfrage fehlt oder ist nicht prüfbar), **fehler** (mit den letzten Logzeilen) oder **übersprungen** (feste Ports belegt, zu wenig Platz oder RAM). Ein Spielekauf ist nicht nötig: Dedicated Server lädt SteamCMD anonym. Testserver zählen nicht gegen das Server-Limit der Edition. Der Lauf übersteht Neustarts des Panels und setzt fort; ab 10 GB freiem Platz hält er an. Der Bericht lässt sich als Markdown herunterladen.
 
 ## Backups und Dateien
 
@@ -149,7 +161,7 @@ Nur Go-Standardbibliothek, keine externen Abhängigkeiten. Daten liegen in `/var
 
 ## Nächste Schritte
 
-1. Steam-Vorlagen auf echter Hardware prüfen und korrigieren
+1. Selbsttest über alle Vorlagen laufen lassen, Fehler korrigieren, Status anpassen
 2. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
 5. Mehrere Rechner (Nodes), Mehrbenutzer, Discord-Webhooks
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)

@@ -200,7 +200,40 @@
     <p class="err" id="licErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
   </form>
+  <div class="set-block">
+    <h3>Selbsttest</h3>
+    <p class="muted small">Prüft automatisch, ob die Spielvorlagen auf diesem Rechner funktionieren: herunterladen, starten, auf Bereitschaft und Spielerabfrage warten, wieder löschen. Läuft im Hintergrund, auch über Nacht.</p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="openTest">Selbsttest öffnen</button></div>
+  </div>
   <p class="mono muted small" id="verLine"></p>
+</dialog>
+
+<dialog id="dlgTest" class="dlg wide" aria-labelledby="tsTitle">
+  <div class="dlg-head"><h2 id="tsTitle">Selbsttest</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <form class="ts-start" id="tsForm">
+    <label class="field"><span>Was testen?</span>
+      <select id="tsWhich">
+        <option value="offen">Noch nicht getestete und fehlgeschlagene</option>
+        <option value="nicht-stabil">Alle, die noch nicht stabil sind</option>
+        <option value="community">Nur Community-Vorlagen (LinuxGSM)</option>
+        <option value="alle">Alle Vorlagen</option>
+      </select></label>
+    <button type="submit" class="btn-accent" id="tsGo">Selbsttest starten</button>
+  </form>
+  <p class="small muted" id="tsHint">Ein Spiel nach dem anderen, kleine Downloads zuerst. Jeder Testserver wird danach samt Dateien gelöscht. Deine eigenen Server bleiben unberührt, sollten aber nicht dieselben festen Ports belegen.</p>
+  <div class="ts-run" id="tsRun" hidden>
+    <div class="ts-now"><div><span class="mono muted small" id="tsCount"></span><h3 id="tsCur"></h3><p class="mono small" id="tsStep"></p></div>
+      <button type="button" class="btn-line" id="tsStop">Abbrechen</button></div>
+    <div class="bar"><b id="tsBar" style="width:0"></b></div>
+  </div>
+  <div class="ts-sum" id="tsSum"></div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Spiel</th><th>Ergebnis</th><th>Download</th><th>Start</th><th>Bereit</th><th>Abfrage</th><th class="num">Größe</th><th class="num">Dauer</th></tr></thead>
+      <tbody id="tsRows"></tbody>
+    </table>
+  </div>
+  <div class="dlg-actions"><a class="btn-line" id="tsReport" href="/api/selftest/report" download>Bericht herunterladen</a></div>
 </dialog>
 
 <dialog id="dlgManage" class="dlg wide" aria-labelledby="mgTitle">

@@ -320,3 +320,20 @@ nav.main a[aria-current="page"]{background:var(--ink);color:var(--bg)}
 
 body.still *,body.still *::before,body.still *::after{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Selbsttest */
+.dlg form.ts-start{flex-direction:row;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.ts-start .field{flex:1;min-width:220px;margin:0}
+.ts-run{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;margin:12px 0}
+.ts-now{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.ts-now h3{margin:2px 0 4px}
+.ts-now p{margin:0;color:var(--muted)}
+.ts-sum{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.ts-sum span{font-family:var(--font-mono);font-size:11px;padding:5px 10px;border-radius:999px;border:1px solid var(--line)}
+.ts-res{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.ts-res.ok{color:var(--ok)}.ts-res.fehler{color:var(--bad)}.ts-res.unsicher{color:var(--accent)}.ts-res.übersprungen{color:var(--muted)}
+.ts-detail td{white-space:normal;background:color-mix(in srgb,var(--line) 25%,transparent)}
+.ts-detail pre{font-family:var(--font-mono);margin:6px 0 0;max-height:220px;overflow:auto;font-size:11px;white-space:pre-wrap;word-break:break-word}
+#tsRows tr.has-d{cursor:pointer}
+.ts-yes{color:var(--ok)}.ts-no{color:var(--bad)}
+a.btn-line{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
