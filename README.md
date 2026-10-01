@@ -56,6 +56,19 @@ docker ps --filter label=gamepanel.id # alle Gameserver-Container
 ls /var/lib/gamepanel/servers/        # Spieldaten, ein Ordner pro Server
 ```
 
+## Spiele und Vorlagen
+
+Das Panel bringt **84 Vorlagen** mit:
+
+- **Handgepflegt und getestet** („stabil“): Minecraft Java, Valheim, Palworld.
+- **Handgepflegt** („ungetestet“): Counter-Strike 2, Satisfactory, Project Zomboid, 7 Days to Die, Rust, Garry's Mod, TF2, Minecraft Bedrock, TeamSpeak 3, Factorio, Terraria.
+- **Windows-Server über Wine** („experimentell“): Enshrouded, V Rising, Sons of the Forest, Abiotic Factor. Beim ersten Start wird einmalig Wine von WineHQ in eine eigene Laufzeit-Schicht installiert.
+- **Steam (Community)**, 64 Spiele: automatisch aus den Daten von [LinuxGSM](https://github.com/GameServerManagers/LinuxGSM) erzeugt (MIT-Lizenz, siehe `internal/templates/games/community/LINUXGSM-LICENSE.md`). Dazu gehören u. a. ARK: Survival Evolved, Counter-Strike 1.6/Source/GO, Left 4 Dead 1 und 2, Insurgency (Sandstorm), Squad, Mordhau, Unturned, Core Keeper, The Front, Soulmask, Sven Co-op und viele Source- und GoldSrc-Mods. Alle „ungetestet“.
+
+Neu erzeugen: `git clone --depth 1 https://github.com/GameServerManagers/LinuxGSM /tmp/lgsm && python3 tools/gen_lgsm.py /tmp/lgsm internal/templates/games/community`. Spiele, die einen Steam-Login brauchen oder deren Ports nur in einer Spielkonfiguration stehen, werden übersprungen.
+
+Vorlagen-Felder seit 0.4: `packages` (zusätzliche Debian-Pakete, eigene Image-Schicht je Paketkombination), `runtime: "wine"` + `platform: "windows"` (Windows-Server über Wine), `log_file` (Spiel schreibt in eine Datei, die Konsole liest mit), `data_path` / `data_uid` / `cmd` für Container-Images.
+
 ## Backups und Dateien
 
 Auf der Server-Karte bzw. in der Detailansicht: **Backups** und **Dateien**.
