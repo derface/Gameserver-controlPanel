@@ -17,6 +17,16 @@
       "name": "Abfrage",
       "port": 15637,
       "proto": "udp"
+    },
+    {
+      "name": "Spiel (TCP)",
+      "port": 15636,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage (TCP)",
+      "port": 15637,
+      "proto": "tcp"
     }
   ],
   "fixed_ports": true,
@@ -33,7 +43,7 @@
     "server/savegame",
     "server/enshrouded_server.json"
   ],
-  "status": "experimentell",
+  "status": "beta",
   "disk_gb": 4,
-  "notes": "Läuft über Wine. Name, Passwort und Spielerzahl stehen nach dem ersten Start in enshrouded_server.json im Serverordner. Erst bearbeiten, wenn der Server gestoppt ist."
+  "notes": "Läuft über Wine. Name, Passwort und Spielerzahl stehen nach dem ersten Start in enshrouded_server.json im Serverordner, erst bearbeiten, wenn der Server gestoppt ist. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten."
 }
