@@ -1,0 +1,54 @@
+{
+  "id": "lgsm-ns2",
+  "name": "Natural Selection 2",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 4940,
+  "start": "cd x64 && ./server_linux -name '{{servername}}' -port {{port}} -webadmin -webdomain 0.0.0.0 -webuser admin -webpassword 'CHANGE_ME' -webport {{port_3}} -startmodserver -modserverport {{port_2}} -map {{defaultmap}} -limit {{maxplayers}} -speclimit 5 -config_path '/data/server/panel' -logdir '/data/logs' -modstorage '/data/server/panel/Workshop'",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Mod Server",
+      "port": 27031,
+      "proto": "tcp"
+    },
+    {
+      "name": "Web Interface",
+      "port": 8080,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "20",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "ns2_summit",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 2048,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "packages": [
+    "libtbb12",
+    "speex"
+  ],
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

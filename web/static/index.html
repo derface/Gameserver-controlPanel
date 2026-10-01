@@ -120,7 +120,13 @@
 <dialog id="dlgCreate" class="dlg">
   <form id="createForm" method="dialog">
     <div class="dlg-head"><h2 id="createTitle">Server anlegen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-    <label class="field"><span>Spiel</span><select id="cTpl" required></select></label>
+    <div class="field picker">
+      <span>Spiel <b class="mono" id="cCount"></b></span>
+      <label class="sr" for="cSearch">Spiel suchen</label>
+      <input id="cSearch" type="search" placeholder="Spiel suchen, z. B. ark, rust, counter" autocomplete="off">
+      <label class="sr" for="cTpl">Spiel auswählen</label>
+      <select id="cTpl" size="7" required></select>
+    </div>
     <p class="note" id="cNotes" hidden></p>
     <label class="field"><span>Name im Panel</span><input id="cName" maxlength="40" required></label>
     <div class="field"><span>Arbeitsspeicher <b id="cMemV" class="mono"></b></span><input id="cMem" type="range" step="256"></div>

@@ -1,0 +1,26 @@
+{
+  "id": "lgsm-wf",
+  "name": "Warfork",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1136510,
+  "start": "./wf_server.x86_64 +exec panel.cfg +sv_http_ip 0.0.0.0 +set sv_http_port {{port_2}} +sv_ip 0.0.0.0 +sv_port {{port}}",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 44400,
+      "proto": "udp"
+    },
+    {
+      "name": "HTTP",
+      "port": 44444,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "lgsm-ti",
+  "name": "The Isle",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 412680,
+  "steam_beta": "evrima",
+  "start": "cd TheIsle/Binaries/Linux && ./TheIsleServer-Linux-Shipping {{defaultmap}} -Port={{port}} -log",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "/Game/TheIsle/Maps/Game/Gateway/Gateway",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 8192,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

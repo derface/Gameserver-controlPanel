@@ -1,0 +1,38 @@
+{
+  "id": "teamspeak3",
+  "name": "TeamSpeak 3",
+  "category": "Sprachserver",
+  "kind": "image",
+  "image": "teamspeak:latest",
+  "env": {
+    "TS3SERVER_LICENSE": "accept",
+    "TZ": "Europe/Berlin"
+  },
+  "data_path": "/var/ts3server",
+  "data_uid": 9987,
+  "ports": [
+    {
+      "name": "Sprache",
+      "port": 9987,
+      "proto": "udp"
+    },
+    {
+      "name": "ServerQuery",
+      "port": 10011,
+      "proto": "tcp"
+    },
+    {
+      "name": "Dateien",
+      "port": 30033,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 512,
+  "min_memory_mb": 128,
+  "console": "stdin",
+  "ready": "listening on",
+  "status": "beta",
+  "disk_gb": 1,
+  "notes": "Offizielles TeamSpeak-Image. Der Admin-Schlüssel (token=…) steht beim ersten Start in der Konsole. Gilt mit der kostenlosen Lizenz für bis zu 32 Plätze."
+}

@@ -1,0 +1,43 @@
+{
+  "id": "lgsm-sbots",
+  "name": "StickyBots",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 974130,
+  "start": "cd blank1/Binaries/Linux && ./blank1Server-Linux-Shipping -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_2}} -startup_map {{defaultmap}} -server_name '{{servername}}'",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "StationKappa",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

@@ -1,0 +1,38 @@
+{
+  "id": "lgsm-mh",
+  "name": "MORDHAU",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 629800,
+  "start": "cd Mordhau/Binaries/Linux && ./MordhauServer-Linux-Shipping Mordhau {{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} -BeaconPort={{port_3}} -QueryPort={{port_2}} -GameIni=/data/server/Mordhau/Saved/Config/LinuxServer/Game.ini -log",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Beacon",
+      "port": 15000,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "FFA_ThePit",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

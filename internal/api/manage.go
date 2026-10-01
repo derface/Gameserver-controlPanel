@@ -239,13 +239,15 @@ func safeFileName(s string) string {
 
 func (a *API) root(w http.ResponseWriter, r *http.Request) (files.Root, bool) {
 	id := r.PathValue("id")
-	if _, ok := a.Store.Server(id); !ok {
+	sv, ok := a.Store.Server(id)
+	if !ok {
 		fail(w, 404, errors.New("Server nicht gefunden"))
 		return files.Root{}, false
 	}
 	dir := a.Mgr.ServerDir(id)
 	_ = os.MkdirAll(dir, 0o755)
-	return files.New(dir), true
+	tpl, _ := a.Mgr.Templates().Get(sv.Template)
+	return files.New(dir).WithOwner(tpl.DataUID), true
 }
 
 func qpath(r *http.Request) string { return r.URL.Query().Get("path") }

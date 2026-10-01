@@ -1,0 +1,43 @@
+{
+  "id": "lgsm-l4d",
+  "name": "Left 4 Dead",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 222840,
+  "start": "./srcds_run -game left4dead -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_2}} +map {{defaultmap}} -maxplayers {{maxplayers}}",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Client",
+      "port": 27005,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "8",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "l4d_hospital01_apartment",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 1024,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

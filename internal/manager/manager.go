@@ -264,13 +264,33 @@ func (m *Manager) ensureImage(ctx context.Context, id string, tpl templates.Temp
 	m.buildMu.Lock()
 	defer m.buildMu.Unlock()
 	if tpl.Kind == "steam" {
-		if m.dk.ImageExists(ctx, SteamImage) {
+		if !m.dk.ImageExists(ctx, SteamImage) {
+			m.setJob(id, "Steam-Laufzeit wird eingerichtet (einmalig, 2 bis 5 Minuten)")
+			err := m.dk.Build(ctx, SteamImage, map[string]string{"Dockerfile": steamDockerfile, "gp-run": steamRunScript}, func(line string) {
+				if strings.HasPrefix(line, "Step") {
+					m.setJob(id, "Steam-Laufzeit: "+line)
+				}
+			})
+			if err != nil {
+				return err
+			}
+		}
+		img := SteamImageFor(tpl)
+		if img == SteamImage || m.dk.ImageExists(ctx, img) {
 			return nil
 		}
-		m.setJob(id, "Steam-Laufzeit wird eingerichtet (einmalig, 2 bis 5 Minuten)")
-		return m.dk.Build(ctx, SteamImage, map[string]string{"Dockerfile": steamDockerfile, "gp-run": steamRunScript}, func(line string) {
+		df, err := layerDockerfile(tpl)
+		if err != nil {
+			return err
+		}
+		what := "Zusatzpakete für " + tpl.Name
+		if tpl.Runtime == "wine" {
+			what = "Wine für Windows-Server (einmalig, 3 bis 8 Minuten)"
+		}
+		m.setJob(id, what+" werden eingerichtet")
+		return m.dk.Build(ctx, img, map[string]string{"Dockerfile": df}, func(line string) {
 			if strings.HasPrefix(line, "Step") {
-				m.setJob(id, "Steam-Laufzeit: "+line)
+				m.setJob(id, what+": "+line)
 			}
 		})
 	}
@@ -297,7 +317,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 		StopTimeout: tpl.StopTimeout,
 		StopSignal:  tpl.StopSignal,
 		HostConfig: docker.HostConfig{
-			Binds:         []string{m.ServerDir(sv.ID) + ":/data"},
+			Binds:         []string{m.ServerDir(sv.ID) + ":" + tpl.DataPathOr()},
 			PortBindings:  map[string][]docker.PortBinding{},
 			Memory:        int64(sv.MemoryMB) * 1024 * 1024,
 			RestartPolicy: docker.RestartPolicy{Name: "unless-stopped"},
@@ -323,17 +343,22 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 		if sv.UpdateOnRun {
 			upd = "1"
 		}
-		cfg.Image = SteamImage
+		cfg.Image = SteamImageFor(tpl)
 		cfg.Env = []string{
 			"GP_APP_ID=" + strconv.Itoa(appID),
 			"GP_START=" + start,
 			"GP_UPDATE=" + upd,
 			"GP_BETA=" + tpl.SteamBeta,
+			"GP_PLATFORM=" + tpl.Platform,
+			"GP_LOGFILE=" + tpl.LogFile,
 			"TZ=Europe/Berlin",
 		}
 		return cfg
 	}
 	cfg.Image = tpl.Image
+	for _, a := range tpl.Cmd {
+		cfg.Cmd = append(cfg.Cmd, tpl.Render(a, sv.Vars, hostPorts))
+	}
 	for k, v := range tpl.Env {
 		val := tpl.Render(v, sv.Vars, hostPorts)
 		if val != "" {
@@ -364,7 +389,11 @@ func (m *Manager) prepare(id string, start bool) {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return err
 		}
-		_ = os.Chown(dir, containerUID, containerUID)
+		uid := containerUID
+		if tpl.DataUID > 0 {
+			uid = tpl.DataUID
+		}
+		_ = os.Chown(dir, uid, uid)
 		if err := m.ensureImage(ctx, id, tpl); err != nil {
 			return fmt.Errorf("Image: %w", err)
 		}
@@ -466,7 +495,7 @@ func (m *Manager) outdated(ctx context.Context, sv store.Server) bool {
 		return false
 	}
 	_, img, err := m.dk.InspectImage(ctx, sv.ContainerID)
-	return err == nil && img != "" && img != SteamImage
+	return err == nil && img != "" && img != SteamImageFor(tpl)
 }
 
 // Recreate rebuilds the container with the current settings (keeps data).

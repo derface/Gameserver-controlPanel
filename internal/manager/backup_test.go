@@ -4,6 +4,9 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -68,5 +71,71 @@ func TestDue(t *testing.T) {
 	}
 	if due(store.BackupPlan{EveryHours: 0}, now) {
 		t.Fatal("aus, aber fällig")
+	}
+}
+
+func TestLayerDockerfile(t *testing.T) {
+	base := templates.Template{Kind: "steam"}
+	if SteamImageFor(base) != SteamImage {
+		t.Fatal("ohne Pakete muss das Grund-Image genutzt werden")
+	}
+	a := templates.Template{Kind: "steam", Packages: []string{"lib32z1", "libtinfo5:i386"}}
+	b := templates.Template{Kind: "steam", Packages: []string{"libtinfo5:i386", "lib32z1"}}
+	if SteamImageFor(a) != SteamImageFor(b) || SteamImageFor(a) == SteamImage {
+		t.Fatal("gleiche Pakete müssen das gleiche Image ergeben")
+	}
+	df, err := layerDockerfile(a)
+	if err != nil || !strings.Contains(df, "apt-get install -y --no-install-recommends lib32z1 libtinfo5:i386") {
+		t.Fatalf("Dockerfile: %v\n%s", err, df)
+	}
+	if _, err := layerDockerfile(templates.Template{Packages: []string{"x; rm -rf /"}}); err == nil {
+		t.Fatal("ungültiger Paketname angenommen")
+	}
+	w, _ := layerDockerfile(templates.Template{Runtime: "wine"})
+	if !strings.Contains(w, "winehq-stable") {
+		t.Fatal("Wine fehlt")
+	}
+}
+
+func TestAllTemplatesRender(t *testing.T) {
+	set, err := templates.Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(set.All()) < 70 {
+		t.Fatalf("nur %d Vorlagen", len(set.All()))
+	}
+	for _, tpl := range set.All() {
+		if tpl.Custom {
+			continue
+		}
+		vars, err := tpl.ResolveVars(map[string]string{"password": "geheim1", "admin_password": "geheim1", "rcon_password": "geheim1", "adminpassword": "geheim1"})
+		if err != nil {
+			t.Errorf("%s: %v", tpl.ID, err)
+			continue
+		}
+		ports := []int{}
+		for _, p := range tpl.Ports {
+			ports = append(ports, p.Port)
+		}
+		for _, m := range regexp.MustCompile(`\{\{\s*([a-z0-9_]+)\s*\}\}`).FindAllStringSubmatch(tpl.Start+strings.Join(tpl.Cmd, " "), -1) {
+			k := m[1]
+			if _, ok := vars[k]; !ok && k != "port" && !regexp.MustCompile(`^port_[0-9]+$`).MatchString(k) {
+				t.Errorf("%s: unbekannter Platzhalter %s", tpl.ID, k)
+			}
+			if strings.HasPrefix(k, "port_") {
+				n, _ := strconv.Atoi(k[5:])
+				if n > len(tpl.Ports) {
+					t.Errorf("%s: %s, aber nur %d Ports", tpl.ID, k, len(tpl.Ports))
+				}
+			}
+		}
+		out := tpl.Render(tpl.Start, vars, ports)
+		if strings.Contains(out, "{{") {
+			t.Errorf("%s: Platzhalter übrig: %s", tpl.ID, out)
+		}
+		if tpl.Query != nil && tpl.Query.Port >= len(tpl.Ports) {
+			t.Errorf("%s: Abfrage-Port %d existiert nicht", tpl.ID, tpl.Query.Port)
+		}
 	}
 }

@@ -60,6 +60,7 @@ Regeln:
 - memory_mb: realistisch für Spiel und Spielerzahl, mindestens das Minimum der Vorlage, höchstens den freien RAM.
 - Passwörter nie erfinden: lass geheime Variablen leer und erwähne im reply, dass der Nutzer sie setzen soll.
 - Für Minecraft-Mods nutze die Variable "mods" mit Modrinth-Namen (z. B. create,ferrite-core,modernfix) und passenden Loader als "type".
+- Bevorzuge Vorlagen mit Status "stabil". Bei "beta" oder "experimentell" erwähne im reply, dass das Spiel im Panel noch nicht erprobt ist.
 - steps: 4 bis 6 kurze deutsche Schritte, die das Panel ausführt (Container anlegen, Dateien laden, Einstellungen, Start).
 `)
 	fmt.Fprintf(&b, "\nRechner: %d MB RAM gesamt, davon %d MB frei.\n", c.TotalMemMB, c.FreeMemMB)
@@ -68,7 +69,10 @@ Regeln:
 	}
 	b.WriteString("\nVorlagen:\n")
 	for _, t := range tpls {
-		fmt.Fprintf(&b, "- id=%s | %s | RAM Standard %d MB, Minimum %d MB", t.ID, t.Name, t.MemoryMB, t.MinMemoryMB)
+		fmt.Fprintf(&b, "- id=%s | %s | RAM %d MB (min %d)", t.ID, t.Name, t.MemoryMB, t.MinMemoryMB)
+		if t.Status != "stabil" {
+			fmt.Fprintf(&b, " | %s", t.Status)
+		}
 		if t.SteamAppID != 0 {
 			fmt.Fprintf(&b, " | Steam-App %d", t.SteamAppID)
 		}

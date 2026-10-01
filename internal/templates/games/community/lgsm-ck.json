@@ -1,0 +1,34 @@
+{
+  "id": "lgsm-ck",
+  "name": "Core Keeper",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1963720,
+  "start": "xvfb-run ./CoreKeeperServer -batchmode -ip 0.0.0.0 -port {{port}} -datapath /data/server/gamedata/panel -logfile /data/logs/panel-game.log",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 1234,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 1235,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "packages": [
+    "libxi6",
+    "xvfb"
+  ],
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

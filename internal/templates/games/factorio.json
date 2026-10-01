@@ -1,0 +1,33 @@
+{
+  "id": "factorio",
+  "name": "Factorio",
+  "category": "Weitere Spiele",
+  "kind": "image",
+  "image": "factoriotools/factorio:stable",
+  "env": {
+    "TZ": "Europe/Berlin"
+  },
+  "data_path": "/factorio",
+  "data_uid": 845,
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 34197,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 27015,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 2048,
+  "min_memory_mb": 1024,
+  "console": "stdin",
+  "ready": "Matching server connection resumed|joined the game|Hosting game at",
+  "backup_include": [],
+  "status": "beta",
+  "disk_gb": 1,
+  "notes": "Nutzt das verbreitete Image factoriotools/factorio. Beim ersten Start wird automatisch eine Karte erzeugt. Einstellungen in config/server-settings.json."
+}

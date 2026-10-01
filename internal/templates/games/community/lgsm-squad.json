@@ -1,0 +1,26 @@
+{
+  "id": "lgsm-squad",
+  "name": "Squad",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 403240,
+  "start": "./SquadGameServer.sh -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_2}}",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7787,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 27165,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

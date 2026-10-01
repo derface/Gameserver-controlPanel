@@ -1,0 +1,45 @@
+{
+  "id": "lgsm-hcu",
+  "name": "HYPERCHARGE: Unboxed",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1045940,
+  "start": "cd Unboxed/Binaries/Linux && ./UnboxedServer-Linux-Shipping {{defaultmap}}?MaxPlayers={{maxplayers}} -ServerName='{{servername}}' -Port={{port}} -QueryPort={{port_2}}",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 27015,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "8",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "KidsBedroom",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

@@ -1,0 +1,67 @@
+{
+  "id": "lgsm-csgo",
+  "name": "Counter-Strike: Global Offensive",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 740,
+  "start": "./srcds_run -game csgo -usercon -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +sv_setsteamaccount {{gslt}} -tickrate {{tickrate}} +map {{defaultmap}} +servercfgfile panel.cfg -maxplayers_override {{maxplayers}} +mapgroup mg_active +game_type 0 +game_mode {{gamemode}} +sv_game_mode_flags 0 +sv_skirmish_id 0 +host_workshop_collection +workshop_start_map -authkey -nobreakpad",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "SourceTV",
+      "port": 27020,
+      "proto": "udp"
+    },
+    {
+      "name": "Client",
+      "port": 27005,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "16",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "de_mirage",
+      "type": "slug"
+    },
+    {
+      "key": "gamemode",
+      "label": "Spielmodus",
+      "default": "0",
+      "type": "slug"
+    },
+    {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    },
+    {
+      "key": "tickrate",
+      "label": "Tickrate",
+      "default": "64",
+      "type": "number"
+    }
+  ],
+  "memory_mb": 1024,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

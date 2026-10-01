@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-//go:embed games/*.json
+//go:embed games/*.json games/community/*.json
 var builtin embed.FS
 
 type Port struct {
@@ -58,8 +58,15 @@ type Template struct {
 	Status      string            `json:"status"`          // stabil | beta
 	DiskGB      int               `json:"disk_gb,omitempty"`
 	Notes       string            `json:"notes,omitempty"`
-	Custom      bool              `json:"custom,omitempty"` // user supplies app id, start and ports
-	Query       *Query            `json:"query,omitempty"`  // how to read the player count
+	Custom      bool              `json:"custom,omitempty"`    // user supplies app id, start and ports
+	Query       *Query            `json:"query,omitempty"`     // how to read the player count
+	Packages    []string          `json:"packages,omitempty"`  // extra Debian packages (steam)
+	Runtime     string            `json:"runtime,omitempty"`   // "" or "wine"
+	Platform    string            `json:"platform,omitempty"`  // "windows" downloads Windows binaries
+	DataPath    string            `json:"data_path,omitempty"` // mount point for image servers (default /data)
+	DataUID     int               `json:"data_uid,omitempty"`  // owner of the server folder (default 1000)
+	Cmd         []string          `json:"cmd,omitempty"`       // arguments for image servers
+	LogFile     string            `json:"log_file,omitempty"`  // steam: game writes here instead of stdout
 
 	// Backups: by default a Steam server backs up everything in its data
 	// folder except the game install ("server"); image servers back up all.
@@ -67,6 +74,14 @@ type Template struct {
 	BackupInclude []string `json:"backup_include,omitempty"` // extra paths, also inside excluded ones
 	BackupPre     []string `json:"backup_pre,omitempty"`     // console commands before a live backup
 	BackupPost    []string `json:"backup_post,omitempty"`    // console commands afterwards
+}
+
+// DataPathOr returns where the server folder is mounted in the container.
+func (t Template) DataPathOr() string {
+	if t.DataPath != "" && t.Kind == "image" {
+		return t.DataPath
+	}
+	return "/data"
 }
 
 // Excludes returns the effective top-level excludes for backups.
@@ -95,17 +110,22 @@ type Set struct {
 // Load reads the built-in templates plus any *.json in extraDir (may be empty).
 func Load(extraDir string) (*Set, error) {
 	s := &Set{byID: map[string]Template{}}
-	entries, err := builtin.ReadDir("games")
-	if err != nil {
-		return nil, err
-	}
-	for _, e := range entries {
-		b, err := builtin.ReadFile("games/" + e.Name())
+	for _, dir := range []string{"games", "games/community"} {
+		entries, err := builtin.ReadDir(dir)
 		if err != nil {
 			return nil, err
 		}
-		if err := s.add(b, e.Name()); err != nil {
-			return nil, err
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			b, err := builtin.ReadFile(dir + "/" + e.Name())
+			if err != nil {
+				return nil, err
+			}
+			if err := s.add(b, e.Name()); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if extraDir != "" {
@@ -172,7 +192,7 @@ func (s *Set) Get(id string) (Template, bool) {
 	return t, ok
 }
 
-var unsafeChars = regexp.MustCompile("[\"`$\\\\;&|<>\n\r]")
+var unsafeChars = regexp.MustCompile("[\"'`$\\\\;&|<>\n\r]")
 var slugChars = regexp.MustCompile(`[^A-Za-z0-9_-]`)
 
 // Clean removes characters that could break out of a shell argument.

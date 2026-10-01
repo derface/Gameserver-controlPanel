@@ -1,0 +1,60 @@
+{
+  "id": "terraria",
+  "name": "Terraria",
+  "category": "Weitere Spiele",
+  "kind": "image",
+  "image": "ryshe/terraria:latest",
+  "env": {
+    "TZ": "Europe/Berlin"
+  },
+  "data_path": "/root/.local/share/Terraria/Worlds",
+  "data_uid": 0,
+  "cmd": [
+    "-world",
+    "/root/.local/share/Terraria/Worlds/{{world}}.wld",
+    "-autocreate",
+    "{{size}}",
+    "-maxplayers",
+    "{{max_players}}"
+  ],
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "world",
+      "label": "Weltname",
+      "default": "Welt",
+      "type": "slug"
+    },
+    {
+      "key": "size",
+      "label": "Weltgröße (beim ersten Start)",
+      "default": "2",
+      "type": "select",
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "help": "1 = klein, 2 = mittel, 3 = groß"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "default": "8",
+      "type": "number"
+    }
+  ],
+  "memory_mb": 1024,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "ready": "Server started",
+  "status": "beta",
+  "disk_gb": 1,
+  "notes": "Vanilla-Terraria über das Image ryshe/terraria. Befehle wie save oder say gehen über die Konsole."
+}

@@ -34,9 +34,20 @@ type Entry struct {
 	ModTime time.Time `json:"mod_time"`
 }
 
-type Root struct{ dir string }
+type Root struct {
+	dir string
+	uid int
+}
 
-func New(dir string) Root { return Root{dir: filepath.Clean(dir)} }
+func New(dir string) Root { return Root{dir: filepath.Clean(dir), uid: OwnerUID} }
+
+// WithOwner sets the user new and changed files belong to.
+func (r Root) WithOwner(uid int) Root {
+	if uid > 0 {
+		r.uid = uid
+	}
+	return r
+}
 
 // Resolve turns a browser path ("/server/config.txt") into an absolute path.
 // If the target exists, symlinks are resolved and checked; for a new file
@@ -146,7 +157,7 @@ func (r Root) WriteText(rel, content string) error {
 	if err := os.WriteFile(tmp, []byte(content), mode); err != nil {
 		return friendly(err)
 	}
-	_ = os.Chown(tmp, OwnerUID, OwnerUID)
+	_ = os.Chown(tmp, r.uid, r.uid)
 	return os.Rename(tmp, abs)
 }
 
@@ -202,7 +213,7 @@ func (r Root) Save(rel, name string, src io.Reader) error {
 		return err
 	}
 	f.Close()
-	_ = os.Chown(tmp, OwnerUID, OwnerUID)
+	_ = os.Chown(tmp, r.uid, r.uid)
 	return os.Rename(tmp, abs)
 }
 
@@ -217,7 +228,7 @@ func (r Root) Mkdir(rel, name string) error {
 	if err := os.Mkdir(abs, 0o755); err != nil {
 		return friendly(err)
 	}
-	return os.Chown(abs, OwnerUID, OwnerUID)
+	return os.Chown(abs, r.uid, r.uid)
 }
 
 func (r Root) Rename(rel, newName string) error {

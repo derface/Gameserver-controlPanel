@@ -1,0 +1,39 @@
+{
+  "id": "enshrouded",
+  "name": "Enshrouded",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2278520,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "xvfb-run -a wine ./enshrouded_server.exe",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 15636,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 15637,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 12288,
+  "min_memory_mb": 6144,
+  "console": "stdin",
+  "ready": "HostOnline",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/savegame",
+    "server/enshrouded_server.json"
+  ],
+  "status": "experimentell",
+  "disk_gb": 4,
+  "notes": "Läuft über Wine. Name, Passwort und Spielerzahl stehen nach dem ersten Start in enshrouded_server.json im Serverordner. Erst bearbeiten, wenn der Server gestoppt ist."
+}

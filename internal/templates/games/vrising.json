@@ -1,0 +1,50 @@
+{
+  "id": "vrising",
+  "name": "V Rising",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 1829350,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "xvfb-run -a wine ./VRisingServer.exe -persistentDataPath /data/server/save-data -serverName \"{{server_name}}\" -saveName {{save_name}} -logFile /data/logs/VRisingServer.log",
+  "log_file": "/data/logs/VRisingServer.log",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 9876,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 9877,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "default": "Mein V-Rising-Server"
+    },
+    {
+      "key": "save_name",
+      "label": "Spielstand",
+      "default": "world1",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 8192,
+  "min_memory_mb": 4096,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/save-data"
+  ],
+  "status": "experimentell",
+  "disk_gb": 3,
+  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start)."
+}

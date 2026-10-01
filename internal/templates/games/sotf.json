@@ -1,0 +1,42 @@
+{
+  "id": "sotf",
+  "name": "Sons of the Forest",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2465200,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "xvfb-run -a wine ./SonsOfTheForestDS.exe -userdatapath /data/server/userdata",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 8766,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    },
+    {
+      "name": "Blob-Sync",
+      "port": 9700,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 8192,
+  "min_memory_mb": 6144,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/userdata"
+  ],
+  "status": "experimentell",
+  "disk_gb": 5,
+  "notes": "Läuft über Wine. Einstellungen in userdata/dedicatedserver.cfg (entsteht beim ersten Start)."
+}

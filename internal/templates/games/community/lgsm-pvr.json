@@ -1,0 +1,36 @@
+{
+  "id": "lgsm-pvr",
+  "name": "Pavlov VR",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 622970,
+  "start": "cd Pavlov/Binaries/Linux && ./PavlovServer-Linux-Shipping Pavlov {{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} ApiKey= -log",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "datacenter",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 8192,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "packages": [
+    "libc++1"
+  ],
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

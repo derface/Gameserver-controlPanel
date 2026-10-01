@@ -1,0 +1,58 @@
+{
+  "id": "lgsm-unt",
+  "name": "Unturned",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1110390,
+  "start": "./Unturned_Headless.x86_64 -nographics -batchmode -bind 0.0.0.0 -port {{port}} -maxplayers {{maxplayers}} -perspective first -mode {{gamemode}} -name {{servername}} -map {{defaultmap}} -gslt {{gslt}} +InternetServer/panel",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "20",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "PEI",
+      "type": "slug"
+    },
+    {
+      "key": "gamemode",
+      "label": "Spielmodus",
+      "default": "normal",
+      "type": "slug"
+    },
+    {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

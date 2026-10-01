@@ -1,0 +1,42 @@
+{
+  "id": "lgsm-ark",
+  "name": "ARK: Survival Evolved",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 376030,
+  "start": "cd ShooterGame/Binaries/Linux && ./ShooterGameServer {{defaultmap}}?AltSaveDirectoryName={{defaultmap}} -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_3}} -AutoManagedMods -Crossplay -PublicIPForEpic=",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "RAW UDP Socket",
+      "port": 7778,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "TheIsland",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 2
+  },
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

@@ -1,0 +1,30 @@
+{
+  "id": "lgsm-squad44",
+  "name": "Squad 44",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 746200,
+  "start": "./PostScriptumServer.sh -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_2}} -log",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 10027,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 10037,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

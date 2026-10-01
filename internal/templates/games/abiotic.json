@@ -1,0 +1,61 @@
+{
+  "id": "abiotic",
+  "name": "Abiotic Factor",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2857200,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "xvfb-run -a wine ./AbioticFactor/Binaries/Win64/AbioticFactorServer-Win64-Shipping.exe -log -useperfthreads -NoAsyncLoadingThread -MaxServerPlayers={{max_players}} -PORT={{port}} -QueryPort={{port_2}} -SteamServerName=\"{{server_name}}\" -ServerPassword=\"{{password}}\" -WorldSaveName={{world}}",
+  "log_file": "/data/server/AbioticFactor/Saved/Logs/AbioticFactor.log",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "default": "Mein Abiotic-Factor-Server"
+    },
+    {
+      "key": "password",
+      "label": "Passwort",
+      "default": "",
+      "type": "secret"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "default": "6",
+      "type": "number"
+    },
+    {
+      "key": "world",
+      "label": "Weltname",
+      "default": "Cascade",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 4096,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/AbioticFactor/Saved"
+  ],
+  "status": "experimentell",
+  "disk_gb": 4,
+  "notes": "Läuft über Wine."
+}

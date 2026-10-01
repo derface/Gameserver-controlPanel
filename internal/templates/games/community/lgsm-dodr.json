@@ -1,0 +1,37 @@
+{
+  "id": "lgsm-dodr",
+  "name": "Day of Dragons",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1088320,
+  "start": "cd Dragons/Binaries/Linux && ./DragonsServer-Linux-Shipping -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_2}} -SteamServerName='{{servername}}' -log",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

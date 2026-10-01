@@ -73,6 +73,10 @@ kbd{font-family:var(--font-mono);font-size:10px;border:1px solid currentColor;bo
 .field small{color:var(--muted);font-size:12px}
 .check{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
 .check input{width:18px;height:18px;accent-color:var(--accent)}
+.picker select{padding:6px!important;font-size:14px}
+.picker select optgroup{font-family:var(--font-mono);font-size:11px;color:var(--muted);font-style:normal}
+.picker select option{padding:6px 8px;border-radius:6px;font-family:var(--font-body);font-size:14px;color:var(--ink)}
+.picker select option:checked{background:var(--accent);color:var(--on-accent)}
 .vars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .vars .full{grid-column:1/-1}
 @media (max-width:560px){.vars{grid-template-columns:minmax(0,1fr)}}

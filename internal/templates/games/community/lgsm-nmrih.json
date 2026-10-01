@@ -1,0 +1,58 @@
+{
+  "id": "lgsm-nmrih",
+  "name": "No More Room in Hell",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 317670,
+  "start": "./srcds_run -game nmrih -strictportbind -ip 0.0.0.0 -port {{port}} +clientport {{port_3}} +tv_port {{port_2}} +map {{defaultmap}} +sv_setsteamaccount {{gslt}} +servercfgfile panel.cfg -maxplayers {{maxplayers}}",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "SourceTV",
+      "port": 27020,
+      "proto": "udp"
+    },
+    {
+      "name": "Client",
+      "port": 27005,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "8",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "nmo_broadway",
+      "type": "slug"
+    },
+    {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    }
+  ],
+  "memory_mb": 1024,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "packages": [
+    "libtinfo5:i386"
+  ],
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}

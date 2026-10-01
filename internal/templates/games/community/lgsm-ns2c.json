@@ -1,0 +1,49 @@
+{
+  "id": "lgsm-ns2c",
+  "name": "NS2: Combat",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 313900,
+  "start": "cd ia32 && ./ns2combatserver_linux32 -name '{{servername}}' -port {{port}} -webadmin -webdomain 0.0.0.0 -webuser admin -webpassword 'CHANGE_ME' -webport {{port_2}} -map {{defaultmap}} -limit {{maxplayers}} -config_path '/data/server/panel' -modstorage '/data/server/panel/Workshop' -mods ''",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Web Interface",
+      "port": 8080,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "24",
+      "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "co_core",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 2048,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "packages": [
+    "libtbb12",
+    "speex:i386"
+  ],
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen und noch nicht im Panel getestet."
+}
