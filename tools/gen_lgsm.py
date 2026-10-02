@@ -39,6 +39,8 @@ BROKEN = {
 # Im Selbsttest vom 01.10.2026 bestanden (Download, Start, Spielerabfrage).
 # Nur diese bekommen "beta", alle anderen "experimentell" bis zum nächsten Test.
 PASSED = set("ark bd bmdm bb2 cc cs css dods dodr em fof hl2dm hldms hldm hw jbep3 l4d nmrih ohd pvkii sm squad44 sbots sven tf".split())
+# zweiter Lauf 02.10.2026, nach den Korrekturen
+PASSED |= set("cmw ck cscz csgo dod dmc l4d2 mh ns2 opfor pvr ricochet tf2c tfc tu".split())
 
 # Nacharbeiten, die LinuxGSM in seinen fix_*.sh macht, als Befehle vor dem Start
 # (laufen im Ordner des Programms). Platzhalter: SC32/SC64 = steamclient.so.
@@ -55,9 +57,12 @@ FIXES = {
     "hw": ["export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/server:/data/server/Hurtworld_Data/Plugins/x86_64"],
     "nmrih": ["for f in vphysics studiorender soundemittersystem shaderapiempty scenefilecache replay materialsystem; do [ -e bin/$f.so ] || ln -s ${f}_srv.so bin/$f.so; done"],
 }
+FIXES["btl"] = ["mv -f Battalion/Plugins/Sentry/Binaries/Linux/crashpad_handler Battalion/Plugins/Sentry/Binaries/Linux/crashpad_handler.off 2>/dev/null"]
 EXTRA_PKGS = {"ck": ["xauth"], "mh": ["libcurl3-gnutls"], "pvr": ["libc++1", "libc++abi1"], "btl": [], "tf2c": ["libcurl3-gnutls:i386", "libcurl3-gnutls"]}
 # eigene Bereit-Meldungen (sonst bei Unreal-Servern mit -log die Standardzeile)
-READY = {"ns2": r"Finished loading 'maps/", "ns2c": r"Finished loading 'maps/"}
+READY = {"ns2": r"Finished loading 'maps/", "unt": r"Loading level: 100%"}
+# Unreal-Server ohne Spielerabfrage bekommen -log, damit die Bereit-Meldung sichtbar wird
+ADD_LOG = {"hcu", "squad"}
 
 USER_VARS = {
     "servername": ("Servername", "text", None),
@@ -286,6 +291,8 @@ for short, (gsname, gamename) in sorted(names.items()):
         skipped.append((short, "kein Programm"))
         continue
     pre = expand(cfg.get("preexecutable", ""), {**env, "javaram": "2048"})
+    if short in ADD_LOG and not re.search(r'(^|\s)-log(\s|$)', start_args):
+        start_args += " -log"
     if re.search(r'(srcds_run|hlds_run|srcds\.sh|srcds_run\.sh)$', exe) and "-norestart" not in start_args:
         start_args += " -norestart"  # Absturz soll Docker sehen, nicht srcds_run selbst neu starten
     fixes = "; ".join(FIXES.get(short, []))

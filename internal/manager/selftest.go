@@ -112,7 +112,12 @@ func (m *Manager) TestStatus() TestRun {
 	}
 	r := *m.test
 	r.Queue = append([]string{}, r.Queue...)
-	r.Results = append([]TestResult{}, r.Results...)
+	r.Results = []TestResult{}
+	for _, x := range m.test.Results {
+		if _, ok := m.tpls.Get(x.Template); ok { // templates removed by an update drop out
+			r.Results = append(r.Results, x)
+		}
+	}
 	r.FreeGB = freeGB(m.dataDir)
 	return r
 }

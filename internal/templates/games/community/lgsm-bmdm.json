@@ -24,11 +24,10 @@
   ],
   "vars": [
     {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "dm_bounce",
+      "type": "slug"
     },
     {
       "key": "maxplayers",
@@ -37,10 +36,11 @@
       "type": "number"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "dm_bounce",
-      "type": "slug"
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 1024,

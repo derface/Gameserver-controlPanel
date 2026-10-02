@@ -19,16 +19,16 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "16",
-      "type": "number"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "crossfire",
       "type": "slug"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "16",
+      "type": "number"
     }
   ],
   "memory_mb": 512,

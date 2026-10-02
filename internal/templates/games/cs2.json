@@ -74,6 +74,6 @@
     "server/game/csgo/cfg"
   ],
   "status": "experimentell",
-  "disk_gb": 40,
-  "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend."
+  "disk_gb": 60,
+  "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend. Braucht während der Installation rund 60 GB freien Platz."
 }

@@ -6,7 +6,7 @@
   "steam_app_id": 2465200,
   "platform": "windows",
   "runtime": "wine",
-  "start": "xvfb-run -a wine ./SonsOfTheForestDS.exe -userdatapath /data/server/userdata",
+  "start": "xvfb-run -a wine ./SonsOfTheForestDS.exe -userdatapath /data/server/userdata -logFile /data/logs/sotf.log",
   "ports": [
     {
       "name": "Spiel",
@@ -38,5 +38,6 @@
   ],
   "status": "experimentell",
   "disk_gb": 5,
-  "notes": "Läuft über Wine. Einstellungen in userdata/dedicatedserver.cfg (entsteht beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht."
+  "notes": "Läuft über Wine. Einstellungen in userdata/dedicatedserver.cfg (entsteht beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht.",
+  "log_file": "/data/logs/sotf.log"
 }

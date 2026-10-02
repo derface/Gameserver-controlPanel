@@ -19,17 +19,10 @@
   ],
   "vars": [
     {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
-    },
-    {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "20",
-      "type": "number"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     },
     {
       "key": "defaultmap",
@@ -38,21 +31,29 @@
       "type": "slug"
     },
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "20",
+      "type": "number"
     },
     {
       "key": "gamemode",
       "label": "Spielmodus",
       "default": "normal",
       "type": "slug"
+    },
+    {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 4096,
   "min_memory_mb": 512,
   "console": "stdin",
+  "ready": "Loading level: 100%",
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen."
 }

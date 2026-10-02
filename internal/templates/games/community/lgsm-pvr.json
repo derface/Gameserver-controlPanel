@@ -33,6 +33,6 @@
     "libc++1",
     "libc++abi1"
   ],
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen."
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

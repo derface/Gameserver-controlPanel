@@ -667,7 +667,7 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 	if tpl.Ready != "" {
 		ready, _ = regexp.Compile(tpl.Ready)
 	}
-	installing, started, failed, isReady := false, tpl.Kind != "steam", false, false
+	installing, started, failed, isReady, noSpace := false, tpl.Kind != "steam", false, false, false
 	progress := 0.0
 	sc := bufio.NewScanner(io.LimitReader(rc, 64<<20))
 	sc.Buffer(make([]byte, 64<<10), 1<<20)
@@ -678,6 +678,8 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 			installing, started, progress = true, false, 0
 		case strings.Contains(line, "[panel] Installation fehlgeschlagen"):
 			failed = true
+		case installing && strings.Contains(line, "state is 0x202"):
+			noSpace = true // SteamCMD: not enough disk space
 		case strings.Contains(line, "[panel] Start:"):
 			installing, started = false, true
 		case installing:
@@ -691,6 +693,9 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 	switch {
 	case failed && !started:
 		l.Msg = "SteamCMD-Installation fehlgeschlagen. Details in der Konsole."
+		if noSpace {
+			l.Msg = "SteamCMD-Installation fehlgeschlagen: nicht genug Speicherplatz auf der Platte."
+		}
 		return "error"
 	case installing:
 		l.Progress = progress / 100

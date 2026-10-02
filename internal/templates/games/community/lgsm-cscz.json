@@ -20,16 +20,16 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "16",
-      "type": "number"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "de_dust2",
       "type": "slug"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "16",
+      "type": "number"
     }
   ],
   "memory_mb": 512,
@@ -39,6 +39,6 @@
     "type": "a2s",
     "port": 0
   },
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen."
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

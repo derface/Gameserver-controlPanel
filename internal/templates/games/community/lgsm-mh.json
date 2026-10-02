@@ -37,6 +37,6 @@
   "packages": [
     "libcurl3-gnutls"
   ],
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen."
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

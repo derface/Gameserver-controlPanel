@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 1045940,
-  "start": "cd Unboxed/Binaries/Linux && ./UnboxedServer-Linux-Shipping {{defaultmap}}?MaxPlayers={{maxplayers}} -ServerName='{{servername}}' -Port={{port}} -QueryPort={{port_2}}",
+  "start": "cd Unboxed/Binaries/Linux && ./UnboxedServer-Linux-Shipping {{defaultmap}}?MaxPlayers={{maxplayers}} -ServerName='{{servername}}' -Port={{port}} -QueryPort={{port_2}} -log",
   "ports": [
     {
       "name": "Game",
@@ -19,10 +19,10 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "8",
-      "type": "number"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     },
     {
       "key": "defaultmap",
@@ -31,15 +31,16 @@
       "type": "slug"
     },
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "8",
+      "type": "number"
     }
   ],
   "memory_mb": 6144,
   "min_memory_mb": 512,
   "console": "stdin",
+  "ready": "Bringing up level for play took",
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen."
 }

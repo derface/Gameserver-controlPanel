@@ -30,6 +30,6 @@
     "xauth",
     "xvfb"
   ],
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen."
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

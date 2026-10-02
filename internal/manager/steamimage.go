@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:5"
+const SteamImage = "gamepanel/steam-runtime:6"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -86,7 +86,7 @@ cp -f /opt/steamcmd/linux64/steamclient.so ~/.steam/sdk64/ 2>/dev/null || true
 cp -f /opt/steamcmd/linux32/steamclient.so ~/.steam/sdk32/ 2>/dev/null || true
 cd /data/server
 if [ "${GP_PLATFORM}" = "windows" ]; then
-  export WINEPREFIX=/data/home/.wine WINEDEBUG=-all WINEARCH=win64
+  export WINEPREFIX=/data/home/.wine WINEDEBUG=fixme-all WINEARCH=win64
   if [ ! -f "$WINEPREFIX/system.reg" ]; then
     echo "[panel] Wine wird eingerichtet (einmalig)"
     wineboot --init >/dev/null 2>&1 || true

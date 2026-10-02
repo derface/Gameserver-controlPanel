@@ -19,10 +19,10 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "20",
-      "type": "number"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     },
     {
       "key": "defaultmap",
@@ -31,10 +31,10 @@
       "type": "slug"
     },
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "20",
+      "type": "number"
     }
   ],
   "memory_mb": 4096,

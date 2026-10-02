@@ -24,11 +24,16 @@
   ],
   "vars": [
     {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "Oilfield",
+      "type": "slug"
     },
     {
       "key": "maxplayers",
@@ -43,16 +48,11 @@
       "type": "secret"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "Oilfield",
-      "type": "slug"
-    },
-    {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 6144,

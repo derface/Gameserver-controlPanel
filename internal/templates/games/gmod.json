@@ -57,5 +57,8 @@
   ],
   "status": "experimentell",
   "disk_gb": 5,
-  "notes": " Selbsttest 01.10.2026: startet, meldet aber nicht „bereit“, wird noch untersucht."
+  "notes": " Selbsttest 01.10.2026: startet, meldet aber nicht „bereit“, wird noch untersucht.",
+  "packages": [
+    "libtinfo5:i386"
+  ]
 }

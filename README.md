@@ -61,7 +61,7 @@ ls /var/lib/gamepanel/servers/        # Spieldaten, ein Ordner pro Server
 Das Panel bringt **75 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe unten):
 
 - **stabil** (im Spiel erprobt): Minecraft Java, Minecraft Bedrock, Valheim, Palworld.
-- **beta** (Selbsttest bestanden): Enshrouded und Abiotic Factor (beide über Wine), Rust, 7 Days to Die, Project Zomboid, Satisfactory, Factorio, Terraria, TeamSpeak 3 sowie 25 Community-Spiele, u. a. ARK: Survival Evolved, Counter-Strike 1.6 und Source, Left 4 Dead, Squad 44, Soulmask, The Front, Sven Co-op, Black Mesa.
+- **beta** (Selbsttest bestanden): Enshrouded und Abiotic Factor (beide über Wine), Rust, 7 Days to Die, Project Zomboid, Satisfactory, Factorio, Terraria, TeamSpeak 3 sowie 40 Community-Spiele, u. a. ARK: Survival Evolved, CS 1.6, CS: Condition Zero, CS: Source, CS:GO, Left 4 Dead 1 und 2, Day of Defeat, TFC, TF2 Classified, Squad 44, Soulmask, The Front, Mordhau, Pavlov VR, Core Keeper, Tower Unite.
 - **experimentell** (noch nicht bestanden oder nach einer Korrektur noch nicht erneut getestet): CS2, TF2, Garry's Mod, V Rising, Sons of the Forest und die übrigen Community-Spiele.
 - **defekt**: im Selbsttest abgestürzt, Ursache offen. Diese Vorlagen sind im Panel ausgeblendet und für die KI gesperrt, der Selbsttest prüft sie weiter.
 

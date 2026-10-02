@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 403240,
-  "start": "./SquadGameServer.sh -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_2}}",
+  "start": "./SquadGameServer.sh -MultiHome=0.0.0.0 -Port={{port}} -QueryPort={{port_2}} -log",
   "ports": [
     {
       "name": "Game",
@@ -21,6 +21,7 @@
   "memory_mb": 6144,
   "min_memory_mb": 512,
   "console": "stdin",
+  "ready": "Bringing up level for play took",
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen."
 }

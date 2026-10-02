@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 232250,
-  "start": "./srcds_run_64 -game tf -nohltv -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +hostname \"{{server_name}}\"",
+  "start": "[ -f bin/linux64/replay_srv.so ] && rm -f bin/replay_srv.so; ./srcds_run_64 -game tf -nohltv -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +hostname \"{{server_name}}\"",
   "ports": [
     {
       "name": "Spiel",
@@ -47,5 +47,6 @@
     "server/tf/cfg"
   ],
   "status": "experimentell",
-  "disk_gb": 15
+  "disk_gb": 15,
+  "notes": "Läuft als 64-Bit-Server; die alte 32-Bit-Datei replay_srv.so wird vor dem Start entfernt."
 }

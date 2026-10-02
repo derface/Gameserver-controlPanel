@@ -19,10 +19,10 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "24",
-      "type": "number"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     },
     {
       "key": "defaultmap",
@@ -31,16 +31,15 @@
       "type": "slug"
     },
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "24",
+      "type": "number"
     }
   ],
   "memory_mb": 2048,
   "min_memory_mb": 512,
   "console": "stdin",
-  "ready": "Finished loading 'maps/",
   "packages": [
     "libtbb12",
     "speex:i386"

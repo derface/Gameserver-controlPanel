@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 805140,
-  "start": "cd Battalion/Binaries/Linux && ./BattalionServer-Linux-Shipping -Port={{port}} -QueryPort={{port_2}} -BroadcastIp= -log",
+  "start": "cd Battalion/Binaries/Linux && mv -f Battalion/Plugins/Sentry/Binaries/Linux/crashpad_handler Battalion/Plugins/Sentry/Binaries/Linux/crashpad_handler.off 2>/dev/null; ./BattalionServer-Linux-Shipping -Port={{port}} -QueryPort={{port_2}} -BroadcastIp= -log",
   "ports": [
     {
       "name": "Game",
