@@ -39,6 +39,7 @@
     "type": "a2s",
     "port": 0
   },
+  "broadcast": "say {{msg}}",
   "status": "beta",
   "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

@@ -356,6 +356,8 @@
         <button class="btn-line" type="button" data-d="restart" ${!on || busy ? 'disabled' : ''}>Neustart</button>
         <button class="btn-line" type="button" data-d="backups">Backups</button>
         <button class="btn-line" type="button" data-d="files">Dateien</button>
+        <button class="btn-line" type="button" data-d="tasks">Aufgaben</button>
+        <button class="btn-line" type="button" data-d="events">Verlauf</button>
         <button class="btn-line" type="button" data-d="edit">Bearbeiten</button>
         <button class="btn-line" type="button" data-d="delete">Löschen</button>
         <button class="btn-line" type="button" data-d="back">Zurück</button>
@@ -372,6 +374,7 @@
     else if (a === 'edit') openEdit(s);
     else if (a === 'backups') openManage(s.id, 'backups');
     else if (a === 'files') openManage(s.id, 'files');
+    else if (a === 'tasks' || a === 'events') openManage(s.id, a);
     else if (a === 'delete') openDelete(s);
     else deselect();
   });
@@ -923,6 +926,7 @@
     dl: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
     ren: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
     up: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 01-.5-8 6 6 0 0111.5 1.5A3.5 3.5 0 0117.5 18"/><path d="M12 12v8M9 15l3-3 3 3"/></svg>',
+    play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 5l12 7-12 7z"/></svg>',
     del: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
   };
 
@@ -942,7 +946,11 @@
     MG.tab = tab;
     $$('#dlgManage .tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     $('#paneBackups').hidden = tab !== 'backups'; $('#paneFiles').hidden = tab !== 'files';
-    if (tab === 'backups') loadBackups(); else loadFiles(MG.path);
+    $('#paneTasks').hidden = tab !== 'tasks'; $('#paneEvents').hidden = tab !== 'events';
+    clearTimeout(TK.timer);
+    if (tab === 'backups') loadBackups();
+    else if (tab === 'files') loadFiles(MG.path);
+    else loadTasks();
   }
   $$('#dlgManage .tabs button').forEach(b => b.addEventListener('click', async () => {
     if (b.dataset.tab !== MG.tab && MG.dirty && !(await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen'))) return;
@@ -959,6 +967,107 @@
     e.stopPropagation();
     if (await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen')) { closeEditor(true); $('#dlgManage').close(); }
   }, true);
+
+  // Aufgaben, Wächter, Verlauf
+  const TK = { data: null, timer: null };
+  const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  $('#tkDays').innerHTML = [1, 2, 3, 4, 5, 6, 0].map(d => `<label><input type="checkbox" value="${d}">${DAYS[d]}</label>`).join('');
+  const fmtWhen = d => {
+    if (!d || d.startsWith('0001')) return '–';
+    const t = new Date(d), now = new Date(), tom = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const hm = pad2(t.getHours()) + ':' + pad2(t.getMinutes());
+    if (t.toDateString() === now.toDateString()) return 'heute ' + hm;
+    if (t.toDateString() === tom.toDateString()) return 'morgen ' + hm;
+    return t.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' ' + hm;
+  };
+  const schedText = t => t.every_hours ? (t.every_hours === 1 ? 'Stündlich' : `Alle ${t.every_hours} Stunden`)
+    : (t.days && t.days.length ? t.days.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map(d => DAYS[d]).join(', ') : 'Täglich') + ' ' + t.at;
+  async function loadTasks() {
+    const id = MG.id, tab = MG.tab;
+    let d;
+    try { d = await api('GET', `/api/servers/${id}/tasks`); } catch (e) { toast(e.message, 'bad'); return; }
+    if (MG.id !== id || MG.tab !== tab || !$('#dlgManage').open) return;
+    TK.data = d;
+    if (tab === 'tasks') renderTasks(); else renderEvents();
+    TK.timer = setTimeout(loadTasks, 10000);
+  }
+  function renderEvents() {
+    const ev = TK.data.events || [];
+    $('#evList').innerHTML = ev.length ? ev.map(e => `<li class="${esc(e.level)}"><span class="dot" aria-hidden="true"></span><time datetime="${esc(e.time)}">${esc(fmtWhen(e.time))}</time><span>${esc(e.text)}</span></li>`).join('')
+      : '<li class="muted" style="display:block;padding:20px 4px">Noch keine Ereignisse. Hier erscheinen Starts, Stopps, Abstürze, Updates und ausgeführte Aufgaben.</li>';
+  }
+  function renderTasks() {
+    const d = TK.data, s = byId(MG.id);
+    if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.tk-top')) { /* nicht unter dem Finger umschalten */ }
+    else {
+      $('#wAuto').checked = !d.watch.no_auto_restart; $('#wHang').checked = !!d.watch.hang_restart && d.can_query;
+      $('#wHangMin').value = String(d.watch.hang_minutes || 5);
+    }
+    $('#wHang').disabled = $('#wHangMin').disabled = !d.can_query; $('#wHangNote').hidden = d.can_query;
+    $('#tkUpdWrap').hidden = !d.can_update;
+    $('#tkUpdText').textContent = s && s.category && s.category.startsWith('Steam') ? 'SteamCMD lädt die neueste Version. Ein laufender Server startet dafür neu, ein gestoppter aktualisiert beim nächsten Start.' : 'Lädt die neueste Version des Spiels. Ein laufender Server startet dafür neu.';
+    $('#tkAction').querySelector('[value=update]').disabled = !d.can_update;
+    const tasks = d.tasks || [];
+    $('#tkRows').innerHTML = tasks.length ? tasks.map((t, i) => {
+      const what = esc(t.label) + (t.command ? ` <span class="tk-cmdtxt">${esc(t.command)}</span>` : '') + (t.warn_min ? ` <span class="muted small">· Warnung ${t.warn_min} Min.</span>` : '');
+      const res = t.last_result ? `<span class="tk-res small ${/^Fehler/.test(t.last_result) ? 'bad' : 'muted'}" title="${esc(t.last_result)}">${esc(t.last_result)}</span>` : '';
+      return `<tr data-i="${i}"><td><input type="checkbox" class="tk-on" ${t.enabled ? 'checked' : ''} aria-label="Aufgabe aktiv"></td><td>${esc(schedText(t))}</td><td>${what}</td>
+        <td class="mono small">${t.enabled ? esc(fmtWhen(t.next_run)) : 'aus'}</td><td><span class="mono small">${esc(fmtWhen(t.last_run))}</span>${res}</td>
+        <td><div class="acts row"><button type="button" class="icon-btn tk-run" title="Jetzt ausführen" aria-label="Jetzt ausführen">${ICON.play}</button><button type="button" class="icon-btn tk-del" title="Löschen" aria-label="Löschen">${ICON.del}</button></div></td></tr>`;
+    }).join('') : '<tr class="empty"><td colspan="6">Noch keine Aufgaben. Zum Beispiel: täglich um 4 Uhr neu starten, vorher die Spieler warnen.</td></tr>';
+    tkFormFields();
+  }
+  function tkFormFields() {
+    const a = $('#tkAction').value, k = $('#tkKind').value, d = TK.data || {};
+    $('#tkCmdWrap').hidden = a !== 'command';
+    $('#tkAtWrap').hidden = k === 'every'; $('#tkEveryWrap').hidden = k !== 'every'; $('#tkDays').hidden = k !== 'days';
+    const warnable = ['restart', 'update', 'stop'].includes(a);
+    $('#tkWarnWrap').hidden = !warnable || !d.can_broadcast;
+    $('#tkNote').textContent = warnable && !d.can_broadcast ? 'Dieses Spiel kann vom Panel aus keine Nachricht an die Spieler schicken, deshalb gibt es keine Vorwarnung.' : (a === 'backup' && S.license && !S.license.edition.auto_backup ? 'Geplante Backups gehören nicht zu deiner Edition.' : '');
+  }
+  ['tkAction', 'tkKind'].forEach(x => $('#' + x).addEventListener('change', tkFormFields));
+  async function saveTasks(tasks, okMsg) {
+    try { TK.data = await api('PUT', `/api/servers/${MG.id}/tasks`, { tasks }); renderTasks(); if (okMsg) toast(okMsg, 'ok'); return true; }
+    catch (e) { toast(e.message, 'bad'); loadTasks(); return false; }
+  }
+  const plainTasks = () => (TK.data.tasks || []).map(t => ({ id: t.id, action: t.action, command: t.command, at: t.at, days: t.days, every_hours: t.every_hours, warn_min: t.warn_min, enabled: t.enabled }));
+  $('#tkForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const k = $('#tkKind').value, a = $('#tkAction').value;
+    const t = { action: a, command: $('#tkCmd').value, enabled: true, warn_min: $('#tkWarnWrap').hidden ? 0 : +$('#tkWarn').value };
+    if (k === 'every') t.every_hours = +$('#tkEvery').value; else t.at = $('#tkAt').value;
+    if (k === 'days') {
+      t.days = $$('#tkDays input:checked').map(x => +x.value);
+      if (!t.days.length) { toast('Bitte mindestens einen Tag wählen', 'bad'); return; }
+    }
+    if (await saveTasks(plainTasks().concat([t]), 'Aufgabe angelegt')) $('#tkCmd').value = '';
+  });
+  $('#tkRows').addEventListener('change', e => {
+    const tr = e.target.closest('tr[data-i]'); if (!tr || !e.target.classList.contains('tk-on')) return;
+    const list = plainTasks(); list[+tr.dataset.i].enabled = e.target.checked; saveTasks(list);
+  });
+  $('#tkRows').addEventListener('click', async e => {
+    const tr = e.target.closest('tr[data-i]'); if (!tr) return;
+    const t = TK.data.tasks[+tr.dataset.i];
+    if (e.target.closest('.tk-del')) {
+      if (!await confirmBox('Aufgabe löschen?', schedText(t) + ': ' + t.label, 'Löschen')) return;
+      const list = plainTasks(); list.splice(+tr.dataset.i, 1); saveTasks(list, 'Aufgabe gelöscht');
+    } else if (e.target.closest('.tk-run')) {
+      if (['restart', 'stop', 'update'].includes(t.action) && !await confirmBox(t.label + ' jetzt ausführen?', 'Ohne Vorwarnung an die Spieler.', 'Ausführen')) return;
+      try { await api('POST', `/api/servers/${MG.id}/tasks/${t.id}/run`); toast(t.label + ' wird ausgeführt', 'ok'); setTimeout(loadTasks, 2500); } catch (err) { toast(err.message, 'bad'); }
+    }
+  });
+  async function saveWatch() {
+    try { TK.data = await api('PUT', `/api/servers/${MG.id}/watch`, { no_auto_restart: !$('#wAuto').checked, hang_restart: $('#wHang').checked, hang_minutes: +$('#wHangMin').value }); renderTasks(); toast('Wächter gespeichert', 'ok'); }
+    catch (e) { toast(e.message, 'bad'); loadTasks(); }
+  }
+  ['wAuto', 'wHang', 'wHangMin'].forEach(x => $('#' + x).addEventListener('change', saveWatch));
+  $('#tkUpdate').addEventListener('click', async () => {
+    const s = byId(MG.id);
+    if (isOn(s) && !await confirmBox('Jetzt aktualisieren?', s.name + ' startet dafür neu. Spieler werden getrennt.', 'Aktualisieren')) return;
+    try { await api('POST', `/api/servers/${MG.id}/update`); toast('Update gestartet', 'ok'); loadServers(); setTimeout(loadTasks, 2000); } catch (e) { toast(e.message, 'bad'); }
+  });
+  $('#dlgManage').addEventListener('close', () => clearTimeout(TK.timer));
 
   // Backups
   async function loadBackups() {
@@ -1168,6 +1277,8 @@
       a.push({ label: 'Zu ' + s.name + ' fliegen', hint: '3D', run: () => { select(s.id); $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
       a.push({ label: 'Backups von ' + s.name, hint: 'Backup', run: () => openManage(s.id, 'backups') });
       a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
+      a.push({ label: 'Aufgaben von ' + s.name, hint: 'Aufgaben', run: () => openManage(s.id, 'tasks') });
+      a.push({ label: 'Verlauf von ' + s.name, hint: 'Verlauf', run: () => openManage(s.id, 'events') });
       a.push({ label: 'Konsole von ' + s.name, hint: 'Konsole', run: () => { openConsole(s.id); $('#konsole').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
     });
     a.push({ label: 'Einstellungen und Lizenz', hint: 'Panel', run: openSettings });

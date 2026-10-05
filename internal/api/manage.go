@@ -29,6 +29,10 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/remote", a.guard(a.remoteGet))
 	mux.HandleFunc("PUT /api/remote", a.guard(a.remotePut))
 	mux.HandleFunc("POST /api/remote/test", a.guard(a.remoteTest))
+	mux.HandleFunc("GET /api/servers/{id}/tasks", a.guard(a.tasksGet))
+	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.guard(a.tasksPut))
+	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.guard(a.taskRun))
+	mux.HandleFunc("PUT /api/servers/{id}/watch", a.guard(a.watchPut))
 	mux.HandleFunc("GET /api/selftest", a.guard(a.selftestGet))
 	mux.HandleFunc("POST /api/selftest", a.guard(a.selftestStart))
 	mux.HandleFunc("DELETE /api/selftest", a.guard(a.selftestStop))
@@ -86,6 +90,7 @@ func (a *API) backupCreate(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, err)
 		return
 	}
+	a.Mgr.Event(r.PathValue("id"), "info", "Backup "+b.Name+" erstellt von "+a.Auth.User(r))
 	writeJSON(w, 201, b)
 }
 
@@ -141,6 +146,7 @@ func (a *API) backupDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) backupRestore(w http.ResponseWriter, r *http.Request) {
+	a.Mgr.Event(r.PathValue("id"), "warn", "Backup "+r.PathValue("name")+" wird wiederhergestellt ("+a.Auth.User(r)+")")
 	if err := a.Mgr.RestoreBackup(r.PathValue("id"), r.PathValue("name")); err != nil {
 		fail(w, 400, err)
 		return
@@ -435,4 +441,53 @@ func (a *API) selftestReport(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="selbsttest-`+time.Now().Format("2006-01-02")+`.md"`)
 	_, _ = io.WriteString(w, a.Mgr.TestReport())
+}
+
+// ---------- tasks, watchdog, history ----------
+
+func (a *API) tasksGet(w http.ResponseWriter, r *http.Request) {
+	v, err := a.Mgr.Tasks(r.PathValue("id"))
+	if err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 200, v)
+}
+
+func (a *API) tasksPut(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Tasks []store.Task `json:"tasks"`
+	}
+	if err := decode(r, &req); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	id := r.PathValue("id")
+	if err := a.Mgr.SetTasks(id, req.Tasks); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	a.Mgr.Event(id, "info", "Aufgaben geändert von "+a.Auth.User(r))
+	a.tasksGet(w, r)
+}
+
+func (a *API) taskRun(w http.ResponseWriter, r *http.Request) {
+	if err := a.Mgr.RunTaskByID(r.PathValue("id"), r.PathValue("tid")); err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 202, map[string]bool{"ok": true})
+}
+
+func (a *API) watchPut(w http.ResponseWriter, r *http.Request) {
+	var req store.Watch
+	if err := decode(r, &req); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	if err := a.Mgr.SetWatch(r.Context(), r.PathValue("id"), req); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	a.tasksGet(w, r)
 }

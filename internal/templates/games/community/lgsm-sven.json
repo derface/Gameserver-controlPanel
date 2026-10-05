@@ -38,6 +38,7 @@
     "type": "a2s",
     "port": 0
   },
+  "broadcast": "say {{msg}}",
   "packages": [
     "libssl3:i386",
     "zlib1g:i386"

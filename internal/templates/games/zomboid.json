@@ -6,12 +6,31 @@
   "steam_app_id": 380870,
   "start": "./start-server.sh -servername {{server_name}} -adminpassword \"{{admin_password}}\" -port {{port}} -udpport {{port_2}}",
   "ports": [
-    {"name": "Spiel", "port": 16261, "proto": "udp"},
-    {"name": "Direkt", "port": 16262, "proto": "udp"}
+    {
+      "name": "Spiel",
+      "port": 16261,
+      "proto": "udp"
+    },
+    {
+      "name": "Direkt",
+      "port": 16262,
+      "proto": "udp"
+    }
   ],
   "vars": [
-    {"key": "server_name", "label": "Servername (ohne Leerzeichen)", "default": "panel", "type": "slug"},
-    {"key": "admin_password", "label": "Admin-Passwort", "default": "", "type": "secret", "required": true}
+    {
+      "key": "server_name",
+      "label": "Servername (ohne Leerzeichen)",
+      "default": "panel",
+      "type": "slug"
+    },
+    {
+      "key": "admin_password",
+      "label": "Admin-Passwort",
+      "default": "",
+      "type": "secret",
+      "required": true
+    }
   ],
   "memory_mb": 6144,
   "min_memory_mb": 3072,
@@ -20,5 +39,6 @@
   "ready": "SERVER STARTED",
   "status": "beta",
   "disk_gb": 5,
-  "notes": "Konfiguration liegt in Zomboid/Server/<servername>.ini im Home-Verzeichnis des Containers."
+  "notes": "Konfiguration liegt in Zomboid/Server/<servername>.ini im Home-Verzeichnis des Containers.",
+  "broadcast": "servermsg \"{{msg}}\""
 }

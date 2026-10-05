@@ -248,6 +248,11 @@ func (a *API) create(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, err)
 		return
 	}
+	by := a.Auth.User(r)
+	if extra.ByAI {
+		by += " mit dem KI-Assistenten"
+	}
+	a.Mgr.Event(sv.ID, "info", "Angelegt von "+by)
 	writeJSON(w, 201, a.Mgr.Info(sv))
 }
 
@@ -308,7 +313,10 @@ func (a *API) update(w http.ResponseWriter, r *http.Request) {
 		sv.Vars = vars
 		needRecreate = true
 	}
-	if err := a.Store.SaveServer(sv); err != nil {
+	if err := a.Store.ModifyServer(id, func(cur *store.Server) error {
+		cur.Name, cur.MemoryMB, cur.UpdateOnRun, cur.Vars = sv.Name, sv.MemoryMB, sv.UpdateOnRun, sv.Vars
+		return nil
+	}); err != nil {
 		fail(w, 500, err)
 		return
 	}
@@ -339,6 +347,12 @@ func (a *API) action(w http.ResponseWriter, r *http.Request) {
 		err = a.Mgr.Restart(r.Context(), id)
 	case "recreate":
 		a.Mgr.Recreate(id, true)
+	case "update":
+		var msg string
+		msg, err = a.Mgr.UpdateServer(r.Context(), id)
+		if err == nil {
+			a.Mgr.Event(id, "info", "Update von "+a.Auth.User(r)+": "+msg)
+		}
 	case "command":
 		var req struct {
 			Command string `json:"command"`
@@ -361,6 +375,9 @@ func (a *API) action(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fail(w, 400, err)
 		return
+	}
+	if txt := map[string]string{"start": "Gestartet", "stop": "Gestoppt", "restart": "Neu gestartet", "recreate": "Neu angelegt"}[r.PathValue("action")]; txt != "" {
+		a.Mgr.Event(id, "info", txt+" von "+a.Auth.User(r))
 	}
 	sv, _ := a.Store.Server(id)
 	writeJSON(w, 200, a.Mgr.Info(sv))

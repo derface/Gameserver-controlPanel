@@ -29,10 +29,10 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "Level01_Main",
+      "type": "slug"
     },
     {
       "key": "adminpassword",
@@ -41,16 +41,16 @@
       "type": "secret"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "Level01_Main",
-      "type": "slug"
-    },
-    {
       "key": "serverpassword",
       "label": "Server-Passwort",
       "default": "",
       "type": "secret"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     },
     {
       "key": "maxplayers",

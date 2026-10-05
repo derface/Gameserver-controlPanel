@@ -56,5 +56,6 @@
   "ready": "Server started",
   "status": "beta",
   "disk_gb": 1,
-  "notes": "Vanilla-Terraria über das Image ryshe/terraria. Befehle wie save oder say gehen über die Konsole."
+  "notes": "Vanilla-Terraria über das Image ryshe/terraria. Befehle wie save oder say gehen über die Konsole.",
+  "broadcast": "say {{msg}}"
 }

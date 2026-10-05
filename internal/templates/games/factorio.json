@@ -29,5 +29,6 @@
   "backup_include": [],
   "status": "beta",
   "disk_gb": 1,
-  "notes": "Nutzt das verbreitete Image factoriotools/factorio. Beim ersten Start wird automatisch eine Karte erzeugt. Einstellungen in config/server-settings.json."
+  "notes": "Nutzt das verbreitete Image factoriotools/factorio. Beim ersten Start wird automatisch eine Karte erzeugt. Einstellungen in config/server-settings.json.",
+  "broadcast": "{{msg}}"
 }

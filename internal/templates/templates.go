@@ -56,6 +56,7 @@ type Template struct {
 	JavaMemEnv  string            `json:"java_memory_env,omitempty"`
 	Console     string            `json:"console"` // stdin | exec
 	ExecPrefix  []string          `json:"exec_prefix,omitempty"`
+	Broadcast   string            `json:"broadcast,omitempty"` // console command that messages all players, {{msg}}
 	StopSignal  string            `json:"stop_signal,omitempty"`
 	StopTimeout int               `json:"stop_timeout,omitempty"`
 	Ready       string            `json:"ready,omitempty"` // regex in logs meaning "server is up"

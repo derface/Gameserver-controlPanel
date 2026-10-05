@@ -440,7 +440,10 @@ func (m *Manager) SetBackupPlan(id string, every, at, keep int) (store.Server, e
 		return sv, errors.New("Behalten: 1 bis 100 Backups")
 	}
 	sv.Backup.EveryHours, sv.Backup.AtHour, sv.Backup.Keep = every, at, keep
-	return sv, m.st.SaveServer(sv)
+	return sv, m.st.ModifyServer(id, func(cur *store.Server) error {
+		cur.Backup.EveryHours, cur.Backup.AtHour, cur.Backup.Keep = every, at, keep
+		return nil
+	})
 }
 
 // due reports whether an automatic backup should run now.
@@ -477,19 +480,19 @@ func (m *Manager) runSchedule(ctx context.Context) {
 			if !due(sv.Backup, now) || sv.ContainerID == "" {
 				continue
 			}
-			sv.Backup.LastAuto = now // also on failure, so it does not retry every minute
-			_ = m.st.SaveServer(sv)
+			// also on failure, so it does not retry every minute
+			_ = m.st.ModifyServer(sv.ID, func(cur *store.Server) error { cur.Backup.LastAuto = now; return nil })
 			go func(id string) {
 				bctx, cancel := context.WithTimeout(ctx, time.Hour)
 				defer cancel()
 				_, err := m.CreateBackup(bctx, id, KindAuto)
-				if cur, ok := m.st.Server(id); ok {
+				_ = m.st.ModifyServer(id, func(cur *store.Server) error {
 					cur.Backup.LastError = ""
 					if err != nil {
 						cur.Backup.LastError = err.Error()
 					}
-					_ = m.st.SaveServer(cur)
-				}
+					return nil
+				})
 			}(sv.ID)
 		}
 	}

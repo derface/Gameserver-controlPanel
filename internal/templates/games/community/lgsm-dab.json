@@ -43,6 +43,7 @@
     "type": "a2s",
     "port": 0
   },
+  "broadcast": "say {{msg}}",
   "status": "defekt",
   "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest 01.10.2026: Segmentation fault beim Start."
 }

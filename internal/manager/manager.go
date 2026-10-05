@@ -38,13 +38,18 @@ type Manager struct {
 	Remote      func() (remote.Target, remote.Config)
 	up          uploads
 
-	buildMu sync.Mutex
-	opMu    sync.Map // id -> *sync.Mutex
+	buildMu   sync.Mutex
+	opMu      sync.Map // id -> *sync.Mutex
+	refreshMu sync.Map // id -> *sync.Mutex
 
 	testMu     sync.Mutex
 	test       *TestRun
 	testCancel context.CancelFunc
 	baseCtx    context.Context
+
+	ev           eventLog
+	pendingTasks map[string]bool      // guarded by mu
+	expectAt     map[string]time.Time // panel-initiated start/stop, guarded by mu
 
 	mu   sync.RWMutex
 	jobs map[string]*job
@@ -67,6 +72,14 @@ type live struct {
 	Players   int // -1 = unknown
 	MaxPl     int
 	queriedAt time.Time
+
+	// watchdog
+	crashes     []time.Time
+	countedRun  string    // StartedAt of the run already counted as crash
+	answeredAt  time.Time // last successful player query
+	answeredRun string    // StartedAt of the run that answered
+	hangRun     string    // run for which a hang restart was triggered
+	haltMsg     string    // why the watchdog stopped the server
 }
 
 // Info is what the API returns for one server.
@@ -179,6 +192,42 @@ func baseApp(t templates.Template) string {
 		return ""
 	}
 	return strconv.Itoa(t.SteamBase)
+}
+
+func restartPolicy(sv store.Server) docker.RestartPolicy {
+	if sv.Watch.NoAutoRestart {
+		return docker.RestartPolicy{Name: "no"}
+	}
+	return docker.RestartPolicy{Name: "unless-stopped"}
+}
+
+// expect marks a start/stop/restart as wanted, so the watchdog does not
+// count it as a crash.
+func (m *Manager) expect(id string) {
+	m.mu.Lock()
+	if m.expectAt == nil {
+		m.expectAt = map[string]time.Time{}
+	}
+	m.expectAt[id] = time.Now()
+	m.mu.Unlock()
+}
+
+// consumeExpect is called when the watchdog sees a start/stop/restart; it
+// reports whether the panel asked for it (within the last 30 minutes, which
+// covers image builds and recreations) and clears the mark.
+func (m *Manager) consumeExpect(id string) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	t, ok := m.expectAt[id]
+	delete(m.expectAt, id)
+	return ok && time.Since(t) < 30*time.Minute
+}
+
+func (m *Manager) expected(id string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	t, ok := m.expectAt[id]
+	return ok && time.Since(t) < 30*time.Minute
 }
 
 // countServers counts the servers that use up the license (not self-tests).
@@ -347,7 +396,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			Binds:         []string{m.ServerDir(sv.ID) + ":" + tpl.DataPathOr()},
 			PortBindings:  map[string][]docker.PortBinding{},
 			Memory:        int64(sv.MemoryMB) * 1024 * 1024,
-			RestartPolicy: docker.RestartPolicy{Name: "unless-stopped"},
+			RestartPolicy: restartPolicy(sv),
 		},
 		ExposedPorts: map[string]struct{}{},
 	}
@@ -438,11 +487,12 @@ func (m *Manager) prepare(id string, start bool) {
 			return err
 		}
 		sv.ContainerID = cid
-		if err := m.st.SaveServer(sv); err != nil {
+		if err := m.st.ModifyServer(id, func(cur *store.Server) error { cur.ContainerID = cid; return nil }); err != nil {
 			return err
 		}
 		if start {
 			m.setJob(id, "Wird gestartet")
+			m.expect(id)
 			return m.dk.Start(ctx, cid)
 		}
 		return nil
@@ -452,6 +502,7 @@ func (m *Manager) prepare(id string, start bool) {
 		return
 	}
 	m.refresh(id) // first the live state, then drop the job, so the UI never sees a gap
+	m.consumeExpect(id)
 	m.clearJob(id)
 }
 
@@ -470,6 +521,7 @@ func (m *Manager) get(id string) (store.Server, templates.Template, error) {
 }
 
 func (m *Manager) Start(ctx context.Context, id string) error {
+	m.expect(id)
 	sv, _, err := m.get(id)
 	if err != nil {
 		return err
@@ -496,6 +548,7 @@ func (m *Manager) Start(ctx context.Context, id string) error {
 }
 
 func (m *Manager) Stop(ctx context.Context, id string) error {
+	m.expect(id)
 	sv, tpl, err := m.get(id)
 	if err != nil || sv.ContainerID == "" {
 		return err
@@ -506,6 +559,7 @@ func (m *Manager) Stop(ctx context.Context, id string) error {
 }
 
 func (m *Manager) Restart(ctx context.Context, id string) error {
+	m.expect(id)
 	sv, tpl, err := m.get(id)
 	if err != nil {
 		return err
@@ -531,6 +585,7 @@ func (m *Manager) outdated(ctx context.Context, sv store.Server) bool {
 
 // Recreate rebuilds the container with the current settings (keeps data).
 func (m *Manager) Recreate(id string, start bool) {
+	m.expect(id)
 	m.setJob(id, "Wird neu angelegt")
 	go m.prepare(id, start)
 }
@@ -558,6 +613,7 @@ func (m *Manager) Delete(ctx context.Context, id string, wipe bool) error {
 	delete(m.jobs, id)
 	delete(m.live, id)
 	m.mu.Unlock()
+	m.dropEvents(id)
 	return m.st.DeleteServer(id)
 }
 
@@ -600,6 +656,12 @@ func (m *Manager) logs(ctx context.Context, id string, follow bool, tail int, si
 var steamProgress = regexp.MustCompile(`progress: ([0-9]+\.[0-9]+)`)
 
 func (m *Manager) refresh(id string) {
+	// one refresh per server at a time: the watchdog compares with the
+	// previous state and must not see the same transition twice
+	v, _ := m.refreshMu.LoadOrStore(id, &sync.Mutex{})
+	mu := v.(*sync.Mutex)
+	mu.Lock()
+	defer mu.Unlock()
 	sv, ok := m.st.Server(id)
 	if !ok || sv.ContainerID == "" {
 		return
@@ -617,6 +679,8 @@ func (m *Manager) refresh(id string) {
 	if prev != nil {
 		l.readyFor = prev.readyFor
 		l.Players, l.MaxPl, l.queriedAt = prev.Players, prev.MaxPl, prev.queriedAt
+		l.crashes, l.countedRun = prev.crashes, prev.countedRun
+		l.answeredAt, l.answeredRun, l.hangRun = prev.answeredAt, prev.answeredRun, prev.hangRun
 	}
 	if err != nil {
 		l.Phase, l.Msg = "error", "Container fehlt. Mit „Starten“ wird er neu angelegt."
@@ -645,6 +709,9 @@ func (m *Manager) refresh(id string) {
 				l.Msg = fmt.Sprintf("Beendet mit Code %d. Details in der Konsole.", c)
 			}
 		}
+	}
+	if err == nil && sv.CreatedBy != testCreator {
+		m.watchdog(sv, tpl, prev, l)
 	}
 	m.mu.Lock()
 	m.live[id] = l
@@ -735,6 +802,7 @@ func (m *Manager) queryPlayers(sv store.Server, tpl templates.Template, l *live)
 		return
 	}
 	l.Players, l.MaxPl = r.Players, r.Max
+	l.answeredAt, l.answeredRun = time.Now(), l.State.StartedAt
 }
 
 // Run keeps the live state fresh until ctx ends.
@@ -744,6 +812,7 @@ func (m *Manager) Run(ctx context.Context) {
 	m.testMu.Unlock()
 	go m.resumeTest()
 	go m.runSchedule(ctx)
+	go m.runTasks(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {

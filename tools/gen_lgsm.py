@@ -340,6 +340,8 @@ for short, (gsname, gamename) in sorted(names.items()):
         tpl["ready"] = READY[short]
     elif engine in ("unreal4", "unreal5") and re.search(r'(^|\s)-log(\s|$)', start):
         tpl["ready"] = "Bringing up level for play took"
+    if engine in ("source", "goldsrc"):
+        tpl["broadcast"] = "say {{msg}}"
     if pkgs:
         tpl["packages"] = sorted(set(pkgs))
     tpl["status"] = "beta" if short in PASSED else "experimentell"

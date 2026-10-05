@@ -18,30 +18,108 @@
     "TZ": "Europe/Berlin"
   },
   "ports": [
-    {"name": "Spiel", "port": 25565, "proto": "tcp"}
+    {
+      "name": "Spiel",
+      "port": 25565,
+      "proto": "tcp"
+    }
   ],
   "vars": [
-    {"key": "type", "label": "Server-Art", "default": "PAPER", "type": "select", "options": ["PAPER", "VANILLA", "FABRIC", "NEOFORGE", "FORGE", "PURPUR"]},
-    {"key": "version", "label": "Minecraft-Version", "default": "LATEST", "help": "z. B. 1.21.1 oder LATEST"},
-    {"key": "max_players", "label": "Maximale Spieler", "default": "20", "type": "number"},
-    {"key": "motd", "label": "Nachricht in der Serverliste", "default": "Ein Server von [Panel]"},
-    {"key": "difficulty", "label": "Schwierigkeit", "default": "normal", "type": "select", "options": ["peaceful", "easy", "normal", "hard"]},
-    {"key": "view_distance", "label": "Sichtweite (Chunks)", "default": "10", "type": "number"},
-    {"key": "online_mode", "label": "Nur Original-Accounts", "default": "true", "type": "select", "options": ["true", "false"]},
-    {"key": "mods", "label": "Mods/Plugins von Modrinth", "default": "", "help": "Kommagetrennte Modrinth-Namen, z. B. create,ferrite-core,modernfix"}
+    {
+      "key": "type",
+      "label": "Server-Art",
+      "default": "PAPER",
+      "type": "select",
+      "options": [
+        "PAPER",
+        "VANILLA",
+        "FABRIC",
+        "NEOFORGE",
+        "FORGE",
+        "PURPUR"
+      ]
+    },
+    {
+      "key": "version",
+      "label": "Minecraft-Version",
+      "default": "LATEST",
+      "help": "z. B. 1.21.1 oder LATEST"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "default": "20",
+      "type": "number"
+    },
+    {
+      "key": "motd",
+      "label": "Nachricht in der Serverliste",
+      "default": "Ein Server von [Panel]"
+    },
+    {
+      "key": "difficulty",
+      "label": "Schwierigkeit",
+      "default": "normal",
+      "type": "select",
+      "options": [
+        "peaceful",
+        "easy",
+        "normal",
+        "hard"
+      ]
+    },
+    {
+      "key": "view_distance",
+      "label": "Sichtweite (Chunks)",
+      "default": "10",
+      "type": "number"
+    },
+    {
+      "key": "online_mode",
+      "label": "Nur Original-Accounts",
+      "default": "true",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ]
+    },
+    {
+      "key": "mods",
+      "label": "Mods/Plugins von Modrinth",
+      "default": "",
+      "help": "Kommagetrennte Modrinth-Namen, z. B. create,ferrite-core,modernfix"
+    }
   ],
   "memory_mb": 4096,
   "min_memory_mb": 1536,
   "java_memory_env": "MEMORY",
   "console": "exec",
-  "exec_prefix": ["rcon-cli"],
+  "exec_prefix": [
+    "rcon-cli"
+  ],
   "stop_timeout": 60,
   "ready": "Done \\(",
-  "query": {"type": "minecraft", "port": 0},
-  "backup_exclude": ["libraries", "versions", ".cache", "logs", "crash-reports"],
-  "backup_pre": ["save-off", "save-all flush"],
-  "backup_post": ["save-on"],
+  "query": {
+    "type": "minecraft",
+    "port": 0
+  },
+  "backup_exclude": [
+    "libraries",
+    "versions",
+    ".cache",
+    "logs",
+    "crash-reports"
+  ],
+  "backup_pre": [
+    "save-off",
+    "save-all flush"
+  ],
+  "backup_post": [
+    "save-on"
+  ],
   "status": "stabil",
   "disk_gb": 3,
-  "notes": "Nutzt das bewährte Image itzg/minecraft-server. Mods werden beim Start automatisch von Modrinth geladen."
+  "notes": "Nutzt das bewährte Image itzg/minecraft-server. Mods werden beim Start automatisch von Modrinth geladen.",
+  "broadcast": "say {{msg}}"
 }

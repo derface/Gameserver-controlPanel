@@ -46,6 +46,30 @@ type Server struct {
 	Created     time.Time         `json:"created"`
 	CreatedBy   string            `json:"created_by,omitempty"` // "manual" | "ai"
 	Backup      BackupPlan        `json:"backup"`
+	Tasks       []Task            `json:"tasks,omitempty"`
+	Watch       Watch             `json:"watch"`
+}
+
+// Task is a scheduled action of one server.
+type Task struct {
+	ID         string    `json:"id"`
+	Action     string    `json:"action"`            // restart | update | command | backup | start | stop
+	Command    string    `json:"command,omitempty"` // for "command"
+	At         string    `json:"at,omitempty"`      // "HH:MM" for daily/weekly tasks
+	Days       []int     `json:"days,omitempty"`    // 0 = Sonntag … 6; leer = jeden Tag
+	EveryHours int       `json:"every_hours,omitempty"`
+	WarnMin    int       `json:"warn_min,omitempty"` // warn players this many minutes before
+	Enabled    bool      `json:"enabled"`
+	LastRun    time.Time `json:"last_run,omitempty"`
+	LastResult string    `json:"last_result,omitempty"`
+	Created    time.Time `json:"created"`
+}
+
+// Watch configures the crash and hang watchdog.
+type Watch struct {
+	NoAutoRestart bool `json:"no_auto_restart"` // default: Docker restarts a crashed server
+	HangRestart   bool `json:"hang_restart"`    // restart when the player query stops answering
+	HangMinutes   int  `json:"hang_minutes"`
 }
 
 // BackupPlan is the automatic backup schedule of one server.
@@ -167,6 +191,21 @@ func (s *Store) SaveServer(sv Server) error {
 	})
 }
 
+// ModifyServer changes one server atomically, so concurrent writers
+// (scheduler, API) do not overwrite each other's fields.
+func (s *Store) ModifyServer(id string, fn func(sv *Server) error) error {
+	return s.Update(func(d *Data) error {
+		for i := range d.Servers {
+			if d.Servers[i].ID == id {
+				return fn(&d.Servers[i])
+			}
+		}
+		return errNotFound
+	})
+}
+
+var errNotFound = errors.New("Server nicht gefunden")
+
 func (s *Store) DeleteServer(id string) error {
 	return s.Update(func(d *Data) error {
 		out := d.Servers[:0]
@@ -187,5 +226,10 @@ func copyServer(sv Server) Server {
 		c.Vars[k] = v
 	}
 	c.Ports = append([]PortMap(nil), sv.Ports...)
+	c.Tasks = make([]Task, len(sv.Tasks))
+	for i, t := range sv.Tasks {
+		t.Days = append([]int(nil), t.Days...)
+		c.Tasks[i] = t
+	}
 	return c
 }

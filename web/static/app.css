@@ -337,3 +337,42 @@ body.still *,body.still *::before,body.still *::after{animation:none!important;t
 #tsRows tr.has-d{cursor:pointer}
 .ts-yes{color:var(--ok)}.ts-no{color:var(--bad)}
 a.btn-line{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
+
+/* Aufgaben + Verlauf */
+.tk-top{display:grid;grid-template-columns:1fr minmax(200px,280px);gap:16px;margin-bottom:18px}
+@media (max-width:720px){.tk-top{grid-template-columns:1fr}}
+.tk-watch,.tk-upd{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px}
+.tk-watch h3,.tk-upd h3{margin:0 0 8px}
+.tk-watch .check{margin:6px 0}
+.tk-hang{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tk-hang select{width:auto}
+.tk-upd p{margin:0 0 10px}
+.dlg form.tk-form{flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:10px;margin-top:14px}
+.tk-form .field{margin:0;min-width:130px}
+.tk-form .tk-cmd{flex:1;min-width:200px}
+.tk-days{display:flex;gap:4px;border:0;padding:0;margin:0}
+.tk-days label{display:inline-flex;align-items:center;justify-content:center;width:38px;height:40px;border:1px solid var(--line);border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-mono);font-size:11px;text-transform:uppercase}
+.tk-days input{position:absolute;opacity:0;pointer-events:none}
+.tk-days label:has(input:checked){background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tk-days label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.tk-res{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.tk-res.bad{color:var(--bad)}
+.ev-list{list-style:none;margin:0;padding:0;max-height:60vh;overflow:auto}
+.ev-list li{display:grid;grid-template-columns:auto 130px 1fr;gap:12px;align-items:baseline;padding:9px 4px;border-top:1px solid var(--line)}
+.ev-list li:first-child{border-top:0}
+.ev-list .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transform:translateY(-1px)}
+.ev-list .warn .dot{background:var(--accent)}
+.ev-list .error .dot{background:var(--bad)}
+.ev-list .info .dot{background:var(--ok)}
+.ev-list time{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+#paneTasks>*,#paneEvents>*{flex-shrink:0}
+#paneTasks h3{margin:0}
+.tk-cmdtxt{font-family:var(--font-mono);font-size:12px;background:color-mix(in srgb,var(--line) 40%,transparent);padding:1px 6px;border-radius:4px}
+@media (max-width:720px){
+  .dlg.wide .dlg-head{flex-wrap:wrap}
+  .dlg.wide .mg-title{flex:1 1 calc(100% - 60px);order:0}
+  .dlg.wide .dlg-head .icon-btn{order:1}
+  .dlg.wide .tabs{order:2;flex:1 1 100%;margin:0;overflow-x:auto;scrollbar-width:none}
+  .dlg.wide .tabs button{flex:0 0 auto;padding:8px 11px}
+  .dlg.wide{padding:16px}
+}

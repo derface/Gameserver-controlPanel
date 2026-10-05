@@ -36,17 +36,17 @@
       "type": "slug"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "32",
-      "type": "number"
-    },
-    {
       "key": "gslt",
       "label": "Game Server Login Token",
       "default": "",
       "type": "secret",
       "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "32",
+      "type": "number"
     }
   ],
   "memory_mb": 1024,
@@ -56,6 +56,7 @@
     "type": "a2s",
     "port": 0
   },
+  "broadcast": "say {{msg}}",
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen."
 }

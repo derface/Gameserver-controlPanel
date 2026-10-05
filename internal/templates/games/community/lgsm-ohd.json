@@ -24,16 +24,16 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "AAS-TestMap",
       "type": "slug"
+    },
+    {
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     },
     {
       "key": "maxplayers",

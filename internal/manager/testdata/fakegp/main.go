@@ -52,9 +52,15 @@ func main() {
 		fmt.Println("listen:", err)
 		os.Exit(2)
 	}
+	if mode == "hang" { // answers for 6 s, then stops answering but keeps running
+		go func() { time.Sleep(6 * time.Second); pc.Close() }()
+	}
 	buf := make([]byte, 1500)
 	for {
 		n, addr, err := pc.ReadFrom(buf)
+		if err != nil && mode == "hang" {
+			select {}
+		}
 		if err != nil || n < 5 {
 			continue
 		}

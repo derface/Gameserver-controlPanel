@@ -43,6 +43,7 @@
     "type": "a2s",
     "port": 0
   },
+  "broadcast": "say {{msg}}",
   "packages": [
     "libtinfo5:i386"
   ],

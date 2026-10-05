@@ -31,10 +31,11 @@
       "type": "slug"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "20",
-      "type": "number"
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
       "key": "gamemode",
@@ -43,11 +44,10 @@
       "type": "slug"
     },
     {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "20",
+      "type": "number"
     }
   ],
   "memory_mb": 4096,

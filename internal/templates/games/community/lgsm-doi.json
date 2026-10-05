@@ -49,6 +49,7 @@
     "type": "a2s",
     "port": 0
   },
+  "broadcast": "say {{msg}}",
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen."
 }

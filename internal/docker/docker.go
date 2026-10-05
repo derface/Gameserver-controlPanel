@@ -276,6 +276,11 @@ func (c *Client) Restart(ctx context.Context, id string, timeout int) error {
 	return nil
 }
 
+// SetRestartPolicy changes the restart policy of an existing container.
+func (c *Client) SetRestartPolicy(ctx context.Context, id string, p RestartPolicy) error {
+	return c.simple(ctx, "POST", "/containers/"+id+"/update", nil, map[string]any{"RestartPolicy": p}, nil)
+}
+
 func (c *Client) Remove(ctx context.Context, id string) error {
 	err := c.simple(ctx, "DELETE", "/containers/"+id, url.Values{"force": {"1"}, "v": {"0"}}, nil, nil)
 	if errors.Is(err, ErrNotFound) {

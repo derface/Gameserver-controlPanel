@@ -83,6 +83,15 @@ Einstellungen → Selbsttest (oder Strg+K → „Selbsttest“). Das Panel prüf
 
 Ergebnis je Spiel: **ok**, **unsicher** (läuft, aber Abfrage fehlt oder ist nicht prüfbar), **fehler** (mit den letzten Logzeilen) oder **übersprungen** (feste Ports belegt, zu wenig Platz oder RAM). Ein Spielekauf ist nicht nötig: Dedicated Server lädt SteamCMD anonym. Testserver zählen nicht gegen das Server-Limit der Edition. Der Lauf übersteht Neustarts des Panels und setzt fort; ab 10 GB freiem Platz hält er an. Der Bericht lässt sich als Markdown herunterladen.
 
+## Aufgaben, Absturz-Wächter, Verlauf
+
+Im Dialog „Server verwalten“ gibt es die Reiter **Aufgaben** und **Verlauf**.
+
+- **Geplante Aufgaben:** Neustart, Update, Backup, Befehl, Starten oder Stoppen, täglich zu einer Uhrzeit, an bestimmten Wochentagen oder alle N Stunden. Neustart, Update und Stopp können die Spieler 1 bis 30 Minuten vorher warnen (Erinnerungen bei 30, 15, 10, 5 und 1 Minute), sofern das Spiel einen Chat-Befehl hat (Vorlagenfeld `broadcast`, z. B. `say {{msg}}`). Verpasste Läufe (Panel war aus) werden nach 30 Minuten übersprungen, damit ein 4-Uhr-Neustart nicht mittags passiert. Jede Aufgabe lässt sich auch sofort ausführen.
+- **Absturz-Wächter:** Docker startet einen abgestürzten Server neu, das Panel trägt den Absturz in den Verlauf ein. Bei 3 Abstürzen in 10 Minuten hält das Panel den Server an und zeigt den Grund. Optional: Neustart, wenn ein Server, der auf die Spielerabfrage geantwortet hat, 2 bis 30 Minuten lang nicht mehr antwortet. Der automatische Neustart lässt sich pro Server abschalten.
+- **Update per Knopf:** Steam-Spiele werden beim nächsten Start per SteamCMD aktualisiert (ein laufender Server startet dafür neu), Container-Spiele laden ihr Image neu.
+- **Verlauf:** Anlegen, Starts und Stopps (mit Benutzer), Abstürze, Updates, Aufgaben, Backups und Wiederherstellungen, die letzten 200 Einträge je Server.
+
 ## Backups und Dateien
 
 Auf der Server-Karte bzw. in der Detailansicht: **Backups** und **Dateien**.

@@ -242,6 +242,8 @@
     <div class="tabs" role="tablist" aria-label="Bereich">
       <button type="button" role="tab" id="tabBackups" aria-selected="true" data-tab="backups">Backups</button>
       <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files">Dateien</button>
+      <button type="button" role="tab" id="tabTasks" aria-selected="false" data-tab="tasks">Aufgaben</button>
+      <button type="button" role="tab" id="tabEvents" aria-selected="false" data-tab="events">Verlauf</button>
     </div>
     <button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button>
   </div>
@@ -289,6 +291,51 @@
       <textarea id="fmText" spellcheck="false" wrap="off"></textarea>
       <p class="small muted">Die meisten Spiele lesen Konfigurationen nur beim Start. Nach dem Speichern den Server neu starten.</p>
     </div>
+  </section>
+
+  <section class="mg-pane" id="paneTasks" role="tabpanel" aria-labelledby="tabTasks" hidden>
+    <div class="tk-top">
+      <div class="tk-watch">
+        <h3>Absturz-Wächter</h3>
+        <label class="check"><input type="checkbox" id="wAuto"> Nach einem Absturz automatisch neu starten <span class="muted small">(bei 3 Abstürzen in 10 Minuten wird angehalten)</span></label>
+        <div class="tk-hang">
+          <label class="check"><input type="checkbox" id="wHang"> Neu starten, wenn der Server nicht mehr antwortet, nach</label>
+          <select id="wHangMin" aria-label="Minuten ohne Antwort"><option value="2">2 Min.</option><option value="5">5 Min.</option><option value="10">10 Min.</option><option value="15">15 Min.</option><option value="30">30 Min.</option></select>
+        </div>
+        <p class="small muted" id="wHangNote" hidden>Dieses Spiel meldet keine Spielerzahl, deshalb lässt sich ein Hängen nicht erkennen.</p>
+      </div>
+      <div class="tk-upd" id="tkUpdWrap">
+        <h3>Update</h3>
+        <p class="small muted" id="tkUpdText">Lädt die neueste Version des Spiels. Ein laufender Server startet dafür neu.</p>
+        <button type="button" class="btn-line" id="tkUpdate">Jetzt aktualisieren</button>
+      </div>
+    </div>
+    <h3>Geplante Aufgaben</h3>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Aktiv</th><th>Wann</th><th>Aktion</th><th>Nächster Lauf</th><th>Zuletzt</th><th><span class="sr">Aktionen</span></th></tr></thead>
+        <tbody id="tkRows"></tbody>
+      </table>
+    </div>
+    <form class="tk-form" id="tkForm">
+      <label class="field"><span>Aktion</span>
+        <select id="tkAction"><option value="restart">Neustart</option><option value="update">Update</option><option value="backup">Backup</option><option value="command">Befehl senden</option><option value="stop">Stoppen</option><option value="start">Starten</option></select></label>
+      <label class="field tk-cmd" id="tkCmdWrap" hidden><span>Befehl</span><input id="tkCmd" maxlength="500" placeholder="z. B. save-all"></label>
+      <label class="field"><span>Zeitplan</span>
+        <select id="tkKind"><option value="daily">Täglich</option><option value="days">An bestimmten Tagen</option><option value="every">Alle … Stunden</option></select></label>
+      <label class="field" id="tkAtWrap"><span>Uhrzeit</span><input id="tkAt" type="time" value="04:00" required></label>
+      <label class="field" id="tkEveryWrap" hidden><span>Abstand</span>
+        <select id="tkEvery"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>6</option><option>8</option><option>12</option><option>24</option></select></label>
+      <fieldset class="tk-days" id="tkDays" hidden><legend class="sr">Wochentage</legend></fieldset>
+      <label class="field" id="tkWarnWrap"><span>Spieler vorwarnen</span>
+        <select id="tkWarn"><option value="0">Nein</option><option value="1">1 Min. vorher</option><option value="5" selected>5 Min. vorher</option><option value="10">10 Min. vorher</option><option value="15">15 Min. vorher</option><option value="30">30 Min. vorher</option></select></label>
+      <button type="submit" class="btn-accent">Hinzufügen</button>
+    </form>
+    <p class="small muted" id="tkNote"></p>
+  </section>
+
+  <section class="mg-pane" id="paneEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
+    <ol class="ev-list" id="evList" aria-live="polite"></ol>
   </section>
 </dialog>
 
