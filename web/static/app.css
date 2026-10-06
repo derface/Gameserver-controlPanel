@@ -376,3 +376,16 @@ a.btn-line{display:inline-flex;align-items:center;text-decoration:none;color:var
   .dlg.wide .tabs button{flex:0 0 auto;padding:8px 11px}
   .dlg.wide{padding:16px}
 }
+
+/* Einstellungen */
+.st-form{display:flex;flex-direction:column;gap:18px}
+.dlg form.st-form{gap:18px}
+.st-sec{border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px 16px;margin:0;min-width:0}
+.st-sec legend{font-family:var(--font-display);font-stretch:125%;font-weight:800;text-transform:uppercase;font-size:14px;padding:0 6px;margin-left:-6px}
+.st-sec .st-file{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin:0 0 10px;word-break:break-all}
+.st-sec .vars{margin-top:6px}
+.st-sec .st-info{margin:0 0 10px}
+.st-sec .err{margin:0 0 10px}
+.st-foot{position:sticky;bottom:0;display:flex;gap:12px;align-items:center;justify-content:flex-end;padding:12px 0 2px;background:var(--panel);border-top:1px solid var(--line)}
+.st-foot p{margin:0;flex:1}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}

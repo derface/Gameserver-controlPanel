@@ -45,5 +45,80 @@
   ],
   "status": "beta",
   "disk_gb": 4,
-  "notes": "Läuft über Wine. Name, Passwort und Spielerzahl stehen nach dem ersten Start in enshrouded_server.json im Serverordner, erst bearbeiten, wenn der Server gestoppt ist. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten."
+  "notes": "Läuft über Wine. Name, Passwort und Spielerzahl stehen nach dem ersten Start in enshrouded_server.json im Serverordner, erst bearbeiten, wenn der Server gestoppt ist. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten.",
+  "config": [
+    {
+      "title": "Enshrouded (enshrouded_server.json)",
+      "file": "server/enshrouded_server.json",
+      "format": "json",
+      "note": "Passwörter gelten für die Gruppen Admin, Freund, Gast und Besucher. Wer welches Passwort eingibt, landet in der Gruppe.",
+      "settings": [
+        {
+          "key": "name",
+          "label": "Servername"
+        },
+        {
+          "key": "slotCount",
+          "label": "Spielerplätze",
+          "type": "number",
+          "min": 1,
+          "max": 16
+        },
+        {
+          "key": "gameSettingsPreset",
+          "label": "Spielregeln",
+          "type": "select",
+          "options": [
+            "Default",
+            "Relaxed",
+            "Hard",
+            "Survival",
+            "Custom"
+          ],
+          "labels": [
+            "Standard",
+            "Entspannt",
+            "Schwer",
+            "Survival",
+            "Eigene"
+          ]
+        },
+        {
+          "key": "userGroups.0.password",
+          "label": "Passwort Admin",
+          "type": "secret"
+        },
+        {
+          "key": "userGroups.1.password",
+          "label": "Passwort Freund",
+          "type": "secret"
+        },
+        {
+          "key": "userGroups.2.password",
+          "label": "Passwort Gast",
+          "type": "secret"
+        },
+        {
+          "key": "userGroups.3.password",
+          "label": "Passwort Besucher",
+          "type": "secret"
+        },
+        {
+          "key": "enableVoiceChat",
+          "label": "Sprachchat",
+          "type": "bool"
+        },
+        {
+          "key": "enableTextChat",
+          "label": "Textchat",
+          "type": "bool"
+        },
+        {
+          "key": "password",
+          "label": "Passwort",
+          "type": "secret"
+        }
+      ]
+    }
+  ]
 }

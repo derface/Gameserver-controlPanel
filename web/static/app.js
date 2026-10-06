@@ -354,6 +354,7 @@
       <div class="acts">
         <button class="btn-accent" type="button" data-d="power" ${busy ? 'disabled' : ''}>${on ? 'Stoppen' : 'Starten'}</button>
         <button class="btn-line" type="button" data-d="restart" ${!on || busy ? 'disabled' : ''}>Neustart</button>
+        <button class="btn-line" type="button" data-d="settings">Einstellungen</button>
         <button class="btn-line" type="button" data-d="backups">Backups</button>
         <button class="btn-line" type="button" data-d="files">Dateien</button>
         <button class="btn-line" type="button" data-d="tasks">Aufgaben</button>
@@ -374,7 +375,7 @@
     else if (a === 'edit') openEdit(s);
     else if (a === 'backups') openManage(s.id, 'backups');
     else if (a === 'files') openManage(s.id, 'files');
-    else if (a === 'tasks' || a === 'events') openManage(s.id, a);
+    else if (a === 'tasks' || a === 'events' || a === 'settings') openManage(s.id, a);
     else if (a === 'delete') openDelete(s);
     else deselect();
   });
@@ -538,8 +539,8 @@
   }
 
   /* ---------------- Formular-Bausteine ---------------- */
-  function varField(v, val, forEdit) {
-    const id = 'v_' + v.key, req = v.required ? ' *' : '';
+  function varField(v, val, forEdit, pre) {
+    const id = (pre || 'v_') + v.key, req = v.required ? ' *' : '';
     const help = v.help ? `<small>${esc(v.help)}</small>` : '';
     const full = (v.type === 'command' || (v.help && v.help.length > 50)) ? ' full' : '';
     if (v.type === 'bool') {
@@ -644,6 +645,7 @@
     try { await api('PATCH', '/api/servers/' + editId, body); $('#dlgEdit').close(); toast('Gespeichert. Der Container wird neu angelegt.', 'ok'); await loadServers(); }
     catch (err) { showErr($('#eErr'), err.message); }
   });
+  $('#eToSettings').addEventListener('click', () => { const id = editId; $('#dlgEdit').close(); openManage(id, 'settings'); });
   function openDelete(s) {
     delId = s.id; $('#delWipe').checked = false;
     $('#delText').textContent = `„${s.name}“ wird gestoppt und aus dem Panel entfernt.`;
@@ -946,9 +948,10 @@
     MG.tab = tab;
     $$('#dlgManage .tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     $('#paneBackups').hidden = tab !== 'backups'; $('#paneFiles').hidden = tab !== 'files';
-    $('#paneTasks').hidden = tab !== 'tasks'; $('#paneEvents').hidden = tab !== 'events';
+    $('#paneTasks').hidden = tab !== 'tasks'; $('#paneEvents').hidden = tab !== 'events'; $('#paneSettings').hidden = tab !== 'settings';
     clearTimeout(TK.timer);
-    if (tab === 'backups') loadBackups();
+    if (tab === 'settings') loadSettings();
+    else if (tab === 'backups') loadBackups();
     else if (tab === 'files') loadFiles(MG.path);
     else loadTasks();
   }
@@ -967,6 +970,85 @@
     e.stopPropagation();
     if (await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen')) { closeEditor(true); $('#dlgManage').close(); }
   }, true);
+
+  // Spiel-Einstellungen
+  const GS = { data: null, orig: {} };
+  function cfgField(f, s) {
+    const id = `st_${f}_${s.key.replace(/[^A-Za-z0-9_-]/g, '_')}`, attrs = `data-cf="${f}" data-k="${esc(s.key)}"`;
+    const help = s.help ? `<small>${esc(s.help)}</small>` : '';
+    if (s.type === 'bool') return `<label class="check"><input type="checkbox" ${attrs} ${s.value === 'true' ? 'checked' : ''}> ${esc(s.label)}</label>`;
+    let input;
+    if (s.type === 'select') {
+      const opts = s.options.map((o, i) => `<option value="${esc(o)}" ${o === s.value ? 'selected' : ''}>${esc((s.labels && s.labels[i]) || o)}</option>`);
+      if (s.value && !s.options.includes(s.value)) opts.unshift(`<option value="${esc(s.value)}" selected>${esc(s.value)}</option>`);
+      input = `<select id="${id}" ${attrs}>${opts.join('')}</select>`;
+    } else if (s.type === 'secret') {
+      const set = s.value === '••••••';
+      input = `<input id="${id}" ${attrs} type="password" value="" placeholder="${set ? 'gesetzt, unverändert' : 'leer'}" autocomplete="new-password">`;
+    } else if (s.type === 'number') {
+      input = `<input id="${id}" ${attrs} type="number" step="any" value="${esc(s.value)}"${s.min != null ? ` min="${s.min}"` : ''}${s.max != null ? ` max="${s.max}"` : ''}>`;
+    } else {
+      input = `<input id="${id}" ${attrs} type="text" value="${esc(s.value)}" maxlength="300" autocomplete="off">`;
+    }
+    return `<label class="field"><span>${esc(s.label)}</span>${input}${help}</label>`;
+  }
+  async function loadSettings() {
+    const id = MG.id;
+    let d;
+    try { d = await api('GET', `/api/servers/${id}/settings`); } catch (e) { toast(e.message, 'bad'); return; }
+    if (MG.id !== id) return;
+    GS.data = d; renderSettings();
+  }
+  function renderSettings() {
+    const d = GS.data;
+    let h = '';
+    if (d.vars.length) {
+      h += `<fieldset class="st-sec"><legend>Start-Einstellungen</legend><p class="small muted st-info">Werden dem Spiel beim Start mitgegeben. Ändern legt den Container neu an, Spielstände bleiben erhalten.</p>
+        <div class="vars" id="stVars">${d.vars.map(v => varField(v, v.value, true, 'stv_')).join('')}</div></fieldset>`;
+    }
+    d.files.forEach((f, i) => {
+      const shown = f.settings.filter(s => s.present);
+      h += `<fieldset class="st-sec"><legend>${esc(f.title)}</legend><p class="st-file">${esc(f.file)}</p>`;
+      if (f.note) h += `<p class="small muted st-info">${esc(f.note)}</p>`;
+      if (f.error) h += `<p class="err">${esc(f.error)}</p>`;
+      if (!f.editable && !f.error) h += '<p class="small muted st-info">Diese Datei legt das Spiel beim ersten Start an. Starte den Server einmal, danach kannst du die Werte hier ändern.</p>';
+      else if (f.editable) h += `<div class="vars">${shown.map(s => cfgField(i, s)).join('')}</div>`;
+      if (f.editable && shown.length < f.settings.length) h += `<p class="small muted">${f.settings.length - shown.length} weitere Einstellungen gibt es in dieser Spielversion nicht.</p>`;
+      h += '</fieldset>';
+    });
+    if (!d.vars.length && !d.files.length) h = '<p class="muted">Für dieses Spiel gibt es noch kein Einstellungs-Formular. Die Konfigurationsdateien kannst du unter „Dateien“ bearbeiten.</p>';
+    $('#stBody').innerHTML = h;
+    $('#stSave').hidden = !d.vars.length && !d.files.some(f => f.editable);
+    $('#stNote').textContent = d.running ? 'Der Server läuft. Zum Speichern wird er kurz gestoppt und wieder gestartet, die Spieler werden dabei getrennt.' : '';
+    GS.orig = collectSettings();
+  }
+  function collectSettings() {
+    const files = {};
+    $$('#stBody [data-cf]').forEach(el => {
+      const f = el.dataset.cf, k = el.dataset.k;
+      let v = el.type === 'checkbox' ? String(el.checked) : el.value;
+      if (el.type === 'password' && v === '') v = '••••••';
+      (files[f] = files[f] || {})[k] = v;
+    });
+    return { vars: $('#stVars') ? collectVars($('#stVars'), true) : {}, files };
+  }
+  $('#stForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const now = collectSettings(), body = { vars: {}, files: {} };
+    for (const [k, v] of Object.entries(now.vars)) if (GS.orig.vars[k] !== v) body.vars[k] = v;
+    for (const [f, kv] of Object.entries(now.files)) for (const [k, v] of Object.entries(kv)) {
+      if (!GS.orig.files[f] || GS.orig.files[f][k] !== v) (body.files[f] = body.files[f] || {})[k] = v;
+    }
+    if (!Object.keys(body.vars).length && !Object.keys(body.files).length) { toast('Nichts geändert'); return; }
+    const b = $('#stSave'); b.disabled = true; b.textContent = GS.data.running ? 'Stoppt, speichert, startet …' : 'Speichert …';
+    try {
+      const r = await api('PUT', `/api/servers/${MG.id}/settings`, body);
+      GS.data = r.settings; renderSettings();
+      toast(r.changed && r.changed.length ? 'Gespeichert: ' + r.changed.join(', ') : 'Nichts geändert', 'ok');
+      loadServers();
+    } catch (err) { toast(err.message, 'bad'); }
+    finally { b.disabled = false; b.textContent = 'Speichern'; }
+  });
 
   // Aufgaben, Wächter, Verlauf
   const TK = { data: null, timer: null };
@@ -1275,6 +1357,7 @@
     S.servers.forEach(s => {
       if (s.status !== 'preparing') a.push({ label: s.name + (isOn(s) ? ' stoppen' : ' starten'), hint: 'Server', run: () => togglePower(s) });
       a.push({ label: 'Zu ' + s.name + ' fliegen', hint: '3D', run: () => { select(s.id); $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
+      a.push({ label: 'Einstellungen von ' + s.name, hint: 'Einstellungen', run: () => openManage(s.id, 'settings') });
       a.push({ label: 'Backups von ' + s.name, hint: 'Backup', run: () => openManage(s.id, 'backups') });
       a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
       a.push({ label: 'Aufgaben von ' + s.name, hint: 'Aufgaben', run: () => openManage(s.id, 'tasks') });

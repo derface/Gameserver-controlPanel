@@ -20,16 +20,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "rc_arena",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "rc_arena",
+      "type": "slug"
     }
   ],
   "memory_mb": 512,
@@ -40,6 +40,50 @@
     "port": 0
   },
   "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Server (ricochet/panel.cfg)",
+      "file": "server/ricochet/panel.cfg",
+      "format": "cvar",
+      "settings": [
+        {
+          "key": "hostname",
+          "label": "Servername"
+        },
+        {
+          "key": "sv_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "rcon_password",
+          "label": "RCON-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "mp_timelimit",
+          "label": "Zeitlimit pro Map (Minuten)",
+          "type": "number",
+          "min": 0,
+          "max": 180
+        },
+        {
+          "key": "mp_friendlyfire",
+          "label": "Friendly Fire",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sv_alltalk",
+          "label": "Sprachchat für alle",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        }
+      ]
+    }
+  ],
   "status": "beta",
   "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

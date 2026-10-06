@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/files"
@@ -29,6 +31,8 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/remote", a.guard(a.remoteGet))
 	mux.HandleFunc("PUT /api/remote", a.guard(a.remotePut))
 	mux.HandleFunc("POST /api/remote/test", a.guard(a.remoteTest))
+	mux.HandleFunc("GET /api/servers/{id}/settings", a.guard(a.settingsGet))
+	mux.HandleFunc("PUT /api/servers/{id}/settings", a.guard(a.settingsPut))
 	mux.HandleFunc("GET /api/servers/{id}/tasks", a.guard(a.tasksGet))
 	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.guard(a.tasksPut))
 	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.guard(a.taskRun))
@@ -490,4 +494,48 @@ func (a *API) watchPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.tasksGet(w, r)
+}
+
+// ---------- game settings ----------
+
+func (a *API) settingsGet(w http.ResponseWriter, r *http.Request) {
+	v, err := a.Mgr.Settings(r.PathValue("id"))
+	if err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 200, v)
+}
+
+func (a *API) settingsPut(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Vars  map[string]string            `json:"vars"`
+		Files map[string]map[string]string `json:"files"`
+	}
+	if err := decode(r, &req); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	vals := map[int]map[string]string{}
+	for k, v := range req.Files {
+		i, err := strconv.Atoi(k)
+		if err != nil || i < 0 {
+			fail(w, 400, errors.New("Ungültige Anfrage"))
+			return
+		}
+		vals[i] = v
+	}
+	id := r.PathValue("id")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute) // a stop may take a while
+	defer cancel()
+	changed, err := a.Mgr.ApplySettings(ctx, id, req.Vars, vals)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	if len(changed) > 0 {
+		a.Mgr.Event(id, "info", "Einstellungen geändert von "+a.Auth.User(r)+": "+strings.Join(changed, ", "))
+	}
+	v, _ := a.Mgr.Settings(id)
+	writeJSON(w, 200, map[string]any{"changed": changed, "settings": v})
 }

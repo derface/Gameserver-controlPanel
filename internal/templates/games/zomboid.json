@@ -40,5 +40,71 @@
   "status": "beta",
   "disk_gb": 5,
   "notes": "Konfiguration liegt in Zomboid/Server/<servername>.ini im Home-Verzeichnis des Containers.",
-  "broadcast": "servermsg \"{{msg}}\""
+  "broadcast": "servermsg \"{{msg}}\"",
+  "config": [
+    {
+      "title": "Project Zomboid (Server-INI)",
+      "file": "home/Zomboid/Server/{{server_name}}.ini",
+      "format": "properties",
+      "note": "Die Datei entsteht beim ersten Start.",
+      "settings": [
+        {
+          "key": "PublicName",
+          "label": "Name in der Serverliste"
+        },
+        {
+          "key": "PublicDescription",
+          "label": "Beschreibung"
+        },
+        {
+          "key": "Password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "MaxPlayers",
+          "label": "Maximale Spieler",
+          "type": "number",
+          "min": 1,
+          "max": 100
+        },
+        {
+          "key": "Public",
+          "label": "In der Serverliste zeigen",
+          "type": "bool"
+        },
+        {
+          "key": "Open",
+          "label": "Jeder darf beitreten",
+          "type": "bool",
+          "help": "Aus = nur Spieler mit Konto auf dem Server"
+        },
+        {
+          "key": "PVP",
+          "label": "PvP",
+          "type": "bool"
+        },
+        {
+          "key": "PauseEmpty",
+          "label": "Pause ohne Spieler",
+          "type": "bool"
+        },
+        {
+          "key": "GlobalChat",
+          "label": "Globaler Chat",
+          "type": "bool"
+        },
+        {
+          "key": "SafetySystem",
+          "label": "PvP-Schutzschalter",
+          "type": "bool"
+        },
+        {
+          "key": "SleepAllowed",
+          "label": "Schlafen erlaubt",
+          "type": "bool"
+        }
+      ]
+    }
+  ]
 }

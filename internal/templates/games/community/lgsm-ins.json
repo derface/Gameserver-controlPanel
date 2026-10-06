@@ -24,16 +24,10 @@
   ],
   "vars": [
     {
-      "key": "tickrate",
-      "label": "Tickrate",
-      "default": "64",
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "32",
       "type": "number"
-    },
-    {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "embassy_coop checkpoint",
-      "type": "slug"
     },
     {
       "key": "gslt",
@@ -43,9 +37,15 @@
       "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "32",
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "embassy_coop checkpoint",
+      "type": "slug"
+    },
+    {
+      "key": "tickrate",
+      "label": "Tickrate",
+      "default": "64",
       "type": "number"
     }
   ],
@@ -57,6 +57,50 @@
     "port": 0
   },
   "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Server (insurgency/cfg/panel.cfg)",
+      "file": "server/insurgency/cfg/panel.cfg",
+      "format": "cvar",
+      "settings": [
+        {
+          "key": "hostname",
+          "label": "Servername"
+        },
+        {
+          "key": "sv_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "rcon_password",
+          "label": "RCON-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "mp_timelimit",
+          "label": "Zeitlimit pro Map (Minuten)",
+          "type": "number",
+          "min": 0,
+          "max": 180
+        },
+        {
+          "key": "mp_friendlyfire",
+          "label": "Friendly Fire",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sv_alltalk",
+          "label": "Sprachchat für alle",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        }
+      ]
+    }
+  ],
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen."
 }

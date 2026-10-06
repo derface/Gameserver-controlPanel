@@ -34,6 +34,72 @@ type Var struct {
 	Needed  bool     `json:"required,omitempty"`
 }
 
+// ConfigFile is one game configuration file with the settings the panel
+// shows as a form (see package gameconfig for the formats).
+type ConfigFile struct {
+	Title    string    `json:"title"`
+	File     string    `json:"file"`                // below the server folder, may contain {{var}}
+	Format   string    `json:"format"`              // properties | ini | json | cvar | xmlprop | palworld
+	InitFrom string    `json:"init_from,omitempty"` // copy this file first if File is missing or empty
+	Note     string    `json:"note,omitempty"`
+	Settings []Setting `json:"settings"`
+}
+
+type Setting struct {
+	Key     string   `json:"key"`
+	Label   string   `json:"label"`
+	Type    string   `json:"type,omitempty"` // text | number | bool | select | secret
+	Options []string `json:"options,omitempty"`
+	Labels  []string `json:"labels,omitempty"` // display names for options
+	True    string   `json:"true,omitempty"`   // how the file writes yes/no (default true/false)
+	False   string   `json:"false,omitempty"`
+	Min     *float64 `json:"min,omitempty"`
+	Max     *float64 `json:"max,omitempty"`
+	Help    string   `json:"help,omitempty"`
+}
+
+// BoolValues returns how the file spells true and false.
+func (s Setting) BoolValues() (string, string) {
+	t, f := s.True, s.False
+	if t == "" {
+		t = "true"
+	}
+	if f == "" {
+		f = "false"
+	}
+	return t, f
+}
+
+var configFormats = map[string]bool{"properties": true, "ini": true, "json": true, "cvar": true, "xmlprop": true, "palworld": true}
+
+func (t Template) checkConfig() error {
+	for i, c := range t.Config {
+		if !configFormats[c.Format] {
+			return fmt.Errorf("config %d: unbekanntes Format %q", i, c.Format)
+		}
+		if c.File == "" || strings.Contains(c.File, "..") || strings.HasPrefix(c.File, "/") {
+			return fmt.Errorf("config %d: ungültiger Dateipfad", i)
+		}
+		seen := map[string]bool{}
+		for _, s := range c.Settings {
+			if s.Key == "" || s.Label == "" || seen[s.Key] {
+				return fmt.Errorf("config %d: Einstellung ohne Schlüssel/Name oder doppelt (%s)", i, s.Key)
+			}
+			seen[s.Key] = true
+			switch s.Type {
+			case "", "text", "number", "bool", "secret":
+			case "select":
+				if len(s.Options) == 0 || (len(s.Labels) > 0 && len(s.Labels) != len(s.Options)) {
+					return fmt.Errorf("config %d: %s braucht passende options/labels", i, s.Key)
+				}
+			default:
+				return fmt.Errorf("config %d: %s hat unbekannten Typ %q", i, s.Key, s.Type)
+			}
+		}
+	}
+	return nil
+}
+
 type Template struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
@@ -72,6 +138,9 @@ type Template struct {
 	DataUID     int               `json:"data_uid,omitempty"`  // owner of the server folder (default 1000)
 	Cmd         []string          `json:"cmd,omitempty"`       // arguments for image servers
 	LogFile     string            `json:"log_file,omitempty"`  // steam: game writes here instead of stdout
+
+	// Settings shown as a form; values live in the game's config files.
+	Config []ConfigFile `json:"config,omitempty"`
 
 	// Backups: by default a Steam server backs up everything in its data
 	// folder except the game install ("server"); image servers back up all.
@@ -164,6 +233,9 @@ func (s *Set) add(b []byte, src string) error {
 	}
 	if t.Kind == "image" && t.Image == "" {
 		return fmt.Errorf("%s: image fehlt", src)
+	}
+	if err := t.checkConfig(); err != nil {
+		return fmt.Errorf("%s: %w", src, err)
 	}
 	if t.Console == "" {
 		t.Console = "stdin"

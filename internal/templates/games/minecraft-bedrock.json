@@ -65,5 +65,51 @@
   "status": "stabil",
   "disk_gb": 2,
   "notes": "Für Handy, Konsole und Windows-Edition.",
-  "broadcast": "say {{msg}}"
+  "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Spielwelt (server.properties)",
+      "file": "server.properties",
+      "format": "properties",
+      "settings": [
+        {
+          "key": "allow-cheats",
+          "label": "Cheats erlauben",
+          "type": "bool"
+        },
+        {
+          "key": "allow-list",
+          "label": "Nur Spieler auf der Allowlist",
+          "type": "bool"
+        },
+        {
+          "key": "view-distance",
+          "label": "Sichtweite (Chunks)",
+          "type": "number",
+          "min": 5,
+          "max": 96
+        },
+        {
+          "key": "tick-distance",
+          "label": "Simulationsweite (Chunks)",
+          "type": "number",
+          "min": 4,
+          "max": 12
+        },
+        {
+          "key": "player-idle-timeout",
+          "label": "Inaktive Spieler kicken nach (Minuten, 0 = nie)",
+          "type": "number",
+          "min": 0,
+          "max": 1440
+        },
+        {
+          "key": "level-seed",
+          "label": "Seed",
+          "type": "text",
+          "help": "Gilt nur für neue Welten"
+        }
+      ]
+    }
+  ]
 }

@@ -121,5 +121,89 @@
   "status": "stabil",
   "disk_gb": 3,
   "notes": "Nutzt das bewährte Image itzg/minecraft-server. Mods werden beim Start automatisch von Modrinth geladen.",
-  "broadcast": "say {{msg}}"
+  "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Spielwelt (server.properties)",
+      "file": "server.properties",
+      "format": "properties",
+      "note": "Servername, Schwierigkeit, Spielerzahl und Sichtweite stehen oben bei den Start-Einstellungen.",
+      "settings": [
+        {
+          "key": "gamemode",
+          "label": "Spielmodus",
+          "type": "select",
+          "options": [
+            "survival",
+            "creative",
+            "adventure",
+            "spectator"
+          ],
+          "labels": [
+            "Überleben",
+            "Kreativ",
+            "Abenteuer",
+            "Zuschauer"
+          ]
+        },
+        {
+          "key": "hardcore",
+          "label": "Hardcore",
+          "type": "bool"
+        },
+        {
+          "key": "pvp",
+          "label": "Spieler gegen Spieler (PvP)",
+          "type": "bool"
+        },
+        {
+          "key": "white-list",
+          "label": "Nur Spieler auf der Whitelist",
+          "type": "bool",
+          "help": "Spieler in der Konsole mit whitelist add <Name> hinzufügen"
+        },
+        {
+          "key": "enforce-whitelist",
+          "label": "Whitelist sofort durchsetzen",
+          "type": "bool"
+        },
+        {
+          "key": "allow-flight",
+          "label": "Fliegen erlauben",
+          "type": "bool",
+          "help": "Für Mods und Plugins, die Fliegen erlauben"
+        },
+        {
+          "key": "allow-nether",
+          "label": "Nether erlauben",
+          "type": "bool"
+        },
+        {
+          "key": "spawn-monsters",
+          "label": "Monster",
+          "type": "bool"
+        },
+        {
+          "key": "spawn-protection",
+          "label": "Spawn-Schutz (Blöcke)",
+          "type": "number",
+          "min": 0,
+          "max": 1000
+        },
+        {
+          "key": "simulation-distance",
+          "label": "Simulationsweite (Chunks)",
+          "type": "number",
+          "min": 3,
+          "max": 32
+        },
+        {
+          "key": "level-seed",
+          "label": "Seed",
+          "type": "text",
+          "help": "Gilt nur für neue Welten"
+        }
+      ]
+    }
+  ]
 }

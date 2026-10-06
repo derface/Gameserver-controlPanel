@@ -6,20 +6,157 @@
   "steam_app_id": 2394010,
   "start": "./PalServer.sh -port={{port}} -players={{max_players}} -useperfthreads -NoAsyncLoadingThread -UseMultithreadForDS {{community}}",
   "ports": [
-    {"name": "Spiel", "port": 8211, "proto": "udp"},
-    {"name": "Abfrage", "port": 27015, "proto": "udp"}
+    {
+      "name": "Spiel",
+      "port": 8211,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
   ],
   "vars": [
-    {"key": "max_players", "label": "Maximale Spieler", "default": "16", "type": "number"},
-    {"key": "community", "label": "Als Community-Server listen", "default": "false", "type": "bool", "flag": "-publiclobby"}
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "default": "16",
+      "type": "number"
+    },
+    {
+      "key": "community",
+      "label": "Als Community-Server listen",
+      "default": "false",
+      "type": "bool",
+      "flag": "-publiclobby"
+    }
   ],
   "memory_mb": 8192,
   "min_memory_mb": 6144,
   "console": "stdin",
   "stop_timeout": 45,
   "ready": "Running Palworld dedicated server",
-  "backup_include": ["server/Pal/Saved"],
+  "backup_include": [
+    "server/Pal/Saved"
+  ],
   "status": "stabil",
   "disk_gb": 6,
-  "notes": "Palworld braucht viel RAM, 16 GB sind für volle Server empfehlenswert. Einstellungen in Pal/Saved/Config/LinuxServer/PalWorldSettings.ini."
+  "notes": "Palworld braucht viel RAM, 16 GB sind für volle Server empfehlenswert. Einstellungen in Pal/Saved/Config/LinuxServer/PalWorldSettings.ini.",
+  "config": [
+    {
+      "title": "Palworld (PalWorldSettings.ini)",
+      "file": "server/Pal/Saved/Config/LinuxServer/PalWorldSettings.ini",
+      "format": "palworld",
+      "init_from": "server/DefaultPalWorldSettings.ini",
+      "note": "Beim ersten Speichern übernimmt das Panel die Standardwerte von Palworld.",
+      "settings": [
+        {
+          "key": "ServerName",
+          "label": "Servername"
+        },
+        {
+          "key": "ServerDescription",
+          "label": "Beschreibung"
+        },
+        {
+          "key": "ServerPassword",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "AdminPassword",
+          "label": "Admin-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "ExpRate",
+          "label": "Erfahrung (Faktor)",
+          "type": "number",
+          "min": 0.1,
+          "max": 20
+        },
+        {
+          "key": "PalCaptureRate",
+          "label": "Fangrate (Faktor)",
+          "type": "number",
+          "min": 0.5,
+          "max": 2
+        },
+        {
+          "key": "PalSpawnNumRate",
+          "label": "Pal-Anzahl (Faktor)",
+          "type": "number",
+          "min": 0.5,
+          "max": 3
+        },
+        {
+          "key": "DayTimeSpeedRate",
+          "label": "Tag-Geschwindigkeit",
+          "type": "number",
+          "min": 0.1,
+          "max": 5
+        },
+        {
+          "key": "NightTimeSpeedRate",
+          "label": "Nacht-Geschwindigkeit",
+          "type": "number",
+          "min": 0.1,
+          "max": 5
+        },
+        {
+          "key": "DeathPenalty",
+          "label": "Beim Tod verlieren",
+          "type": "select",
+          "options": [
+            "None",
+            "Item",
+            "ItemAndEquipment",
+            "All"
+          ],
+          "labels": [
+            "Nichts",
+            "Gegenstände",
+            "Gegenstände und Ausrüstung",
+            "Alles inkl. Pals"
+          ]
+        },
+        {
+          "key": "bIsPvP",
+          "label": "PvP",
+          "type": "bool",
+          "true": "True",
+          "false": "False"
+        },
+        {
+          "key": "bEnablePlayerToPlayerDamage",
+          "label": "Spieler können sich schaden",
+          "type": "bool",
+          "true": "True",
+          "false": "False"
+        },
+        {
+          "key": "bEnableFriendlyFire",
+          "label": "Friendly Fire",
+          "type": "bool",
+          "true": "True",
+          "false": "False"
+        },
+        {
+          "key": "BaseCampWorkerMaxNum",
+          "label": "Max. Arbeiter pro Basis",
+          "type": "number",
+          "min": 1,
+          "max": 50
+        },
+        {
+          "key": "RCONEnabled",
+          "label": "RCON an",
+          "type": "bool",
+          "true": "True",
+          "false": "False"
+        }
+      ]
+    }
+  ]
 }

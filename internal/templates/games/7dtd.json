@@ -6,10 +6,26 @@
   "steam_app_id": 294420,
   "start": "./startserver.sh -configfile=serverconfig.xml",
   "ports": [
-    {"name": "Spiel", "port": 26900, "proto": "tcp"},
-    {"name": "Spiel", "port": 26900, "proto": "udp"},
-    {"name": "Spiel", "port": 26901, "proto": "udp"},
-    {"name": "Spiel", "port": 26902, "proto": "udp"}
+    {
+      "name": "Spiel",
+      "port": 26900,
+      "proto": "tcp"
+    },
+    {
+      "name": "Spiel",
+      "port": 26900,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 26901,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 26902,
+      "proto": "udp"
+    }
   ],
   "fixed_ports": true,
   "vars": [],
@@ -17,9 +33,129 @@
   "min_memory_mb": 4096,
   "console": "stdin",
   "stop_timeout": 60,
-  "query": {"type": "a2s", "port": 1},
-  "backup_include": ["server/serverconfig.xml"],
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/serverconfig.xml"
+  ],
   "status": "beta",
   "disk_gb": 15,
-  "notes": "Einstellungen in serverconfig.xml im Serverordner. Die Ports sind fest, daher ist nur ein 7DTD-Server pro Rechner möglich."
+  "notes": "Einstellungen in serverconfig.xml im Serverordner. Die Ports sind fest, daher ist nur ein 7DTD-Server pro Rechner möglich.",
+  "config": [
+    {
+      "title": "7 Days to Die (serverconfig.xml)",
+      "file": "server/serverconfig.xml",
+      "format": "xmlprop",
+      "settings": [
+        {
+          "key": "ServerName",
+          "label": "Servername"
+        },
+        {
+          "key": "ServerDescription",
+          "label": "Beschreibung"
+        },
+        {
+          "key": "ServerPassword",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "ServerMaxPlayerCount",
+          "label": "Maximale Spieler",
+          "type": "number",
+          "min": 1,
+          "max": 64
+        },
+        {
+          "key": "ServerVisibility",
+          "label": "Sichtbarkeit",
+          "type": "select",
+          "options": [
+            "2",
+            "1",
+            "0"
+          ],
+          "labels": [
+            "Öffentlich",
+            "Nur Freunde",
+            "Nicht gelistet"
+          ]
+        },
+        {
+          "key": "GameWorld",
+          "label": "Karte",
+          "type": "select",
+          "options": [
+            "Navezgane",
+            "RWG"
+          ],
+          "labels": [
+            "Navezgane",
+            "Zufallswelt"
+          ]
+        },
+        {
+          "key": "WorldGenSeed",
+          "label": "Seed der Zufallswelt"
+        },
+        {
+          "key": "WorldGenSize",
+          "label": "Größe der Zufallswelt",
+          "type": "select",
+          "options": [
+            "6144",
+            "8192",
+            "10240"
+          ]
+        },
+        {
+          "key": "GameName",
+          "label": "Spielstand"
+        },
+        {
+          "key": "GameDifficulty",
+          "label": "Schwierigkeit (0–5)",
+          "type": "number",
+          "min": 0,
+          "max": 5
+        },
+        {
+          "key": "DayNightLength",
+          "label": "Minuten pro Tag",
+          "type": "number",
+          "min": 10,
+          "max": 240
+        },
+        {
+          "key": "BloodMoonFrequency",
+          "label": "Blutmond alle … Tage",
+          "type": "number",
+          "min": 0,
+          "max": 30
+        },
+        {
+          "key": "LootAbundance",
+          "label": "Beute (%)",
+          "type": "number",
+          "min": 25,
+          "max": 200
+        },
+        {
+          "key": "XPMultiplier",
+          "label": "Erfahrung (%)",
+          "type": "number",
+          "min": 25,
+          "max": 300
+        },
+        {
+          "key": "EACEnabled",
+          "label": "EasyAntiCheat",
+          "type": "bool"
+        }
+      ]
+    }
+  ]
 }

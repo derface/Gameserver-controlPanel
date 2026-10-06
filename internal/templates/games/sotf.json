@@ -39,5 +39,81 @@
   "status": "experimentell",
   "disk_gb": 5,
   "notes": "Läuft über Wine. Einstellungen in userdata/dedicatedserver.cfg (entsteht beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht.",
-  "log_file": "/data/logs/sotf.log"
+  "log_file": "/data/logs/sotf.log",
+  "config": [
+    {
+      "title": "Sons of the Forest (dedicatedserver.cfg)",
+      "file": "server/userdata/dedicatedserver.cfg",
+      "format": "json",
+      "settings": [
+        {
+          "key": "ServerName",
+          "label": "Servername"
+        },
+        {
+          "key": "Password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "MaxPlayers",
+          "label": "Maximale Spieler",
+          "type": "number",
+          "min": 1,
+          "max": 8
+        },
+        {
+          "key": "GameMode",
+          "label": "Spielmodus",
+          "type": "select",
+          "options": [
+            "Normal",
+            "Hard",
+            "HardSurvival",
+            "Peaceful",
+            "Custom"
+          ],
+          "labels": [
+            "Normal",
+            "Schwer",
+            "Harte Survival",
+            "Friedlich",
+            "Eigene"
+          ]
+        },
+        {
+          "key": "SaveSlot",
+          "label": "Speicherplatz",
+          "type": "number",
+          "min": 1,
+          "max": 30
+        },
+        {
+          "key": "SaveMode",
+          "label": "Spielstand",
+          "type": "select",
+          "options": [
+            "Continue",
+            "New"
+          ],
+          "labels": [
+            "Fortsetzen",
+            "Neu beginnen"
+          ]
+        },
+        {
+          "key": "SaveInterval",
+          "label": "Speichern alle … Sekunden",
+          "type": "number",
+          "min": 60,
+          "max": 3600
+        },
+        {
+          "key": "LanOnly",
+          "label": "Nur im LAN",
+          "type": "bool"
+        }
+      ]
+    }
+  ]
 }

@@ -24,16 +24,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "zps_deadend",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "20",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "zps_deadend",
+      "type": "slug"
     }
   ],
   "memory_mb": 1024,
@@ -44,6 +44,50 @@
     "port": 0
   },
   "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Server (zps/cfg/panel.cfg)",
+      "file": "server/zps/cfg/panel.cfg",
+      "format": "cvar",
+      "settings": [
+        {
+          "key": "hostname",
+          "label": "Servername"
+        },
+        {
+          "key": "sv_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "rcon_password",
+          "label": "RCON-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "mp_timelimit",
+          "label": "Zeitlimit pro Map (Minuten)",
+          "type": "number",
+          "min": 0,
+          "max": 180
+        },
+        {
+          "key": "mp_friendlyfire",
+          "label": "Friendly Fire",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sv_alltalk",
+          "label": "Sprachchat für alle",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        }
+      ]
+    }
+  ],
   "packages": [
     "libtinfo5:i386"
   ],

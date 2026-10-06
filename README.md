@@ -83,6 +83,17 @@ Einstellungen → Selbsttest (oder Strg+K → „Selbsttest“). Das Panel prüf
 
 Ergebnis je Spiel: **ok**, **unsicher** (läuft, aber Abfrage fehlt oder ist nicht prüfbar), **fehler** (mit den letzten Logzeilen) oder **übersprungen** (feste Ports belegt, zu wenig Platz oder RAM). Ein Spielekauf ist nicht nötig: Dedicated Server lädt SteamCMD anonym. Testserver zählen nicht gegen das Server-Limit der Edition. Der Lauf übersteht Neustarts des Panels und setzt fort; ab 10 GB freiem Platz hält er an. Der Bericht lässt sich als Markdown herunterladen.
 
+## Spiel-Einstellungen
+
+„Server verwalten“ → **Einstellungen** zeigt ein Formular statt Konfigurationsdateien:
+
+- **Start-Einstellungen:** die Variablen der Vorlage (Servername, Passwort, Weltname …). Ändern legt den Container neu an, Spielstände bleiben.
+- **Dateieinstellungen:** Werte direkt in den Konfigurationsdateien des Spiels, z. B. Minecraft `server.properties`, Palworld `PalWorldSettings.ini`, Enshrouded `enshrouded_server.json`, 7DTD `serverconfig.xml`, Zomboid-INI, Factorio `server-settings.json`, V Rising, Sons of the Forest, ARK `GameUserSettings.ini` sowie `server.cfg` aller Source- und GoldSrc-Spiele.
+
+Nur geänderte Werte werden geschrieben, alles andere in der Datei (Kommentare, Reihenfolge, unbekannte Schlüssel) bleibt unverändert. Läuft der Server, wird er dafür gestoppt und wieder gestartet, weil viele Spiele ihre Konfiguration beim Beenden überschreiben. Einstellungen, die es in der installierten Spielversion nicht gibt, werden ausgeblendet. Passwörter werden nie an den Browser geschickt.
+
+Vorlagenfeld `config`: Liste von Dateien mit `file` (relativ zum Serverordner, `{{var}}` erlaubt), `format` (`properties`, `ini` mit Schlüsseln `Abschnitt/Name`, `json` mit Punkt-Pfaden, `cvar`, `xmlprop`, `palworld`), optional `init_from` (Vorlage, falls die Datei fehlt) und `settings` (`key`, `label`, `type` text/number/bool/select/secret, `options`/`labels`, `true`/`false` für die Schreibweise in der Datei, `min`/`max`, `help`).
+
 ## Aufgaben, Absturz-Wächter, Verlauf
 
 Im Dialog „Server verwalten“ gibt es die Reiter **Aufgaben** und **Verlauf**.

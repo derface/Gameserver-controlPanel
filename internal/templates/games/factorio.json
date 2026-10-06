@@ -30,5 +30,76 @@
   "status": "beta",
   "disk_gb": 1,
   "notes": "Nutzt das verbreitete Image factoriotools/factorio. Beim ersten Start wird automatisch eine Karte erzeugt. Einstellungen in config/server-settings.json.",
-  "broadcast": "{{msg}}"
+  "broadcast": "{{msg}}",
+  "config": [
+    {
+      "title": "Factorio (server-settings.json)",
+      "file": "config/server-settings.json",
+      "format": "json",
+      "note": "Für die öffentliche Liste braucht Factorio einen Account (username/token in der Datei).",
+      "settings": [
+        {
+          "key": "name",
+          "label": "Servername"
+        },
+        {
+          "key": "description",
+          "label": "Beschreibung"
+        },
+        {
+          "key": "max_players",
+          "label": "Maximale Spieler (0 = unbegrenzt)",
+          "type": "number",
+          "min": 0,
+          "max": 500
+        },
+        {
+          "key": "game_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "visibility.public",
+          "label": "Öffentlich listen",
+          "type": "bool"
+        },
+        {
+          "key": "visibility.lan",
+          "label": "Im LAN zeigen",
+          "type": "bool"
+        },
+        {
+          "key": "require_user_verification",
+          "label": "Nur mit Factorio-Konto",
+          "type": "bool"
+        },
+        {
+          "key": "autosave_interval",
+          "label": "Autosave alle … Minuten",
+          "type": "number",
+          "min": 1,
+          "max": 120
+        },
+        {
+          "key": "autosave_slots",
+          "label": "Autosave-Plätze",
+          "type": "number",
+          "min": 1,
+          "max": 100
+        },
+        {
+          "key": "afk_autokick_interval",
+          "label": "Inaktive kicken nach (Minuten, 0 = nie)",
+          "type": "number",
+          "min": 0,
+          "max": 600
+        },
+        {
+          "key": "auto_pause",
+          "label": "Pause ohne Spieler",
+          "type": "bool"
+        }
+      ]
+    }
+  ]
 }

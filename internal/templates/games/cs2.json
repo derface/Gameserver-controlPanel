@@ -76,5 +76,55 @@
   "status": "experimentell",
   "disk_gb": 60,
   "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend. Braucht während der Installation rund 60 GB freien Platz.",
-  "broadcast": "say {{msg}}"
+  "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Server (game/csgo/cfg/server.cfg)",
+      "file": "server/game/csgo/cfg/server.cfg",
+      "format": "cvar",
+      "note": "Servername und Map stehen bei den Start-Einstellungen.",
+      "settings": [
+        {
+          "key": "sv_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "mp_maxrounds",
+          "label": "Runden pro Map",
+          "type": "number",
+          "min": 1,
+          "max": 60
+        },
+        {
+          "key": "mp_roundtime",
+          "label": "Rundenzeit (Minuten)",
+          "type": "number",
+          "min": 1,
+          "max": 60
+        },
+        {
+          "key": "mp_friendlyfire",
+          "label": "Friendly Fire",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sv_cheats",
+          "label": "Cheats",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "bot_quota",
+          "label": "Bots",
+          "type": "number",
+          "min": 0,
+          "max": 20
+        }
+      ]
+    }
+  ]
 }

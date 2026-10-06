@@ -61,5 +61,56 @@
   "packages": [
     "libtinfo5:i386"
   ],
-  "broadcast": "say {{msg}}"
+  "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Server (garrysmod/cfg/server.cfg)",
+      "file": "server/garrysmod/cfg/server.cfg",
+      "format": "cvar",
+      "settings": [
+        {
+          "key": "sv_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "rcon_password",
+          "label": "RCON-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "sbox_noclip",
+          "label": "Noclip erlauben",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sbox_godmode",
+          "label": "Unverwundbar",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sbox_playershurtplayers",
+          "label": "Spieler können sich verletzen",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sbox_maxprops",
+          "label": "Max. Props pro Spieler",
+          "type": "number",
+          "min": 0,
+          "max": 2000
+        },
+        {
+          "key": "sv_loadingurl",
+          "label": "Ladebildschirm-URL"
+        }
+      ]
+    }
+  ]
 }

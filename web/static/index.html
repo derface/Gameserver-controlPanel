@@ -142,7 +142,8 @@
     <div class="dlg-head"><h2>Server bearbeiten</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
     <label class="field"><span>Name</span><input id="eName" maxlength="40" required></label>
     <div class="field"><span>Arbeitsspeicher <b id="eMemV" class="mono"></b></span><input id="eMem" type="range" step="256"></div>
-    <div id="eVars" class="vars"></div>
+    <div id="eVars" class="vars" hidden></div>
+    <p class="note">Spieleinstellungen wie Servername, Passwort oder Schwierigkeit findest du unter <button type="button" class="linkbtn" id="eToSettings">Server verwalten → Einstellungen</button>.</p>
     <label class="check" id="eUpdWrap"><input type="checkbox" id="eUpd"> Bei jedem Start per SteamCMD aktualisieren</label>
     <p class="note">Beim Speichern wird der Container mit den neuen Werten neu angelegt. Spielstände bleiben erhalten.</p>
     <p class="err" id="eErr" role="alert" hidden></p>
@@ -240,6 +241,7 @@
   <div class="dlg-head">
     <div class="mg-title"><span class="mono muted" id="mgGame"></span><h2 id="mgTitle">Server</h2></div>
     <div class="tabs" role="tablist" aria-label="Bereich">
+      <button type="button" role="tab" id="tabSettings" aria-selected="false" data-tab="settings">Einstellungen</button>
       <button type="button" role="tab" id="tabBackups" aria-selected="true" data-tab="backups">Backups</button>
       <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files">Dateien</button>
       <button type="button" role="tab" id="tabTasks" aria-selected="false" data-tab="tasks">Aufgaben</button>
@@ -247,6 +249,16 @@
     </div>
     <button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button>
   </div>
+
+  <section class="mg-pane" id="paneSettings" role="tabpanel" aria-labelledby="tabSettings" hidden>
+    <form id="stForm" class="st-form" novalidate>
+      <div id="stBody"></div>
+      <div class="st-foot">
+        <p class="small muted" id="stNote"></p>
+        <button type="submit" class="btn-accent" id="stSave">Speichern</button>
+      </div>
+    </form>
+  </section>
 
   <section class="mg-pane" id="paneBackups" role="tabpanel" aria-labelledby="tabBackups">
     <div class="bk-top">

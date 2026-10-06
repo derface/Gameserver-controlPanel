@@ -46,5 +46,113 @@
   ],
   "status": "experimentell",
   "disk_gb": 3,
-  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht."
+  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht.",
+  "config": [
+    {
+      "title": "Server (ServerHostSettings.json)",
+      "file": "server/save-data/Settings/ServerHostSettings.json",
+      "format": "json",
+      "settings": [
+        {
+          "key": "Name",
+          "label": "Servername"
+        },
+        {
+          "key": "Description",
+          "label": "Beschreibung"
+        },
+        {
+          "key": "Password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "MaxConnectedUsers",
+          "label": "Maximale Spieler",
+          "type": "number",
+          "min": 1,
+          "max": 128
+        },
+        {
+          "key": "MaxConnectedAdmins",
+          "label": "Zusätzliche Admin-Plätze",
+          "type": "number",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "key": "ListOnSteam",
+          "label": "In der Steam-Liste",
+          "type": "bool"
+        },
+        {
+          "key": "ListOnEOS",
+          "label": "In der Epic-Liste (Crossplay)",
+          "type": "bool"
+        },
+        {
+          "key": "AutoSaveCount",
+          "label": "Autosaves behalten",
+          "type": "number",
+          "min": 1,
+          "max": 100
+        },
+        {
+          "key": "AutoSaveInterval",
+          "label": "Autosave alle … Sekunden",
+          "type": "number",
+          "min": 30,
+          "max": 3600
+        }
+      ]
+    },
+    {
+      "title": "Spielregeln (ServerGameSettings.json)",
+      "file": "server/save-data/Settings/ServerGameSettings.json",
+      "format": "json",
+      "settings": [
+        {
+          "key": "GameModeType",
+          "label": "Modus",
+          "type": "select",
+          "options": [
+            "PvP",
+            "PvE"
+          ]
+        },
+        {
+          "key": "ClanSize",
+          "label": "Clan-Größe",
+          "type": "number",
+          "min": 1,
+          "max": 50
+        },
+        {
+          "key": "CastleDamageMode",
+          "label": "Burgschaden",
+          "type": "select",
+          "options": [
+            "Never",
+            "Always",
+            "TimeRestricted"
+          ],
+          "labels": [
+            "Nie",
+            "Immer",
+            "Zu bestimmten Zeiten"
+          ]
+        },
+        {
+          "key": "BloodBoundEquipment",
+          "label": "Ausrüstung bleibt beim Tod",
+          "type": "bool"
+        },
+        {
+          "key": "TeleportBoundItems",
+          "label": "Teleport mit Ressourcen gesperrt",
+          "type": "bool"
+        }
+      ]
+    }
+  ]
 }

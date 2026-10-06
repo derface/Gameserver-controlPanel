@@ -342,6 +342,42 @@ for short, (gsname, gamename) in sorted(names.items()):
         tpl["ready"] = "Bringing up level for play took"
     if engine in ("source", "goldsrc"):
         tpl["broadcast"] = "say {{msg}}"
+        gm = re.search(r'-game\s+"?(?:/data/server/)?([A-Za-z0-9_\-]+)"?', start)
+        cfgname = "panel.cfg" if "+servercfgfile panel.cfg" in start else "server.cfg"
+        if gm:
+            sub = gm.group(1) + ("/" if engine == "goldsrc" else "/cfg/")  # GoldSrc: config in the mod folder
+            tpl["config"] = [{
+                "title": "Server (%s%s)" % (sub, cfgname),
+                "file": "server/%s%s" % (sub, cfgname),
+                "format": "cvar",
+                "settings": [
+                    {"key": "hostname", "label": "Servername"},
+                    {"key": "sv_password", "label": "Passwort", "type": "secret"},
+                    {"key": "rcon_password", "label": "RCON-Passwort", "type": "secret"},
+                    {"key": "mp_timelimit", "label": "Zeitlimit pro Map (Minuten)", "type": "number", "min": 0, "max": 180},
+                    {"key": "mp_friendlyfire", "label": "Friendly Fire", "type": "bool", "true": "1", "false": "0"},
+                    {"key": "sv_alltalk", "label": "Sprachchat für alle", "type": "bool", "true": "1", "false": "0"},
+                ],
+            }]
+    if short == "ark":
+        tpl["config"] = [{
+            "title": "ARK (GameUserSettings.ini)",
+            "file": "server/ShooterGame/Saved/Config/LinuxServer/GameUserSettings.ini",
+            "format": "ini",
+            "note": "Die Datei entsteht beim ersten Start. ARK schreibt sie beim Beenden neu, deshalb stoppt das Panel den Server vor dem Speichern.",
+            "settings": [
+                {"key": "SessionSettings/SessionName", "label": "Servername"},
+                {"key": "ServerSettings/ServerPassword", "label": "Passwort", "type": "secret"},
+                {"key": "ServerSettings/ServerAdminPassword", "label": "Admin-Passwort", "type": "secret"},
+                {"key": "/Script/Engine.GameSession/MaxPlayers", "label": "Maximale Spieler", "type": "number", "min": 1, "max": 200},
+                {"key": "ServerSettings/ServerPVE", "label": "PvE (kein PvP)", "type": "bool", "true": "True", "false": "False"},
+                {"key": "ServerSettings/DifficultyOffset", "label": "Schwierigkeit (0 bis 1)", "type": "number", "min": 0, "max": 1},
+                {"key": "ServerSettings/XPMultiplier", "label": "Erfahrung (Faktor)", "type": "number", "min": 0.1, "max": 100},
+                {"key": "ServerSettings/TamingSpeedMultiplier", "label": "Zähmen (Faktor)", "type": "number", "min": 0.1, "max": 100},
+                {"key": "ServerSettings/HarvestAmountMultiplier", "label": "Ernte (Faktor)", "type": "number", "min": 0.1, "max": 100},
+                {"key": "ServerSettings/ShowMapPlayerLocation", "label": "Eigene Position auf der Karte", "type": "bool", "true": "True", "false": "False"},
+            ],
+        }]
     if pkgs:
         tpl["packages"] = sorted(set(pkgs))
     tpl["status"] = "beta" if short in PASSED else "experimentell"

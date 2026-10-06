@@ -49,5 +49,52 @@
   "status": "experimentell",
   "disk_gb": 15,
   "notes": "Läuft als 64-Bit-Server; die alte 32-Bit-Datei replay_srv.so wird vor dem Start entfernt.",
-  "broadcast": "say {{msg}}"
+  "broadcast": "say {{msg}}",
+  "config": [
+    {
+      "title": "Server (tf/cfg/server.cfg)",
+      "file": "server/tf/cfg/server.cfg",
+      "format": "cvar",
+      "settings": [
+        {
+          "key": "sv_password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "rcon_password",
+          "label": "RCON-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "mp_timelimit",
+          "label": "Zeitlimit pro Map (Minuten)",
+          "type": "number",
+          "min": 0,
+          "max": 180
+        },
+        {
+          "key": "mp_maxrounds",
+          "label": "Runden pro Map (0 = egal)",
+          "type": "number",
+          "min": 0,
+          "max": 60
+        },
+        {
+          "key": "mp_autoteambalance",
+          "label": "Teams automatisch ausgleichen",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "sv_alltalk",
+          "label": "Sprachchat für alle",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        }
+      ]
+    }
+  ]
 }

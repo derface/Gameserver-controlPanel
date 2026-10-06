@@ -24,12 +24,6 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "AAS-TestMap",
-      "type": "slug"
-    },
-    {
       "key": "servername",
       "label": "Servername",
       "default": "Mein Server",
@@ -40,6 +34,12 @@
       "label": "Maximale Spieler",
       "default": "16",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "AAS-TestMap",
+      "type": "slug"
     }
   ],
   "memory_mb": 6144,
