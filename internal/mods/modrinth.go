@@ -170,7 +170,7 @@ func safeIcon(u string) string {
 
 // ParseList turns the stored list ("create,ferrite-core") into slugs.
 func ParseList(s string) []string {
-	var out []string
+	out := []string{} // never nil: the browser expects a list
 	seen := map[string]bool{}
 	for _, p := range strings.FieldsFunc(s, func(r rune) bool { return r == ',' || r == ' ' || r == '\n' }) {
 		p = strings.TrimSpace(p)

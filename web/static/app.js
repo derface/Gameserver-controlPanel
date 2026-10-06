@@ -1062,7 +1062,8 @@
     let d;
     try { d = await api('GET', `/api/servers/${id}/mods`); } catch (e) { toast(e.message, 'bad'); return; }
     if (MG.id !== id) return;
-    MD.st = d; MD.want = d.slugs.slice();
+    d.slugs = d.slugs || []; d.installed = d.installed || [];
+    MD.st = d; MD.want = d.slugs.slice(); MD.hits = [];
     (d.installed || []).forEach(p => { MD.info[p.slug] = p; MD.info[p.id] = p; });
     const what = d.project_type === 'plugin' ? 'Plugins' : 'Mods';
     const loader = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt', paper: 'Paper', purpur: 'Purpur', spigot: 'Spigot', bukkit: 'Bukkit', folia: 'Folia' }[d.loader] || d.loader;
@@ -1104,6 +1105,7 @@
       const r = await api('GET', `/api/servers/${id}/mods/search?q=${encodeURIComponent(q)}&offset=${off}`);
       if (MG.id !== id) return;
       MD.q = q; MD.off = off + r.hits.length;
+      r.hits = r.hits || [];
       MD.hits = off ? MD.hits.concat(r.hits) : r.hits;
       r.hits.forEach(p => { MD.info[p.slug] = p; });
       $('#mdMore').hidden = MD.off >= r.total;
@@ -1122,7 +1124,7 @@
     const b = $('#mdApply'); b.disabled = true; b.textContent = 'Übernimmt …';
     try {
       const d = await api('PUT', `/api/servers/${MG.id}/mods`, { slugs: MD.want });
-      MD.st = d; MD.want = d.slugs.slice(); (d.installed || []).forEach(p => { MD.info[p.slug] = p; });
+      d.slugs = d.slugs || []; MD.st = d; MD.want = d.slugs.slice(); (d.installed || []).forEach(p => { MD.info[p.slug] = p; });
       renderMods(); toast(d.running ? 'Übernommen, der Server startet neu und lädt die Mods' : 'Übernommen, wird beim nächsten Start installiert', 'ok'); loadServers();
     } catch (err) { toast(err.message, 'bad'); }
     finally { b.disabled = false; b.textContent = 'Übernehmen'; }

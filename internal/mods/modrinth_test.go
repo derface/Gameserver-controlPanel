@@ -77,6 +77,9 @@ func TestSearchAndLookup(t *testing.T) {
 }
 
 func TestParseList(t *testing.T) {
+	if b, _ := json.Marshal(ParseList("")); string(b) != "[]" {
+		t.Fatalf("leere Liste als %s", b)
+	}
 	got := ParseList(" create, ferrite-core,,Create ,modernfix\n")
 	if strings.Join(got, "|") != "create|ferrite-core|modernfix" {
 		t.Fatal(got)
