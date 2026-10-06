@@ -94,6 +94,14 @@ Nur geänderte Werte werden geschrieben, alles andere in der Datei (Kommentare, 
 
 Vorlagenfeld `config`: Liste von Dateien mit `file` (relativ zum Serverordner, `{{var}}` erlaubt), `format` (`properties`, `ini` mit Schlüsseln `Abschnitt/Name`, `json` mit Punkt-Pfaden, `cvar`, `xmlprop`, `palworld`), optional `init_from` (Vorlage, falls die Datei fehlt) und `settings` (`key`, `label`, `type` text/number/bool/select/secret, `options`/`labels`, `true`/`false` für die Schreibweise in der Datei, `min`/`max`, `help`).
 
+## Mods und Workshop
+
+- **Minecraft Java:** Reiter **Mods** unter „Server verwalten“. Suche auf Modrinth, gefiltert nach Server-Art (Fabric, Forge, NeoForge, Quilt → Mods; Paper, Purpur → Plugins) und Minecraft-Version, nur Projekte, die auf dem Server laufen. Änderungen werden gesammelt und mit „Übernehmen“ gespeichert; das Image itzg/minecraft-server lädt die Mods samt Pflicht-Abhängigkeiten beim Start und räumt entfernte wieder ab. Vanilla hat keine Mods, dann zeigt der Reiter den Hinweis, die Server-Art umzustellen.
+- **Project Zomboid:** Workshop-IDs, Mod-IDs und Karte unter Einstellungen; der Server lädt die Workshop-Inhalte beim Start selbst.
+- **Garry's Mod:** Workshop-Sammlung (ID) plus Steam-Web-API-Schlüssel unter Einstellungen → Start-Einstellungen.
+
+Vorlagenfeld `mods`: `{"source": "modrinth", "var": "mods", "type_var": "type", "version_var": "version"}`.
+
 ## Aufgaben, Absturz-Wächter, Verlauf
 
 Im Dialog „Server verwalten“ gibt es die Reiter **Aufgaben** und **Verlauf**.

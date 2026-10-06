@@ -242,6 +242,7 @@
     <div class="mg-title"><span class="mono muted" id="mgGame"></span><h2 id="mgTitle">Server</h2></div>
     <div class="tabs" role="tablist" aria-label="Bereich">
       <button type="button" role="tab" id="tabSettings" aria-selected="false" data-tab="settings">Einstellungen</button>
+      <button type="button" role="tab" id="tabMods" aria-selected="false" data-tab="mods" hidden>Mods</button>
       <button type="button" role="tab" id="tabBackups" aria-selected="true" data-tab="backups">Backups</button>
       <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files">Dateien</button>
       <button type="button" role="tab" id="tabTasks" aria-selected="false" data-tab="tasks">Aufgaben</button>
@@ -258,6 +259,23 @@
         <button type="submit" class="btn-accent" id="stSave">Speichern</button>
       </div>
     </form>
+  </section>
+
+  <section class="mg-pane" id="paneMods" role="tabpanel" aria-labelledby="tabMods" hidden>
+    <p class="small muted" id="mdInfo"></p>
+    <div id="mdInstalled" class="md-list"></div>
+    <div class="md-bar" id="mdBar" hidden>
+      <p id="mdBarText"></p>
+      <button type="button" class="btn-line" id="mdReset">Verwerfen</button>
+      <button type="button" class="btn-accent" id="mdApply">Übernehmen</button>
+    </div>
+    <form class="md-search" id="mdSearchForm" role="search">
+      <label class="sr" for="mdQ">Auf Modrinth suchen</label>
+      <input id="mdQ" type="search" placeholder="Auf Modrinth suchen, z. B. Lithium, EssentialsX …" autocomplete="off">
+      <button type="submit" class="btn-line">Suchen</button>
+    </form>
+    <div id="mdResults" class="md-list"></div>
+    <button type="button" class="btn-line" id="mdMore" hidden>Mehr laden</button>
   </section>
 
   <section class="mg-pane" id="paneBackups" role="tabpanel" aria-labelledby="tabBackups">

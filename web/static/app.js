@@ -940,6 +940,9 @@
   function openManage(id, tab) {
     const s = byId(id); if (!s) return;
     MG.id = id; MG.path = ''; closeEditor(true);
+    const tpl = S.tplById[s.template];
+    $('#tabMods').hidden = !(tpl && tpl.mods);
+    if (tab === 'mods' && $('#tabMods').hidden) tab = 'settings';
     $('#mgTitle').textContent = s.name; $('#mgGame').textContent = s.template_name;
     mgTab(tab || 'backups');
     if (!$('#dlgManage').open) $('#dlgManage').showModal();
@@ -948,9 +951,10 @@
     MG.tab = tab;
     $$('#dlgManage .tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     $('#paneBackups').hidden = tab !== 'backups'; $('#paneFiles').hidden = tab !== 'files';
-    $('#paneTasks').hidden = tab !== 'tasks'; $('#paneEvents').hidden = tab !== 'events'; $('#paneSettings').hidden = tab !== 'settings';
+    $('#paneTasks').hidden = tab !== 'tasks'; $('#paneEvents').hidden = tab !== 'events'; $('#paneSettings').hidden = tab !== 'settings'; $('#paneMods').hidden = tab !== 'mods';
     clearTimeout(TK.timer);
     if (tab === 'settings') loadSettings();
+    else if (tab === 'mods') loadMods();
     else if (tab === 'backups') loadBackups();
     else if (tab === 'files') loadFiles(MG.path);
     else loadTasks();
@@ -1048,6 +1052,80 @@
       loadServers();
     } catch (err) { toast(err.message, 'bad'); }
     finally { b.disabled = false; b.textContent = 'Speichern'; }
+  });
+
+  // Mods (Modrinth)
+  const MD = { st: null, want: [], info: {}, q: '', off: 0, hits: [] };
+  const fmtNum = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : n >= 1e3 ? Math.round(n / 1e3) + ' Tsd.' : String(n);
+  async function loadMods() {
+    const id = MG.id;
+    let d;
+    try { d = await api('GET', `/api/servers/${id}/mods`); } catch (e) { toast(e.message, 'bad'); return; }
+    if (MG.id !== id) return;
+    MD.st = d; MD.want = d.slugs.slice();
+    (d.installed || []).forEach(p => { MD.info[p.slug] = p; MD.info[p.id] = p; });
+    const what = d.project_type === 'plugin' ? 'Plugins' : 'Mods';
+    const loader = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt', paper: 'Paper', purpur: 'Purpur', spigot: 'Spigot', bukkit: 'Bukkit', folia: 'Folia' }[d.loader] || d.loader;
+    $('#mdInfo').textContent = d.supported
+      ? `${loader}-${what} für Minecraft ${d.game_version || '(neueste Version)'}. Nur Projekte, die auf dem Server laufen. Abhängigkeiten lädt der Server beim Start automatisch mit.${d.lookup_error ? ' Hinweis: ' + d.lookup_error : ''}`
+      : d.reason;
+    $('#mdSearchForm').hidden = !d.supported;
+    renderMods();
+    if (d.supported && !MD.hits.length) searchMods('', 0);
+  }
+  function modCard(p, mode) {
+    const icon = p.icon ? `<img src="${esc(p.icon)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="md-ph" aria-hidden="true"></span>';
+    const btn = mode === 'installed' || mode === 'adding' ? `<button type="button" class="btn-line" data-md-del="${esc(p.slug)}">Entfernen</button>`
+      : mode === 'removing' ? `<button type="button" class="btn-line" data-md-add="${esc(p.slug)}">Behalten</button>`
+      : mode === 'have' ? '<span class="mono muted">installiert</span>'
+      : `<button type="button" class="btn-line" data-md-add="${esc(p.slug)}">Hinzufügen</button>`;
+    const sub = p.downloads ? `<span class="mono muted">${fmtNum(p.downloads)} Downloads${p.author ? ' · ' + esc(p.author) : ''}</span>` : '';
+    return `<div class="md-item ${mode === 'adding' ? 'add' : mode === 'removing' ? 'del' : ''}">${icon}<div class="md-t"><b title="${esc(p.title || p.slug)}">${esc(p.title || p.slug)}</b>${sub}<p>${esc(p.description || '')}</p></div>${btn}</div>`;
+  }
+  function renderMods() {
+    const d = MD.st, lc = s => s.toLowerCase(), want = MD.want.map(lc), had = d.slugs.map(lc);
+    const shown = [];
+    MD.want.forEach(sl => shown.push([MD.info[sl] || { slug: sl, title: sl }, had.includes(lc(sl)) ? 'installed' : 'adding']));
+    d.slugs.forEach(sl => { if (!want.includes(lc(sl))) shown.push([MD.info[sl] || { slug: sl, title: sl }, 'removing']); });
+    $('#mdInstalled').innerHTML = shown.length
+      ? shown.map(([p, m]) => modCard(p, m)).join('')
+      : `<p class="muted">Noch keine ${d.project_type === 'plugin' ? 'Plugins' : 'Mods'} installiert.</p>`;
+    const dirty = want.length !== had.length || want.some(x => !had.includes(x));
+    $('#mdBar').hidden = !dirty;
+    if (dirty) {
+      const add = want.filter(x => !had.includes(x)).length, del = had.filter(x => !want.includes(x)).length;
+      $('#mdBarText').textContent = [add ? add + ' hinzufügen' : '', del ? del + ' entfernen' : ''].filter(Boolean).join(', ') + '. ' + (d.running ? 'Der Server startet zum Übernehmen neu.' : 'Wird beim nächsten Start installiert.');
+    }
+    $('#mdResults').innerHTML = MD.hits.map(p => modCard(p, want.includes(lc(p.slug)) ? 'have' : 'search')).join('');
+  }
+  async function searchMods(q, off) {
+    const id = MG.id;
+    try {
+      const r = await api('GET', `/api/servers/${id}/mods/search?q=${encodeURIComponent(q)}&offset=${off}`);
+      if (MG.id !== id) return;
+      MD.q = q; MD.off = off + r.hits.length;
+      MD.hits = off ? MD.hits.concat(r.hits) : r.hits;
+      r.hits.forEach(p => { MD.info[p.slug] = p; });
+      $('#mdMore').hidden = MD.off >= r.total;
+      if (!MD.hits.length) $('#mdResults').innerHTML = '<p class="muted">Nichts gefunden.</p>'; else renderMods();
+    } catch (e) { $('#mdResults').innerHTML = `<p class="err">${esc(e.message)}</p>`; $('#mdMore').hidden = true; }
+  }
+  $('#mdSearchForm').addEventListener('submit', e => { e.preventDefault(); searchMods($('#mdQ').value.trim(), 0); });
+  $('#mdMore').addEventListener('click', () => searchMods(MD.q, MD.off));
+  $('#paneMods').addEventListener('click', e => {
+    const a = e.target.closest('[data-md-add]'), d = e.target.closest('[data-md-del]');
+    if (a && !MD.want.some(x => x.toLowerCase() === a.dataset.mdAdd.toLowerCase())) { MD.want.push(a.dataset.mdAdd); renderMods(); }
+    if (d) { MD.want = MD.want.filter(x => x.toLowerCase() !== d.dataset.mdDel.toLowerCase()); renderMods(); }
+  });
+  $('#mdReset').addEventListener('click', () => { MD.want = MD.st.slugs.slice(); renderMods(); });
+  $('#mdApply').addEventListener('click', async () => {
+    const b = $('#mdApply'); b.disabled = true; b.textContent = 'Übernimmt …';
+    try {
+      const d = await api('PUT', `/api/servers/${MG.id}/mods`, { slugs: MD.want });
+      MD.st = d; MD.want = d.slugs.slice(); (d.installed || []).forEach(p => { MD.info[p.slug] = p; });
+      renderMods(); toast(d.running ? 'Übernommen, der Server startet neu und lädt die Mods' : 'Übernommen, wird beim nächsten Start installiert', 'ok'); loadServers();
+    } catch (err) { toast(err.message, 'bad'); }
+    finally { b.disabled = false; b.textContent = 'Übernehmen'; }
   });
 
   // Aufgaben, Wächter, Verlauf
@@ -1358,6 +1436,7 @@
       if (s.status !== 'preparing') a.push({ label: s.name + (isOn(s) ? ' stoppen' : ' starten'), hint: 'Server', run: () => togglePower(s) });
       a.push({ label: 'Zu ' + s.name + ' fliegen', hint: '3D', run: () => { select(s.id); $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
       a.push({ label: 'Einstellungen von ' + s.name, hint: 'Einstellungen', run: () => openManage(s.id, 'settings') });
+      if ((S.tplById[s.template] || {}).mods) a.push({ label: 'Mods von ' + s.name, hint: 'Mods', run: () => openManage(s.id, 'mods') });
       a.push({ label: 'Backups von ' + s.name, hint: 'Backup', run: () => openManage(s.id, 'backups') });
       a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
       a.push({ label: 'Aufgaben von ' + s.name, hint: 'Aufgaben', run: () => openManage(s.id, 'tasks') });

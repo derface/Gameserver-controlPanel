@@ -103,6 +103,21 @@
           "key": "SleepAllowed",
           "label": "Schlafen erlaubt",
           "type": "bool"
+        },
+        {
+          "key": "WorkshopItems",
+          "label": "Workshop-IDs",
+          "help": "Steam-Workshop-Nummern, mit Semikolon getrennt, z. B. 2169435993;2392709985. Der Server lädt sie beim Start selbst."
+        },
+        {
+          "key": "Mods",
+          "label": "Mod-IDs",
+          "help": "Die Mod-ID aus der Workshop-Beschreibung, mit Semikolon getrennt. Gehört zu den Workshop-IDs oben."
+        },
+        {
+          "key": "Map",
+          "label": "Karte",
+          "help": "Standard: Muldraugh, KY. Weitere Karten aus Mods mit Semikolon davor."
         }
       ]
     }

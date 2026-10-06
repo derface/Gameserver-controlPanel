@@ -15,7 +15,8 @@
     "ONLINE_MODE": "{{online_mode}}",
     "MODRINTH_PROJECTS": "{{mods}}",
     "ENABLE_RCON": "true",
-    "TZ": "Europe/Berlin"
+    "TZ": "Europe/Berlin",
+    "MODRINTH_DOWNLOAD_DEPENDENCIES": "required"
   },
   "ports": [
     {
@@ -88,7 +89,7 @@
       "key": "mods",
       "label": "Mods/Plugins von Modrinth",
       "default": "",
-      "help": "Kommagetrennte Modrinth-Namen, z. B. create,ferrite-core,modernfix"
+      "help": "Kommagetrennte Modrinth-Namen. Bequemer im Reiter „Mods“ unter Server verwalten."
     }
   ],
   "memory_mb": 4096,
@@ -205,5 +206,11 @@
         }
       ]
     }
-  ]
+  ],
+  "mods": {
+    "source": "modrinth",
+    "var": "mods",
+    "type_var": "type",
+    "version_var": "version"
+  }
 }

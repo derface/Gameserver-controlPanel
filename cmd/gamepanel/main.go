@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/derface/Gameserver-controlPanel/internal/mods"
 	"io/fs"
 	"log"
 	"net/http"
@@ -40,6 +41,9 @@ func main() {
 	listen := flag.String("listen", env("GP_LISTEN", ":8420"), "Adresse des Web-Panels")
 	dataDir := flag.String("data", env("GP_DATA", "/var/lib/gamepanel"), "Datenverzeichnis")
 	sock := flag.String("docker", env("GP_DOCKER", "/var/run/docker.sock"), "Docker-Socket")
+	if u := os.Getenv("GP_MODRINTH_URL"); u != "" { // for tests
+		mods.BaseURL = u
+	}
 	showVersion := flag.Bool("version", false, "Version anzeigen")
 	flag.Parse()
 	if *showVersion {

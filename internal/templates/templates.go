@@ -100,6 +100,16 @@ func (t Template) checkConfig() error {
 	return nil
 }
 
+// ModSource connects a template to a mod catalogue. For "modrinth" the list
+// of project slugs is kept in the variable Var; the server's loader and game
+// version come from TypeVar and VersionVar.
+type ModSource struct {
+	Source     string `json:"source"` // modrinth
+	Var        string `json:"var"`
+	TypeVar    string `json:"type_var"`
+	VersionVar string `json:"version_var"`
+}
+
 type Template struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
@@ -141,6 +151,8 @@ type Template struct {
 
 	// Settings shown as a form; values live in the game's config files.
 	Config []ConfigFile `json:"config,omitempty"`
+	// Mod manager: where the list of mods lives.
+	Mods *ModSource `json:"mods,omitempty"`
 
 	// Backups: by default a Steam server backs up everything in its data
 	// folder except the game install ("server"); image servers back up all.

@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 4020,
-  "start": "./srcds_run -game garrysmod -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +gamemode {{gamemode}} +hostname \"{{server_name}}\"",
+  "start": "./srcds_run -game garrysmod -console -norestart -port {{port}} +maxplayers {{max_players}} +map {{map}} +gamemode {{gamemode}} +hostname \"{{server_name}}\" $([ -n \"{{collection}}\" ] && [ -n \"{{authkey}}\" ] && echo +host_workshop_collection {{collection}} -authkey {{authkey}})",
   "ports": [
     {
       "name": "Spiel",
@@ -40,6 +40,20 @@
       "label": "Maximale Spieler",
       "default": "16",
       "type": "number"
+    },
+    {
+      "key": "collection",
+      "label": "Workshop-Sammlung (ID)",
+      "default": "",
+      "type": "number",
+      "help": "Nummer einer Steam-Workshop-Sammlung mit Addons. Braucht zusätzlich einen Steam-Web-API-Schlüssel."
+    },
+    {
+      "key": "authkey",
+      "label": "Steam-Web-API-Schlüssel",
+      "default": "",
+      "type": "secret",
+      "help": "Von steamcommunity.com/dev/apikey"
     }
   ],
   "memory_mb": 2048,
