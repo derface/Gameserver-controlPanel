@@ -35,10 +35,10 @@
       "type": "text"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "Level01_Main",
-      "type": "slug"
+      "key": "adminpassword",
+      "label": "Admin-Passwort",
+      "default": "",
+      "type": "secret"
     },
     {
       "key": "maxplayers",
@@ -47,16 +47,16 @@
       "type": "number"
     },
     {
-      "key": "adminpassword",
-      "label": "Admin-Passwort",
-      "default": "",
-      "type": "secret"
-    },
-    {
       "key": "serverpassword",
       "label": "Server-Passwort",
       "default": "",
       "type": "secret"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "Level01_Main",
+      "type": "slug"
     }
   ],
   "memory_mb": 6144,

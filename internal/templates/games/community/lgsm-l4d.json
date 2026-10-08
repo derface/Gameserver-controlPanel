@@ -19,16 +19,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "l4d_hospital01_apartment",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "8",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "l4d_hospital01_apartment",
+      "type": "slug"
     }
   ],
   "memory_mb": 1024,

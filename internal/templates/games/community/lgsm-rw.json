@@ -1,0 +1,40 @@
+{
+  "id": "lgsm-rw",
+  "name": "Rising World",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 339010,
+  "steam_beta": "unity",
+  "start": "./RisingWorldServer.x64",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 4255,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel (TCP)",
+      "port": 4255,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 4254,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 2
+  },
+  "packages": [
+    "openjdk-17-jre-headless"
+  ],
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
+  "fixed_ports": true
+}

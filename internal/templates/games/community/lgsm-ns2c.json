@@ -25,16 +25,16 @@
       "type": "text"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "co_core",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "24",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "co_core",
+      "type": "slug"
     }
   ],
   "memory_mb": 2048,

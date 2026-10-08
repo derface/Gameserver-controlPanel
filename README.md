@@ -58,7 +58,7 @@ ls /var/lib/gamepanel/servers/        # Spieldaten, ein Ordner pro Server
 
 ## Spiele und Vorlagen
 
-Das Panel bringt **75 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe unten):
+Das Panel bringt **88 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe unten):
 
 - **stabil** (im Spiel erprobt): Minecraft Java, Minecraft Bedrock, Valheim, Palworld.
 - **beta** (Selbsttest bestanden): Enshrouded und Abiotic Factor (beide über Wine), Rust, 7 Days to Die, Project Zomboid, Satisfactory, Factorio, Terraria, TeamSpeak 3 sowie 40 Community-Spiele, u. a. ARK: Survival Evolved, CS 1.6, CS: Condition Zero, CS: Source, CS:GO, Left 4 Dead 1 und 2, Day of Defeat, TFC, TF2 Classified, Squad 44, Soulmask, The Front, Mordhau, Pavlov VR, Core Keeper, Tower Unite.
@@ -99,6 +99,10 @@ Vorlagenfeld `config`: Liste von Dateien mit `file` (relativ zum Serverordner, `
 Manche Dedicated Server gibt Steam nicht anonym heraus (Arma 3, DayZ, Action: Source, Blade Symphony). Unter Einstellungen → **Steam-Konto** meldet sich das Panel einmal an. Fragt Steam nach einem Steam-Guard-Code (E-Mail oder Steam-App), erscheint ein Feld dafür; eine Bestätigung in der Steam-App wird abgewartet. Das Passwort wird nie gespeichert und nur bis zum Abschluss der Anmeldung im Speicher gehalten. SteamCMD legt seinen Anmelde-Cache in `<data>/steam-auth` ab; dieser Ordner wird nur in die Container der Spiele eingehängt, die ein Konto brauchen (Vorlagenfeld `steam_login: true`), und die melden sich dann nur mit dem Kontonamen an. Ist die Anmeldung abgelaufen, wartet der Server mit einer Meldung, statt Steam mit Neustarts zu überfluten. Empfehlung: ein eigenes Steam-Konto nur für Server; manche Spiele (DayZ) verlangen, dass das Konto das Spiel besitzt.
 
 Arma 3 und DayZ haben ein Einstellungsformular für `server.cfg` bzw. `serverDZ.cfg` (Format `armacfg`), Arma 3 außerdem eine Mod-Liste (Ordner wie `@CBA_A3`, mit Komma getrennt).
+
+### Spiele mit festen Ports
+
+Killing Floor 2, Eco, Avorion, Necesse, Craftopia, Rising World, Barotrauma, Stationeers und Starbound führen ihre Ports nur in einer Konfigurationsdatei, die sie beim ersten Start selbst anlegen. Das Panel nutzt die Standard-Ports dieser Spiele (`MANUAL_PORTS` im Generator), daher läuft von jedem höchstens ein Server pro Rechner. Euro Truck Simulator 2 und American Truck Simulator fehlen bewusst: ihr Server braucht eine Paketdatei, die man im Spiel selbst exportieren muss.
 
 ## Mods und Workshop
 

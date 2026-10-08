@@ -1,0 +1,30 @@
+{
+  "id": "lgsm-bt",
+  "name": "Barotrauma",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1026340,
+  "start": "./DedicatedServer.exe",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "packages": [
+    "libicu72"
+  ],
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
+  "fixed_ports": true
+}

@@ -24,17 +24,17 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "embassy_coop checkpoint",
-      "type": "slug"
-    },
-    {
       "key": "gslt",
       "label": "Game Server Login Token",
       "default": "",
       "type": "secret",
       "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+    },
+    {
+      "key": "tickrate",
+      "label": "Tickrate",
+      "default": "64",
+      "type": "number"
     },
     {
       "key": "maxplayers",
@@ -43,10 +43,10 @@
       "type": "number"
     },
     {
-      "key": "tickrate",
-      "label": "Tickrate",
-      "default": "64",
-      "type": "number"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "embassy_coop checkpoint",
+      "type": "slug"
     }
   ],
   "memory_mb": 1024,

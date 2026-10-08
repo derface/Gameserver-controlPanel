@@ -210,6 +210,20 @@ def polish_dayz(t):
 
 POLISH = {"arma3": polish_arma3, "dayz": polish_dayz}
 
+# Standard-Ports von Spielen, die ihre Ports nur in der eigenen Konfiguration
+# führen (Quelle: Herstellerdokumentation / Standard-Konfigurationen).
+MANUAL_PORTS = {
+    "kf2": [("Spiel", "port", 7777, "udp"), ("Abfrage", "queryport", 27015, "udp"), ("Web-Admin", "httpport", 8080, "tcp"), ("Steam", "steamport", 20560, "udp")],
+    "eco": [("Spiel", "port", 3000, "udp"), ("Web", "httpport", 3001, "tcp")],
+    "av": [("Spiel", "port", 27000, "udp"), ("Spiel (TCP)", "porttcp", 27000, "tcp"), ("Abfrage", "queryport", 27003, "udp"), ("Steam", "steamport", 27020, "udp"), ("Steamworks", "steamworksport", 27021, "udp")],
+    "nec": [("Spiel", "port", 14159, "udp")],
+    "ct": [("Spiel", "port", 6587, "udp")],
+    "rw": [("Spiel", "port", 4255, "udp"), ("Spiel (TCP)", "porttcp", 4255, "tcp"), ("Abfrage", "queryport", 4254, "udp")],
+    "bt": [("Spiel", "port", 27015, "udp"), ("Abfrage", "queryport", 27016, "udp")],
+    "st": [("Spiel", "port", 27016, "udp"), ("Abfrage", "queryport", 27015, "udp")],
+    "sb": [("Spiel", "port", 21025, "tcp")],
+}
+
 made, skipped = [], []
 os.makedirs(OUT, exist_ok=True)
 for old in os.listdir(OUT):
@@ -250,6 +264,12 @@ for short, (gsname, gamename) in sorted(names.items()):
         if not v.isdigit() or v == "0":
             continue
         plist.append((name, var, int(v), proto))
+    if short in MANUAL_PORTS:
+        # the game keeps its ports in a config file it writes on first start:
+        # use the defaults and allow one instance per machine
+        plist = list(MANUAL_PORTS[short])
+        for name, var, num, proto in plist:
+            env[var] = str(num)
     if not plist:
         skipped.append((short, "Ports stehen nur in der Spielkonfiguration"))
         continue
@@ -422,6 +442,9 @@ for short, (gsname, gamename) in sorted(names.items()):
     if short in BROKEN:
         tpl["status"] = "defekt"
         tpl["notes"] += " " + BROKEN[short] + "."
+    if short in MANUAL_PORTS:
+        tpl["fixed_ports"] = True
+        tpl["notes"] += " Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner."
     if short in POLISH:
         POLISH[short](tpl)
     with open(os.path.join(OUT, tpl["id"] + ".json"), "w") as f:

@@ -1,0 +1,54 @@
+{
+  "id": "lgsm-kf2",
+  "name": "Killing Floor 2",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 232130,
+  "start": "cd Binaries/Win64 && ./KFGameSteamServer.bin.x86_64 \"{{defaultmap}}?Game={{gamemode}}?ConfigSubDir=panel -QueryPort={{port_2}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Web-Admin",
+      "port": 8080,
+      "proto": "tcp"
+    },
+    {
+      "name": "Steam",
+      "port": 20560,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "KF-BioticsLab",
+      "type": "slug"
+    },
+    {
+      "key": "gamemode",
+      "label": "Spielmodus",
+      "default": "KFGameContent.KFGameInfo_VersusSurvival",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 2048,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
+  "fixed_ports": true
+}

@@ -1,0 +1,29 @@
+{
+  "id": "lgsm-nec",
+  "name": "Necesse",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 1169370,
+  "start": "./StartServer-nogui.sh -localdir -world {{worldname}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 14159,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "worldname",
+      "label": "Weltname",
+      "default": "MyWorld",
+      "type": "slug"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
+  "fixed_ports": true
+}

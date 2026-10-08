@@ -24,10 +24,10 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "bastogne stronghold",
-      "type": "slug"
+      "key": "tickrate",
+      "label": "Tickrate",
+      "default": "64",
+      "type": "number"
     },
     {
       "key": "maxplayers",
@@ -36,10 +36,10 @@
       "type": "number"
     },
     {
-      "key": "tickrate",
-      "label": "Tickrate",
-      "default": "64",
-      "type": "number"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "bastogne stronghold",
+      "type": "slug"
     }
   ],
   "memory_mb": 1024,

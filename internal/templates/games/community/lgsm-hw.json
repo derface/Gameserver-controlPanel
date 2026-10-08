@@ -25,16 +25,16 @@
       "type": "text"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "nullius",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "20",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "nullius",
+      "type": "slug"
     }
   ],
   "memory_mb": 4096,
