@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:7"
+const SteamImage = "gamepanel/steam-runtime:8"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -98,6 +98,13 @@ cp -f /opt/steamcmd/linux32/steamclient.so ~/.steam/sdk32/ 2>/dev/null || true
 cd /data/server
 if [ "${GP_PLATFORM}" = "windows" ]; then
   export WINEPREFIX=/data/home/.wine WINEDEBUG=fixme-all WINEARCH=win64
+  # own virtual screen without access control: xvfb-run's Xauthority does
+  # not always reach Wine in the container ("no driver could be loaded")
+  if [ -z "${DISPLAY}" ] && command -v Xvfb >/dev/null; then
+    Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp -ac >/dev/null 2>&1 &
+    export DISPLAY=:99
+    sleep 1
+  fi
   if [ ! -f "$WINEPREFIX/system.reg" ]; then
     echo "[panel] Wine wird eingerichtet (einmalig)"
     wineboot --init >/dev/null 2>&1 || true

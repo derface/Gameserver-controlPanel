@@ -22,7 +22,8 @@
   "min_memory_mb": 512,
   "console": "stdin",
   "packages": [
-    "libgdiplus"
+    "libgdiplus",
+    "libicu72"
   ],
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",

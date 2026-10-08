@@ -24,10 +24,10 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "ns2_summit",
+      "type": "slug"
     },
     {
       "key": "maxplayers",
@@ -36,10 +36,10 @@
       "type": "number"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "ns2_summit",
-      "type": "slug"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 2048,

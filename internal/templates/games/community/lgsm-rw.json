@@ -34,7 +34,7 @@
   "packages": [
     "openjdk-17-jre-headless"
   ],
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
   "fixed_ports": true
 }

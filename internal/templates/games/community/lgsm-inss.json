@@ -24,16 +24,22 @@
   ],
   "vars": [
     {
-      "key": "servername",
-      "label": "Servername",
-      "default": "Mein Server",
-      "type": "text"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "Oilfield",
+      "type": "slug"
     },
     {
       "key": "rconpassword",
       "label": "RCON-Passwort",
       "default": "",
       "type": "secret"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "28",
+      "type": "number"
     },
     {
       "key": "gslt",
@@ -43,16 +49,10 @@
       "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "28",
-      "type": "number"
-    },
-    {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "Oilfield",
-      "type": "slug"
+      "key": "servername",
+      "label": "Servername",
+      "default": "Mein Server",
+      "type": "text"
     }
   ],
   "memory_mb": 6144,

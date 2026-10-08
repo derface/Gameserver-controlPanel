@@ -29,10 +29,10 @@
   ],
   "vars": [
     {
-      "key": "serverpassword",
-      "label": "Server-Passwort",
-      "default": "",
-      "type": "secret"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "40",
+      "type": "number"
     },
     {
       "key": "gamemode",
@@ -47,10 +47,10 @@
       "type": "text"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "40",
-      "type": "number"
+      "key": "serverpassword",
+      "label": "Server-Passwort",
+      "default": "",
+      "type": "secret"
     }
   ],
   "memory_mb": 6144,

@@ -96,5 +96,9 @@
         }
       ]
     }
+  ],
+  "packages": [
+    "libcurl3-gnutls",
+    "libcurl3-gnutls:i386"
   ]
 }

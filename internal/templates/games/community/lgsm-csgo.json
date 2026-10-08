@@ -24,11 +24,10 @@
   ],
   "vars": [
     {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "de_mirage",
+      "type": "slug"
     },
     {
       "key": "tickrate",
@@ -43,10 +42,11 @@
       "type": "number"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "de_mirage",
-      "type": "slug"
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
       "key": "gamemode",

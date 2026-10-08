@@ -24,16 +24,16 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "10",
-      "type": "number"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "da_rooftops",
       "type": "slug"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "10",
+      "type": "number"
     }
   ],
   "memory_mb": 1024,

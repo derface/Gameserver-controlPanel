@@ -23,6 +23,7 @@
   "memory_mb": 4096,
   "min_memory_mb": 512,
   "console": "stdin",
+  "ready": "Started server using port",
   "status": "experimentell",
   "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
   "fixed_ports": true

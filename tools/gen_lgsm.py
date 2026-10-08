@@ -41,6 +41,8 @@ BROKEN = {
 PASSED = set("ark bd bmdm bb2 cc cs css dods dodr em fof hl2dm hldms hldm hw jbep3 l4d nmrih ohd pvkii sm squad44 sbots sven tf".split())
 # zweiter Lauf 02.10.2026, nach den Korrekturen
 PASSED |= set("cmw ck cscz csgo dod dmc l4d2 mh ns2 opfor pvr ricochet tf2c tfc tu".split())
+# dritter Lauf 08.10.2026
+PASSED |= set("kf2 rw squad unt".split())
 
 # Nacharbeiten, die LinuxGSM in seinen fix_*.sh macht, als Befehle vor dem Start
 # (laufen im Ordner des Programms). Platzhalter: SC32/SC64 = steamclient.so.
@@ -58,9 +60,9 @@ FIXES = {
     "nmrih": ["for f in vphysics studiorender soundemittersystem shaderapiempty scenefilecache replay materialsystem; do [ -e bin/$f.so ] || ln -s ${f}_srv.so bin/$f.so; done"],
 }
 FIXES["btl"] = ["mv -f Battalion/Plugins/Sentry/Binaries/Linux/crashpad_handler Battalion/Plugins/Sentry/Binaries/Linux/crashpad_handler.off 2>/dev/null"]
-EXTRA_PKGS = {"ck": ["xauth"], "mh": ["libcurl3-gnutls"], "pvr": ["libc++1", "libc++abi1"], "btl": [], "tf2c": ["libcurl3-gnutls:i386", "libcurl3-gnutls"]}
+EXTRA_PKGS = {"eco": ["libicu72"], "ck": ["xauth"], "mh": ["libcurl3-gnutls"], "pvr": ["libc++1", "libc++abi1"], "btl": [], "tf2c": ["libcurl3-gnutls:i386", "libcurl3-gnutls"]}
 # eigene Bereit-Meldungen (sonst bei Unreal-Servern mit -log die Standardzeile)
-READY = {"ns2": r"Finished loading 'maps/", "unt": r"Loading level: 100%"}
+READY = {"ns2": r"Finished loading 'maps/", "unt": r"Loading level: 100%", "av": r"Server startup complete", "nec": r"Started server using port"}
 # Unreal-Server ohne Spielerabfrage bekommen -log, damit die Bereit-Meldung sichtbar wird
 ADD_LOG = {"hcu", "squad"}
 

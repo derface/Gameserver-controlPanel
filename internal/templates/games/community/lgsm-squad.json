@@ -22,6 +22,6 @@
   "min_memory_mb": 512,
   "console": "stdin",
   "ready": "Bringing up level for play took",
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen."
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest bestanden."
 }

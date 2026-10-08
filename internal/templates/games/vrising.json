@@ -6,7 +6,7 @@
   "steam_app_id": 1829350,
   "platform": "windows",
   "runtime": "wine",
-  "start": "xvfb-run -a wine ./VRisingServer.exe -persistentDataPath /data/server/save-data -serverName \"{{server_name}}\" -saveName {{save_name}} -logFile /data/logs/VRisingServer.log",
+  "start": "wine ./VRisingServer.exe -persistentDataPath /data/server/save-data -serverName \"{{server_name}}\" -saveName {{save_name}} -logFile /data/logs/VRisingServer.log",
   "log_file": "/data/logs/VRisingServer.log",
   "ports": [
     {
@@ -46,7 +46,7 @@
   ],
   "status": "experimentell",
   "disk_gb": 3,
-  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start). Selbsttest 01.10.2026: stürzt unter Wine kurz nach dem Start ab, wird noch untersucht.",
+  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start). Selbsttest 08.10.2026: Wine fand keinen Bildschirm; seit Laufzeit 8 startet das Panel einen eigenen.",
   "config": [
     {
       "title": "Server (ServerHostSettings.json)",
