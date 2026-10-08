@@ -24,10 +24,10 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "16",
-      "type": "number"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "de_mirage",
+      "type": "slug"
     },
     {
       "key": "gamemode",
@@ -43,10 +43,10 @@
       "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "de_mirage",
-      "type": "slug"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "16",
+      "type": "number"
     },
     {
       "key": "tickrate",

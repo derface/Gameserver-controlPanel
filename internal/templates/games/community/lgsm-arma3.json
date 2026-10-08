@@ -1,0 +1,125 @@
+{
+  "id": "lgsm-arma3",
+  "name": "ARMA 3",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 233780,
+  "steam_login": true,
+  "start": "[ -f server.cfg ] || printf 'hostname = \\\"Mein Arma-3-Server\\\";\\npassword = \\\"\\\";\\npasswordAdmin = \\\"\\\";\\nmaxPlayers = 32;\\npersistent = 1;\\nverifySignatures = 2;\\nBattlEye = 1;\\n' > server.cfg; ./arma3server_x64 -ip=0.0.0.0 -port={{port}} -mod=\"$(echo '{{mods}}' | tr , ';')\" -servermod= -bepath= -config=server.cfg -autoinit -loadmissiontomemory",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 2302,
+      "proto": "udp"
+    },
+    {
+      "name": "Query",
+      "port": 2303,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam",
+      "port": 2304,
+      "proto": "udp"
+    },
+    {
+      "name": "Voice (unused)",
+      "port": 2305,
+      "proto": "udp"
+    },
+    {
+      "name": "BattleEye",
+      "port": 2306,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "mods",
+      "label": "Mod-Ordner",
+      "default": "",
+      "help": "Ordner im Serververzeichnis, mit Komma getrennt, z. B. @CBA_A3,@ace. Mods lädst du über Dateien hoch."
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen. Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen.",
+  "config": [
+    {
+      "title": "Arma 3 (server.cfg)",
+      "file": "server/server.cfg",
+      "format": "armacfg",
+      "settings": [
+        {
+          "key": "hostname",
+          "label": "Servername"
+        },
+        {
+          "key": "password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "passwordAdmin",
+          "label": "Admin-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "maxPlayers",
+          "label": "Maximale Spieler",
+          "type": "number",
+          "min": 1,
+          "max": 256
+        },
+        {
+          "key": "persistent",
+          "label": "Mission läuft ohne Spieler weiter",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "verifySignatures",
+          "label": "Mod-Signaturen prüfen",
+          "type": "select",
+          "options": [
+            "2",
+            "0"
+          ],
+          "labels": [
+            "Ja (empfohlen)",
+            "Nein"
+          ]
+        },
+        {
+          "key": "BattlEye",
+          "label": "BattlEye-Anticheat",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "kickDuplicate",
+          "label": "Doppelte Spieler-IDs kicken",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "disableVoN",
+          "label": "Sprachchat aus",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        }
+      ]
+    }
+  ],
+  "broadcast": ""
+}

@@ -25,16 +25,16 @@
       "type": "text"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "8",
-      "type": "number"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "KidsBedroom",
       "type": "slug"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "8",
+      "type": "number"
     }
   ],
   "memory_mb": 6144,

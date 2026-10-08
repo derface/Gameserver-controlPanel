@@ -227,6 +227,7 @@ type HostConfig struct {
 
 type ContainerConfig struct {
 	Image        string              `json:"Image"`
+	Entrypoint   []string            `json:"Entrypoint,omitempty"`
 	Cmd          []string            `json:"Cmd,omitempty"`
 	Env          []string            `json:"Env,omitempty"`
 	User         string              `json:"User,omitempty"`

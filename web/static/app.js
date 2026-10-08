@@ -579,6 +579,7 @@
   let createPrefill = null;
   const CAT_ORDER = ['Minecraft', 'Steam', 'Steam (Windows, Wine)', 'Weitere Spiele', 'Sprachserver', 'Steam (Community)'];
   const STATUS_TAG = { beta: ' · beta', experimentell: ' · experimentell' };
+  const loginTag = t => t.steam_login ? ' · Steam-Konto' : '';
   const usable = () => S.tpls.filter(t => t.status !== 'defekt');
   function fillPicker(keep) {
     const q = $('#cSearch').value.trim().toLowerCase();
@@ -587,7 +588,7 @@
     const cats = {};
     list.forEach(t => { (cats[t.category] = cats[t.category] || []).push(t); });
     const order = Object.keys(cats).sort((a, b) => (CAT_ORDER.indexOf(a) + 99) % 99 - (CAT_ORDER.indexOf(b) + 99) % 99 || a.localeCompare(b));
-    sel.innerHTML = order.map(c => `<optgroup label="${esc(c)}">${cats[c].sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${esc(t.id)}">${esc(t.name)}${STATUS_TAG[t.status] || ''}</option>`).join('')}</optgroup>`).join('');
+    sel.innerHTML = order.map(c => `<optgroup label="${esc(c)}">${cats[c].sort((a, b) => a.name.localeCompare(b.name)).map(t => `<option value="${esc(t.id)}">${esc(t.name)}${STATUS_TAG[t.status] || ''}${loginTag(t)}</option>`).join('')}</optgroup>`).join('');
     $('#cCount').textContent = list.length === usable().length ? list.length + ' Spiele' : list.length + ' von ' + usable().length;
     if (list.some(t => t.id === cur)) sel.value = cur; else if (list.length) sel.value = list[0].id;
     return list.length;
@@ -681,6 +682,7 @@
     } catch (e) { /* egal */ }
     rmFields(); showErr($('#rmErr'));
     $('#verLine').textContent = 'Version ' + S.version;
+    $('#stmPass').value = ''; $('#stmCode').value = ''; loadSteam();
     $('#dlgSettings').showModal();
   }
   function provFields() {
@@ -734,6 +736,44 @@
     catch (err) { showErr($('#rmErr'), err.message); }
     finally { b.disabled = false; b.textContent = 'Verbindung testen'; }
   });
+  // Steam-Konto
+  let stmTimer = null;
+  async function loadSteam() {
+    clearTimeout(stmTimer);
+    let st;
+    try { st = await api('GET', '/api/steam'); } catch (e) { return; }
+    renderSteam(st);
+    if ((st.state === 'working' || st.state === 'need_app') && $('#dlgSettings').open) stmTimer = setTimeout(loadSteam, 2000);
+  }
+  function renderSteam(st) {
+    const busy = st.state === 'working' || st.state === 'need_app';
+    const msg = { none: 'Nicht angemeldet.', ok: st.user ? `Angemeldet als <b>${esc(st.user)}</b>.` : '' }[st.state];
+    $('#stmStatus').innerHTML = busy ? `<span class="spin" aria-hidden="true"></span> ${esc(st.message || 'Anmeldung läuft …')}` : (st.state === 'need_code' ? esc(st.message) : msg || '');
+    if (st.state === 'ok' && st.user && st.message && !msg) $('#stmStatus').innerHTML = esc(st.message);
+    showErr($('#stmErr'), st.state === 'error' ? st.message : '');
+    $('#stmCodeWrap').hidden = st.state !== 'need_code';
+    $('#stmCodeLabel').textContent = st.code_kind === 'app' ? 'Code aus der Steam-App' : 'Code aus der E-Mail von Steam';
+    if (st.pending && !$('#stmUser').value) $('#stmUser').value = st.pending;
+    if (st.user && !$('#stmUser').value) $('#stmUser').value = st.user;
+    $('#stmLogout').hidden = !st.user || busy;
+    $('#stmGo').disabled = busy;
+    $('#stmGo').textContent = st.state === 'need_code' ? 'Code senden' : st.user ? 'Neu anmelden' : 'Anmelden';
+    if (st.state === 'need_code') setTimeout(() => $('#stmCode').focus(), 50);
+    if (st.state === 'ok') { $('#stmPass').value = ''; $('#stmCode').value = ''; }
+  }
+  $('#stmForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#stmErr'));
+    try {
+      const st = await api('POST', '/api/steam/login', { user: $('#stmUser').value.trim(), password: $('#stmPass').value, code: $('#stmCodeWrap').hidden ? '' : $('#stmCode').value.trim() });
+      renderSteam(st); stmTimer = setTimeout(loadSteam, 1500);
+    } catch (err) { showErr($('#stmErr'), err.message); }
+  });
+  $('#stmLogout').addEventListener('click', async () => {
+    if (!await confirmBox('Steam-Konto abmelden?', 'Server, die ein Steam-Konto brauchen, können danach nicht mehr aktualisieren.', 'Abmelden')) return;
+    try { renderSteam(await api('DELETE', '/api/steam')); $('#stmUser').value = ''; } catch (err) { showErr($('#stmErr'), err.message); }
+  });
+  $('#dlgSettings').addEventListener('close', () => clearTimeout(stmTimer));
+
   $('#licForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#licErr'));
     try { S.license = await api('PUT', '/api/license', { key: $('#licKey').value }); renderLicense(); renderKI(); toast('Lizenz aktiviert: ' + S.license.edition.name, 'ok'); $('#licKey').value = ''; }

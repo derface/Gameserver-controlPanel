@@ -37,6 +37,9 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.guard(a.tasksPut))
 	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.guard(a.taskRun))
 	mux.HandleFunc("PUT /api/servers/{id}/watch", a.guard(a.watchPut))
+	mux.HandleFunc("GET /api/steam", a.guard(a.steamGet))
+	mux.HandleFunc("POST /api/steam/login", a.guard(a.steamLogin))
+	mux.HandleFunc("DELETE /api/steam", a.guard(a.steamLogout))
 	mux.HandleFunc("GET /api/selftest", a.guard(a.selftestGet))
 	mux.HandleFunc("POST /api/selftest", a.guard(a.selftestStart))
 	mux.HandleFunc("DELETE /api/selftest", a.guard(a.selftestStop))
@@ -538,4 +541,35 @@ func (a *API) settingsPut(w http.ResponseWriter, r *http.Request) {
 	}
 	v, _ := a.Mgr.Settings(id)
 	writeJSON(w, 200, map[string]any{"changed": changed, "settings": v})
+}
+
+// ---------- Steam account ----------
+
+func (a *API) steamGet(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, a.Mgr.Steam())
+}
+
+func (a *API) steamLogin(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		User     string `json:"user"`
+		Password string `json:"password"`
+		Code     string `json:"code"`
+	}
+	if err := decode(r, &req); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	if err := a.Mgr.SteamLogin(req.User, req.Password, req.Code); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 202, a.Mgr.Steam())
+}
+
+func (a *API) steamLogout(w http.ResponseWriter, r *http.Request) {
+	if err := a.Mgr.SteamLogout(); err != nil {
+		fail(w, 409, err)
+		return
+	}
+	writeJSON(w, 200, a.Mgr.Steam())
 }

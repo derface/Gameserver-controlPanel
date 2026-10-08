@@ -329,6 +329,10 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 		return
 	}
 
+	if tpl.SteamLogin && m.steamUser() == "" {
+		res.Result, res.Error = "übersprungen", "Braucht ein Steam-Konto (Einstellungen → Steam-Konto)"
+		return
+	}
 	vars := map[string]string{}
 	for _, v := range tpl.Vars {
 		if v.Default == "" && v.Needed { // optional tokens (GSLT) stay empty: a fake one breaks the start

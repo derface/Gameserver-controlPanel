@@ -175,6 +175,41 @@ def derived_ports(short, env):
             out[m.group(1)] = m.group(2)
     return out
 
+def B(key, label):
+    return {"key": key, "label": label, "type": "bool", "true": "1", "false": "0"}
+
+def polish_arma3(t):
+    # Arma 3 ships no server.cfg: create a minimal one, then use it
+    init = ("[ -f server.cfg ] || printf 'hostname = \\\"Mein Arma-3-Server\\\";\\npassword = \\\"\\\";\\npasswordAdmin = \\\"\\\";\\n"
+            "maxPlayers = 32;\\npersistent = 1;\\nverifySignatures = 2;\\nBattlEye = 1;\\n' > server.cfg; ")
+    t["start"] = init + t["start"].replace("-mod= ", "-mod=\"$(echo '{{mods}}' | tr , ';')\" ").replace(" -autoinit", " -config=server.cfg -autoinit")
+    t["vars"].append({"key": "mods", "label": "Mod-Ordner", "default": "", "help": "Ordner im Serververzeichnis, mit Komma getrennt, z. B. @CBA_A3,@ace. Mods lädst du über Dateien hoch."})
+    t["config"] = [{"title": "Arma 3 (server.cfg)", "file": "server/server.cfg", "format": "armacfg", "settings": [
+        {"key": "hostname", "label": "Servername"},
+        {"key": "password", "label": "Passwort", "type": "secret"},
+        {"key": "passwordAdmin", "label": "Admin-Passwort", "type": "secret"},
+        {"key": "maxPlayers", "label": "Maximale Spieler", "type": "number", "min": 1, "max": 256},
+        B("persistent", "Mission läuft ohne Spieler weiter"),
+        {"key": "verifySignatures", "label": "Mod-Signaturen prüfen", "type": "select", "options": ["2", "0"], "labels": ["Ja (empfohlen)", "Nein"]},
+        B("BattlEye", "BattlEye-Anticheat"), B("kickDuplicate", "Doppelte Spieler-IDs kicken"), B("disableVoN", "Sprachchat aus"),
+    ]}]
+    t["broadcast"] = ""
+
+def polish_dayz(t):
+    t["start"] = t["start"].replace(" -limitFPS", " -config=serverDZ.cfg -limitFPS")
+    t["config"] = [{"title": "DayZ (serverDZ.cfg)", "file": "server/serverDZ.cfg", "format": "armacfg", "settings": [
+        {"key": "hostname", "label": "Servername"},
+        {"key": "password", "label": "Passwort", "type": "secret"},
+        {"key": "passwordAdmin", "label": "Admin-Passwort", "type": "secret"},
+        {"key": "maxPlayers", "label": "Maximale Spieler", "type": "number", "min": 1, "max": 127},
+        {"key": "serverTimeAcceleration", "label": "Zeitraffer Tag (Faktor)", "type": "number", "min": 0, "max": 64},
+        {"key": "serverNightTimeAcceleration", "label": "Zeitraffer Nacht (Faktor)", "type": "number", "min": 0.1, "max": 64},
+        B("disable3rdPerson", "Nur Ego-Perspektive"), B("disableCrosshair", "Fadenkreuz aus"),
+        B("BattlEye", "BattlEye-Anticheat"), B("enableWhitelist", "Nur Whitelist"),
+    ]}]
+
+POLISH = {"arma3": polish_arma3, "dayz": polish_dayz}
+
 made, skipped = [], []
 os.makedirs(OUT, exist_ok=True)
 for old in os.listdir(OUT):
@@ -194,9 +229,7 @@ for short, (gsname, gamename) in sorted(names.items()):
     if not appid.isdigit():
         skipped.append((short, "kein Steam"))
         continue
-    if "steamuser" in cfg:
-        skipped.append((short, "braucht Steam-Login"))
-        continue
+    needs_login = "steamuser" in cfg
     windows = cfg.get("steamcmdforcewindows") == "yes"
     if windows:
         skipped.append((short, "nur Windows"))
@@ -315,6 +348,8 @@ for short, (gsname, gamename) in sorted(names.items()):
     }
     if cfg.get("branch"):
         tpl["steam_beta"] = cfg["branch"]
+    if needs_login:
+        tpl["steam_login"] = True
     if cfg.get("appidmod") and appid == "90" and cfg["appidmod"] != "cstrike":
         tpl["steam_mod"] = cfg["appidmod"]
     if cfg.get("baseappid"):
@@ -382,9 +417,13 @@ for short, (gsname, gamename) in sorted(names.items()):
         tpl["packages"] = sorted(set(pkgs))
     tpl["status"] = "beta" if short in PASSED else "experimentell"
     tpl["notes"] = "Automatisch aus LinuxGSM übernommen." + (" Selbsttest bestanden." if short in PASSED else "")
+    if needs_login:
+        tpl["notes"] += " Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen."
     if short in BROKEN:
         tpl["status"] = "defekt"
         tpl["notes"] += " " + BROKEN[short] + "."
+    if short in POLISH:
+        POLISH[short](tpl)
     with open(os.path.join(OUT, tpl["id"] + ".json"), "w") as f:
         json.dump(tpl, f, ensure_ascii=False, indent=2)
         f.write("\n")

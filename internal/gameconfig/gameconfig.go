@@ -10,6 +10,7 @@
 //	cvar        Source/GoldSrc config lines: key "value"
 //	xmlprop     <property name="Key" value="…"/> (7 Days to Die)
 //	palworld    a field inside OptionSettings=(…) of PalWorldSettings.ini
+//	armacfg     key = value; lines of Arma 3 / DayZ server.cfg (top level only)
 package gameconfig
 
 import (
@@ -23,12 +24,12 @@ import (
 )
 
 // Formats lists the supported formats.
-var Formats = map[string]bool{"properties": true, "ini": true, "json": true, "cvar": true, "xmlprop": true, "palworld": true}
+var Formats = map[string]bool{"properties": true, "ini": true, "json": true, "cvar": true, "xmlprop": true, "palworld": true, "armacfg": true}
 
 // CanCreate reports whether a missing file can be started from scratch.
 // The others need the structure the game writes on its first start.
 func CanCreate(format string) bool {
-	return format == "properties" || format == "cvar" || format == "ini"
+	return format == "properties" || format == "cvar" || format == "ini" || format == "armacfg"
 }
 
 // Get returns the value of key and whether it exists.
@@ -55,6 +56,9 @@ func Get(format string, data []byte, key string) (string, bool, error) {
 		return xmlUnescape(string(data[loc[2]:loc[3]])), true, nil
 	case "palworld":
 		_, v, ok := findPal(data, key)
+		return v, ok, nil
+	case "armacfg":
+		_, v, _, ok := findArma(data, key)
 		return v, ok, nil
 	case "json":
 		var doc any
@@ -114,6 +118,8 @@ func Set(format string, data []byte, values map[string]string, keys []string) ([
 			data = splice(data, loc[2], loc[3], xmlEscape(v))
 		case "palworld":
 			data, err = setPal(data, k, v)
+		case "armacfg":
+			data, err = setArma(data, k, v)
 		default:
 			return nil, fmt.Errorf("unbekanntes Format %q", format)
 		}
@@ -447,4 +453,53 @@ func indentOf(data []byte) string {
 		return "  "
 	}
 	return string(m[1])
+}
+
+// ---------- Arma / DayZ server.cfg ----------
+
+var armaLine = regexp.MustCompile(`^(\s*)([A-Za-z0-9_]+)\s*=\s*(.*?)\s*;(.*)$`)
+
+// findArma looks for a top-level "key = value;" (not inside class blocks).
+func findArma(data []byte, key string) (line int, val string, quoted, ok bool) {
+	depth := 0
+	for i, l := range lines(data) {
+		t := strings.TrimSpace(strings.TrimSuffix(l, "\r"))
+		if strings.HasPrefix(t, "//") {
+			continue
+		}
+		if depth == 0 {
+			if m := armaLine.FindStringSubmatch(strings.TrimSuffix(l, "\r")); m != nil && strings.EqualFold(m[2], key) {
+				v := m[3]
+				if len(v) >= 2 && v[0] == '"' && v[len(v)-1] == '"' {
+					return i, v[1 : len(v)-1], true, true
+				}
+				return i, v, false, true
+			}
+		}
+		depth += strings.Count(t, "{") - strings.Count(t, "}")
+	}
+	return -1, "", false, false
+}
+
+func setArma(data []byte, key, val string) ([]byte, error) {
+	if strings.ContainsAny(val, `"{};`) {
+		return nil, fmt.Errorf("%s: Anführungszeichen, Klammern und Semikolon sind nicht erlaubt", key)
+	}
+	i, _, quoted, ok := findArma(data, key)
+	isNum := regexp.MustCompile(`^-?[0-9]+(\.[0-9]+)?$`).MatchString(val)
+	nv := val
+	if (ok && quoted) || (!ok && !isNum) {
+		nv = `"` + val + `"`
+	}
+	if !ok {
+		return appendLine(data, key+" = "+nv+";"), nil
+	}
+	ls := lines(data)
+	cr := strings.HasSuffix(ls[i], "\r")
+	m := armaLine.FindStringSubmatch(strings.TrimSuffix(ls[i], "\r"))
+	ls[i] = m[1] + m[2] + " = " + nv + ";" + m[4]
+	if cr {
+		ls[i] += "\r"
+	}
+	return []byte(strings.Join(ls, "\n")), nil
 }

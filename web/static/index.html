@@ -194,6 +194,18 @@
     <p class="err" id="rmErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="rmTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
+  <form id="stmForm" class="set-block" autocomplete="off">
+    <h3>Steam-Konto</h3>
+    <p class="muted small">Nur für Spiele, deren Server Steam nicht anonym herausgibt (Arma 3, DayZ, Killing Floor …). Das Panel speichert dein Passwort nicht, SteamCMD merkt sich nur die Anmeldung. Am besten ein eigenes Konto nur für Server nehmen: wer mit demselben Konto spielt, kann beim Server-Update aus dem Spiel fliegen. Manche Spiele (z. B. DayZ) verlangen, dass das Konto das Spiel besitzt.</p>
+    <p id="stmStatus" class="small"></p>
+    <div class="vars" id="stmFields">
+      <label class="field"><span>Kontoname</span><input id="stmUser" autocomplete="off" spellcheck="false"></label>
+      <label class="field"><span>Passwort</span><input id="stmPass" type="password" autocomplete="new-password"></label>
+      <label class="field" id="stmCodeWrap" hidden><span id="stmCodeLabel">Steam-Guard-Code</span><input id="stmCode" maxlength="8" autocomplete="one-time-code" spellcheck="false"></label>
+    </div>
+    <p class="err" id="stmErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="stmLogout" hidden>Abmelden</button><button type="submit" class="btn-accent" id="stmGo">Anmelden</button></div>
+  </form>
   <form id="licForm" class="set-block">
     <h3>Lizenz</h3>
     <p id="licStatus"></p>

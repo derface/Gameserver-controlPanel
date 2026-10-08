@@ -29,24 +29,6 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "50",
-      "type": "number"
-    },
-    {
-      "key": "serverpassword",
-      "label": "Server-Passwort",
-      "default": "",
-      "type": "secret"
-    },
-    {
-      "key": "adminpassword",
-      "label": "Admin-Passwort",
-      "default": "",
-      "type": "secret"
-    },
-    {
       "key": "servername",
       "label": "Servername",
       "default": "Mein Server",
@@ -57,6 +39,24 @@
       "label": "Start-Map",
       "default": "Level01_Main",
       "type": "slug"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "50",
+      "type": "number"
+    },
+    {
+      "key": "adminpassword",
+      "label": "Admin-Passwort",
+      "default": "",
+      "type": "secret"
+    },
+    {
+      "key": "serverpassword",
+      "label": "Server-Passwort",
+      "default": "",
+      "type": "secret"
     }
   ],
   "memory_mb": 6144,

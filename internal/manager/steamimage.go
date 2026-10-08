@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:6"
+const SteamImage = "gamepanel/steam-runtime:7"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -43,7 +43,18 @@ set -e
 mkdir -p /data/server /data/logs
 PLATFORM=""
 if [ "${GP_PLATFORM}" = "windows" ]; then PLATFORM="+@sSteamCmdForcePlatformType windows"; fi
-steam() { /opt/steamcmd/steamcmd.sh "$@" +quit; }
+LOGIN="anonymous"
+if [ -n "${GP_STEAM_USER}" ]; then LOGIN="${GP_STEAM_USER}"; fi
+steam() {
+  /opt/steamcmd/steamcmd.sh "$@" +quit 2>&1 | tee /tmp/gp-steamcmd.log
+  rc=${PIPESTATUS[0]}
+  if [ -n "${GP_STEAM_USER}" ] && grep -qiE "cached credentials|login failure|password|two-factor|steam guard" /tmp/gp-steamcmd.log; then
+    echo "[panel] Steam-Anmeldung fehlt oder ist abgelaufen. Bitte im Panel unter Einstellungen → Steam-Konto neu anmelden."
+    # do not exit: Docker would restart us and Steam blocks repeated logins
+    exec sleep infinity
+  fi
+  return $rc
+}
 if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
   echo "[panel] SteamCMD: App ${GP_APP_ID} wird installiert oder aktualisiert"
   BETA=""
@@ -54,15 +65,15 @@ if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
     if [ -n "${GP_BASE_APP}" ]; then
       echo "[panel] SteamCMD: Basis-App ${GP_BASE_APP} nach ${GP_BASE_DIR}"
       mkdir -p "/data/server/${GP_BASE_DIR}"
-      if ! steam ${PLATFORM} +force_install_dir "/data/server/${GP_BASE_DIR}" +login anonymous +app_update "${GP_BASE_APP}" validate; then
+      if ! steam ${PLATFORM} +force_install_dir "/data/server/${GP_BASE_DIR}" +login "${LOGIN}" +app_update "${GP_BASE_APP}" validate; then
         echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"; sleep 10; continue
       fi
     fi
     if [ -n "${GP_PREPLATFORM}" ] && [ ! -f /data/server/.gp-preplatform ]; then
       echo "[panel] SteamCMD: Erstinstallation mit Plattform ${GP_PREPLATFORM}"
-      steam +@sSteamCmdForcePlatformType "${GP_PREPLATFORM}" +force_install_dir /data/server +login anonymous +app_update "${GP_APP_ID}" validate && touch /data/server/.gp-preplatform || true
+      steam +@sSteamCmdForcePlatformType "${GP_PREPLATFORM}" +force_install_dir /data/server +login "${LOGIN}" +app_update "${GP_APP_ID}" validate && touch /data/server/.gp-preplatform || true
     fi
-    if steam ${PLATFORM} +force_install_dir /data/server +login anonymous ${MOD} +app_update "${GP_APP_ID}" ${BETA} validate; then
+    if steam ${PLATFORM} +force_install_dir /data/server +login "${LOGIN}" ${MOD} +app_update "${GP_APP_ID}" ${BETA} validate; then
       if [ -z "${GP_MOD}" ] || [ -d "/data/server/${GP_MOD}" ]; then
         touch /data/server/.gp-installed
         break

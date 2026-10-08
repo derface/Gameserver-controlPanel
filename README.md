@@ -94,6 +94,12 @@ Nur geänderte Werte werden geschrieben, alles andere in der Datei (Kommentare, 
 
 Vorlagenfeld `config`: Liste von Dateien mit `file` (relativ zum Serverordner, `{{var}}` erlaubt), `format` (`properties`, `ini` mit Schlüsseln `Abschnitt/Name`, `json` mit Punkt-Pfaden, `cvar`, `xmlprop`, `palworld`), optional `init_from` (Vorlage, falls die Datei fehlt) und `settings` (`key`, `label`, `type` text/number/bool/select/secret, `options`/`labels`, `true`/`false` für die Schreibweise in der Datei, `min`/`max`, `help`).
 
+## Steam-Konto
+
+Manche Dedicated Server gibt Steam nicht anonym heraus (Arma 3, DayZ, Action: Source, Blade Symphony). Unter Einstellungen → **Steam-Konto** meldet sich das Panel einmal an. Fragt Steam nach einem Steam-Guard-Code (E-Mail oder Steam-App), erscheint ein Feld dafür; eine Bestätigung in der Steam-App wird abgewartet. Das Passwort wird nie gespeichert und nur bis zum Abschluss der Anmeldung im Speicher gehalten. SteamCMD legt seinen Anmelde-Cache in `<data>/steam-auth` ab; dieser Ordner wird nur in die Container der Spiele eingehängt, die ein Konto brauchen (Vorlagenfeld `steam_login: true`), und die melden sich dann nur mit dem Kontonamen an. Ist die Anmeldung abgelaufen, wartet der Server mit einer Meldung, statt Steam mit Neustarts zu überfluten. Empfehlung: ein eigenes Steam-Konto nur für Server; manche Spiele (DayZ) verlangen, dass das Konto das Spiel besitzt.
+
+Arma 3 und DayZ haben ein Einstellungsformular für `server.cfg` bzw. `serverDZ.cfg` (Format `armacfg`), Arma 3 außerdem eine Mod-Liste (Ordner wie `@CBA_A3`, mit Komma getrennt).
+
 ## Mods und Workshop
 
 - **Minecraft Java:** Reiter **Mods** unter „Server verwalten“. Suche auf Modrinth, gefiltert nach Server-Art (Fabric, Forge, NeoForge, Quilt → Mods; Paper, Purpur → Plugins) und Minecraft-Version, nur Projekte, die auf dem Server laufen. Änderungen werden gesammelt und mit „Übernehmen“ gespeichert; das Image itzg/minecraft-server lädt die Mods samt Pflicht-Abhängigkeiten beim Start und räumt entfernte wieder ab. Vanilla hat keine Mods, dann zeigt der Reiter den Hinweis, die Server-Art umzustellen.

@@ -152,3 +152,22 @@ func TestJSON(t *testing.T) {
 		}
 	}
 }
+
+func TestArmaCfg(t *testing.T) {
+	in := "hostname = \"EXAMPLE NAME\";\t// The name of the server\r\npassword = \"\";\r\nmaxPlayers = 60;\r\nclass Missions\r\n{\r\n\tclass m1 { template = \"x\"; difficulty = \"Regular\"; };\r\n\tmaxPlayers = 5;\r\n};\r\n"
+	if v, ok := get(t, "armacfg", in, "hostname"); !ok || v != "EXAMPLE NAME" {
+		t.Fatalf("%q", v)
+	}
+	if v, _ := get(t, "armacfg", in, "maxPlayers"); v != "60" {
+		t.Fatalf("Klassen-Inhalt gelesen: %q", v)
+	}
+	out := set(t, "armacfg", in, "hostname", "Davids Server", "maxPlayers", "40", "verifySignatures", "2", "motdInterval", "5")
+	for _, w := range []string{"hostname = \"Davids Server\";\t// The name of the server\r\n", "maxPlayers = 40;\r\n", "\tmaxPlayers = 5;", "verifySignatures = 2;\n", "motdInterval = 5;"} {
+		if !strings.Contains(out, w) {
+			t.Fatalf("%q fehlt in %q", w, out)
+		}
+	}
+	if _, err := Set("armacfg", []byte(in), map[string]string{"hostname": "x\"; exit"}, []string{"hostname"}); err == nil {
+		t.Fatal("Anführungszeichen angenommen")
+	}
+}

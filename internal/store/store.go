@@ -88,6 +88,7 @@ type Settings struct {
 	OllamaURL    string        `json:"ollama_url,omitempty"`
 	AIModel      string        `json:"ai_model,omitempty"`
 	PublicHost   string        `json:"public_host,omitempty"` // shown to players, e.g. play.example.com
+	SteamUser    string        `json:"steam_user,omitempty"`  // logged-in Steam account (the login itself is cached by SteamCMD)
 	Remote       remote.Config `json:"remote_backup"`
 }
 

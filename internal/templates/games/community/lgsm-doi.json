@@ -24,16 +24,16 @@
   ],
   "vars": [
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "32",
-      "type": "number"
-    },
-    {
       "key": "defaultmap",
       "label": "Start-Map",
       "default": "bastogne stronghold",
       "type": "slug"
+    },
+    {
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "32",
+      "type": "number"
     },
     {
       "key": "tickrate",

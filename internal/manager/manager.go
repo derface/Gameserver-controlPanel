@@ -48,6 +48,7 @@ type Manager struct {
 	baseCtx    context.Context
 
 	ev           eventLog
+	sl           steamLogin
 	pendingTasks map[string]bool      // guarded by mu
 	expectAt     map[string]time.Time // panel-initiated start/stop, guarded by mu
 
@@ -175,6 +176,9 @@ func (m *Manager) Validate(req CreateReq) (templates.Template, map[string]string
 			return tpl, nil, nil, errors.New("Die Steam-App-ID fehlt")
 		}
 	}
+	if tpl.SteamLogin && m.steamUser() == "" {
+		return tpl, nil, nil, fmt.Errorf("%s lässt sich nur mit einem Steam-Konto herunterladen. Melde dich unter Einstellungen → Steam-Konto an", tpl.Name)
+	}
 	if tpl.Status == "defekt" && !req.internal {
 		return tpl, nil, nil, fmt.Errorf("Die Vorlage %s funktioniert derzeit nicht und ist deshalb gesperrt", tpl.Name)
 	}
@@ -192,6 +196,13 @@ func baseApp(t templates.Template) string {
 		return ""
 	}
 	return strconv.Itoa(t.SteamBase)
+}
+
+func (m *Manager) loginFor(tpl templates.Template) string {
+	if !tpl.SteamLogin {
+		return ""
+	}
+	return m.steamUser()
 }
 
 func restartPolicy(sv store.Server) docker.RestartPolicy {
@@ -420,6 +431,9 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			upd = "1"
 		}
 		cfg.Image = SteamImageFor(tpl)
+		if tpl.SteamLogin {
+			cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, m.SteamAuthDir()+":/home/steam/Steam")
+		}
 		cfg.Env = []string{
 			"GP_APP_ID=" + strconv.Itoa(appID),
 			"GP_START=" + start,
@@ -430,6 +444,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			"GP_PREPLATFORM=" + tpl.SteamPrePl,
 			"GP_BASE_APP=" + baseApp(tpl),
 			"GP_BASE_DIR=" + tpl.SteamBaseIn,
+			"GP_STEAM_USER=" + m.loginFor(tpl),
 			"GP_LOGFILE=" + tpl.LogFile,
 			"TZ=Europe/Berlin",
 		}
@@ -734,7 +749,7 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 	if tpl.Ready != "" {
 		ready, _ = regexp.Compile(tpl.Ready)
 	}
-	installing, started, failed, isReady, noSpace := false, tpl.Kind != "steam", false, false, false
+	installing, started, failed, isReady, noSpace, noLogin := false, tpl.Kind != "steam", false, false, false, false
 	progress := 0.0
 	sc := bufio.NewScanner(io.LimitReader(rc, 64<<20))
 	sc.Buffer(make([]byte, 64<<10), 1<<20)
@@ -745,6 +760,8 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 			installing, started, progress = true, false, 0
 		case strings.Contains(line, "[panel] Installation fehlgeschlagen"):
 			failed = true
+		case strings.Contains(line, "[panel] Steam-Anmeldung fehlt"):
+			failed, noLogin = true, true
 		case installing && strings.Contains(line, "state is 0x202"):
 			noSpace = true // SteamCMD: not enough disk space
 		case strings.Contains(line, "[panel] Start:"):
@@ -762,6 +779,9 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 		l.Msg = "SteamCMD-Installation fehlgeschlagen. Details in der Konsole."
 		if noSpace {
 			l.Msg = "SteamCMD-Installation fehlgeschlagen: nicht genug Speicherplatz auf der Platte."
+		}
+		if noLogin {
+			l.Msg = "Steam-Anmeldung fehlt oder ist abgelaufen. Unter Einstellungen → Steam-Konto neu anmelden, dann den Server neu starten."
 		}
 		return "error"
 	case installing:

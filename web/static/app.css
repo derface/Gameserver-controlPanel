@@ -411,3 +411,5 @@ a.btn-line{display:inline-flex;align-items:center;text-decoration:none;color:var
 .md-search input:focus{border-color:var(--accent);outline:none}
 .md-item .mono{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none;letter-spacing:0}
 @media (max-width:720px){.md-bar{flex-wrap:wrap}.md-bar p{flex:1 1 100%}.md-bar button{flex:1}.md-list{grid-template-columns:minmax(0,1fr)}}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}

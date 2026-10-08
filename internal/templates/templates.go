@@ -70,7 +70,7 @@ func (s Setting) BoolValues() (string, string) {
 	return t, f
 }
 
-var configFormats = map[string]bool{"properties": true, "ini": true, "json": true, "cvar": true, "xmlprop": true, "palworld": true}
+var configFormats = map[string]bool{"properties": true, "ini": true, "json": true, "cvar": true, "xmlprop": true, "palworld": true, "armacfg": true}
 
 func (t Template) checkConfig() error {
 	for i, c := range t.Config {
@@ -118,6 +118,7 @@ type Template struct {
 	SteamAppID  int               `json:"steam_app_id,omitempty"`
 	SteamBeta   string            `json:"steam_beta,omitempty"`
 	SteamMod    string            `json:"steam_mod,omitempty"`         // GoldSrc: +app_set_config 90 mod <name>
+	SteamLogin  bool              `json:"steam_login,omitempty"`       // SteamCMD needs a Steam account (not anonymous)
 	SteamPrePl  string            `json:"steam_preplatform,omitempty"` // first install once with this platform (L4D2)
 	SteamBase   int               `json:"steam_base_app,omitempty"`    // extra app installed first (TF2 for TF2 Classified)
 	SteamBaseIn string            `json:"steam_base_dir,omitempty"`    // its folder below the server folder

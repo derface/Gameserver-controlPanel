@@ -1,0 +1,104 @@
+{
+  "id": "lgsm-dayz",
+  "name": "DayZ",
+  "category": "Steam (Community)",
+  "kind": "steam",
+  "steam_app_id": 223350,
+  "steam_login": true,
+  "start": "./DayZServer -ip=0.0.0.0 -port={{port}} -mod= -servermod= -bepath= -config=serverDZ.cfg -limitFPS=60 -dologs -adminlog -freezeCheck",
+  "ports": [
+    {
+      "name": "Game",
+      "port": 2302,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam",
+      "port": 2304,
+      "proto": "udp"
+    },
+    {
+      "name": "BattleEye",
+      "port": 2306,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 512,
+  "console": "stdin",
+  "status": "experimentell",
+  "notes": "Automatisch aus LinuxGSM übernommen. Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen.",
+  "config": [
+    {
+      "title": "DayZ (serverDZ.cfg)",
+      "file": "server/serverDZ.cfg",
+      "format": "armacfg",
+      "settings": [
+        {
+          "key": "hostname",
+          "label": "Servername"
+        },
+        {
+          "key": "password",
+          "label": "Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "passwordAdmin",
+          "label": "Admin-Passwort",
+          "type": "secret"
+        },
+        {
+          "key": "maxPlayers",
+          "label": "Maximale Spieler",
+          "type": "number",
+          "min": 1,
+          "max": 127
+        },
+        {
+          "key": "serverTimeAcceleration",
+          "label": "Zeitraffer Tag (Faktor)",
+          "type": "number",
+          "min": 0,
+          "max": 64
+        },
+        {
+          "key": "serverNightTimeAcceleration",
+          "label": "Zeitraffer Nacht (Faktor)",
+          "type": "number",
+          "min": 0.1,
+          "max": 64
+        },
+        {
+          "key": "disable3rdPerson",
+          "label": "Nur Ego-Perspektive",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "disableCrosshair",
+          "label": "Fadenkreuz aus",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "BattlEye",
+          "label": "BattlEye-Anticheat",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        },
+        {
+          "key": "enableWhitelist",
+          "label": "Nur Whitelist",
+          "type": "bool",
+          "true": "1",
+          "false": "0"
+        }
+      ]
+    }
+  ]
+}

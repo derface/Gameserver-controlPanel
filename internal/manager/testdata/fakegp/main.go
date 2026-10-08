@@ -11,7 +11,41 @@ import (
 	"time"
 )
 
+// steamLogin plays SteamCMD's login for the Steam account tests:
+// "+login user pass [code] +quit"
+func steamLogin(args []string) {
+	fmt.Println("Redirecting stderr to '/home/steam/Steam/logs/stderr.txt'")
+	fmt.Println("Loading Steam API...OK")
+	if len(args) < 3 {
+		fmt.Println("usage")
+		os.Exit(1)
+	}
+	user, pass := args[1], args[2]
+	fmt.Printf("Logging in user '%s' to Steam Public...\n", user)
+	switch {
+	case pass != "richtig":
+		fmt.Println("FAILED (Invalid Password)")
+		os.Exit(5)
+	case len(args) > 4 && args[3] == "AB12C":
+		os.WriteFile("/home/steam/Steam/config.vdf", []byte("cached "+user), 0o600)
+		fmt.Println("Waiting for client config...OK")
+		fmt.Println("Waiting for user info...OK")
+	case len(args) > 4 && args[3] != "+quit":
+		fmt.Println("FAILED (Invalid Login Auth Code)")
+		os.Exit(5)
+	default:
+		fmt.Println("This computer has not been authenticated for your account using Steam Guard.")
+		fmt.Println("Please check your email for the message from Steam, and enter the Steam Guard")
+		fmt.Print(" code from that message.\nSteam Guard code:")
+		select {}
+	}
+}
+
 func main() {
+	if strings.HasSuffix(os.Args[0], "steamcmd.sh") {
+		steamLogin(os.Args[1:])
+		return
+	}
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
 	go func() { <-sig; os.Exit(0) }()
