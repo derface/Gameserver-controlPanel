@@ -31,301 +31,138 @@
 </section>
 
 <!-- ============ Panel ============ -->
-<div id="app" hidden>
-<header class="top" id="top">
-  <div class="top-in">
-    <div class="brand"><i></i>[Panel]</div>
-    <nav class="main" aria-label="Hauptnavigation">
-      <a href="#top" aria-current="page">Übersicht</a>
-      <a href="#server">Server</a>
-      <a href="#ki" class="admin-only">KI-Assistent</a>
-      <a href="#konsole">Konsole</a>
-    </nav>
-    <div class="tools">
-      <span class="chip-ed" id="edChip" role="button" tabindex="0"></span>
-      <button class="btn-line" id="openPal" type="button">Suchen<kbd>Strg K</kbd></button>
-      <button class="icon-btn" id="openSettings" type="button" aria-label="Einstellungen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
-      <button class="switch" id="motionBtn" type="button" aria-pressed="true" aria-label="Animationen">Bewegung<span class="track"><span class="knob"></span></span></button>
-      <button class="switch" id="themeBtn" type="button" aria-pressed="true">Hell<span class="track"><span class="knob"></span></span>Dunkel</button>
-      <button class="btn-line" id="logoutBtn" type="button" title="Abmelden">Abmelden<span class="who mono" id="whoAmI"></span></button>
-    </div>
+<div id="app" class="app" hidden>
+<aside class="side" id="side" aria-label="Navigation">
+  <div class="side-top">
+    <a class="brand" href="#/"><i></i>[Panel]</a>
+    <button class="icon-btn side-close" id="sideClose" type="button" aria-label="Menü schließen">✕</button>
   </div>
-</header>
+  <button class="side-search" id="openPal" type="button"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><span>Suchen</span><kbd>Strg K</kbd></button>
+  <nav class="side-nav" aria-label="Hauptnavigation">
+    <a href="#/" data-nav="home"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6h-6v6H5a1 1 0 01-1-1z"/></svg><span>Übersicht</span></a>
+    <a href="#/server" data-nav="servers"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="6" rx="1.5"/><rect x="4" y="14" width="16" height="6" rx="1.5"/><path d="M8 7h.01M8 17h.01"/></svg><span>Server</span><b class="cnt" id="navCount"></b></a>
+    <a href="#/ki" data-nav="ki" class="admin-only"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg><span>KI-Assistent</span></a>
+    <div class="side-label admin-only">Verwaltung</div>
+    <a href="#/benutzer" data-nav="users" class="admin-only"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0111 0"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2A4.5 4.5 0 0121 18.5"/></svg><span>Benutzer</span></a>
+    <a href="#/protokoll" data-nav="audit" class="admin-only"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h3"/></svg><span>Protokoll</span></a>
+    <a href="#/selbsttest" data-nav="test" class="admin-only"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 001.8 3h10.4a2 2 0 001.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg><span>Selbsttest</span><b class="cnt live" id="navTest" hidden>läuft</b></a>
+    <a href="#/einstellungen" data-nav="settings"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Einstellungen</span></a>
+  </nav>
+  <div class="side-foot">
+    <div class="prefs">
+      <button class="switch" id="themeBtn" type="button" aria-pressed="true"><span class="sw-l">Dunkles Design</span><span class="track"><span class="knob"></span></span></button>
+      <button class="switch" id="motionBtn" type="button" aria-pressed="true"><span class="sw-l">Animationen</span><span class="track"><span class="knob"></span></span></button>
+    </div>
+    <div class="me-card">
+      <span class="avatar" id="meAvatar" aria-hidden="true"></span>
+      <a class="me-txt" href="#/einstellungen/konto"><b id="whoAmI"></b><span id="whoRole"></span></a>
+      <button class="icon-btn" id="logoutBtn" type="button" aria-label="Abmelden" title="Abmelden"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3"/><path d="M10 16l-4-4 4-4M6 12h10"/></svg></button>
+    </div>
+    <span class="chip-ed" id="edChip" role="button" tabindex="0"></span>
+  </div>
+</aside>
+<div class="side-scrim" id="sideScrim" hidden></div>
 
-<main class="shell">
+<div class="main">
+  <header class="mbar">
+    <button class="icon-btn" id="sideOpen" type="button" aria-label="Menü öffnen"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="#/"><i></i>[Panel]</a>
+    <button class="icon-btn" id="openPal2" type="button" aria-label="Suchen"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button>
+  </header>
   <div class="banner" id="dockerBanner" hidden></div>
-  <div class="grid">
-    <div class="col">
-      <section class="stats" aria-label="Auslastung des Rechners">
-        <div class="stat"><span class="mono muted" id="hostName">CPU</span><span class="v" id="vCpu">–</span><canvas id="sCpu" aria-hidden="true"></canvas></div>
-        <div class="stat"><span class="mono muted">RAM</span><span class="v" id="vRam">–</span><canvas id="sRam" aria-hidden="true"></canvas></div>
-        <div class="stat"><span class="mono muted">Speicher</span><span class="v" id="vDisk">–</span><canvas id="sDisk" aria-hidden="true"></canvas></div>
-        <div class="stat"><span class="mono muted">Spieler online</span><span class="v" id="vRun">–</span><canvas id="sRun" aria-hidden="true"></canvas></div>
-      </section>
 
-      <section class="stage" id="stage" aria-label="3D-Server-Landschaft">
-        <canvas id="land" aria-label="Drehbare 3D-Ansicht der Gameserver. Server anklicken für Details."></canvas>
+  <!-- Übersicht -->
+  <section class="page" id="pageHome" aria-labelledby="hHome">
+    <div class="page-head">
+      <div><h1 id="hHome">Übersicht</h1><p class="muted" id="homeSub"></p></div>
+      <div class="acts admin-only"><button class="btn-line" type="button" data-act="ai">Mit KI planen</button><button class="btn-accent" type="button" data-act="create">Server anlegen</button></div>
+    </div>
+      <section class="stats" aria-label="Auslastung des Rechners">
+        <div class="stat"><span class="label" id="hostName">CPU</span><span class="v" id="vCpu">–</span><canvas id="sCpu" aria-hidden="true"></canvas></div>
+        <div class="stat"><span class="label">Arbeitsspeicher</span><span class="v" id="vRam">–</span><canvas id="sRam" aria-hidden="true"></canvas></div>
+        <div class="stat"><span class="label">Speicherplatz</span><span class="v" id="vDisk">–</span><canvas id="sDisk" aria-hidden="true"></canvas></div>
+        <div class="stat"><span class="label">Spieler online</span><span class="v" id="vRun">–</span><canvas id="sRun" aria-hidden="true"></canvas></div>
+      </section>
+    <div class="home-grid">
+      <section class="stage card" id="stage" aria-label="3D-Ansicht der Server">
+        <canvas id="land" aria-label="Drehbare 3D-Ansicht der Gameserver. Server anklicken öffnet ihn."></canvas>
         <div class="labels" id="labels"></div>
-        <div class="stage-head"><div><h2>Server-Landschaft</h2><div class="mono muted">Ziehen zum Drehen · Block anklicken zum Hineinfliegen</div></div></div>
         <div class="stage-empty" id="stageEmpty" hidden>
           <p class="admin-only">Noch kein Server. Leg deinen ersten an oder lass die KI einen planen.</p>
           <p class="not-admin">Dir ist noch kein Server freigegeben. Frag den Admin des Panels.</p>
           <button class="btn-accent admin-only" type="button" data-act="create">Server anlegen</button>
         </div>
-        <div class="zoom"><button type="button" id="zIn" aria-label="Näher heranzoomen">+</button><button type="button" id="zOut" aria-label="Herauszoomen">−</button><button type="button" id="zReset" class="txt">Übersicht</button></div>
-        <aside class="detail" id="detail" aria-live="polite"></aside>
+        <div class="zoom"><button type="button" id="zIn" aria-label="Näher heranzoomen">+</button><button type="button" id="zOut" aria-label="Herauszoomen">−</button></div>
       </section>
-
-      <section id="server" class="col tight">
-        <div class="sec-head">
-          <h2>Gameserver</h2><span class="mono muted" id="modCount"></span>
-          <span class="grow"></span>
-          <button class="btn-line admin-only" type="button" data-act="ai">Mit KI anlegen</button>
-          <button class="btn-accent admin-only" type="button" data-act="create">Server anlegen</button>
-        </div>
-        <div class="mods" id="mods"></div>
+      <section class="card home-list" aria-labelledby="hHomeList">
+        <div class="card-head"><h2 id="hHomeList">Deine Server</h2><a class="link" href="#/server">Alle anzeigen</a></div>
+        <ul class="srv-list" id="homeList"></ul>
       </section>
     </div>
+  </section>
 
-    <aside class="col" aria-label="KI und Konsole">
-      <section class="core-card admin-only" id="ki" data-state="idle">
-        <div class="core-top"><h2>KI-Kern</h2><span class="core-state mono"><i></i><span id="coreState">Bereit</span></span></div>
-        <canvas id="core" aria-hidden="true"></canvas>
-        <div class="core-body" id="coreBody">
-          <div class="chat" id="chat"></div>
-          <div class="plan" id="plan" hidden></div>
-          <div class="chips" id="chips">
-            <button type="button">Minecraft mit Create-Mods für 8 Freunde</button>
-            <button type="button">Valheim-Server mit Crossplay für 5 Leute</button>
-            <button type="button">Palworld für 4 Spieler</button>
+  <!-- Serverliste -->
+  <section class="page" id="pageServers" aria-labelledby="hServers" hidden>
+    <div class="page-head">
+      <div><h1 id="hServers">Server</h1><p class="muted" id="modCount"></p></div>
+      <div class="acts admin-only"><button class="btn-line" type="button" data-act="ai">Mit KI planen</button><button class="btn-accent" type="button" data-act="create">Server anlegen</button></div>
+    </div>
+    <div class="toolbar">
+      <label class="search-in"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><span class="sr">Server suchen</span><input id="srvSearch" type="search" placeholder="Server oder Spiel suchen" autocomplete="off"></label>
+      <div class="seg" id="srvFilter" role="group" aria-label="Filter">
+        <button type="button" data-f="" aria-pressed="true">Alle</button><button type="button" data-f="on" aria-pressed="false">Laufen</button><button type="button" data-f="off" aria-pressed="false">Gestoppt</button>
+      </div>
+    </div>
+    <div class="mods" id="mods"></div>
+  </section>
+
+  <!-- Ein Server -->
+  <section class="page" id="pageServer" aria-labelledby="svName" hidden>
+    <a class="back" href="#/server"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Alle Server</a>
+    <div class="srv-head">
+      <div class="srv-title">
+        <span class="muted small" id="svGame"></span>
+        <h1 id="svName">Server</h1>
+        <div class="srv-meta" id="svMeta"></div>
+      </div>
+      <div class="acts" id="svActs">
+        <details class="more op-only" id="svMore">
+          <summary class="btn-line" aria-label="Weitere Aktionen" title="Weitere Aktionen"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></summary>
+          <div class="menu" role="menu">
+            <button type="button" role="menuitem" data-sv="edit">Name, RAM, Startoptionen</button>
+            <button type="button" role="menuitem" data-sv="settings-tab">Spiel-Einstellungen</button>
+            <button type="button" role="menuitem" class="admin-only danger" data-sv="delete">Server löschen</button>
           </div>
-          <form class="ask" id="askForm">
-            <label class="sr" for="askInput">Nachricht an den KI-Kern</label>
-            <input id="askInput" autocomplete="off" placeholder="Beschreibe deinen Server …">
-            <button type="submit" aria-label="Senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
-          </form>
-        </div>
-      </section>
+        </details>
+        <button class="btn-line op-only" type="button" data-sv="restart">Neustart</button>
+        <button class="btn-accent op-only" type="button" data-sv="power">Starten</button>
+      </div>
+    </div>
+    <p class="msg-line" id="svMsg" hidden></p>
+    <nav class="tabs" role="tablist" aria-label="Bereich" id="svTabs">
+      <button type="button" role="tab" id="tabConsole" data-tab="console">Konsole</button>
+      <button type="button" role="tab" id="tabSettings" data-tab="settings" class="op-only">Einstellungen</button>
+      <button type="button" role="tab" id="tabMods" data-tab="mods" class="op-only" hidden>Mods</button>
+      <button type="button" role="tab" id="tabBackups" data-tab="backups">Backups</button>
+      <button type="button" role="tab" id="tabFiles" data-tab="files" class="op-only">Dateien</button>
+      <button type="button" role="tab" id="tabTasks" data-tab="tasks">Aufgaben</button>
+      <button type="button" role="tab" id="tabEvents" data-tab="events">Verlauf</button>
+    </nav>
 
+  <section class="mg-pane" id="paneConsole" role="tabpanel" aria-labelledby="tabConsole">
+    <div class="con-grid">
       <section class="lcd" id="konsole" aria-label="Konsole">
-        <div class="lcd-head mono"><span id="conName">Konsole</span><span class="live" id="conLive" hidden><i></i>Live</span></div>
-        <div class="lines" id="lines"><div class="dim">Wähle einen Server, um seine Konsole zu sehen.</div></div>
+        <div class="lcd-head"><span id="conName">Konsole</span><span class="live" id="conLive" hidden><i></i>Live</span></div>
+        <div class="lines" id="lines"></div>
         <form class="lcd-in op-only" id="cmdForm">
           <span aria-hidden="true">›</span>
           <label class="sr" for="cmdInput">Befehl an den Server senden</label>
           <input id="cmdInput" autocomplete="off" placeholder="Befehl senden" disabled>
         </form>
       </section>
-    </aside>
-  </div>
-</main>
-</div>
-
-<!-- ============ Dialoge ============ -->
-<dialog id="dlgCreate" class="dlg">
-  <form id="createForm" method="dialog">
-    <div class="dlg-head"><h2 id="createTitle">Server anlegen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-    <div class="field picker">
-      <span>Spiel <b class="mono" id="cCount"></b></span>
-      <label class="sr" for="cSearch">Spiel suchen</label>
-      <input id="cSearch" type="search" placeholder="Spiel suchen, z. B. ark, rust, counter" autocomplete="off">
-      <label class="sr" for="cTpl">Spiel auswählen</label>
-      <select id="cTpl" size="7" required></select>
+      <aside class="card info" id="svInfo" aria-label="Details"></aside>
     </div>
-    <p class="note" id="cNotes" hidden></p>
-    <label class="field"><span>Name im Panel</span><input id="cName" maxlength="40" required></label>
-    <div class="field"><span>Arbeitsspeicher <b id="cMemV" class="mono"></b></span><input id="cMem" type="range" step="256"></div>
-    <div id="cVars" class="vars"></div>
-    <label class="check"><input type="checkbox" id="cStart" checked> Nach dem Anlegen direkt starten</label>
-    <p class="err" id="cErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="cSubmit">Anlegen</button></div>
-  </form>
-</dialog>
-
-<dialog id="dlgEdit" class="dlg">
-  <form id="editForm" method="dialog">
-    <div class="dlg-head"><h2>Server bearbeiten</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-    <label class="field"><span>Name</span><input id="eName" maxlength="40" required></label>
-    <div class="field"><span>Arbeitsspeicher <b id="eMemV" class="mono"></b></span><input id="eMem" type="range" step="256"></div>
-    <div id="eVars" class="vars" hidden></div>
-    <p class="note">Spieleinstellungen wie Servername, Passwort oder Schwierigkeit findest du unter <button type="button" class="linkbtn" id="eToSettings">Server verwalten → Einstellungen</button>.</p>
-    <label class="check" id="eUpdWrap"><input type="checkbox" id="eUpd"> Bei jedem Start per SteamCMD aktualisieren</label>
-    <p class="note">Beim Speichern wird der Container mit den neuen Werten neu angelegt. Spielstände bleiben erhalten.</p>
-    <p class="err" id="eErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Speichern</button></div>
-  </form>
-</dialog>
-
-<dialog id="dlgDelete" class="dlg small">
-  <form id="deleteForm" method="dialog">
-    <div class="dlg-head"><h2>Server löschen?</h2></div>
-    <p id="delText"></p>
-    <label class="check"><input type="checkbox" id="delWipe"> Auch alle Spieldaten und Spielstände löschen</label>
-    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-danger">Löschen</button></div>
-  </form>
-</dialog>
-
-<dialog id="dlgSettings" class="dlg">
-  <div class="dlg-head"><h2>Einstellungen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-  <div class="set-block" id="meBlock">
-    <h3>Mein Konto</h3>
-    <p id="meLine" class="small"></p>
-    <form id="pwForm" autocomplete="on">
-      <input type="text" name="username" id="pwUser" autocomplete="username" hidden>
-      <div class="vars">
-        <label class="field full"><span>Bisheriges Passwort</span><input id="pwOld" type="password" autocomplete="current-password" required></label>
-        <label class="field"><span>Neues Passwort</span><input id="pwNew" type="password" autocomplete="new-password" minlength="10" required></label>
-        <label class="field"><span>Wiederholen</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="10" required></label>
-      </div>
-      <p class="err" id="pwErr" role="alert" hidden></p>
-      <div class="dlg-actions"><button type="submit" class="btn-line">Passwort ändern</button></div>
-    </form>
-    <div class="sec2">
-      <h4>Zwei-Faktor-Anmeldung</h4>
-      <p class="small muted">Zusätzlich zum Passwort fragt das Panel nach einem Code aus einer Authenticator-App (z. B. Aegis, 2FAS, Google Authenticator, Bitwarden). Wer dein Passwort kennt, kommt so trotzdem nicht hinein.</p>
-      <p id="tfStatus" class="small"></p>
-      <div class="dlg-actions">
-        <button type="button" class="btn-line" id="tfOff" hidden>Ausschalten</button>
-        <button type="button" class="btn-line" id="tfCodes" hidden>Neue Wiederherstellungscodes</button>
-        <button type="button" class="btn-accent" id="tfOn">Einrichten</button>
-      </div>
-    </div>
-    <div class="sec2">
-      <h4>Angemeldete Geräte</h4>
-      <p class="small muted" id="sessLine"></p>
-      <div class="dlg-actions"><button type="button" class="btn-line" id="logoutAll">Auf allen anderen Geräten abmelden</button></div>
-    </div>
-  </div>
-  <div class="set-block admin-only">
-    <h3>Benutzer und Rechte</h3>
-    <p class="muted small">Weitere Konten für Freunde oder Mit-Admins. <b>Zuschauer</b> sehen Server, Konsole und Verlauf. <b>Betreiber</b> dürfen Server starten, stoppen, Befehle senden, Backups, Dateien, Einstellungen und Mods. <b>Admins</b> dürfen alles. Betreiber und Zuschauer lassen sich auf einzelne Server beschränken.</p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="openAudit">Protokoll ansehen</button><button type="button" class="btn-accent" id="openUsers">Benutzer verwalten</button></div>
-  </div>
-  <form id="tlsForm" class="set-block admin-only" autocomplete="off">
-    <h3>HTTPS</h3>
-    <p class="muted small">Verschlüsselt die Verbindung zum Panel, damit Passwörter nicht mitgelesen werden können. HTTP und HTTPS laufen auf demselben Port; ist HTTPS an, wird http:// automatisch umgeleitet.</p>
-    <p id="tlsStatus" class="small"></p>
-    <label class="field"><span>Zertifikat</span>
-      <select id="tlsMode">
-        <option value="">Aus – nur HTTP</option>
-        <option value="self">Selbst signiert – für zu Hause und im Heimnetz</option>
-        <option value="acme">Let's Encrypt – kostenlos, braucht eine eigene Domain</option>
-        <option value="custom">Eigenes Zertifikat einfügen</option>
-      </select></label>
-    <p class="note" data-tls="self">Der Browser warnt beim ersten Aufruf, weil niemand das Zertifikat beglaubigt. Einmal „Trotzdem fortfahren“ wählen; die Verbindung ist danach trotzdem verschlüsselt.</p>
-    <div class="vars" data-tls="acme">
-      <label class="field"><span>Domain</span><input id="tlsDomain" placeholder="panel.meine-domain.de" spellcheck="false"></label>
-      <label class="field"><span>E-Mail <em class="muted">optional</em></span><input id="tlsEmail" type="email" placeholder="für Ablauf-Warnungen"></label>
-      <p class="note full">Die Domain muss auf deine öffentliche IP zeigen. Im Router Port 80 (für die Prüfung) und Port 443 auf Port <span class="mono" id="tlsPort">8420</span> dieses Rechners weiterleiten – dann ist das Panel unter https://deine-domain erreichbar. Das Zertifikat wird alle 60 Tage von selbst erneuert.</p>
-    </div>
-    <div class="vars" data-tls="custom">
-      <label class="field full"><span>Zertifikat (PEM, mit Zwischenzertifikaten)</span><textarea id="tlsCert" rows="4" placeholder="-----BEGIN CERTIFICATE-----" spellcheck="false"></textarea></label>
-      <label class="field full"><span>Privater Schlüssel (PEM)</span><textarea id="tlsKey" rows="3" placeholder="-----BEGIN PRIVATE KEY----- (leer lassen = bisherigen behalten)" spellcheck="false"></textarea></label>
-    </div>
-    <p class="note">Ausgesperrt? Auf dem Server selbst geht http://localhost:8420 immer, z. B. per SSH-Tunnel. Oder in /etc/systemd/system/gamepanel.service die Zeile <span class="mono">Environment=GP_NO_TLS=1</span> ergänzen und den Dienst neu starten.</p>
-    <p class="err" id="tlsErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="tlsRenew" hidden>Zertifikat jetzt holen</button><button type="submit" class="btn-accent">Speichern</button></div>
-  </form>
-  <form id="aiForm" class="set-block admin-only">
-    <h3>KI-Assistent</h3>
-    <p class="muted small">Du nutzt deinen eigenen API-Key. Die Kosten rechnet dein Anbieter direkt mit dir ab. Ollama läuft kostenlos auf deinem eigenen Rechner.</p>
-    <label class="field"><span>Anbieter</span>
-      <select id="sProv"><option value="">Aus</option><option value="anthropic">Anthropic (Claude)</option><option value="openai">OpenAI</option><option value="ollama">Ollama (lokal)</option></select></label>
-    <label class="field" data-prov="anthropic"><span>Anthropic-API-Key</span><input id="sAnt" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
-    <label class="field" data-prov="openai"><span>OpenAI-API-Key</span><input id="sOai" type="password" autocomplete="off" placeholder="sk-…"></label>
-    <label class="field" data-prov="ollama"><span>Ollama-Adresse</span><input id="sOll" placeholder="http://192.168.178.20:11434"></label>
-    <label class="field" data-prov="any"><span>Modell <em class="muted" id="sModelHint"></em></span><input id="sModel" placeholder="leer = Standard"></label>
-    <label class="field"><span>Adresse für Spieler (optional)</span><input id="sHost" placeholder="z. B. play.meine-domain.de"></label>
-    <p class="err" id="sErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="sTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
-  </form>
-  <form id="rmForm" class="set-block admin-only">
-    <h3>Externe Backups</h3>
-    <p class="muted small">Jedes Backup wird zusätzlich außerhalb dieses Servers gespeichert. Fällt die Platte aus, sind die Spielstände noch da.</p>
-    <label class="field"><span>Ziel</span>
-      <select id="rmType"><option value="">Aus</option><option value="dir">Ordner (zweite Platte, NAS)</option><option value="s3">S3-kompatibler Speicher (Backblaze B2, Wasabi, Hetzner, MinIO, AWS)</option></select></label>
-    <label class="field" data-rm="dir"><span>Ordner auf diesem Server</span><input id="rmDir" placeholder="/mnt/backup"><small>Muss eingehängt sein, bevor Backups laufen. Nicht im Panel-Datenordner.</small></label>
-    <div class="vars" data-rm="s3">
-      <label class="field full"><span>Endpunkt</span><input id="rmEp" placeholder="https://s3.eu-central-003.backblazeb2.com" autocomplete="off"></label>
-      <label class="field"><span>Bucket</span><input id="rmBucket" autocomplete="off"></label>
-      <label class="field"><span>Region <em class="muted">optional</em></span><input id="rmRegion" placeholder="wird aus dem Endpunkt erkannt" autocomplete="off"></label>
-      <label class="field"><span>Access Key / Key ID</span><input id="rmAk" autocomplete="off"></label>
-      <label class="field"><span>Secret Key / Application Key</span><input id="rmSk" type="password" autocomplete="off"></label>
-      <label class="field"><span>Unterordner <em class="muted">optional</em></span><input id="rmPrefix" placeholder="panel" autocomplete="off"></label>
-      <label class="check"><input type="checkbox" id="rmPath" checked> Pfad-Stil (für Backblaze, MinIO, Hetzner empfohlen)</label>
-    </div>
-    <label class="field" data-rm="any"><span>Automatische Backups extern behalten</span><input id="rmKeep" type="number" min="1" max="365"></label>
-    <p class="err" id="rmErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="rmTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
-  </form>
-  <form id="stmForm" class="set-block admin-only" autocomplete="off">
-    <h3>Steam-Konto</h3>
-    <p class="muted small">Nur für Spiele, deren Server Steam nicht anonym herausgibt (Arma 3, DayZ, Killing Floor …). Das Panel speichert dein Passwort nicht, SteamCMD merkt sich nur die Anmeldung. Am besten ein eigenes Konto nur für Server nehmen: wer mit demselben Konto spielt, kann beim Server-Update aus dem Spiel fliegen. Manche Spiele (z. B. DayZ) verlangen, dass das Konto das Spiel besitzt.</p>
-    <p id="stmStatus" class="small"></p>
-    <div class="vars" id="stmFields">
-      <label class="field"><span>Kontoname</span><input id="stmUser" autocomplete="off" spellcheck="false"></label>
-      <label class="field"><span>Passwort</span><input id="stmPass" type="password" autocomplete="new-password"></label>
-      <label class="field" id="stmCodeWrap" hidden><span id="stmCodeLabel">Steam-Guard-Code</span><input id="stmCode" maxlength="8" autocomplete="one-time-code" spellcheck="false"></label>
-    </div>
-    <p class="err" id="stmErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="stmLogout" hidden>Abmelden</button><button type="submit" class="btn-accent" id="stmGo">Anmelden</button></div>
-  </form>
-  <form id="licForm" class="set-block admin-only">
-    <h3>Lizenz</h3>
-    <p id="licStatus"></p>
-    <label class="field"><span>Lizenzschlüssel</span><textarea id="licKey" rows="3" placeholder="GP1.…" spellcheck="false"></textarea></label>
-    <p class="err" id="licErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
-  </form>
-  <div class="set-block admin-only">
-    <h3>Selbsttest</h3>
-    <p class="muted small">Prüft automatisch, ob die Spielvorlagen auf diesem Rechner funktionieren: herunterladen, starten, auf Bereitschaft und Spielerabfrage warten, wieder löschen. Läuft im Hintergrund, auch über Nacht.</p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="openTest">Selbsttest öffnen</button></div>
-  </div>
-  <p class="mono muted small" id="verLine"></p>
-</dialog>
-
-<dialog id="dlgTest" class="dlg wide" aria-labelledby="tsTitle">
-  <div class="dlg-head"><h2 id="tsTitle">Selbsttest</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-  <form class="ts-start" id="tsForm">
-    <label class="field"><span>Was testen?</span>
-      <select id="tsWhich">
-        <option value="offen">Alles, was noch nicht bestanden hat</option>
-        <option value="nicht-stabil">Alle, die noch nicht stabil sind</option>
-        <option value="community">Nur Community-Vorlagen (LinuxGSM)</option>
-        <option value="alle">Alle Vorlagen</option>
-      </select></label>
-    <button type="submit" class="btn-accent" id="tsGo">Selbsttest starten</button>
-  </form>
-  <p class="small muted" id="tsHint">Ein Spiel nach dem anderen, kleine Downloads zuerst. Jeder Testserver wird danach samt Dateien gelöscht. Deine eigenen Server bleiben unberührt, sollten aber nicht dieselben festen Ports belegen.</p>
-  <div class="ts-run" id="tsRun" hidden>
-    <div class="ts-now"><div><span class="mono muted small" id="tsCount"></span><h3 id="tsCur"></h3><p class="mono small" id="tsStep"></p></div>
-      <button type="button" class="btn-line" id="tsStop">Abbrechen</button></div>
-    <div class="bar"><b id="tsBar" style="width:0"></b></div>
-  </div>
-  <div class="ts-sum" id="tsSum"></div>
-  <div class="tbl-wrap">
-    <table class="tbl">
-      <thead><tr><th>Spiel</th><th>Ergebnis</th><th>Download</th><th>Start</th><th>Bereit</th><th>Abfrage</th><th class="num">Größe</th><th class="num">Dauer</th></tr></thead>
-      <tbody id="tsRows"></tbody>
-    </table>
-  </div>
-  <div class="dlg-actions"><a class="btn-line" id="tsReport" href="/api/selftest/report" download>Bericht herunterladen</a></div>
-</dialog>
-
-<dialog id="dlgManage" class="dlg wide" aria-labelledby="mgTitle">
-  <div class="dlg-head">
-    <div class="mg-title"><span class="mono muted" id="mgGame"></span><h2 id="mgTitle">Server</h2></div>
-    <div class="tabs" role="tablist" aria-label="Bereich">
-      <button type="button" role="tab" id="tabSettings" aria-selected="false" data-tab="settings" class="op-only">Einstellungen</button>
-      <button type="button" role="tab" id="tabMods" aria-selected="false" data-tab="mods" class="op-only" hidden>Mods</button>
-      <button type="button" role="tab" id="tabBackups" aria-selected="true" data-tab="backups">Backups</button>
-      <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files" class="op-only">Dateien</button>
-      <button type="button" role="tab" id="tabTasks" aria-selected="false" data-tab="tasks">Aufgaben</button>
-      <button type="button" role="tab" id="tabEvents" aria-selected="false" data-tab="events">Verlauf</button>
-    </div>
-    <button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button>
-  </div>
+  </section>
 
   <section class="mg-pane" id="paneSettings" role="tabpanel" aria-labelledby="tabSettings" hidden>
     <form id="stForm" class="st-form" novalidate>
@@ -354,7 +191,7 @@
     <button type="button" class="btn-line" id="mdMore" hidden>Mehr laden</button>
   </section>
 
-  <section class="mg-pane" id="paneBackups" role="tabpanel" aria-labelledby="tabBackups">
+  <section class="mg-pane" id="paneBackups" role="tabpanel" aria-labelledby="tabBackups" hidden>
     <div class="bk-top">
       <button type="button" class="btn-accent" id="bkNow">Backup jetzt erstellen</button>
       <p class="small muted" id="bkScope"></p>
@@ -443,30 +280,35 @@
   <section class="mg-pane" id="paneEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
     <ol class="ev-list" id="evList" aria-live="polite"></ol>
   </section>
-</dialog>
+  </section>
 
-<dialog id="dlg2FA" class="dlg small">
-  <div class="dlg-head"><h2>Zwei-Faktor</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-  <form id="tfForm" autocomplete="off">
-    <div id="tfStep1">
-      <p class="small">1. Scanne den Code mit deiner Authenticator-App.</p>
-      <div class="qr" id="tfQR" aria-label="QR-Code für die Authenticator-App"></div>
-      <p class="small muted">Scannen geht nicht? Diesen Schlüssel von Hand eintragen:</p>
-      <p class="mono secret" id="tfSecret"></p>
-      <label class="field"><span>2. Code aus der App</span><input id="tfCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456"></label>
-    </div>
-    <div id="tfStep2" hidden>
-      <p class="small"><b>Zwei-Faktor-Anmeldung ist an.</b> Bewahre diese Wiederherstellungscodes sicher auf (z. B. in Vaultwarden). Jeder Code funktioniert einmal, falls dein Handy weg ist. Sie werden nur jetzt angezeigt.</p>
-      <ol class="codes mono" id="tfList"></ol>
-    </div>
-    <p class="err" id="tfErr" role="alert" hidden></p>
-    <div class="dlg-actions" id="tfAct1"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Einschalten</button></div>
-    <div class="dlg-actions" id="tfAct2" hidden><button type="button" class="btn-line" id="tfDl">Als Datei speichern</button><button type="button" class="btn-line" id="tfCopy">Kopieren</button><button type="button" class="btn-accent" data-close>Fertig</button></div>
-  </form>
-</dialog>
+  <!-- KI -->
+  <section class="page narrow" id="pageKI" aria-labelledby="hKI" hidden>
+    <div class="page-head"><div><h1 id="hKI">KI-Assistent</h1><p class="muted">Beschreib, was du spielen willst. Die KI wählt Spiel, Einstellungen und Arbeitsspeicher, du gibst den Plan frei.</p></div></div>
+      <section class="core-card" id="ki" data-state="idle">
+        <div class="core-top"><h2>KI-Kern</h2><span class="core-state mono"><i></i><span id="coreState">Bereit</span></span></div>
+        <canvas id="core" aria-hidden="true"></canvas>
+        <div class="core-body" id="coreBody">
+          <div class="chat" id="chat"></div>
+          <div class="plan" id="plan" hidden></div>
+          <div class="chips" id="chips">
+            <button type="button">Minecraft mit Create-Mods für 8 Freunde</button>
+            <button type="button">Valheim-Server mit Crossplay für 5 Leute</button>
+            <button type="button">Palworld für 4 Spieler</button>
+          </div>
+          <form class="ask" id="askForm">
+            <label class="sr" for="askInput">Nachricht an den KI-Kern</label>
+            <input id="askInput" autocomplete="off" placeholder="Beschreibe deinen Server …">
+            <button type="submit" aria-label="Senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+          </form>
+        </div>
+      </section>
+  </section>
 
-<dialog id="dlgUsers" class="dlg wide" aria-labelledby="usTitle">
-  <div class="dlg-head"><h2 id="usTitle">Benutzer</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <!-- Benutzer -->
+  <section class="page" id="pageUsers" aria-labelledby="hUsers" hidden>
+    <div class="page-head"><div><h1 id="hUsers">Benutzer</h1>
+      <p class="muted"><b>Zuschauer</b> sehen Server, Konsole und Verlauf. <b>Betreiber</b> starten und stoppen Server, senden Befehle und verwalten Backups, Dateien, Einstellungen und Mods. <b>Admins</b> dürfen alles. Zuschauer und Betreiber lassen sich auf einzelne Server beschränken.</p></div></div>
   <div class="tbl-wrap">
     <table class="tbl">
       <thead><tr><th>Name</th><th>Rolle</th><th>Server</th><th>Zwei-Faktor</th><th>Zuletzt angemeldet</th><th><span class="sr">Aktionen</span></th></tr></thead>
@@ -493,10 +335,11 @@
     <p class="err" id="usErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="usCancel" hidden>Abbrechen</button><button type="submit" class="btn-accent" id="usSave">Anlegen</button></div>
   </form>
-</dialog>
+  </section>
 
-<dialog id="dlgAudit" class="dlg wide" aria-labelledby="auTitle">
-  <div class="dlg-head"><h2 id="auTitle">Protokoll</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <!-- Protokoll -->
+  <section class="page" id="pageAudit" aria-labelledby="hAudit" hidden>
+    <div class="page-head"><div><h1 id="hAudit">Protokoll</h1><p class="muted">Wer hat wann was gemacht: Anmeldungen, Befehle, Änderungen.</p></div></div>
   <form class="au-bar" id="auForm" role="search">
     <label class="field"><span>Suchen</span><input id="auQ" type="search" placeholder="Aktion, Server, Befehl, IP …" autocomplete="off"></label>
     <label class="field"><span>Benutzer</span><select id="auUser"><option value="">Alle</option></select></label>
@@ -510,6 +353,226 @@
     </table>
   </div>
   <p class="mono muted small" id="auCount"></p>
+  </section>
+
+  <!-- Selbsttest -->
+  <section class="page" id="pageTest" aria-labelledby="hTest" hidden>
+    <div class="page-head"><div><h1 id="hTest">Selbsttest</h1><p class="muted">Prüft, ob die Spielvorlagen auf diesem Rechner funktionieren: herunterladen, starten, auf Bereitschaft und Spielerabfrage warten, wieder löschen. Läuft im Hintergrund weiter, auch wenn du das Panel schließt.</p></div></div>
+  <form class="ts-start" id="tsForm">
+    <label class="field"><span>Was testen?</span>
+      <select id="tsWhich">
+        <option value="offen">Alles, was noch nicht bestanden hat</option>
+        <option value="nicht-stabil">Alle, die noch nicht stabil sind</option>
+        <option value="community">Nur Community-Vorlagen (LinuxGSM)</option>
+        <option value="alle">Alle Vorlagen</option>
+      </select></label>
+    <button type="submit" class="btn-accent" id="tsGo">Selbsttest starten</button>
+  </form>
+  <p class="small muted" id="tsHint">Ein Spiel nach dem anderen, kleine Downloads zuerst. Jeder Testserver wird danach samt Dateien gelöscht. Deine eigenen Server bleiben unberührt, sollten aber nicht dieselben festen Ports belegen.</p>
+  <div class="ts-run" id="tsRun" hidden>
+    <div class="ts-now"><div><span class="mono muted small" id="tsCount"></span><h3 id="tsCur"></h3><p class="mono small" id="tsStep"></p></div>
+      <button type="button" class="btn-line" id="tsStop">Abbrechen</button></div>
+    <div class="bar"><b id="tsBar" style="width:0"></b></div>
+  </div>
+  <div class="ts-sum" id="tsSum"></div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Spiel</th><th>Ergebnis</th><th>Download</th><th>Start</th><th>Bereit</th><th>Abfrage</th><th class="num">Größe</th><th class="num">Dauer</th></tr></thead>
+      <tbody id="tsRows"></tbody>
+    </table>
+  </div>
+  <div class="page-foot"><a class="btn-line" id="tsReport" href="/api/selftest/report" download>Bericht herunterladen</a></div>
+  </section>
+
+  <!-- Einstellungen -->
+  <section class="page" id="pageSettings" aria-labelledby="hSettings" hidden>
+    <div class="page-head"><div><h1 id="hSettings">Einstellungen</h1></div></div>
+    <div class="set-layout">
+      <nav class="subnav admin-only" id="setNav" aria-label="Einstellungen">
+        <a href="#/einstellungen/konto" data-sec="konto">Mein Konto</a>
+        <a href="#/einstellungen/https" data-sec="https">HTTPS</a>
+        <a href="#/einstellungen/ki" data-sec="ki">Allgemein &amp; KI</a>
+        <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
+        <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
+        <a href="#/einstellungen/lizenz" data-sec="lizenz">Lizenz</a>
+      </nav>
+      <div class="set-body">
+  <div class="set-block" id="meBlock" data-sec="konto">
+    <h2>Mein Konto</h2>
+    <p id="meLine" class="small"></p>
+    <form id="pwForm" autocomplete="on">
+      <input type="text" name="username" id="pwUser" autocomplete="username" hidden>
+      <div class="vars">
+        <label class="field full"><span>Bisheriges Passwort</span><input id="pwOld" type="password" autocomplete="current-password" required></label>
+        <label class="field"><span>Neues Passwort</span><input id="pwNew" type="password" autocomplete="new-password" minlength="10" required></label>
+        <label class="field"><span>Wiederholen</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="10" required></label>
+      </div>
+      <p class="err" id="pwErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="submit" class="btn-line">Passwort ändern</button></div>
+    </form>
+    <div class="sec2">
+      <h4>Zwei-Faktor-Anmeldung</h4>
+      <p class="small muted">Zusätzlich zum Passwort fragt das Panel nach einem Code aus einer Authenticator-App (z. B. Aegis, 2FAS, Google Authenticator, Bitwarden). Wer dein Passwort kennt, kommt so trotzdem nicht hinein.</p>
+      <p id="tfStatus" class="small"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn-line" id="tfOff" hidden>Ausschalten</button>
+        <button type="button" class="btn-line" id="tfCodes" hidden>Neue Wiederherstellungscodes</button>
+        <button type="button" class="btn-accent" id="tfOn">Einrichten</button>
+      </div>
+    </div>
+    <div class="sec2">
+      <h4>Angemeldete Geräte</h4>
+      <p class="small muted" id="sessLine"></p>
+      <div class="dlg-actions"><button type="button" class="btn-line" id="logoutAll">Auf allen anderen Geräten abmelden</button></div>
+    </div>
+  </div>
+  <form id="tlsForm" class="set-block admin-only" data-sec="https" autocomplete="off">
+    <h2>HTTPS</h2>
+    <p class="muted small">Verschlüsselt die Verbindung zum Panel, damit Passwörter nicht mitgelesen werden können. HTTP und HTTPS laufen auf demselben Port; ist HTTPS an, wird http:// automatisch umgeleitet.</p>
+    <p id="tlsStatus" class="small"></p>
+    <label class="field"><span>Zertifikat</span>
+      <select id="tlsMode">
+        <option value="">Aus – nur HTTP</option>
+        <option value="self">Selbst signiert – für zu Hause und im Heimnetz</option>
+        <option value="acme">Let's Encrypt – kostenlos, braucht eine eigene Domain</option>
+        <option value="custom">Eigenes Zertifikat einfügen</option>
+      </select></label>
+    <p class="note" data-tls="self">Der Browser warnt beim ersten Aufruf, weil niemand das Zertifikat beglaubigt. Einmal „Trotzdem fortfahren“ wählen; die Verbindung ist danach trotzdem verschlüsselt.</p>
+    <div class="vars" data-tls="acme">
+      <label class="field"><span>Domain</span><input id="tlsDomain" placeholder="panel.meine-domain.de" spellcheck="false"></label>
+      <label class="field"><span>E-Mail <em class="muted">optional</em></span><input id="tlsEmail" type="email" placeholder="für Ablauf-Warnungen"></label>
+      <p class="note full">Die Domain muss auf deine öffentliche IP zeigen. Im Router Port 80 (für die Prüfung) und Port 443 auf Port <span class="mono" id="tlsPort">8420</span> dieses Rechners weiterleiten – dann ist das Panel unter https://deine-domain erreichbar. Das Zertifikat wird alle 60 Tage von selbst erneuert.</p>
+    </div>
+    <div class="vars" data-tls="custom">
+      <label class="field full"><span>Zertifikat (PEM, mit Zwischenzertifikaten)</span><textarea id="tlsCert" rows="4" placeholder="-----BEGIN CERTIFICATE-----" spellcheck="false"></textarea></label>
+      <label class="field full"><span>Privater Schlüssel (PEM)</span><textarea id="tlsKey" rows="3" placeholder="-----BEGIN PRIVATE KEY----- (leer lassen = bisherigen behalten)" spellcheck="false"></textarea></label>
+    </div>
+    <p class="note">Ausgesperrt? Auf dem Server selbst geht http://localhost:8420 immer, z. B. per SSH-Tunnel. Oder in /etc/systemd/system/gamepanel.service die Zeile <span class="mono">Environment=GP_NO_TLS=1</span> ergänzen und den Dienst neu starten.</p>
+    <p class="err" id="tlsErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="tlsRenew" hidden>Zertifikat jetzt holen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="aiForm" class="set-block admin-only" data-sec="ki">
+    <h2>Allgemein</h2>
+    <label class="field"><span>Adresse für Spieler (optional)</span><input id="sHost" placeholder="z. B. play.meine-domain.de"><small>Wird bei jedem Server als Verbindungsadresse angezeigt. Leer = Adresse, unter der du das Panel aufrufst.</small></label>
+    <h3 class="sub">KI-Assistent</h3>
+    <p class="muted small">Du nutzt deinen eigenen API-Key. Die Kosten rechnet dein Anbieter direkt mit dir ab. Ollama läuft kostenlos auf deinem eigenen Rechner.</p>
+    <label class="field"><span>Anbieter</span>
+      <select id="sProv"><option value="">Aus</option><option value="anthropic">Anthropic (Claude)</option><option value="openai">OpenAI</option><option value="ollama">Ollama (lokal)</option></select></label>
+    <label class="field" data-prov="anthropic"><span>Anthropic-API-Key</span><input id="sAnt" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
+    <label class="field" data-prov="openai"><span>OpenAI-API-Key</span><input id="sOai" type="password" autocomplete="off" placeholder="sk-…"></label>
+    <label class="field" data-prov="ollama"><span>Ollama-Adresse</span><input id="sOll" placeholder="http://192.168.178.20:11434"></label>
+    <label class="field" data-prov="any"><span>Modell <em class="muted" id="sModelHint"></em></span><input id="sModel" placeholder="leer = Standard"></label>
+    <p class="err" id="sErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="sTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="rmForm" class="set-block admin-only" data-sec="backups">
+    <h2>Externe Backups</h2>
+    <p class="muted small">Jedes Backup wird zusätzlich außerhalb dieses Servers gespeichert. Fällt die Platte aus, sind die Spielstände noch da.</p>
+    <label class="field"><span>Ziel</span>
+      <select id="rmType"><option value="">Aus</option><option value="dir">Ordner (zweite Platte, NAS)</option><option value="s3">S3-kompatibler Speicher (Backblaze B2, Wasabi, Hetzner, MinIO, AWS)</option></select></label>
+    <label class="field" data-rm="dir"><span>Ordner auf diesem Server</span><input id="rmDir" placeholder="/mnt/backup"><small>Muss eingehängt sein, bevor Backups laufen. Nicht im Panel-Datenordner.</small></label>
+    <div class="vars" data-rm="s3">
+      <label class="field full"><span>Endpunkt</span><input id="rmEp" placeholder="https://s3.eu-central-003.backblazeb2.com" autocomplete="off"></label>
+      <label class="field"><span>Bucket</span><input id="rmBucket" autocomplete="off"></label>
+      <label class="field"><span>Region <em class="muted">optional</em></span><input id="rmRegion" placeholder="wird aus dem Endpunkt erkannt" autocomplete="off"></label>
+      <label class="field"><span>Access Key / Key ID</span><input id="rmAk" autocomplete="off"></label>
+      <label class="field"><span>Secret Key / Application Key</span><input id="rmSk" type="password" autocomplete="off"></label>
+      <label class="field"><span>Unterordner <em class="muted">optional</em></span><input id="rmPrefix" placeholder="panel" autocomplete="off"></label>
+      <label class="check"><input type="checkbox" id="rmPath" checked> Pfad-Stil (für Backblaze, MinIO, Hetzner empfohlen)</label>
+    </div>
+    <label class="field" data-rm="any"><span>Automatische Backups extern behalten</span><input id="rmKeep" type="number" min="1" max="365"></label>
+    <p class="err" id="rmErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="rmTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="stmForm" class="set-block admin-only" data-sec="steam" autocomplete="off">
+    <h2>Steam-Konto</h2>
+    <p class="muted small">Nur für Spiele, deren Server Steam nicht anonym herausgibt (Arma 3, DayZ, Killing Floor …). Das Panel speichert dein Passwort nicht, SteamCMD merkt sich nur die Anmeldung. Am besten ein eigenes Konto nur für Server nehmen: wer mit demselben Konto spielt, kann beim Server-Update aus dem Spiel fliegen. Manche Spiele (z. B. DayZ) verlangen, dass das Konto das Spiel besitzt.</p>
+    <p id="stmStatus" class="small"></p>
+    <div class="vars" id="stmFields">
+      <label class="field"><span>Kontoname</span><input id="stmUser" autocomplete="off" spellcheck="false"></label>
+      <label class="field"><span>Passwort</span><input id="stmPass" type="password" autocomplete="new-password"></label>
+      <label class="field" id="stmCodeWrap" hidden><span id="stmCodeLabel">Steam-Guard-Code</span><input id="stmCode" maxlength="8" autocomplete="one-time-code" spellcheck="false"></label>
+    </div>
+    <p class="err" id="stmErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="stmLogout" hidden>Abmelden</button><button type="submit" class="btn-accent" id="stmGo">Anmelden</button></div>
+  </form>
+  <form id="licForm" class="set-block admin-only" data-sec="lizenz">
+    <h2>Lizenz</h2>
+    <p id="licStatus"></p>
+    <label class="field"><span>Lizenzschlüssel</span><textarea id="licKey" rows="3" placeholder="GP1.…" spellcheck="false"></textarea></label>
+    <p class="err" id="licErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
+  </form>
+
+        <p class="muted small" id="verLine"></p>
+      </div>
+    </div>
+  </section>
+</div>
+</div>
+
+<!-- ============ Dialoge ============ -->
+<dialog id="dlgCreate" class="dlg">
+  <form id="createForm" method="dialog">
+    <div class="dlg-head"><h2 id="createTitle">Server anlegen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <div class="field picker">
+      <span>Spiel <b class="mono" id="cCount"></b></span>
+      <label class="sr" for="cSearch">Spiel suchen</label>
+      <input id="cSearch" type="search" placeholder="Spiel suchen, z. B. ark, rust, counter" autocomplete="off">
+      <label class="sr" for="cTpl">Spiel auswählen</label>
+      <select id="cTpl" size="7" required></select>
+    </div>
+    <p class="note" id="cNotes" hidden></p>
+    <label class="field"><span>Name im Panel</span><input id="cName" maxlength="40" required></label>
+    <div class="field"><span>Arbeitsspeicher <b id="cMemV" class="mono"></b></span><input id="cMem" type="range" step="256"></div>
+    <div id="cVars" class="vars"></div>
+    <label class="check"><input type="checkbox" id="cStart" checked> Nach dem Anlegen direkt starten</label>
+    <p class="err" id="cErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="cSubmit">Anlegen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgEdit" class="dlg">
+  <form id="editForm" method="dialog">
+    <div class="dlg-head"><h2>Server bearbeiten</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <label class="field"><span>Name</span><input id="eName" maxlength="40" required></label>
+    <div class="field"><span>Arbeitsspeicher <b id="eMemV" class="mono"></b></span><input id="eMem" type="range" step="256"></div>
+    <div id="eVars" class="vars" hidden></div>
+    <p class="note">Spieleinstellungen wie Servername, Passwort oder Schwierigkeit findest du unter <button type="button" class="linkbtn" id="eToSettings">Server verwalten → Einstellungen</button>.</p>
+    <label class="check" id="eUpdWrap"><input type="checkbox" id="eUpd"> Bei jedem Start per SteamCMD aktualisieren</label>
+    <p class="note">Beim Speichern wird der Container mit den neuen Werten neu angelegt. Spielstände bleiben erhalten.</p>
+    <p class="err" id="eErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgDelete" class="dlg small">
+  <form id="deleteForm" method="dialog">
+    <div class="dlg-head"><h2>Server löschen?</h2></div>
+    <p id="delText"></p>
+    <label class="check"><input type="checkbox" id="delWipe"> Auch alle Spieldaten und Spielstände löschen</label>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-danger">Löschen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg2FA" class="dlg small">
+  <div class="dlg-head"><h2>Zwei-Faktor</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <form id="tfForm" autocomplete="off">
+    <div id="tfStep1">
+      <p class="small">1. Scanne den Code mit deiner Authenticator-App.</p>
+      <div class="qr" id="tfQR" aria-label="QR-Code für die Authenticator-App"></div>
+      <p class="small muted">Scannen geht nicht? Diesen Schlüssel von Hand eintragen:</p>
+      <p class="mono secret" id="tfSecret"></p>
+      <label class="field"><span>2. Code aus der App</span><input id="tfCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456"></label>
+    </div>
+    <div id="tfStep2" hidden>
+      <p class="small"><b>Zwei-Faktor-Anmeldung ist an.</b> Bewahre diese Wiederherstellungscodes sicher auf (z. B. in Vaultwarden). Jeder Code funktioniert einmal, falls dein Handy weg ist. Sie werden nur jetzt angezeigt.</p>
+      <ol class="codes mono" id="tfList"></ol>
+    </div>
+    <p class="err" id="tfErr" role="alert" hidden></p>
+    <div class="dlg-actions" id="tfAct1"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Einschalten</button></div>
+    <div class="dlg-actions" id="tfAct2" hidden><button type="button" class="btn-line" id="tfDl">Als Datei speichern</button><button type="button" class="btn-line" id="tfCopy">Kopieren</button><button type="button" class="btn-accent" data-close>Fertig</button></div>
+  </form>
 </dialog>
 
 <dialog id="dlgConfirm" class="dlg small">

@@ -264,7 +264,7 @@
       L.hover = pick(e); cv.style.cursor = L.hover ? 'pointer' : 'grab';
     });
     cv.addEventListener('pointerup', e => {
-      if (down && !down.moved) { const id = pick(e); if (id) select(id); else if (S.sel) deselect(); }
+      if (down && !down.moved) { const id = pick(e); if (id) select(id); }
       down = null; L.drag = false; cv.style.cursor = 'grab';
     });
     cv.addEventListener('pointercancel', () => { down = null; L.drag = false; });
@@ -272,7 +272,7 @@
     cv.addEventListener('wheel', e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); L.tr = clamp(L.tr + e.deltaY * .03, 6, 60); }, { passive: false });
   }
   function tickLand(t, dt) {
-    if (!L.renderer) return;
+    if (!L.renderer || R.page !== 'home') return;
     const k = motion ? 1 - Math.exp(-dt * 3) : 1;
     if (motion && !L.drag && !S.sel) L.theta += dt * .06;
     L.r += (L.tr - L.r) * k; L.target.lerp(L.tt, k);
@@ -321,68 +321,53 @@
     L.glow.intensity = .5 + ((busy || KI.core && KI.core.state === 'executing') ? (motion ? .7 + .4 * Math.sin(t * 8) : 1) : 0);
     L.renderer.render(L.scene, L.cam);
   }
-  function select(id) {
-    const s = byId(id); if (!s) return;
-    S.sel = id;
-    const b = L.blocks.get(id);
-    if (b && L.tt) { L.tt.set(b.tx, 0, b.tz); L.tr = Math.max(14, L.base * .75); }
-    renderDetail(); $('#detail').classList.add('open');
-    $$('.mod').forEach(m => m.classList.toggle('sel', m.dataset.id === id));
-    if (S.consoleId !== id) openConsole(id);
-  }
-  function deselect() {
-    S.sel = null; if (L.tt) L.tt.set(0, 0, 0); L.tr = L.base;
-    $('#detail').classList.remove('open');
-    $$('.mod.sel').forEach(m => m.classList.remove('sel'));
-  }
+  function select(id, tab) { if (byId(id)) go('#/server/' + encodeURIComponent(id) + (tab && tab !== 'console' ? '/' + tab : '')); }
   $('#zIn').onclick = () => { L.tr = clamp(L.tr - 3, 6, 60); };
   $('#zOut').onclick = () => { L.tr = clamp(L.tr + 3, 6, 60); };
-  $('#zReset').onclick = deselect;
 
-  /* ---------------- Detail ---------------- */
-  function renderDetail() {
-    const s = byId(S.sel); if (!s) { deselect(); return; }
+  /* ---------------- Server-Seite: Kopf + Infos ---------------- */
+  function renderServerPage() {
+    const s = byId(R.id);
+    if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
     const on = isOn(s), busy = !!S.pending[s.id] || s.status === 'preparing';
-    const html = `<div class="mono muted">${esc(s.template_name)} · ${esc(s.category)}</div><h3>${esc(s.name)}</h3>
-      <span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
-      ${s.message ? `<p class="msg-line ${s.status === 'error' ? 'bad' : ''}">${esc(s.message)}</p>` : ''}
-      <dl class="kv">
-        <div><dt>Adresse</dt><dd>${esc(addr())}:${s.ports && s.ports[0] ? s.ports[0].host : '–'}</dd></div>
-        <div><dt>Ports</dt><dd>${esc(portList(s))}</dd></div>
-        <div><dt>RAM</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' / ' : ''}${gb(s.memory_mb)} GB</dd></div>
+    const set = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h = html; } };
+    $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '');
+    $('#svName').textContent = s.name;
+    const port = s.ports && s.ports[0] ? s.ports[0].host : '';
+    set($('#svMeta'), `<span class="pill ${esc(s.status)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
+      ${port ? `<button type="button" class="addr" data-copy="${esc(addr() + ':' + port)}" title="Adresse kopieren">${esc(addr())}:${port}</button>` : ''}
+      ${hasPl(s) ? `<span>${s.players} / ${s.max_players} Spieler</span>` : ''}
+      ${s.status === 'running' ? `<span>CPU ${Math.round(s.cpu)} %</span><span>RAM ${gb(s.mem_mb)} / ${gb(s.memory_mb)} GB</span>` : `<span>RAM ${gb(s.memory_mb)} GB</span>`}`);
+    const pw = $('[data-sv="power"]'); pw.textContent = on ? 'Stoppen' : 'Starten'; pw.disabled = busy;
+    pw.classList.toggle('btn-accent', !on); pw.classList.toggle('btn-line', on);
+    $('[data-sv="restart"]').disabled = !on || busy;
+    const m = $('#svMsg'); m.hidden = !s.message; m.textContent = s.message || ''; m.classList.toggle('bad', s.status === 'error');
+    const tpl = S.tplById[s.template];
+    $('#tabMods').hidden = !(tpl && tpl.mods);
+    set($('#svInfo'), `<h2>Details</h2><dl class="kv one">
+        <div><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}</dd></div>
+        <div><dt>Ports</dt><dd>${esc(portList(s)) || '–'}</dd></div>
+        <div><dt>Arbeitsspeicher</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' von ' : ''}${gb(s.memory_mb)} GB</dd></div>
         <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' : '–'}</dd></div>
-        <div><dt>Spieler</dt><dd>${hasPl(s) ? s.players + ' / ' + s.max_players : '–'}</dd></div>
-        <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' · KI' : ''}</dd></div>
-        <div><dt>ID</dt><dd>${esc(s.id)}</dd></div>
-      </dl>
-      ${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}
-      <div class="acts">
-        <button class="btn-accent op-only" type="button" data-d="power" ${busy ? 'disabled' : ''}>${on ? 'Stoppen' : 'Starten'}</button>
-        <button class="btn-line op-only" type="button" data-d="restart" ${!on || busy ? 'disabled' : ''}>Neustart</button>
-        <button class="btn-line op-only" type="button" data-d="settings">Einstellungen</button>
-        <button class="btn-line" type="button" data-d="backups">Backups</button>
-        <button class="btn-line op-only" type="button" data-d="files">Dateien</button>
-        <button class="btn-line" type="button" data-d="tasks">Aufgaben</button>
-        <button class="btn-line" type="button" data-d="events">Verlauf</button>
-        <button class="btn-line op-only" type="button" data-d="edit">Bearbeiten</button>
-        <button class="btn-line admin-only" type="button" data-d="delete">Löschen</button>
-        <button class="btn-line" type="button" data-d="back">Zurück</button>
-      </div>`;
-    const d = $('#detail');
-    if (d._h !== html) { d.innerHTML = html; d._h = html; }
+        <div><dt>Spieler</dt><dd>${hasPl(s) ? s.players + ' von ' + s.max_players : '–'}</dd></div>
+        <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
+        <div><dt>ID</dt><dd class="mono">${esc(s.id)}</dd></div>
+      </dl>${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
   }
-  $('#detail').addEventListener('click', e => {
-    const b = e.target.closest('[data-d]'); if (!b) return;
-    const s = byId(S.sel); if (!s) return;
-    const a = b.dataset.d;
-    if (a === 'power') togglePower(s);
+  $('#svActs').addEventListener('click', e => {
+    const b = e.target.closest('[data-sv]'); if (!b) return;
+    const s = byId(R.id); if (!s) return;
+    const a = b.dataset.sv;
+    $('#svMore').open = false;
+    if (a === 'settings-tab') select(s.id, 'settings');
+    else if (a === 'power') togglePower(s);
     else if (a === 'restart') act(s, 'restart', 'Neustart ausgelöst');
     else if (a === 'edit') openEdit(s);
-    else if (a === 'backups') openManage(s.id, 'backups');
-    else if (a === 'files') openManage(s.id, 'files');
-    else if (a === 'tasks' || a === 'events' || a === 'settings') openManage(s.id, a);
     else if (a === 'delete') openDelete(s);
-    else deselect();
+  });
+  document.addEventListener('click', async e => {
+    const c = e.target.closest('[data-copy]'); if (!c) return;
+    try { await navigator.clipboard.writeText(c.dataset.copy); toast('Adresse kopiert: ' + c.dataset.copy, 'ok'); } catch (err) { toast(c.dataset.copy); }
   });
 
   /* ---------------- Aktionen ---------------- */
@@ -396,7 +381,7 @@
     if (!can('operator')) return;
     if (S.pending[s.id] || s.status === 'preparing') return;
     if (isOn(s)) act(s, 'stop', s.name + ' wird gestoppt');
-    else { act(s, 'start', s.name + ' wird gestartet'); if (S.consoleId !== s.id) openConsole(s.id); }
+    else act(s, 'start', s.name + ' wird gestartet');
   }
 
   /* ---------------- Karten ---------------- */
@@ -418,18 +403,25 @@
     return `<div class="mod-top"><span class="mono game">${s.created_by === 'selbsttest' ? 'Selbsttest · ' : ''}${esc(s.template_name)} · ${esc(portList(s))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
       <h3>${esc(s.name)}</h3>${body}`;
   }
+  const SF = { q: '', f: '' };
+  const matches = s => (!SF.q || (s.name + ' ' + s.template_name).toLowerCase().includes(SF.q)) && (!SF.f || (SF.f === 'on' ? isOn(s) : !isOn(s)));
   function renderCards() {
     const box = $('#mods');
-    if (!S.servers.length) {
+    const list = S.servers.filter(matches);
+    if (S.servers.length && !list.length) {
+      $$('.mod', box).forEach(el => el.remove());
+      if (!$('.empty', box)) box.insertAdjacentHTML('beforeend', '<div class="empty"></div>');
+      $('.empty', box).textContent = 'Kein Server passt zur Suche.';
+    } else if (!S.servers.length) {
       box.innerHTML = '<div class="empty">' + (can('admin') ? 'Hier erscheinen deine Gameserver. Leg oben rechts den ersten an.' : 'Hier erscheinen die Server, die dir freigegeben sind.') + '</div>';
     } else {
       const empty = $('.empty', box); if (empty) empty.remove();
       const seen = new Set();
-      S.servers.forEach((s, i) => {
+      list.forEach((s, i) => {
         seen.add(s.id);
         let el = box.querySelector(`.mod[data-id="${s.id}"]`);
         if (!el) { el = document.createElement('article'); el.dataset.id = s.id; el.style.animation = 'rise .5s both'; box.appendChild(el); }
-        const cls = `mod ${s.status}${S.sel === s.id ? ' sel' : ''}`;
+        const cls = `mod ${s.status}`;
         if (el.className !== cls) el.className = cls;
         const html = cardHTML(s, i);
         if (el._h !== html) { el.innerHTML = html; el._h = html; }
@@ -437,15 +429,38 @@
       $$('.mod', box).forEach(el => { if (!seen.has(el.dataset.id)) el.remove(); });
     }
     const run = S.servers.filter(s => s.status === 'running').length;
-    $('#modCount').textContent = S.servers.length + ' Server · ' + run + ' aktiv';
+    $('#modCount').textContent = S.servers.length === 1 ? '1 Server' + (run ? ', läuft' : '') : S.servers.length + ' Server, ' + run + ' davon laufen';
+    $('#navCount').textContent = S.servers.length || '';
   }
+  function renderHomeList() {
+    const box = $('#homeList');
+    const html = S.servers.length ? S.servers.slice(0, 8).map(s => {
+      const on = isOn(s), busy = !!S.pending[s.id] || s.status === 'preparing';
+      return `<li data-id="${esc(s.id)}"><a class="row" href="#/server/${encodeURIComponent(s.id)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>
+        <span class="nm"><b>${esc(s.name)}</b><small>${esc(s.template_name)}</small></span>
+        <span class="rt">${hasPl(s) ? s.players + ' / ' + s.max_players + ' Spieler' : esc(statusLabel(s))}</span></a>
+        <button class="power op-only" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></li>`;
+    }).join('') + (S.servers.length > 8 ? `<li class="more"><a href="#/server">und ${S.servers.length - 8} weitere</a></li>` : '')
+      : `<li class="none">${can('admin') ? 'Noch kein Server angelegt.' : 'Dir ist noch kein Server freigegeben.'}</li>`;
+    if (box._h !== html) { box.innerHTML = html; box._h = html; }
+    const run = S.servers.filter(x => x.status === 'running').length;
+    $('#homeSub').textContent = S.servers.length ? `${run} von ${S.servers.length} Servern laufen` : 'Willkommen im Panel';
+  }
+  $('#homeList').addEventListener('click', e => {
+    const p = e.target.closest('.power'); if (!p) return;
+    e.preventDefault(); const s = byId(p.closest('li').dataset.id); if (s) togglePower(s);
+  });
+  $('#srvSearch').addEventListener('input', e => { SF.q = e.target.value.trim().toLowerCase(); renderCards(); });
+  $('#srvFilter').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    SF.f = b.dataset.f; $$('#srvFilter button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderCards();
+  });
   const mods = $('#mods');
   mods.addEventListener('click', e => {
     const c = e.target.closest('.mod'); if (!c) return;
     const s = byId(c.dataset.id); if (!s) return;
     if (e.target.closest('.power')) { togglePower(s); return; }
     select(s.id);
-    $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' });
   });
   mods.addEventListener('pointermove', e => {
     if (!motion || e.pointerType !== 'mouse') return;
@@ -456,7 +471,7 @@
   });
   mods.addEventListener('pointerout', e => { const c = e.target.closest('.mod'); if (c && !c.contains(e.relatedTarget)) c.style.transform = ''; });
 
-  function renderAll() { renderCards(); syncLand(); if (S.sel) renderDetail(); trackAI(); }
+  function renderAll() { renderCards(); renderHomeList(); syncLand(); if (R.page === 'server') renderServerPage(); trackAI(); }
 
   /* ---------------- Konsole ---------------- */
   function addLine(text, cls) {
@@ -471,13 +486,13 @@
     while (box.children.length > 600) box.firstChild.remove();
     if (nearBottom) box.scrollTop = box.scrollHeight;
   }
-  function closeConsole() { if (S.es) { S.es.close(); S.es = null; } $('#conLive').hidden = true; }
+  function closeConsole() { if (S.es) { S.es.close(); S.es = null; } $('#conLive').hidden = true; S.consoleId = null; }
   function openConsole(id) {
     closeConsole();
     const s = byId(id); if (!s) return;
     S.consoleId = id;
-    $('#conName').textContent = 'Konsole · ' + s.name;
-    $('#lines').innerHTML = '';
+    $('#conName').textContent = 'Konsole';
+    $('#lines').innerHTML = isOn(s) ? '' : '<div class="dim">Der Server ist gestoppt. Nach dem Start erscheint hier seine Ausgabe.</div>';
     $('#cmdInput').disabled = false;
     $('#cmdInput').placeholder = s.console === 'exec' ? 'Befehl senden (z. B. list)' : 'Befehl senden';
     connectConsole(id);
@@ -493,7 +508,7 @@
     function retry() {
       if (S.es !== es) return;
       S.es = null;
-      setTimeout(() => { const s = byId(id); if (S.consoleId === id && !S.es && s && isOn(s)) connectConsole(id); }, 4000);
+      setTimeout(() => { const s = byId(id); if (S.consoleId === id && !S.es && s && isOn(s)) connectConsole(id); else if (S.consoleId === id && !S.es) S.reconnect = id; }, 4000);
     }
   }
   $('#cmdForm').addEventListener('submit', async e => {
@@ -652,7 +667,7 @@
     try { await api('PATCH', '/api/servers/' + editId, body); $('#dlgEdit').close(); toast('Gespeichert. Der Container wird neu angelegt.', 'ok'); await loadServers(); }
     catch (err) { showErr($('#eErr'), err.message); }
   });
-  $('#eToSettings').addEventListener('click', () => { const id = editId; $('#dlgEdit').close(); openManage(id, 'settings'); });
+  $('#eToSettings').addEventListener('click', () => { const id = editId; $('#dlgEdit').close(); select(id, 'settings'); });
   function openDelete(s) {
     delId = s.id; $('#delWipe').checked = false;
     $('#delText').textContent = `„${s.name}“ wird gestoppt und aus dem Panel entfernt.`;
@@ -664,41 +679,43 @@
     try {
       await api('DELETE', '/api/servers/' + delId + ($('#delWipe').checked ? '?wipe=1' : ''));
       $('#dlgDelete').close(); toast((s ? s.name : 'Server') + ' gelöscht');
-      if (S.sel === delId) deselect();
-      if (S.consoleId === delId) { closeConsole(); S.consoleId = null; $('#lines').innerHTML = ''; $('#conName').textContent = 'Konsole'; $('#cmdInput').disabled = true; }
+      if (S.consoleId === delId) closeConsole();
+      if (R.page === 'server' && R.id === delId) go('#/server');
       await loadServers();
     } catch (err) { toast(err.message, 'bad'); }
   });
 
   /* ---------------- Einstellungen + Lizenz ---------------- */
-  async function openSettings(focus) {
-    loadMe();
-    if (!can('admin')) {
-      $('#verLine').textContent = 'Version ' + S.version;
-      $('#dlgSettings').showModal();
-      if (typeof focus === 'string') setTimeout(() => { const el = $(focus); if (el) el.scrollIntoView({ block: 'center' }); }, 60);
-      return;
+  function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
+  const SEC = ['konto', 'https', 'ki', 'backups', 'steam', 'lizenz'];
+  async function enterSettings(sec) {
+    if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
+    $$('#pageSettings [data-sec]').forEach(el => {
+      if (el.tagName === 'A') el.setAttribute('aria-current', el.dataset.sec === sec ? 'page' : 'false');
+      else el.hidden = el.dataset.sec !== sec;
+    });
+    $('#verLine').textContent = 'Version ' + S.version;
+    clearTimeout(stmTimer);
+    if (sec === 'konto') return loadMe();
+    if (sec === 'https') return loadTLS();
+    if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; return loadSteam(); }
+    if (sec === 'lizenz') { showErr($('#licErr')); $('#licKey').value = ''; return renderLicense(); }
+    if (sec === 'backups') {
+      try {
+        const rc = await api('GET', '/api/remote');
+        $('#rmType').value = rc.type || ''; $('#rmDir').value = rc.dir || ''; $('#rmEp').value = rc.endpoint || '';
+        $('#rmBucket').value = rc.bucket || ''; $('#rmRegion').value = rc.region || ''; $('#rmAk').value = rc.access_key || '';
+        $('#rmSk').value = rc.secret_key || ''; $('#rmPrefix').value = rc.prefix || ''; $('#rmPath').checked = rc.type ? !!rc.path_style : true;
+        $('#rmKeep').value = rc.keep || 14;
+      } catch (e) { /* egal */ }
+      rmFields(); showErr($('#rmErr')); return;
     }
-    loadTLS();
     try { const r = await api('GET', '/api/settings'); S.settings = r.settings; S.defaultModel = r.default_model; } catch (e) { toast(e.message, 'bad'); return; }
     const s = S.settings;
     $('#sProv').value = s.ai_provider || '';
     $('#sAnt').value = s.anthropic_key || ''; $('#sOai').value = s.openai_key || '';
     $('#sOll').value = s.ollama_url || ''; $('#sModel').value = s.ai_model || ''; $('#sHost').value = s.public_host || '';
-    provFields(); showErr($('#sErr')); showErr($('#licErr')); $('#licKey').value = '';
-    renderLicense();
-    try {
-      const rc = await api('GET', '/api/remote');
-      $('#rmType').value = rc.type || ''; $('#rmDir').value = rc.dir || ''; $('#rmEp').value = rc.endpoint || '';
-      $('#rmBucket').value = rc.bucket || ''; $('#rmRegion').value = rc.region || ''; $('#rmAk').value = rc.access_key || '';
-      $('#rmSk').value = rc.secret_key || ''; $('#rmPrefix').value = rc.prefix || ''; $('#rmPath').checked = rc.type ? !!rc.path_style : true;
-      $('#rmKeep').value = rc.keep || 14;
-    } catch (e) { /* egal */ }
-    rmFields(); showErr($('#rmErr'));
-    $('#verLine').textContent = 'Version ' + S.version;
-    $('#stmPass').value = ''; $('#stmCode').value = ''; loadSteam();
-    $('#dlgSettings').showModal();
-    if (typeof focus === 'string') setTimeout(() => { const el = $(focus); if (el) { el.scrollIntoView({ block: 'center' }); if (el.tagName === 'SELECT') el.focus(); } }, 60);
+    provFields(); showErr($('#sErr'));
   }
   function provFields() {
     const p = $('#sProv').value;
@@ -712,7 +729,7 @@
   }
   $('#aiForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#sErr'));
-    try { const r = await api('PUT', '/api/settings', settingsBody()); S.settings = r.settings; toast('Einstellungen gespeichert', 'ok'); renderKI(); $('#dlgSettings').close(); }
+    try { const r = await api('PUT', '/api/settings', settingsBody()); S.settings = r.settings; toast('Einstellungen gespeichert', 'ok'); renderKI(); }
     catch (err) { showErr($('#sErr'), err.message); }
   });
   $('#sTest').addEventListener('click', async () => {
@@ -758,7 +775,7 @@
     let st;
     try { st = await api('GET', '/api/steam'); } catch (e) { return; }
     renderSteam(st);
-    if ((st.state === 'working' || st.state === 'need_app') && $('#dlgSettings').open) stmTimer = setTimeout(loadSteam, 2000);
+    if ((st.state === 'working' || st.state === 'need_app') && R.page === 'settings') stmTimer = setTimeout(loadSteam, 2000);
   }
   function renderSteam(st) {
     const busy = st.state === 'working' || st.state === 'need_app';
@@ -787,7 +804,6 @@
     if (!await confirmBox('Steam-Konto abmelden?', 'Server, die ein Steam-Konto brauchen, können danach nicht mehr aktualisieren.', 'Abmelden')) return;
     try { renderSteam(await api('DELETE', '/api/steam')); $('#stmUser').value = ''; } catch (err) { showErr($('#stmErr'), err.message); }
   });
-  $('#dlgSettings').addEventListener('close', () => clearTimeout(stmTimer));
 
   $('#licForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#licErr'));
@@ -880,12 +896,8 @@
 
   /* ---------------- Benutzer ---------------- */
   const US = { list: [], servers: [], me: '', edit: null };
-  async function openUsers() {
-    if ($('#dlgSettings').open) $('#dlgSettings').close();
-    await loadUsers();
-    usReset();
-    if (!$('#dlgUsers').open) $('#dlgUsers').showModal();
-  }
+  function openUsers() { go('#/benutzer'); }
+  async function enterUsers() { await loadUsers(); usReset(); }
   async function loadUsers() {
     try { const r = await api('GET', '/api/users'); US.list = r.users; US.servers = r.servers; US.me = r.me; } catch (err) { toast(err.message, 'bad'); return; }
     const srvName = id => (US.servers.find(s => s.id === id) || { name: id }).name;
@@ -959,14 +971,13 @@
       await loadUsers(); usReset();
     } catch (err) { showErr($('#usErr'), err.message); }
   });
-  $('#openUsers').addEventListener('click', openUsers);
 
   /* ---------------- Protokoll ---------------- */
   let auTimer = null;
-  async function openAudit() {
-    if ($('#dlgSettings').open) $('#dlgSettings').close();
+  function openAudit() { go('#/protokoll'); }
+  async function enterAudit() {
     try { const r = await api('GET', '/api/users'); $('#auUser').innerHTML = '<option value="">Alle</option>' + r.users.map(u => `<option>${esc(u.name)}</option>`).join(''); } catch (e) { /* egal */ }
-    $('#dlgAudit').showModal(); loadAudit();
+    loadAudit();
   }
   async function loadAudit() {
     const q = new URLSearchParams({ q: $('#auQ').value, user: $('#auUser').value, days: $('#auDays').value, failed: $('#auFail').checked ? '1' : '', limit: '500' });
@@ -982,7 +993,6 @@
   }
   $('#auForm').addEventListener('input', () => { clearTimeout(auTimer); auTimer = setTimeout(loadAudit, 250); });
   $('#auForm').addEventListener('submit', e => { e.preventDefault(); loadAudit(); });
-  $('#openAudit').addEventListener('click', openAudit);
 
   /* ---------------- HTTPS ---------------- */
   async function loadTLS() {
@@ -1028,17 +1038,14 @@
   /* ---------------- Selbsttest ---------------- */
   const TS = { timer: null, open: {} };
   const fmtDur = sec => sec >= 3600 ? Math.floor(sec / 3600) + ' h ' + pad2(Math.floor(sec % 3600 / 60)) + ' min' : Math.max(1, Math.round(sec / 60)) + ' min';
-  async function openTest() {
-    if ($('#dlgSettings').open) $('#dlgSettings').close();
-    $('#dlgTest').showModal();
-    await pollTest();
-  }
+  function openTest() { go('#/selbsttest'); }
   async function pollTest() {
     clearTimeout(TS.timer);
     let r;
     try { r = await api('GET', '/api/selftest'); } catch (e) { toast(e.message, 'bad'); return; }
     renderTest(r);
-    if ($('#dlgTest').open) TS.timer = setTimeout(pollTest, r.running ? 3000 : 15000);
+    $('#navTest').hidden = !r.running;
+    if (R.page === 'test') TS.timer = setTimeout(pollTest, r.running ? 3000 : 15000);
   }
   function renderTest(r) {
     r.queue = r.queue || []; r.results = r.results || [];
@@ -1084,12 +1091,8 @@
     if (!await confirmBox('Selbsttest abbrechen?', 'Der laufende Testserver wird gelöscht. Bisherige Ergebnisse bleiben erhalten.', 'Test abbrechen')) return;
     try { await api('DELETE', '/api/selftest'); toast('Wird abgebrochen …'); setTimeout(pollTest, 1500); } catch (err) { toast(err.message, 'bad'); }
   });
-  $('#dlgTest').addEventListener('close', () => clearTimeout(TS.timer));
-  $('#openTest').onclick = openTest;
-
-  $('#openSettings').onclick = openSettings;
-  $('#edChip').onclick = openSettings;
-  $('#edChip').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSettings(); } };
+  $('#edChip').onclick = () => openSettings(can('admin') ? 'lizenz' : 'konto');
+  $('#edChip').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#edChip').click(); } };
 
   /* ---------------- KI ---------------- */
   const KI = { core: null, busy: false, plan: null, tpl: null, track: null, order: 0 };
@@ -1115,7 +1118,7 @@
     if (msg) {
       if (!lock) { lock = document.createElement('div'); lock.className = 'locked'; body.prepend(lock); }
       lock.innerHTML = `<span>${esc(msg)}</span><button class="btn-line" type="button">Einstellungen öffnen</button>`;
-      lock.querySelector('button').onclick = openSettings;
+      lock.querySelector('button').onclick = () => openSettings(l && !l.edition.ai ? 'lizenz' : 'ki');
     } else if (lock) lock.remove();
     if (!msg && !$('#chat').children.length) addMsg('KI', 'Sag mir, was für einen Server du willst. Ich erstelle einen Plan, und du gibst ihn frei.');
   }
@@ -1151,7 +1154,8 @@
     $('#stamp').textContent = 'Wird ausgeführt'; setCore('executing');
     try {
       const s = await api('POST', '/api/servers', { template: plan.template, name: plan.name, vars: plan.vars, memory_mb: plan.memory_mb, start: true, by_ai: true });
-      startAITrack(s.id); await loadServers(); select(s.id);
+      startAITrack(s.id); await loadServers();
+      $('.plan-actions').insertAdjacentHTML('beforeend', `<a class="btn-line" href="#/server/${encodeURIComponent(s.id)}">Zum Server</a>`);
     } catch (e) {
       addMsg('KI', e.message, 'bad'); $('#stamp').textContent = 'Abgebrochen'; $('#stamp').classList.add('bad');
       setCore('idle'); KI.busy = false; $('#runPlan').disabled = false; $('#editPlan').disabled = false;
@@ -1223,44 +1227,26 @@
   const KIND = { manuell: 'Manuell', auto: 'Automatisch', 'vor-wiederherstellung': 'Vor Wiederherstellung' };
   $('#bkAt').innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${String(h).padStart(2, '0')}:00 Uhr</option>`).join('');
 
-  function openManage(id, tab) {
-    const s = byId(id); if (!s) return;
-    MG.id = id; MG.path = ''; closeEditor(true);
-    const tpl = S.tplById[s.template];
-    $('#tabMods').hidden = !(tpl && tpl.mods);
-    if (tab === 'mods' && $('#tabMods').hidden) tab = 'settings';
-    if (!can('operator') && ['settings', 'mods', 'files'].includes(tab)) tab = 'backups';
-    $('#mgTitle').textContent = s.name; $('#mgGame').textContent = s.template_name;
-    mgTab(tab || 'backups');
-    if (!$('#dlgManage').open) $('#dlgManage').showModal();
-  }
+  function openManage(id, tab) { select(id, tab); }
   function mgTab(tab) {
+    const s = byId(MG.id), tpl = s && S.tplById[s.template];
+    if (tab === 'mods' && !(tpl && tpl.mods)) tab = 'settings';
+    if (!can('operator') && ['settings', 'mods', 'files'].includes(tab)) tab = 'console';
+    if (!['console', 'settings', 'mods', 'backups', 'files', 'tasks', 'events'].includes(tab)) tab = 'console';
     MG.tab = tab;
-    $$('#dlgManage .tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-    $('#paneBackups').hidden = tab !== 'backups'; $('#paneFiles').hidden = tab !== 'files';
-    $('#paneTasks').hidden = tab !== 'tasks'; $('#paneEvents').hidden = tab !== 'events'; $('#paneSettings').hidden = tab !== 'settings'; $('#paneMods').hidden = tab !== 'mods';
+    $$('#svTabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    const panes = { console: 'paneConsole', backups: 'paneBackups', files: 'paneFiles', tasks: 'paneTasks', events: 'paneEvents', settings: 'paneSettings', mods: 'paneMods' };
+    Object.entries(panes).forEach(([k, id]) => { $('#' + id).hidden = k !== tab; });
     clearTimeout(TK.timer);
-    if (tab === 'settings') loadSettings();
+    if (tab !== 'files') closeEditor(true);
+    if (tab === 'console') { if (S.consoleId !== MG.id) openConsole(MG.id); setTimeout(() => { const b = $('#lines'); b.scrollTop = b.scrollHeight; }, 0); }
+    else if (tab === 'settings') loadSettings();
     else if (tab === 'mods') loadMods();
     else if (tab === 'backups') loadBackups();
     else if (tab === 'files') loadFiles(MG.path);
     else loadTasks();
   }
-  $$('#dlgManage .tabs button').forEach(b => b.addEventListener('click', async () => {
-    if (b.dataset.tab !== MG.tab && MG.dirty && !(await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen'))) return;
-    if (b.dataset.tab !== 'files') closeEditor(true);
-    mgTab(b.dataset.tab);
-  }));
-  $('#dlgManage').addEventListener('cancel', async e => {
-    if (!MG.dirty) return;
-    e.preventDefault();
-    if (await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen')) { closeEditor(true); $('#dlgManage').close(); }
-  });
-  $('#dlgManage').addEventListener('click', async e => {
-    if (!e.target.closest('[data-close]') || !MG.dirty) return;
-    e.stopPropagation();
-    if (await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen')) { closeEditor(true); $('#dlgManage').close(); }
-  }, true);
+  $('#svTabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) select(MG.id, b.dataset.tab); });
 
   // Spiel-Einstellungen
   const GS = { data: null, orig: {} };
@@ -1435,7 +1421,7 @@
     const id = MG.id, tab = MG.tab;
     let d;
     try { d = await api('GET', `/api/servers/${id}/tasks`); } catch (e) { toast(e.message, 'bad'); return; }
-    if (MG.id !== id || MG.tab !== tab || !$('#dlgManage').open) return;
+    if (MG.id !== id || MG.tab !== tab || R.page !== 'server') return;
     TK.data = d;
     if (tab === 'tasks') renderTasks(); else renderEvents();
     TK.timer = setTimeout(loadTasks, 10000);
@@ -1516,7 +1502,6 @@
     if (isOn(s) && !await confirmBox('Jetzt aktualisieren?', s.name + ' startet dafür neu. Spieler werden getrennt.', 'Aktualisieren')) return;
     try { await api('POST', `/api/servers/${MG.id}/update`); toast('Update gestartet', 'ok'); loadServers(); setTimeout(loadTasks, 2000); } catch (e) { toast(e.message, 'bad'); }
   });
-  $('#dlgManage').addEventListener('close', () => clearTimeout(TK.timer));
 
   // Backups
   async function loadBackups() {
@@ -1539,7 +1524,7 @@
     $('#bkRemote').innerHTML = hasRemote
       ? 'Externe Kopie: ' + esc(d.remote) + (d.remote_error ? ` · <span class="err">${esc(d.remote_error)}</span>` : '')
       : 'Backups liegen nur auf diesem Server. <button type="button" class="linkbtn" id="bkSetup">Externes Ziel einrichten</button>, damit sie einen Plattendefekt überstehen.';
-    const su = $('#bkSetup'); if (su) su.onclick = () => { $('#dlgManage').close(); openSettings(); setTimeout(() => $('#rmType').focus(), 100); };
+    const su = $('#bkSetup'); if (su) su.onclick = () => openSettings('backups');
     const loc = b => {
       const parts = [];
       if (b.local) parts.push('<span>Lokal</span>');
@@ -1549,7 +1534,7 @@
       return '<div class="loc">' + parts.join('') + '</div>';
     };
     MG.uploading = d.backups.some(b => b.upload === 'läuft');
-    if (MG.uploading) { clearTimeout(MG.upT); MG.upT = setTimeout(() => { if ($('#dlgManage').open && MG.tab === 'backups' && MG.id === id) loadBackups(); }, 3000); }
+    if (MG.uploading) { clearTimeout(MG.upT); MG.upT = setTimeout(() => { if (R.page === 'server' && MG.tab === 'backups' && MG.id === id) loadBackups(); }, 3000); }
     $('#bkRows').innerHTML = d.backups.length ? d.backups.map(b => `<tr>
         <td class="num" style="text-align:left">${fmtDate(b.created)}</td>
         <td><span class="kind ${esc(b.kind)}">${esc(KIND[b.kind] || b.kind)}</span></td>
@@ -1593,7 +1578,7 @@
     } else {
       const txt = (s && isOn(s) ? 'Der Server wird dafür kurz gestoppt. ' : '') + 'Der aktuelle Stand wird vorher automatisch gesichert, du kannst also zurück.';
       if (!(await confirmBox('Backup wiederherstellen?', txt, 'Wiederherstellen'))) return;
-      try { await api('POST', `/api/servers/${id}/backups/${encodeURIComponent(name)}/restore`); toast('Wiederherstellung läuft'); $('#dlgManage').close(); await loadServers(); select(id); }
+      try { await api('POST', `/api/servers/${id}/backups/${encodeURIComponent(name)}/restore`); toast('Wiederherstellung läuft'); await loadServers(); select(id); }
       catch (err) { toast(err.message, 'bad'); }
     }
   });
@@ -1719,27 +1704,32 @@
   function actions() {
     const a = can('admin') ? [
       { label: 'Server anlegen', hint: 'Neu', run: () => openCreate() },
-      { label: 'Server mit KI anlegen', hint: 'KI', run: () => { $('#ki').scrollIntoView({ behavior: motion ? 'smooth' : 'auto' }); $('#askInput').focus(); } }
+      { label: 'Server mit KI planen', hint: 'KI', run: () => { go('#/ki'); setTimeout(() => $('#askInput').focus(), 50); } }
     ] : [];
     const op = can('operator');
     S.servers.forEach(s => {
+      a.push({ label: s.name + ' öffnen', hint: 'Server', run: () => select(s.id) });
       if (op && s.status !== 'preparing') a.push({ label: s.name + (isOn(s) ? ' stoppen' : ' starten'), hint: 'Server', run: () => togglePower(s) });
-      a.push({ label: 'Zu ' + s.name + ' fliegen', hint: '3D', run: () => { select(s.id); $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
       if (op) a.push({ label: 'Einstellungen von ' + s.name, hint: 'Einstellungen', run: () => openManage(s.id, 'settings') });
       if (op && (S.tplById[s.template] || {}).mods) a.push({ label: 'Mods von ' + s.name, hint: 'Mods', run: () => openManage(s.id, 'mods') });
       a.push({ label: 'Backups von ' + s.name, hint: 'Backup', run: () => openManage(s.id, 'backups') });
       if (op) a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
       a.push({ label: 'Aufgaben von ' + s.name, hint: 'Aufgaben', run: () => openManage(s.id, 'tasks') });
       a.push({ label: 'Verlauf von ' + s.name, hint: 'Verlauf', run: () => openManage(s.id, 'events') });
-      a.push({ label: 'Konsole von ' + s.name, hint: 'Konsole', run: () => { openConsole(s.id); $('#konsole').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
+      a.push({ label: 'Konsole von ' + s.name, hint: 'Konsole', run: () => select(s.id, 'console') });
     });
-    a.push({ label: can('admin') ? 'Einstellungen und Lizenz' : 'Mein Konto', hint: 'Panel', run: openSettings });
-    a.push({ label: 'Zwei-Faktor-Anmeldung', hint: 'Konto', run: () => openSettings('#tfOn') });
+    a.push({ label: 'Übersicht', hint: 'Seite', run: () => go('#/') });
+    a.push({ label: 'Alle Server', hint: 'Seite', run: () => go('#/server') });
+    a.push({ label: 'Mein Konto, Passwort, Zwei-Faktor', hint: 'Konto', run: () => openSettings('konto') });
     if (can('admin')) {
       a.push({ label: 'Selbsttest der Spielvorlagen', hint: 'Panel', run: openTest });
       a.push({ label: 'Benutzer verwalten', hint: 'Panel', run: openUsers });
       a.push({ label: 'Protokoll: wer hat was gemacht', hint: 'Panel', run: openAudit });
-      a.push({ label: 'HTTPS einrichten', hint: 'Panel', run: () => openSettings('#tlsMode') });
+      a.push({ label: 'HTTPS einrichten', hint: 'Panel', run: () => openSettings('https') });
+      a.push({ label: 'Allgemein: Spieler-Adresse und KI-Anbieter', hint: 'Panel', run: () => openSettings('ki') });
+      a.push({ label: 'Externe Backups', hint: 'Panel', run: () => openSettings('backups') });
+      a.push({ label: 'Steam-Konto', hint: 'Panel', run: () => openSettings('steam') });
+      a.push({ label: 'Lizenz', hint: 'Panel', run: () => openSettings('lizenz') });
     }
     a.push({ label: isDark() ? 'Helles Design' : 'Dunkles Design', hint: 'Ansicht', run: toggleTheme });
     a.push({ label: motion ? 'Animationen reduzieren' : 'Animationen einschalten', hint: 'Ansicht', run: toggleMotion });
@@ -1754,7 +1744,7 @@
   function openPal() { if ($('#app').hidden) return; $('#pal').hidden = false; $('#palInput').value = ''; palIdx = 0; renderPal(); $('#palInput').focus(); }
   function closePal() { $('#pal').hidden = true; }
   function runPal(i) { const a = palItems[i]; closePal(); if (a) a.run(); }
-  $('#openPal').onclick = openPal;
+  $('#openPal').onclick = openPal; $('#openPal2').onclick = openPal;
   $('#palInput').addEventListener('input', () => { palIdx = 0; renderPal(); });
   $('#palList').addEventListener('click', e => { const b = e.target.closest('button'); if (b) runPal(+b.dataset.i); });
   $('#pal').addEventListener('click', e => { if (e.target.id === 'pal') closePal(); });
@@ -1767,18 +1757,18 @@
       else if (e.key === 'Enter') { e.preventDefault(); runPal(palIdx); }
       return;
     }
-    if (e.key === 'Escape' && S.sel && !document.querySelector('dialog[open]')) deselect();
+    if (e.key === 'Escape' && document.body.classList.contains('side-open')) sideToggle(false);
+    if (e.key === 'Escape' && $('#svMore').open) $('#svMore').open = false;
   });
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     if (b.dataset.act === 'create') openCreate();
-    if (b.dataset.act === 'ai') { $('#ki').scrollIntoView({ behavior: motion ? 'smooth' : 'auto' }); $('#askInput').focus(); }
+    if (b.dataset.act === 'ai') { go('#/ki'); setTimeout(() => $('#askInput').focus(), 50); }
   });
 
   /* ---------------- Design + Bewegung ---------------- */
   function syncSwitches() {
     $('#themeBtn').setAttribute('aria-pressed', String(isDark()));
-    $('#themeBtn').setAttribute('aria-label', isDark() ? 'Zu hellem Design wechseln' : 'Zu dunklem Design wechseln');
     $('#motionBtn').setAttribute('aria-pressed', String(motion));
     document.body.classList.toggle('still', !motion);
   }
@@ -1829,12 +1819,76 @@
     finally { btn.disabled = false; }
   });
   $('#authBack').onclick = () => { authTicket = ''; $('#authCode').value = ''; showAuth('login'); };
-  $('#logoutBtn').onclick = async () => { try { await api('POST', '/api/logout'); } catch (e) { /* egal */ } stopApp(); closeDialogs(); showAuth('login'); };
+  $('#logoutBtn').onclick = async () => { try { await api('POST', '/api/logout'); } catch (e) { /* egal */ } stopApp(); closeDialogs(); history.replaceState(null, '', '#/'); showAuth('login'); };
+
+  /* ---------------- Seiten ---------------- */
+  const R = { page: null, id: null, tab: null, sec: null, hash: '' };
+  const PAGES = { home: 'pageHome', servers: 'pageServers', server: 'pageServer', ki: 'pageKI', users: 'pageUsers', audit: 'pageAudit', test: 'pageTest', settings: 'pageSettings' };
+  const ADMIN_PAGES = ['ki', 'users', 'audit', 'test'];
+  const TITLES = { home: 'Übersicht', servers: 'Server', ki: 'KI-Assistent', users: 'Benutzer', audit: 'Protokoll', test: 'Selbsttest', settings: 'Einstellungen' };
+  function go(hash) { if (location.hash !== hash) location.hash = hash; else route(); }
+  function parseHash() {
+    const p = location.hash.replace(/^#\/?/, '').split('/').map(x => { try { return decodeURIComponent(x); } catch (e) { return x; } });
+    const m = { '': 'home', server: 'servers', ki: 'ki', benutzer: 'users', protokoll: 'audit', selbsttest: 'test', einstellungen: 'settings' };
+    let page = m[p[0]] || 'home', id = null, tab = null, sec = null;
+    if (page === 'servers' && p[1]) { page = 'server'; id = p[1]; tab = p[2] || 'console'; }
+    if (page === 'settings') sec = p[1] || 'konto';
+    if (ADMIN_PAGES.includes(page) && !can('admin')) page = 'home';
+    return { page, id, tab, sec };
+  }
+  let routing = false;
+  async function route() {
+    if ($('#app').hidden || routing) return;
+    const n = parseHash();
+    const leavingFiles = R.page === 'server' && MG.tab === 'files' && MG.dirty && !(n.page === 'server' && n.id === R.id && n.tab === 'files');
+    if (leavingFiles) {
+      routing = true;
+      const ok = await confirmBox('Änderungen verwerfen?', 'Die Datei hat ungespeicherte Änderungen.', 'Verwerfen');
+      routing = false;
+      if (!ok) { history.replaceState(null, '', R.hash || '#/'); return; }
+      closeEditor(true);
+    }
+    const prev = R.page, prevId = R.id;
+    Object.assign(R, n, { hash: location.hash || '#/' });
+    if (prev !== n.page) {
+      Object.entries(PAGES).forEach(([k, id]) => { $('#' + id).hidden = k !== n.page; });
+      window.scrollTo(0, 0);
+    }
+    $$('.side-nav a').forEach(a => a.setAttribute('aria-current', a.dataset.nav === (n.page === 'server' ? 'servers' : n.page) ? 'page' : 'false'));
+    sideToggle(false);
+    clearTimeout(TS.timer); clearTimeout(stmTimer); clearTimeout(TK.timer);
+    if (n.page !== 'server' && S.consoleId) closeConsole();
+    const s = n.page === 'server' ? byId(n.id) : null;
+    document.title = (s ? s.name : TITLES[n.page] || 'Panel') + ' · [Panel]';
+    if (n.page === 'home') { requestAnimationFrame(() => { sizeLand(); drawSparks(); }); }
+    else if (n.page === 'server') {
+      if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
+      if (prevId !== n.id || prev !== 'server') { MG.id = n.id; MG.path = ''; closeEditor(true); if (S.consoleId && S.consoleId !== n.id) closeConsole(); }
+      renderServerPage(); mgTab(n.tab);
+    }
+    else if (n.page === 'ki') { renderKI(); }
+    else if (n.page === 'users') enterUsers();
+    else if (n.page === 'audit') enterAudit();
+    else if (n.page === 'test') pollTest();
+    else if (n.page === 'settings') enterSettings(n.sec);
+  }
+  window.addEventListener('hashchange', route);
+  function sideToggle(open) {
+    document.body.classList.toggle('side-open', open);
+    $('#sideScrim').hidden = !open;
+  }
+  document.addEventListener('click', e => { const m = $('#svMore'); if (m.open && !m.contains(e.target)) m.open = false; });
+  $('#sideOpen').onclick = () => sideToggle(true);
+  $('#sideClose').onclick = () => sideToggle(false);
+  $('#sideScrim').onclick = () => sideToggle(false);
 
   /* ---------------- Start + Abfragen ---------------- */
   let timers = [];
   async function loadServers() {
-    try { S.servers = await api('GET', '/api/servers'); renderAll(); } catch (e) { /* nächste Runde */ }
+    try {
+      S.servers = await api('GET', '/api/servers'); S.loaded = true; renderAll();
+      if (S.reconnect && S.consoleId === S.reconnect && !S.es) { const s = byId(S.reconnect); if (s && isOn(s)) { S.reconnect = null; connectConsole(s.id); } }
+    } catch (e) { /* nächste Runde */ }
   }
   async function loadHost() {
     try { S.host = await api('GET', '/api/host'); renderHost(); } catch (e) { /* nächste Runde */ }
@@ -1849,21 +1903,21 @@
       if (st.docker_error) ban.textContent = 'Docker ist nicht erreichbar. Läuft der Docker-Dienst? Prüfen mit: sudo systemctl status docker. (' + st.docker_error + ')';
     } catch (e) { /* egal */ }
   }
-  function stopApp() { timers.forEach(clearInterval); timers = []; closeConsole(); }
+  function stopApp() { timers.forEach(clearInterval); timers = []; closeConsole(); R.page = null; }
   async function startApp() {
     $('#auth').hidden = true; $('#app').hidden = false;
     const [tpls, set] = await Promise.all([api('GET', '/api/templates'), can('admin') ? api('GET', '/api/settings') : Promise.resolve({ settings: { public_host: S.publicHost } })]);
     S.tpls = tpls; S.tplById = Object.fromEntries(tpls.map(t => [t.id, t])); S.settings = set.settings;
     if (hasGL && !L.renderer) { try { initLand(); } catch (e) { console.error(e); } }
-    if (!L.renderer && !$('.nogl')) $('#stage').insertAdjacentHTML('beforeend', '<div class="nogl">Die 3D-Ansicht braucht WebGL. Die Liste unten funktioniert trotzdem.</div>');
+    if (!L.renderer && !$('.nogl')) $('#stage').insertAdjacentHTML('beforeend', '<div class="nogl">Die 3D-Ansicht braucht WebGL. Die Liste daneben funktioniert trotzdem.</div>');
     if (hasGL && !KI.core) { try { KI.core = makeCore($('#core')); } catch (e) { KI.core = null; } }
     if (!KI.core) $('#core').style.height = '24px';
     renderLicense(); renderKI();
     await Promise.all([loadServers(), loadHost()]);
     const vis = fn => () => { if (!document.hidden) fn(); };
     timers.push(setInterval(vis(loadServers), 2500), setInterval(vis(loadHost), 2000), setInterval(vis(loadState), 30000));
-    const first = S.servers.find(s => s.status === 'running') || S.servers[0];
-    if (first && !S.consoleId) openConsole(first.id);
+    route();
+    if (can('admin')) pollTest();
   }
   async function boot() {
     let st;
@@ -1872,7 +1926,8 @@
     S.version = st.version; S.license = st.license; S.user = st.user;
     S.role = st.role || ''; S.twoFactor = !!st.two_factor; S.publicHost = st.public_host || '';
     document.body.dataset.role = S.role;
-    $('#whoAmI').textContent = st.user ? st.user + (S.role !== 'admin' ? ' · ' + (ROLE[S.role] || '') : '') : '';
+    $('#whoAmI').textContent = st.user || ''; $('#whoRole').textContent = ROLE[S.role] || '';
+    $('#meAvatar').textContent = (st.user || '?').slice(0, 1).toUpperCase();
     if (st.setup_needed) { showAuth('setup'); return; }
     if (!st.user) { showAuth('login'); return; }
     const ban = $('#dockerBanner'); ban.hidden = !st.docker_error;
