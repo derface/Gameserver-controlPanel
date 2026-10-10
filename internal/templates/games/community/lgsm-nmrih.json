@@ -24,16 +24,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "nmo_broadway",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "8",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "nmo_broadway",
+      "type": "slug"
     },
     {
       "key": "gslt",

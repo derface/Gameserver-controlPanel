@@ -19,23 +19,10 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "PEI",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "20",
       "type": "number"
-    },
-    {
-      "key": "gslt",
-      "label": "Game Server Login Token",
-      "default": "",
-      "type": "secret",
-      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     },
     {
       "key": "gamemode",
@@ -48,6 +35,19 @@
       "label": "Servername",
       "default": "Mein Server",
       "type": "text"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "PEI",
+      "type": "slug"
+    },
+    {
+      "key": "gslt",
+      "label": "Game Server Login Token",
+      "default": "",
+      "type": "secret",
+      "help": "Für öffentliche Source-Server: steamcommunity.com/dev/managegameservers"
     }
   ],
   "memory_mb": 4096,

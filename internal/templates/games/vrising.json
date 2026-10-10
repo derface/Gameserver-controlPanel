@@ -46,7 +46,7 @@
   ],
   "status": "experimentell",
   "disk_gb": 3,
-  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start). Selbsttest 08.10.2026: Wine fand keinen Bildschirm; seit Laufzeit 8 startet das Panel einen eigenen.",
+  "notes": "Läuft über Wine. Einstellungen in save-data/Settings/ServerHostSettings.json und ServerGameSettings.json (entstehen beim ersten Start). Selbsttest 10.10.2026: läuft stabil unter Wine, die Spielerabfrage antwortet noch nicht.",
   "config": [
     {
       "title": "Server (ServerHostSettings.json)",

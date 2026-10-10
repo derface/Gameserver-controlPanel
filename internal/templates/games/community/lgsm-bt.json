@@ -24,7 +24,7 @@
   "packages": [
     "libicu72"
   ],
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
+  "status": "defekt",
+  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest 10.10.2026: Startdatei DedicatedServer fehlt im Steam-Download. Nutzt die Standard-Ports des Spiels, daher nur ein Server dieses Spiels pro Rechner.",
   "fixed_ports": true
 }

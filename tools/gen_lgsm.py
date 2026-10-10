@@ -33,6 +33,7 @@ BROKEN = {
     "zps": "Selbsttest 01.10.2026: Segmentation fault beim Start",
     "dys": "Selbsttest 01.10.2026: Segmentation fault beim Start",
     "nd": "Selbsttest 01.10.2026: gameinfo.txt nicht gefunden",
+    "bt": "Selbsttest 10.10.2026: Startdatei DedicatedServer fehlt im Steam-Download",
     "ti": "Selbsttest 01.10.2026: stürzt beim Laden der Plugins ab",
 }
 
@@ -43,6 +44,8 @@ PASSED = set("ark bd bmdm bb2 cc cs css dods dodr em fof hl2dm hldms hldm hw jbe
 PASSED |= set("cmw ck cscz csgo dod dmc l4d2 mh ns2 opfor pvr ricochet tf2c tfc tu".split())
 # dritter Lauf 08.10.2026
 PASSED |= set("kf2 rw squad unt".split())
+# vierter Lauf 10.10.2026
+PASSED |= set("av nec".split())
 
 # Nacharbeiten, die LinuxGSM in seinen fix_*.sh macht, als Befehle vor dem Start
 # (laufen im Ordner des Programms). Platzhalter: SC32/SC64 = steamclient.so.
@@ -210,7 +213,13 @@ def polish_dayz(t):
         B("BattlEye", "BattlEye-Anticheat"), B("enableWhitelist", "Nur Whitelist"),
     ]}]
 
-POLISH = {"arma3": polish_arma3, "dayz": polish_dayz}
+def polish_eco(t):
+    # without an account Eco only starts in offline mode (not in the public list)
+    t["start"] = t["start"].replace("-userToken=", '$([ -n "{{usertoken}}" ] && echo -userToken={{usertoken}} || echo -offline)')
+    t["vars"].append({"key": "usertoken", "label": "Strange-Cloud-Token", "default": "", "type": "secret",
+                      "help": "Von play.eco unter Account. Ohne Token startet der Server offline und erscheint nicht in der öffentlichen Liste."})
+
+POLISH = {"arma3": polish_arma3, "dayz": polish_dayz, "eco": polish_eco}
 
 # Standard-Ports von Spielen, die ihre Ports nur in der eigenen Konfiguration
 # führen (Quelle: Herstellerdokumentation / Standard-Konfigurationen).

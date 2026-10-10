@@ -29,18 +29,6 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "Level01_Main",
-      "type": "slug"
-    },
-    {
-      "key": "serverpassword",
-      "label": "Server-Passwort",
-      "default": "",
-      "type": "secret"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "50",
@@ -53,8 +41,20 @@
       "type": "text"
     },
     {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "Level01_Main",
+      "type": "slug"
+    },
+    {
       "key": "adminpassword",
       "label": "Admin-Passwort",
+      "default": "",
+      "type": "secret"
+    },
+    {
+      "key": "serverpassword",
+      "label": "Server-Passwort",
       "default": "",
       "type": "secret"
     }

@@ -29,15 +29,15 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "KF-BioticsLab",
-      "type": "slug"
-    },
-    {
       "key": "gamemode",
       "label": "Spielmodus",
       "default": "KFGameContent.KFGameInfo_VersusSurvival",
+      "type": "slug"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "KF-BioticsLab",
       "type": "slug"
     }
   ],

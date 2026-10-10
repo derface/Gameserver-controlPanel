@@ -20,16 +20,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "dod_Anzio",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "dod_Anzio",
+      "type": "slug"
     }
   ],
   "memory_mb": 512,

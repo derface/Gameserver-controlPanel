@@ -4,7 +4,7 @@
   "category": "Steam (Community)",
   "kind": "steam",
   "steam_app_id": 739590,
-  "start": "./EcoServer -nogui -userToken=",
+  "start": "./EcoServer -nogui $([ -n \"{{usertoken}}\" ] && echo -userToken={{usertoken}} || echo -offline)",
   "ports": [
     {
       "name": "Spiel",
@@ -17,7 +17,15 @@
       "proto": "tcp"
     }
   ],
-  "vars": [],
+  "vars": [
+    {
+      "key": "usertoken",
+      "label": "Strange-Cloud-Token",
+      "default": "",
+      "type": "secret",
+      "help": "Von play.eco unter Account. Ohne Token startet der Server offline und erscheint nicht in der öffentlichen Liste."
+    }
+  ],
   "memory_mb": 4096,
   "min_memory_mb": 512,
   "console": "stdin",

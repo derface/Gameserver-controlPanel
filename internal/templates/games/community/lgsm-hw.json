@@ -19,12 +19,6 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "nullius",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "20",
@@ -35,6 +29,12 @@
       "label": "Servername",
       "default": "Mein Server",
       "type": "text"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "nullius",
+      "type": "slug"
     }
   ],
   "memory_mb": 4096,

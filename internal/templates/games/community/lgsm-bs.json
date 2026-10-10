@@ -25,16 +25,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "duel_winter",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "duel_winter",
+      "type": "slug"
     },
     {
       "key": "gslt",

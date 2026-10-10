@@ -24,10 +24,10 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "embassy_coop checkpoint",
-      "type": "slug"
+      "key": "maxplayers",
+      "label": "Maximale Spieler",
+      "default": "32",
+      "type": "number"
     },
     {
       "key": "tickrate",
@@ -36,10 +36,10 @@
       "type": "number"
     },
     {
-      "key": "maxplayers",
-      "label": "Maximale Spieler",
-      "default": "32",
-      "type": "number"
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "embassy_coop checkpoint",
+      "type": "slug"
     },
     {
       "key": "gslt",

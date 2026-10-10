@@ -26,16 +26,16 @@
   ],
   "vars": [
     {
-      "key": "defaultmap",
-      "label": "Start-Map",
-      "default": "4koth_frigid",
-      "type": "slug"
-    },
-    {
       "key": "maxplayers",
       "label": "Maximale Spieler",
       "default": "16",
       "type": "number"
+    },
+    {
+      "key": "defaultmap",
+      "label": "Start-Map",
+      "default": "4koth_frigid",
+      "type": "slug"
     },
     {
       "key": "gslt",
