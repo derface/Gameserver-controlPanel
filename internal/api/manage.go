@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/derface/Gameserver-controlPanel/internal/auth"
 	"github.com/derface/Gameserver-controlPanel/internal/files"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
 	"github.com/derface/Gameserver-controlPanel/internal/remote"
@@ -21,38 +22,38 @@ import (
 )
 
 func (a *API) routesManage(mux *http.ServeMux) {
-	mux.HandleFunc("GET /api/servers/{id}/backups", a.guard(a.backups))
-	mux.HandleFunc("POST /api/servers/{id}/backups", a.guard(a.backupCreate))
-	mux.HandleFunc("PUT /api/servers/{id}/backup-plan", a.guard(a.backupPlan))
-	mux.HandleFunc("GET /api/servers/{id}/backups/{name}", a.guard(a.backupDownload))
-	mux.HandleFunc("DELETE /api/servers/{id}/backups/{name}", a.guard(a.backupDelete))
-	mux.HandleFunc("POST /api/servers/{id}/backups/{name}/restore", a.guard(a.backupRestore))
-	mux.HandleFunc("POST /api/servers/{id}/backups/{name}/upload", a.guard(a.backupUpload))
-	mux.HandleFunc("GET /api/remote", a.guard(a.remoteGet))
-	mux.HandleFunc("PUT /api/remote", a.guard(a.remotePut))
-	mux.HandleFunc("POST /api/remote/test", a.guard(a.remoteTest))
-	mux.HandleFunc("GET /api/servers/{id}/settings", a.guard(a.settingsGet))
-	mux.HandleFunc("PUT /api/servers/{id}/settings", a.guard(a.settingsPut))
-	mux.HandleFunc("GET /api/servers/{id}/tasks", a.guard(a.tasksGet))
-	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.guard(a.tasksPut))
-	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.guard(a.taskRun))
-	mux.HandleFunc("PUT /api/servers/{id}/watch", a.guard(a.watchPut))
-	mux.HandleFunc("GET /api/steam", a.guard(a.steamGet))
-	mux.HandleFunc("POST /api/steam/login", a.guard(a.steamLogin))
-	mux.HandleFunc("DELETE /api/steam", a.guard(a.steamLogout))
-	mux.HandleFunc("GET /api/selftest", a.guard(a.selftestGet))
-	mux.HandleFunc("POST /api/selftest", a.guard(a.selftestStart))
-	mux.HandleFunc("DELETE /api/selftest", a.guard(a.selftestStop))
-	mux.HandleFunc("GET /api/selftest/report", a.guard(a.selftestReport))
+	mux.HandleFunc("GET /api/servers/{id}/backups", a.need(auth.Viewer, a.backups))
+	mux.HandleFunc("POST /api/servers/{id}/backups", a.need(auth.Operator, a.backupCreate))
+	mux.HandleFunc("PUT /api/servers/{id}/backup-plan", a.need(auth.Operator, a.backupPlan))
+	mux.HandleFunc("GET /api/servers/{id}/backups/{name}", a.need(auth.Operator, a.backupDownload))
+	mux.HandleFunc("DELETE /api/servers/{id}/backups/{name}", a.need(auth.Operator, a.backupDelete))
+	mux.HandleFunc("POST /api/servers/{id}/backups/{name}/restore", a.need(auth.Operator, a.backupRestore))
+	mux.HandleFunc("POST /api/servers/{id}/backups/{name}/upload", a.need(auth.Operator, a.backupUpload))
+	mux.HandleFunc("GET /api/remote", a.need(auth.Admin, a.remoteGet))
+	mux.HandleFunc("PUT /api/remote", a.need(auth.Admin, a.remotePut))
+	mux.HandleFunc("POST /api/remote/test", a.need(auth.Admin, a.remoteTest))
+	mux.HandleFunc("GET /api/servers/{id}/settings", a.need(auth.Operator, a.settingsGet))
+	mux.HandleFunc("PUT /api/servers/{id}/settings", a.need(auth.Operator, a.settingsPut))
+	mux.HandleFunc("GET /api/servers/{id}/tasks", a.need(auth.Viewer, a.tasksGet))
+	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.need(auth.Operator, a.tasksPut))
+	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.need(auth.Operator, a.taskRun))
+	mux.HandleFunc("PUT /api/servers/{id}/watch", a.need(auth.Operator, a.watchPut))
+	mux.HandleFunc("GET /api/steam", a.need(auth.Admin, a.steamGet))
+	mux.HandleFunc("POST /api/steam/login", a.need(auth.Admin, a.steamLogin))
+	mux.HandleFunc("DELETE /api/steam", a.need(auth.Admin, a.steamLogout))
+	mux.HandleFunc("GET /api/selftest", a.need(auth.Admin, a.selftestGet))
+	mux.HandleFunc("POST /api/selftest", a.need(auth.Admin, a.selftestStart))
+	mux.HandleFunc("DELETE /api/selftest", a.need(auth.Admin, a.selftestStop))
+	mux.HandleFunc("GET /api/selftest/report", a.need(auth.Admin, a.selftestReport))
 
-	mux.HandleFunc("GET /api/servers/{id}/files", a.guard(a.fileList))
-	mux.HandleFunc("DELETE /api/servers/{id}/files", a.guard(a.fileDelete))
-	mux.HandleFunc("GET /api/servers/{id}/files/content", a.guard(a.fileRead))
-	mux.HandleFunc("PUT /api/servers/{id}/files/content", a.guard(a.fileWrite))
-	mux.HandleFunc("GET /api/servers/{id}/files/download", a.guard(a.fileDownload))
-	mux.HandleFunc("POST /api/servers/{id}/files/upload", a.guard(a.fileUpload))
-	mux.HandleFunc("POST /api/servers/{id}/files/mkdir", a.guard(a.fileMkdir))
-	mux.HandleFunc("POST /api/servers/{id}/files/rename", a.guard(a.fileRename))
+	mux.HandleFunc("GET /api/servers/{id}/files", a.need(auth.Operator, a.fileList))
+	mux.HandleFunc("DELETE /api/servers/{id}/files", a.need(auth.Operator, a.fileDelete))
+	mux.HandleFunc("GET /api/servers/{id}/files/content", a.need(auth.Operator, a.fileRead))
+	mux.HandleFunc("PUT /api/servers/{id}/files/content", a.need(auth.Operator, a.fileWrite))
+	mux.HandleFunc("GET /api/servers/{id}/files/download", a.need(auth.Operator, a.fileDownload))
+	mux.HandleFunc("POST /api/servers/{id}/files/upload", a.need(auth.Operator, a.fileUpload))
+	mux.HandleFunc("POST /api/servers/{id}/files/mkdir", a.need(auth.Operator, a.fileMkdir))
+	mux.HandleFunc("POST /api/servers/{id}/files/rename", a.need(auth.Operator, a.fileRename))
 }
 
 // ---------- backups ----------
@@ -217,6 +218,7 @@ func (a *API) remotePut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) remoteTest(w http.ResponseWriter, r *http.Request) {
+	noAudit(r)
 	c, err := a.mergeRemote(r)
 	if err != nil {
 		fail(w, 400, err)

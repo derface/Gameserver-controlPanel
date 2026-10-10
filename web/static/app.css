@@ -413,3 +413,43 @@ a.btn-line{display:inline-flex;align-items:center;text-decoration:none;color:var
 @media (max-width:720px){.md-bar{flex-wrap:wrap}.md-bar p{flex:1 1 100%}.md-bar button{flex:1}.md-list{grid-template-columns:minmax(0,1fr)}}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* rollen, konto, benutzer, protokoll, https */
+body:not([data-role="admin"]) .admin-only,
+body[data-role="admin"] .not-admin,
+body[data-role="viewer"] .op-only,
+body[data-role="viewer"] :is(#bkNow, #bkPlan, #bkRows button, #tkUpdWrap, #tkForm, #tkRows button, #tkRows input, .tk-watch){display:none!important}
+#authCreds{display:flex;flex-direction:column;gap:14px}
+#authBack{align-self:center;font-size:14px}
+.who{display:inline-block;margin-left:8px;padding-left:8px;border-left:1px solid var(--line);color:var(--muted);text-transform:none;letter-spacing:0;max-width:24ch;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.who:empty{display:none}
+#meBlock{border-top:0;margin-top:8px;padding-top:0}
+#meBlock form{margin-top:12px}
+.sec2{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px}
+.sec2 h4{margin:0;font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.on-ok{color:var(--ok);font-weight:600}
+.qr{align-self:center;background:#fff;padding:12px;border-radius:var(--r-md);width:max-content;margin:4px auto}
+.qr svg,.qr img{display:block;width:200px;height:200px}
+.secret{word-break:break-all;font-size:13px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;user-select:all}
+#tfStep1,#tfStep2{display:flex;flex-direction:column;gap:10px}
+.codes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin:0;padding:12px 12px 12px 34px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);font-size:14px}
+.role{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+.role.admin{border-color:var(--accent);color:var(--accent)}
+.role.operator{border-color:var(--ok);color:var(--ok)}
+.tbl td.wrap{white-space:normal;min-width:160px}
+.tbl tr.off td{opacity:.55}
+.us-form{border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);padding:16px}
+.us-srv{display:flex;flex-direction:column;gap:6px;max-height:150px;overflow:auto;padding:4px 2px}
+.us-extra{display:flex;flex-wrap:wrap;gap:10px 22px}
+.au-bar{display:flex!important;flex-direction:row!important;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.au-bar .field{flex:1 1 170px;min-width:150px}
+.au-bar .check{height:44px}
+.au-wrap{flex:1;min-height:0;overflow:auto}
+.tbl.au td{font-size:13px;vertical-align:top}
+.tbl.au .bad{color:var(--bad)}
+.tbl.au thead th{position:sticky;top:0;background:var(--panel)}
+@media (max-width:560px){.codes{grid-template-columns:1fr}}
+body[data-role="viewer"] .power{pointer-events:none;opacity:.55}
+.btn-line.sm:hover{color:var(--bg)}
+.field .check input[type=checkbox]{width:18px;height:18px;padding:0;flex-shrink:0}
+.field .check{font-family:inherit;text-transform:none;letter-spacing:0;color:var(--ink)}

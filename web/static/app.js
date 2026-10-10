@@ -21,7 +21,7 @@
   const hasGL = !!window.THREE && (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } })();
 
   const S = {
-    user: '', license: null, version: '', settings: null,
+    user: '', role: '', twoFactor: false, license: null, version: '', settings: null,
     servers: [], tpls: [], tplById: {}, host: null,
     sel: null, pending: {}, consoleId: null, es: null,
     hist: { cpu: [], ram: [], disk: [], run: [] }
@@ -34,10 +34,12 @@
     const r = await fetch(path, opt);
     let data = null;
     try { data = await r.json(); } catch (e) { /* kein JSON */ }
-    if (r.status === 401 && !/\/api\/(login|setup)$/.test(path)) { stopApp(); showAuth('login'); throw new Error('Bitte anmelden'); }
+    if (r.status === 401 && !/\/api\/(login|setup|login\/2fa)$/.test(path)) { stopApp(); closeDialogs(); showAuth('login'); throw new Error('Bitte anmelden'); }
     if (!r.ok) throw new Error((data && data.error) || ('Fehler ' + r.status));
     return data;
   }
+
+  function closeDialogs() { $$('dialog[open]').forEach(d => d.close()); }
 
   /* ---------------- Toasts ---------------- */
   function toast(msg, kind) {
@@ -63,6 +65,9 @@
   const isOn = s => ['running', 'starting', 'installing', 'preparing'].includes(s.status);
   const byId = id => S.servers.find(s => s.id === id);
   const addr = () => (S.settings && S.settings.public_host) || location.hostname;
+  const RANK = { viewer: 1, operator: 2, admin: 3 };
+  const can = role => (RANK[S.role] || 0) >= RANK[role];
+  const ROLE = { admin: 'Admin', operator: 'Betreiber', viewer: 'Zuschauer' };
   const portList = s => (s.ports || []).map(p => p.host + '/' + p.proto).join(', ');
   const pad2 = n => String(n).padStart(2, '0');
   const hasPl = s => s.status === 'running' && s.players >= 0;
@@ -352,15 +357,15 @@
       </dl>
       ${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}
       <div class="acts">
-        <button class="btn-accent" type="button" data-d="power" ${busy ? 'disabled' : ''}>${on ? 'Stoppen' : 'Starten'}</button>
-        <button class="btn-line" type="button" data-d="restart" ${!on || busy ? 'disabled' : ''}>Neustart</button>
-        <button class="btn-line" type="button" data-d="settings">Einstellungen</button>
+        <button class="btn-accent op-only" type="button" data-d="power" ${busy ? 'disabled' : ''}>${on ? 'Stoppen' : 'Starten'}</button>
+        <button class="btn-line op-only" type="button" data-d="restart" ${!on || busy ? 'disabled' : ''}>Neustart</button>
+        <button class="btn-line op-only" type="button" data-d="settings">Einstellungen</button>
         <button class="btn-line" type="button" data-d="backups">Backups</button>
-        <button class="btn-line" type="button" data-d="files">Dateien</button>
+        <button class="btn-line op-only" type="button" data-d="files">Dateien</button>
         <button class="btn-line" type="button" data-d="tasks">Aufgaben</button>
         <button class="btn-line" type="button" data-d="events">Verlauf</button>
-        <button class="btn-line" type="button" data-d="edit">Bearbeiten</button>
-        <button class="btn-line" type="button" data-d="delete">Löschen</button>
+        <button class="btn-line op-only" type="button" data-d="edit">Bearbeiten</button>
+        <button class="btn-line admin-only" type="button" data-d="delete">Löschen</button>
         <button class="btn-line" type="button" data-d="back">Zurück</button>
       </div>`;
     const d = $('#detail');
@@ -388,6 +393,7 @@
     finally { delete S.pending[s.id]; await loadServers(); }
   }
   function togglePower(s) {
+    if (!can('operator')) return;
     if (S.pending[s.id] || s.status === 'preparing') return;
     if (isOn(s)) act(s, 'stop', s.name + ' wird gestoppt');
     else { act(s, 'start', s.name + ' wird gestartet'); if (S.consoleId !== s.id) openConsole(s.id); }
@@ -415,7 +421,7 @@
   function renderCards() {
     const box = $('#mods');
     if (!S.servers.length) {
-      box.innerHTML = '<div class="empty">Hier erscheinen deine Gameserver. Leg oben rechts den ersten an.</div>';
+      box.innerHTML = '<div class="empty">' + (can('admin') ? 'Hier erscheinen deine Gameserver. Leg oben rechts den ersten an.' : 'Hier erscheinen die Server, die dir freigegeben sind.') + '</div>';
     } else {
       const empty = $('.empty', box); if (empty) empty.remove();
       const seen = new Set();
@@ -665,7 +671,15 @@
   });
 
   /* ---------------- Einstellungen + Lizenz ---------------- */
-  async function openSettings() {
+  async function openSettings(focus) {
+    loadMe();
+    if (!can('admin')) {
+      $('#verLine').textContent = 'Version ' + S.version;
+      $('#dlgSettings').showModal();
+      if (typeof focus === 'string') setTimeout(() => { const el = $(focus); if (el) el.scrollIntoView({ block: 'center' }); }, 60);
+      return;
+    }
+    loadTLS();
     try { const r = await api('GET', '/api/settings'); S.settings = r.settings; S.defaultModel = r.default_model; } catch (e) { toast(e.message, 'bad'); return; }
     const s = S.settings;
     $('#sProv').value = s.ai_provider || '';
@@ -684,6 +698,7 @@
     $('#verLine').textContent = 'Version ' + S.version;
     $('#stmPass').value = ''; $('#stmCode').value = ''; loadSteam();
     $('#dlgSettings').showModal();
+    if (typeof focus === 'string') setTimeout(() => { const el = $(focus); if (el) { el.scrollIntoView({ block: 'center' }); if (el.tagName === 'SELECT') el.focus(); } }, 60);
   }
   function provFields() {
     const p = $('#sProv').value;
@@ -779,6 +794,237 @@
     try { S.license = await api('PUT', '/api/license', { key: $('#licKey').value }); renderLicense(); renderKI(); toast('Lizenz aktiviert: ' + S.license.edition.name, 'ok'); $('#licKey').value = ''; }
     catch (err) { showErr($('#licErr'), err.message); }
   });
+  /* ---------------- Mein Konto ---------------- */
+  const fmtLogin = d => d && !String(d).startsWith('0001') ? fmtDate(d) : 'noch nie';
+  async function loadMe() {
+    showErr($('#pwErr')); $('#pwOld').value = ''; $('#pwNew').value = ''; $('#pwNew2').value = ''; $('#pwUser').value = S.user;
+    let me;
+    try { me = await api('GET', '/api/me'); } catch (e) { return; }
+    S.twoFactor = me.two_factor;
+    $('#meLine').innerHTML = `Angemeldet als <b>${esc(me.name)}</b> · <span class="role ${esc(me.role)}">${esc(ROLE[me.role] || me.role)}</span>` +
+      (me.role !== 'admin' && me.servers.length ? ` · ${me.servers.length} Server freigegeben` : '');
+    $('#tfStatus').innerHTML = me.two_factor
+      ? `<span class="on-ok">Eingeschaltet.</span> Noch ${me.recovery_left} Wiederherstellungscode${me.recovery_left === 1 ? '' : 's'} übrig.${me.recovery_left < 3 ? ' <b>Bitte neue erstellen.</b>' : ''}`
+      : 'Ausgeschaltet.';
+    $('#tfOn').hidden = me.two_factor; $('#tfOff').hidden = !me.two_factor; $('#tfCodes').hidden = !me.two_factor;
+    $('#sessLine').textContent = me.sessions === 1 ? 'Du bist nur auf diesem Gerät angemeldet.' : `Du bist auf ${me.sessions} Geräten bzw. Browsern angemeldet.`;
+    $('#logoutAll').hidden = me.sessions < 2;
+  }
+  $('#pwForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#pwErr'));
+    if ($('#pwNew').value !== $('#pwNew2').value) { showErr($('#pwErr'), 'Die neuen Passwörter stimmen nicht überein.'); return; }
+    try {
+      const r = await api('PUT', '/api/me/password', { old: $('#pwOld').value, new: $('#pwNew').value });
+      toast('Passwort geändert' + (r.ended ? ', ' + r.ended + ' andere Geräte abgemeldet' : ''), 'ok'); loadMe();
+    } catch (err) { showErr($('#pwErr'), err.message); }
+  });
+  $('#logoutAll').addEventListener('click', async () => {
+    try { const r = await api('POST', '/api/me/logout-all'); toast(r.ended + ' andere Sitzungen beendet', 'ok'); loadMe(); } catch (err) { toast(err.message, 'bad'); }
+  });
+
+  // Zwei-Faktor einrichten
+  let tfCodesText = '';
+  function showCodes(codes) {
+    tfCodesText = 'Gamepanel – Wiederherstellungscodes für ' + S.user + ' (' + location.host + ')\n' + codes.join('\n') + '\n';
+    $('#tfList').innerHTML = codes.map(c => `<li>${esc(c)}</li>`).join('');
+    $('#tfStep1').hidden = true; $('#tfAct1').hidden = true; $('#tfStep2').hidden = false; $('#tfAct2').hidden = false;
+  }
+  $('#tfOn').addEventListener('click', async () => {
+    let r;
+    try { r = await api('POST', '/api/me/2fa/setup'); } catch (err) { toast(err.message, 'bad'); return; }
+    $('#tfStep1').hidden = false; $('#tfAct1').hidden = false; $('#tfStep2').hidden = true; $('#tfAct2').hidden = true;
+    showErr($('#tfErr')); $('#tfCode').value = '';
+    $('#tfSecret').textContent = r.secret.replace(/(.{4})/g, '$1 ').trim();
+    try { const q = qrcode(0, 'M'); q.addData(r.uri); q.make(); $('#tfQR').innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true, alt: 'QR-Code' }); }
+    catch (e) { $('#tfQR').textContent = 'QR-Code nicht verfügbar, bitte den Schlüssel eintippen.'; }
+    $('#dlg2FA').showModal(); setTimeout(() => $('#tfCode').focus(), 60);
+  });
+  $('#tfForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#tfErr'));
+    if ($('#tfStep1').hidden) { $('#dlg2FA').close(); return; }
+    try { const r = await api('POST', '/api/me/2fa/enable', { code: $('#tfCode').value }); showCodes(r.recovery); toast('Zwei-Faktor-Anmeldung ist an', 'ok'); loadMe(); }
+    catch (err) { showErr($('#tfErr'), err.message + (/stimmt nicht/.test(err.message) ? ' Stimmt die Uhrzeit auf Handy und Server?' : '')); }
+  });
+  $('#tfCodes').addEventListener('click', async () => {
+    const pw = await passwordBox('Neue Wiederherstellungscodes', 'Die alten Codes werden ungültig. Zur Bestätigung dein Passwort:');
+    if (pw == null) return;
+    try { const r = await api('POST', '/api/me/2fa/recovery', { password: pw }); showCodes(r.recovery); $('#dlg2FA').showModal(); loadMe(); }
+    catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#tfOff').addEventListener('click', async () => {
+    const pw = await passwordBox('Zwei-Faktor ausschalten?', 'Danach reicht wieder das Passwort allein. Zur Bestätigung dein Passwort:');
+    if (pw == null) return;
+    try { await api('POST', '/api/me/2fa/disable', { password: pw }); toast('Zwei-Faktor-Anmeldung ist aus'); loadMe(); }
+    catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#tfDl').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([tfCodesText], { type: 'text/plain' }));
+    a.download = 'gamepanel-wiederherstellungscodes.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $('#tfCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(tfCodesText); toast('Kopiert', 'ok'); } catch (e) { toast('Kopieren geht hier nicht – bitte als Datei speichern', 'bad'); }
+  });
+  function passwordBox(title, label) {
+    return new Promise(res => {
+      const d = $('#dlgPrompt'), inp = $('#prInput');
+      $('#prTitle').textContent = title; $('#prLabel').textContent = label; $('#prOk').textContent = 'Bestätigen';
+      inp.type = 'password'; inp.value = ''; inp.autocomplete = 'current-password';
+      const onClose = () => { d.removeEventListener('close', onClose); inp.type = 'text'; inp.autocomplete = 'off'; res(d.returnValue === 'ok' ? inp.value : null); inp.value = ''; };
+      d.returnValue = '';
+      d.addEventListener('close', onClose);
+      $('#prForm').onsubmit = e => { e.preventDefault(); d.close('ok'); };
+      d.showModal(); setTimeout(() => inp.focus(), 30);
+    });
+  }
+
+  /* ---------------- Benutzer ---------------- */
+  const US = { list: [], servers: [], me: '', edit: null };
+  async function openUsers() {
+    if ($('#dlgSettings').open) $('#dlgSettings').close();
+    await loadUsers();
+    usReset();
+    if (!$('#dlgUsers').open) $('#dlgUsers').showModal();
+  }
+  async function loadUsers() {
+    try { const r = await api('GET', '/api/users'); US.list = r.users; US.servers = r.servers; US.me = r.me; } catch (err) { toast(err.message, 'bad'); return; }
+    const srvName = id => (US.servers.find(s => s.id === id) || { name: id }).name;
+    $('#usRows').innerHTML = US.list.map(u => `<tr class="${u.disabled ? 'off' : ''}">
+        <td><b>${esc(u.name)}</b>${u.name === US.me ? ' <span class="muted small">(du)</span>' : ''}${u.disabled ? ' <span class="muted small">gesperrt</span>' : ''}</td>
+        <td><span class="role ${esc(u.role)}">${esc(ROLE[u.role] || u.role)}</span></td>
+        <td class="wrap small">${u.role === 'admin' || !u.servers.length ? '<span class="muted">alle</span>' : u.servers.map(id => esc(srvName(id))).join(', ')}</td>
+        <td>${u.two_factor ? '<span class="on-ok">an</span>' : '<span class="muted">aus</span>'}</td>
+        <td class="small">${esc(fmtLogin(u.last_login))}${u.sessions ? ` <span class="muted">· ${u.sessions} aktiv</span>` : ''}</td>
+        <td><div class="acts"><button type="button" class="btn-line sm" data-us-edit="${esc(u.name)}">Bearbeiten</button>${u.name === US.me ? '' : `<button type="button" class="btn-line sm" data-us-del="${esc(u.name)}">Löschen</button>`}</div></td>
+      </tr>`).join('');
+  }
+  function usServers(sel) {
+    $('#usSrv').innerHTML = US.servers.length ? US.servers.map(s => `<label class="check"><input type="checkbox" value="${esc(s.id)}" ${sel.includes(s.id) ? 'checked' : ''}> ${esc(s.name)}</label>`).join('')
+      : '<span class="muted small">Noch keine Server angelegt.</span>';
+    $('#usAll').checked = !sel.length; $('#usSrv').hidden = !sel.length;
+  }
+  function usRoleFields() { $('#usSrvWrap').hidden = $('#usRole').value === 'admin'; }
+  function usReset() {
+    US.edit = null; showErr($('#usErr'));
+    $('#usFormTitle').textContent = 'Neuer Benutzer'; $('#usSave').textContent = 'Anlegen'; $('#usCancel').hidden = true; $('#usExtra').hidden = true;
+    $('#usName').value = ''; $('#usName').disabled = false; $('#usPw').value = ''; $('#usPwLabel').textContent = 'Passwort';
+    $('#usPw').placeholder = 'mindestens 10 Zeichen'; $('#usRole').value = 'viewer';
+    $('#usDis').checked = false; $('#us2fa').checked = false; $('#usEnd').checked = false;
+    usServers([]); usRoleFields();
+  }
+  function usEdit(name) {
+    const u = US.list.find(x => x.name === name); if (!u) return;
+    US.edit = u; showErr($('#usErr'));
+    $('#usFormTitle').textContent = u.name + ' bearbeiten'; $('#usSave').textContent = 'Speichern'; $('#usCancel').hidden = false; $('#usExtra').hidden = false;
+    $('#usName').value = u.name; $('#usName').disabled = true; $('#usPw').value = ''; $('#usPwLabel').textContent = 'Neues Passwort';
+    $('#usPw').placeholder = 'leer lassen = unverändert'; $('#usRole').value = u.role;
+    $('#usDis').checked = u.disabled; $('#us2fa').checked = false; $('#us2faWrap').hidden = !u.two_factor; $('#usEnd').checked = false;
+    const self = u.name === US.me;
+    $('#usRole').disabled = self; $('#usDis').disabled = self;
+    usServers(u.servers); usRoleFields();
+    $('#usForm').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'nearest' }); $('#usPw').focus();
+  }
+  $('#usRole').addEventListener('change', usRoleFields);
+  $('#usAll').addEventListener('change', () => { $('#usSrv').hidden = $('#usAll').checked; });
+  $('#usCancel').addEventListener('click', () => { $('#usRole').disabled = false; $('#usDis').disabled = false; usReset(); });
+  $('#usRows').addEventListener('click', async e => {
+    const ed = e.target.closest('[data-us-edit]'), del = e.target.closest('[data-us-del]');
+    if (ed) usEdit(ed.dataset.usEdit);
+    if (del) {
+      const n = del.dataset.usDel;
+      if (!await confirmBox(n + ' löschen?', 'Das Konto wird entfernt und überall abgemeldet. Server und Protokoll bleiben.', 'Löschen')) return;
+      try { await api('DELETE', '/api/users/' + encodeURIComponent(n)); toast(n + ' gelöscht'); await loadUsers(); usReset(); } catch (err) { toast(err.message, 'bad'); }
+    }
+  });
+  $('#usForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#usErr'));
+    const servers = $('#usAll').checked ? [] : $$('#usSrv input:checked').map(i => i.value);
+    if (!$('#usAll').checked && !servers.length && $('#usRole').value !== 'admin') { showErr($('#usErr'), 'Bitte mindestens einen Server wählen oder „Alle Server“.'); return; }
+    const body = { servers };
+    if (!$('#usRole').disabled) body.role = $('#usRole').value;
+    if ($('#usPw').value) body.password = $('#usPw').value;
+    try {
+      if (US.edit) {
+        if (!$('#usDis').disabled) body.disabled = $('#usDis').checked;
+        body.reset_2fa = $('#us2fa').checked; body.end_sessions = $('#usEnd').checked;
+        await api('PATCH', '/api/users/' + encodeURIComponent(US.edit.name), body);
+        toast(US.edit.name + ' gespeichert', 'ok');
+      } else {
+        body.name = $('#usName').value.trim();
+        if (!body.password) { showErr($('#usErr'), 'Bitte ein Passwort vergeben.'); return; }
+        await api('POST', '/api/users', body);
+        toast(body.name + ' angelegt. Gib ihm Benutzername und Passwort weiter.', 'ok');
+      }
+      $('#usRole').disabled = false; $('#usDis').disabled = false;
+      await loadUsers(); usReset();
+    } catch (err) { showErr($('#usErr'), err.message); }
+  });
+  $('#openUsers').addEventListener('click', openUsers);
+
+  /* ---------------- Protokoll ---------------- */
+  let auTimer = null;
+  async function openAudit() {
+    if ($('#dlgSettings').open) $('#dlgSettings').close();
+    try { const r = await api('GET', '/api/users'); $('#auUser').innerHTML = '<option value="">Alle</option>' + r.users.map(u => `<option>${esc(u.name)}</option>`).join(''); } catch (e) { /* egal */ }
+    $('#dlgAudit').showModal(); loadAudit();
+  }
+  async function loadAudit() {
+    const q = new URLSearchParams({ q: $('#auQ').value, user: $('#auUser').value, days: $('#auDays').value, failed: $('#auFail').checked ? '1' : '', limit: '500' });
+    let list;
+    try { list = await api('GET', '/api/audit?' + q); } catch (err) { toast(err.message, 'bad'); return; }
+    $('#auRows').innerHTML = list.length ? list.map(e => `<tr>
+        <td class="mono small">${esc(fmtDate(e.time))}</td><td>${esc(e.user || '–')}</td>
+        <td class="${e.ok ? '' : 'bad'}">${esc(e.action)}${e.ok ? '' : ' ✕'}</td><td>${esc(e.target || '')}</td>
+        <td class="wrap small">${esc(e.detail || '')}${e.error ? `<span class="bad">${e.detail ? ' · ' : ''}${esc(e.error)}</span>` : ''}</td>
+        <td class="mono small muted">${esc(e.ip || '')}</td></tr>`).join('')
+      : '<tr class="empty"><td colspan="6">Keine Einträge.</td></tr>';
+    $('#auCount').textContent = list.length >= 500 ? 'Die neuesten 500 Einträge. Filter eingrenzen für ältere.' : list.length + ' Einträge';
+  }
+  $('#auForm').addEventListener('input', () => { clearTimeout(auTimer); auTimer = setTimeout(loadAudit, 250); });
+  $('#auForm').addEventListener('submit', e => { e.preventDefault(); loadAudit(); });
+  $('#openAudit').addEventListener('click', openAudit);
+
+  /* ---------------- HTTPS ---------------- */
+  async function loadTLS() {
+    let r;
+    try { r = await api('GET', '/api/https'); } catch (e) { return; }
+    renderTLS(r);
+    $('#tlsMode').value = r.status.mode || ''; $('#tlsDomain').value = r.status.domain || ''; $('#tlsEmail').value = r.status.email || '';
+    $('#tlsCert').value = ''; $('#tlsKey').value = ''; tlsFields(); showErr($('#tlsErr'));
+    $('#tlsPort').textContent = location.port || (location.protocol === 'https:' ? '443' : '80');
+  }
+  function renderTLS(r) {
+    const st = r.status, parts = [];
+    parts.push(r.secure ? '<span class="on-ok">Diese Verbindung ist verschlüsselt.</span>' : '<b>Diese Verbindung ist unverschlüsselt.</b>');
+    if (st.off) parts.push('<span class="err">Die Umleitung auf HTTPS ist per GP_NO_TLS abgeschaltet.</span>');
+    if (st.subject) parts.push(`Zertifikat: <b>${esc(st.issuer && st.issuer !== st.subject ? st.issuer : st.subject === 'Gamepanel' ? 'selbst signiert' : st.subject)}</b>, gültig bis ${esc(new Date(st.not_after).toLocaleDateString('de-DE'))}` +
+      (st.names && st.names.length ? `<br><span class="muted small">für ${esc(st.names.slice(0, 8).join(', '))}${st.names.length > 8 ? ' …' : ''}</span>` : ''));
+    $('#tlsStatus').innerHTML = parts.join('<br>');
+    showErr($('#tlsErr'), st.error || '');
+    $('#tlsRenew').hidden = st.mode !== 'acme';
+  }
+  function tlsFields() { const m = $('#tlsMode').value; $$('[data-tls]').forEach(el => { el.hidden = el.dataset.tls !== m; }); }
+  $('#tlsMode').addEventListener('change', tlsFields);
+  $('#tlsForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#tlsErr'));
+    const mode = $('#tlsMode').value;
+    try {
+      const r = await api('PUT', '/api/https', { mode, domain: $('#tlsDomain').value, email: $('#tlsEmail').value, cert: $('#tlsCert').value, key: $('#tlsKey').value });
+      renderTLS(r); $('#tlsCert').value = ''; $('#tlsKey').value = '';
+      if (mode && location.protocol === 'http:' && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) {
+        const host = mode === 'acme' && $('#tlsDomain').value ? $('#tlsDomain').value.trim() : location.host;
+        toast('HTTPS ist an. Du wirst gleich umgeleitet …', 'ok');
+        setTimeout(() => { location.href = 'https://' + host + (mode === 'acme' ? '/' : location.pathname); }, 1800);
+      } else toast(mode ? 'HTTPS gespeichert' : 'HTTPS ausgeschaltet, nur noch HTTP', 'ok');
+    } catch (err) { showErr($('#tlsErr'), err.message); }
+  });
+  $('#tlsRenew').addEventListener('click', async () => {
+    const b = $('#tlsRenew'); b.disabled = true; b.textContent = 'Frage Let\'s Encrypt …';
+    try { renderTLS(await api('POST', '/api/https/renew')); toast('Zertifikat ist da', 'ok'); }
+    catch (err) { showErr($('#tlsErr'), err.message); }
+    finally { b.disabled = false; b.textContent = 'Zertifikat jetzt holen'; }
+  });
+
   /* ---------------- Selbsttest ---------------- */
   const TS = { timer: null, open: {} };
   const fmtDur = sec => sec >= 3600 ? Math.floor(sec / 3600) + ' h ' + pad2(Math.floor(sec % 3600 / 60)) + ' min' : Math.max(1, Math.round(sec / 60)) + ' min';
@@ -983,6 +1229,7 @@
     const tpl = S.tplById[s.template];
     $('#tabMods').hidden = !(tpl && tpl.mods);
     if (tab === 'mods' && $('#tabMods').hidden) tab = 'settings';
+    if (!can('operator') && ['settings', 'mods', 'files'].includes(tab)) tab = 'backups';
     $('#mgTitle').textContent = s.name; $('#mgGame').textContent = s.template_name;
     mgTab(tab || 'backups');
     if (!$('#dlgManage').open) $('#dlgManage').showModal();
@@ -1470,23 +1717,30 @@
   /* ---------------- Befehlssuche ---------------- */
   let palItems = [], palIdx = 0;
   function actions() {
-    const a = [
+    const a = can('admin') ? [
       { label: 'Server anlegen', hint: 'Neu', run: () => openCreate() },
       { label: 'Server mit KI anlegen', hint: 'KI', run: () => { $('#ki').scrollIntoView({ behavior: motion ? 'smooth' : 'auto' }); $('#askInput').focus(); } }
-    ];
+    ] : [];
+    const op = can('operator');
     S.servers.forEach(s => {
-      if (s.status !== 'preparing') a.push({ label: s.name + (isOn(s) ? ' stoppen' : ' starten'), hint: 'Server', run: () => togglePower(s) });
+      if (op && s.status !== 'preparing') a.push({ label: s.name + (isOn(s) ? ' stoppen' : ' starten'), hint: 'Server', run: () => togglePower(s) });
       a.push({ label: 'Zu ' + s.name + ' fliegen', hint: '3D', run: () => { select(s.id); $('#stage').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
-      a.push({ label: 'Einstellungen von ' + s.name, hint: 'Einstellungen', run: () => openManage(s.id, 'settings') });
-      if ((S.tplById[s.template] || {}).mods) a.push({ label: 'Mods von ' + s.name, hint: 'Mods', run: () => openManage(s.id, 'mods') });
+      if (op) a.push({ label: 'Einstellungen von ' + s.name, hint: 'Einstellungen', run: () => openManage(s.id, 'settings') });
+      if (op && (S.tplById[s.template] || {}).mods) a.push({ label: 'Mods von ' + s.name, hint: 'Mods', run: () => openManage(s.id, 'mods') });
       a.push({ label: 'Backups von ' + s.name, hint: 'Backup', run: () => openManage(s.id, 'backups') });
-      a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
+      if (op) a.push({ label: 'Dateien von ' + s.name, hint: 'Dateien', run: () => openManage(s.id, 'files') });
       a.push({ label: 'Aufgaben von ' + s.name, hint: 'Aufgaben', run: () => openManage(s.id, 'tasks') });
       a.push({ label: 'Verlauf von ' + s.name, hint: 'Verlauf', run: () => openManage(s.id, 'events') });
       a.push({ label: 'Konsole von ' + s.name, hint: 'Konsole', run: () => { openConsole(s.id); $('#konsole').scrollIntoView({ behavior: motion ? 'smooth' : 'auto', block: 'center' }); } });
     });
-    a.push({ label: 'Einstellungen und Lizenz', hint: 'Panel', run: openSettings });
-    a.push({ label: 'Selbsttest der Spielvorlagen', hint: 'Panel', run: openTest });
+    a.push({ label: can('admin') ? 'Einstellungen und Lizenz' : 'Mein Konto', hint: 'Panel', run: openSettings });
+    a.push({ label: 'Zwei-Faktor-Anmeldung', hint: 'Konto', run: () => openSettings('#tfOn') });
+    if (can('admin')) {
+      a.push({ label: 'Selbsttest der Spielvorlagen', hint: 'Panel', run: openTest });
+      a.push({ label: 'Benutzer verwalten', hint: 'Panel', run: openUsers });
+      a.push({ label: 'Protokoll: wer hat was gemacht', hint: 'Panel', run: openAudit });
+      a.push({ label: 'HTTPS einrichten', hint: 'Panel', run: () => openSettings('#tlsMode') });
+    }
     a.push({ label: isDark() ? 'Helles Design' : 'Dunkles Design', hint: 'Ansicht', run: toggleTheme });
     a.push({ label: motion ? 'Animationen reduzieren' : 'Animationen einschalten', hint: 'Ansicht', run: toggleMotion });
     return a;
@@ -1534,19 +1788,23 @@
   lightMQ.addEventListener('change', () => { if (!root.dataset.theme) { syncSwitches(); applySceneColors(); } });
 
   /* ---------------- Anmeldung ---------------- */
-  let authMode = 'login', AuthBg = null;
+  let authMode = 'login', AuthBg = null, authTicket = '';
   function showAuth(mode) {
     authMode = mode;
     $('#app').hidden = true; $('#auth').hidden = false;
-    const setup = mode === 'setup';
-    $('#authTitle').textContent = setup ? 'Willkommen' : 'Anmelden';
-    $('#authLead').textContent = setup ? 'Lege dein Admin-Konto an. Damit meldest du dich künftig im Panel an.' : 'Melde dich mit deinem Admin-Konto an.';
+    const setup = mode === 'setup', code = mode === 'code';
+    $('#authTitle').textContent = setup ? 'Willkommen' : code ? 'Bestätigen' : 'Anmelden';
+    $('#authLead').textContent = setup ? 'Lege dein Admin-Konto an. Damit meldest du dich künftig im Panel an.'
+      : code ? 'Gib den 6-stelligen Code aus deiner Authenticator-App ein. Handy weg? Dann einen deiner Wiederherstellungscodes.'
+      : 'Melde dich mit deinem Konto an.';
+    $('#authCreds').hidden = code; $('#authCodeWrap').hidden = !code; $('#authBack').hidden = !code;
+    $('#authName').required = !code; $('#authPass').required = !code;
     $('#authPass2Wrap').hidden = !setup;
     $('#authPass').autocomplete = setup ? 'new-password' : 'current-password';
-    $('#authBtn').textContent = setup ? 'Konto anlegen' : 'Anmelden';
+    $('#authBtn').textContent = setup ? 'Konto anlegen' : code ? 'Bestätigen' : 'Anmelden';
     showErr($('#authErr'));
     if (hasGL && !AuthBg) { try { AuthBg = makeCore($('#authBg'), 9); } catch (e) { AuthBg = null; } }
-    setTimeout(() => $('#authName').focus(), 50);
+    setTimeout(() => (code ? $('#authCode') : $('#authName')).focus(), 50);
   }
   $('#authForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#authErr'));
@@ -1554,13 +1812,24 @@
     if (authMode === 'setup' && pw !== $('#authPass2').value) { showErr($('#authErr'), 'Die Passwörter stimmen nicht überein.'); return; }
     const btn = $('#authBtn'); btn.disabled = true;
     try {
-      await api('POST', authMode === 'setup' ? '/api/setup' : '/api/login', { name, password: pw });
-      $('#authPass').value = ''; $('#authPass2').value = '';
+      if (authMode === 'code') {
+        const r = await api('POST', '/api/login/2fa', { ticket: authTicket, code: $('#authCode').value });
+        $('#authCode').value = ''; authTicket = '';
+        if (r.used_recovery) toast(r.recovery_left ? 'Wiederherstellungscode verbraucht. Noch ' + r.recovery_left + ' übrig.' : 'Das war dein letzter Wiederherstellungscode. Bitte neue erstellen.', r.recovery_left > 2 ? '' : 'bad');
+      } else {
+        const r = await api('POST', authMode === 'setup' ? '/api/setup' : '/api/login', { name, password: pw });
+        $('#authPass').value = ''; $('#authPass2').value = '';
+        if (r && r.need_code) { authTicket = r.ticket; showAuth('code'); return; }
+      }
       await boot();
-    } catch (err) { showErr($('#authErr'), err.message); }
+    } catch (err) {
+      showErr($('#authErr'), err.message);
+      if (authMode === 'code' && /abgelaufen/.test(err.message)) { authTicket = ''; setTimeout(() => { showAuth('login'); showErr($('#authErr'), err.message); }, 50); }
+    }
     finally { btn.disabled = false; }
   });
-  $('#logoutBtn').onclick = async () => { try { await api('POST', '/api/logout'); } catch (e) { /* egal */ } stopApp(); showAuth('login'); };
+  $('#authBack').onclick = () => { authTicket = ''; $('#authCode').value = ''; showAuth('login'); };
+  $('#logoutBtn').onclick = async () => { try { await api('POST', '/api/logout'); } catch (e) { /* egal */ } stopApp(); closeDialogs(); showAuth('login'); };
 
   /* ---------------- Start + Abfragen ---------------- */
   let timers = [];
@@ -1574,6 +1843,7 @@
     try {
       const st = await api('GET', '/api/state');
       S.license = st.license; renderLicense();
+      if (st.role && st.role !== S.role) { S.role = st.role; document.body.dataset.role = S.role; renderAll(); }
       const ban = $('#dockerBanner');
       ban.hidden = !st.docker_error;
       if (st.docker_error) ban.textContent = 'Docker ist nicht erreichbar. Läuft der Docker-Dienst? Prüfen mit: sudo systemctl status docker. (' + st.docker_error + ')';
@@ -1582,7 +1852,7 @@
   function stopApp() { timers.forEach(clearInterval); timers = []; closeConsole(); }
   async function startApp() {
     $('#auth').hidden = true; $('#app').hidden = false;
-    const [tpls, set] = await Promise.all([api('GET', '/api/templates'), api('GET', '/api/settings')]);
+    const [tpls, set] = await Promise.all([api('GET', '/api/templates'), can('admin') ? api('GET', '/api/settings') : Promise.resolve({ settings: { public_host: S.publicHost } })]);
     S.tpls = tpls; S.tplById = Object.fromEntries(tpls.map(t => [t.id, t])); S.settings = set.settings;
     if (hasGL && !L.renderer) { try { initLand(); } catch (e) { console.error(e); } }
     if (!L.renderer && !$('.nogl')) $('#stage').insertAdjacentHTML('beforeend', '<div class="nogl">Die 3D-Ansicht braucht WebGL. Die Liste unten funktioniert trotzdem.</div>');
@@ -1600,6 +1870,9 @@
     try { st = await api('GET', '/api/state'); }
     catch (e) { document.body.innerHTML = '<p style="padding:24px">Das Panel antwortet nicht. Bitte Seite neu laden.</p>'; return; }
     S.version = st.version; S.license = st.license; S.user = st.user;
+    S.role = st.role || ''; S.twoFactor = !!st.two_factor; S.publicHost = st.public_host || '';
+    document.body.dataset.role = S.role;
+    $('#whoAmI').textContent = st.user ? st.user + (S.role !== 'admin' ? ' · ' + (ROLE[S.role] || '') : '') : '';
     if (st.setup_needed) { showAuth('setup'); return; }
     if (!st.user) { showAuth('login'); return; }
     const ban = $('#dockerBanner'); ban.hidden = !st.docker_error;

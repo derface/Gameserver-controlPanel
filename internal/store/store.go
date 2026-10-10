@@ -15,15 +15,34 @@ import (
 )
 
 type User struct {
-	Name    string    `json:"name"`
-	Salt    string    `json:"salt"`
-	Hash    string    `json:"hash"`
-	Created time.Time `json:"created"`
+	Name      string    `json:"name"`
+	Salt      string    `json:"salt"`
+	Hash      string    `json:"hash"`
+	Created   time.Time `json:"created"`
+	Role      string    `json:"role"`              // admin | operator | viewer
+	Servers   []string  `json:"servers,omitempty"` // only these servers (empty = all); not for admins
+	Disabled  bool      `json:"disabled,omitempty"`
+	TOTP      string    `json:"totp,omitempty"`      // base32 secret of the authenticator app, empty = no 2FA
+	TOTPLast  int64     `json:"totp_last,omitempty"` // last accepted time step, so a code works only once
+	Recovery  []string  `json:"recovery,omitempty"`  // sha256 of the unused recovery codes
+	LastLogin time.Time `json:"last_login,omitempty"`
 }
 
+// Session is stored under the sha256 of its token, so a leaked panel.json
+// does not hand out logged-in sessions.
 type Session struct {
 	User    string    `json:"user"`
 	Expires time.Time `json:"expires"`
+	Created time.Time `json:"created,omitempty"`
+	IP      string    `json:"ip,omitempty"`
+	Agent   string    `json:"agent,omitempty"`
+}
+
+// TLSConfig is the built-in HTTPS of the panel.
+type TLSConfig struct {
+	Mode   string `json:"mode"`             // "" (nur HTTP) | self | acme | custom
+	Domain string `json:"domain,omitempty"` // for Let's Encrypt
+	Email  string `json:"email,omitempty"`
 }
 
 type PortMap struct {
@@ -90,6 +109,7 @@ type Settings struct {
 	PublicHost   string        `json:"public_host,omitempty"` // shown to players, e.g. play.example.com
 	SteamUser    string        `json:"steam_user,omitempty"`  // logged-in Steam account (the login itself is cached by SteamCMD)
 	Remote       remote.Config `json:"remote_backup"`
+	TLS          TLSConfig     `json:"tls"`
 }
 
 type Data struct {
@@ -124,6 +144,11 @@ func Open(dir string) (*Store, error) {
 	}
 	if s.d.Sessions == nil {
 		s.d.Sessions = map[string]Session{}
+	}
+	for i := range s.d.Users {
+		if s.d.Users[i].Role == "" { // panels before 0.12 only had admins
+			s.d.Users[i].Role = "admin"
+		}
 	}
 	return s, nil
 }

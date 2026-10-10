@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"github.com/derface/Gameserver-controlPanel/internal/auth"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,9 +15,9 @@ import (
 )
 
 func (a *API) routesMods(mux *http.ServeMux) {
-	mux.HandleFunc("GET /api/servers/{id}/mods", a.guard(a.modsGet))
-	mux.HandleFunc("GET /api/servers/{id}/mods/search", a.guard(a.modsSearch))
-	mux.HandleFunc("PUT /api/servers/{id}/mods", a.guard(a.modsPut))
+	mux.HandleFunc("GET /api/servers/{id}/mods", a.need(auth.Viewer, a.modsGet))
+	mux.HandleFunc("GET /api/servers/{id}/mods/search", a.need(auth.Operator, a.modsSearch))
+	mux.HandleFunc("PUT /api/servers/{id}/mods", a.need(auth.Operator, a.modsPut))
 }
 
 type modState struct {

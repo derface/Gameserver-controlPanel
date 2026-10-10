@@ -17,12 +17,16 @@
   <form id="authForm" class="auth-card" autocomplete="on">
     <div class="brand big"><i></i>[Panel]</div>
     <h1 id="authTitle">Anmelden</h1>
-    <p id="authLead" class="muted">Melde dich mit deinem Admin-Konto an.</p>
-    <label class="field"><span>Benutzername</span><input id="authName" name="username" autocomplete="username" required></label>
-    <label class="field"><span>Passwort</span><input id="authPass" name="password" type="password" autocomplete="current-password" required></label>
-    <label class="field" id="authPass2Wrap" hidden><span>Passwort wiederholen</span><input id="authPass2" type="password" autocomplete="new-password"></label>
+    <p id="authLead" class="muted">Melde dich mit deinem Konto an.</p>
+    <div id="authCreds">
+      <label class="field"><span>Benutzername</span><input id="authName" name="username" autocomplete="username" required></label>
+      <label class="field"><span>Passwort</span><input id="authPass" name="password" type="password" autocomplete="current-password" required></label>
+      <label class="field" id="authPass2Wrap" hidden><span>Passwort wiederholen</span><input id="authPass2" type="password" autocomplete="new-password"></label>
+    </div>
+    <label class="field" id="authCodeWrap" hidden><span>Code</span><input id="authCode" inputmode="text" autocomplete="one-time-code" spellcheck="false" maxlength="20" placeholder="123456"></label>
     <p id="authErr" class="err" role="alert" hidden></p>
     <button class="btn-accent wide" type="submit" id="authBtn">Anmelden</button>
+    <button class="linkbtn" type="button" id="authBack" hidden>Zurück zur Anmeldung</button>
   </form>
 </section>
 
@@ -34,7 +38,7 @@
     <nav class="main" aria-label="Hauptnavigation">
       <a href="#top" aria-current="page">Übersicht</a>
       <a href="#server">Server</a>
-      <a href="#ki">KI-Assistent</a>
+      <a href="#ki" class="admin-only">KI-Assistent</a>
       <a href="#konsole">Konsole</a>
     </nav>
     <div class="tools">
@@ -43,7 +47,7 @@
       <button class="icon-btn" id="openSettings" type="button" aria-label="Einstellungen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
       <button class="switch" id="motionBtn" type="button" aria-pressed="true" aria-label="Animationen">Bewegung<span class="track"><span class="knob"></span></span></button>
       <button class="switch" id="themeBtn" type="button" aria-pressed="true">Hell<span class="track"><span class="knob"></span></span>Dunkel</button>
-      <button class="btn-line" id="logoutBtn" type="button">Abmelden</button>
+      <button class="btn-line" id="logoutBtn" type="button" title="Abmelden">Abmelden<span class="who mono" id="whoAmI"></span></button>
     </div>
   </div>
 </header>
@@ -64,8 +68,9 @@
         <div class="labels" id="labels"></div>
         <div class="stage-head"><div><h2>Server-Landschaft</h2><div class="mono muted">Ziehen zum Drehen · Block anklicken zum Hineinfliegen</div></div></div>
         <div class="stage-empty" id="stageEmpty" hidden>
-          <p>Noch kein Server. Leg deinen ersten an oder lass die KI einen planen.</p>
-          <button class="btn-accent" type="button" data-act="create">Server anlegen</button>
+          <p class="admin-only">Noch kein Server. Leg deinen ersten an oder lass die KI einen planen.</p>
+          <p class="not-admin">Dir ist noch kein Server freigegeben. Frag den Admin des Panels.</p>
+          <button class="btn-accent admin-only" type="button" data-act="create">Server anlegen</button>
         </div>
         <div class="zoom"><button type="button" id="zIn" aria-label="Näher heranzoomen">+</button><button type="button" id="zOut" aria-label="Herauszoomen">−</button><button type="button" id="zReset" class="txt">Übersicht</button></div>
         <aside class="detail" id="detail" aria-live="polite"></aside>
@@ -75,15 +80,15 @@
         <div class="sec-head">
           <h2>Gameserver</h2><span class="mono muted" id="modCount"></span>
           <span class="grow"></span>
-          <button class="btn-line" type="button" data-act="ai">Mit KI anlegen</button>
-          <button class="btn-accent" type="button" data-act="create">Server anlegen</button>
+          <button class="btn-line admin-only" type="button" data-act="ai">Mit KI anlegen</button>
+          <button class="btn-accent admin-only" type="button" data-act="create">Server anlegen</button>
         </div>
         <div class="mods" id="mods"></div>
       </section>
     </div>
 
     <aside class="col" aria-label="KI und Konsole">
-      <section class="core-card" id="ki" data-state="idle">
+      <section class="core-card admin-only" id="ki" data-state="idle">
         <div class="core-top"><h2>KI-Kern</h2><span class="core-state mono"><i></i><span id="coreState">Bereit</span></span></div>
         <canvas id="core" aria-hidden="true"></canvas>
         <div class="core-body" id="coreBody">
@@ -105,7 +110,7 @@
       <section class="lcd" id="konsole" aria-label="Konsole">
         <div class="lcd-head mono"><span id="conName">Konsole</span><span class="live" id="conLive" hidden><i></i>Live</span></div>
         <div class="lines" id="lines"><div class="dim">Wähle einen Server, um seine Konsole zu sehen.</div></div>
-        <form class="lcd-in" id="cmdForm">
+        <form class="lcd-in op-only" id="cmdForm">
           <span aria-hidden="true">›</span>
           <label class="sr" for="cmdInput">Befehl an den Server senden</label>
           <input id="cmdInput" autocomplete="off" placeholder="Befehl senden" disabled>
@@ -162,7 +167,66 @@
 
 <dialog id="dlgSettings" class="dlg">
   <div class="dlg-head"><h2>Einstellungen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
-  <form id="aiForm" class="set-block">
+  <div class="set-block" id="meBlock">
+    <h3>Mein Konto</h3>
+    <p id="meLine" class="small"></p>
+    <form id="pwForm" autocomplete="on">
+      <input type="text" name="username" id="pwUser" autocomplete="username" hidden>
+      <div class="vars">
+        <label class="field full"><span>Bisheriges Passwort</span><input id="pwOld" type="password" autocomplete="current-password" required></label>
+        <label class="field"><span>Neues Passwort</span><input id="pwNew" type="password" autocomplete="new-password" minlength="10" required></label>
+        <label class="field"><span>Wiederholen</span><input id="pwNew2" type="password" autocomplete="new-password" minlength="10" required></label>
+      </div>
+      <p class="err" id="pwErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="submit" class="btn-line">Passwort ändern</button></div>
+    </form>
+    <div class="sec2">
+      <h4>Zwei-Faktor-Anmeldung</h4>
+      <p class="small muted">Zusätzlich zum Passwort fragt das Panel nach einem Code aus einer Authenticator-App (z. B. Aegis, 2FAS, Google Authenticator, Bitwarden). Wer dein Passwort kennt, kommt so trotzdem nicht hinein.</p>
+      <p id="tfStatus" class="small"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn-line" id="tfOff" hidden>Ausschalten</button>
+        <button type="button" class="btn-line" id="tfCodes" hidden>Neue Wiederherstellungscodes</button>
+        <button type="button" class="btn-accent" id="tfOn">Einrichten</button>
+      </div>
+    </div>
+    <div class="sec2">
+      <h4>Angemeldete Geräte</h4>
+      <p class="small muted" id="sessLine"></p>
+      <div class="dlg-actions"><button type="button" class="btn-line" id="logoutAll">Auf allen anderen Geräten abmelden</button></div>
+    </div>
+  </div>
+  <div class="set-block admin-only">
+    <h3>Benutzer und Rechte</h3>
+    <p class="muted small">Weitere Konten für Freunde oder Mit-Admins. <b>Zuschauer</b> sehen Server, Konsole und Verlauf. <b>Betreiber</b> dürfen Server starten, stoppen, Befehle senden, Backups, Dateien, Einstellungen und Mods. <b>Admins</b> dürfen alles. Betreiber und Zuschauer lassen sich auf einzelne Server beschränken.</p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="openAudit">Protokoll ansehen</button><button type="button" class="btn-accent" id="openUsers">Benutzer verwalten</button></div>
+  </div>
+  <form id="tlsForm" class="set-block admin-only" autocomplete="off">
+    <h3>HTTPS</h3>
+    <p class="muted small">Verschlüsselt die Verbindung zum Panel, damit Passwörter nicht mitgelesen werden können. HTTP und HTTPS laufen auf demselben Port; ist HTTPS an, wird http:// automatisch umgeleitet.</p>
+    <p id="tlsStatus" class="small"></p>
+    <label class="field"><span>Zertifikat</span>
+      <select id="tlsMode">
+        <option value="">Aus – nur HTTP</option>
+        <option value="self">Selbst signiert – für zu Hause und im Heimnetz</option>
+        <option value="acme">Let's Encrypt – kostenlos, braucht eine eigene Domain</option>
+        <option value="custom">Eigenes Zertifikat einfügen</option>
+      </select></label>
+    <p class="note" data-tls="self">Der Browser warnt beim ersten Aufruf, weil niemand das Zertifikat beglaubigt. Einmal „Trotzdem fortfahren“ wählen; die Verbindung ist danach trotzdem verschlüsselt.</p>
+    <div class="vars" data-tls="acme">
+      <label class="field"><span>Domain</span><input id="tlsDomain" placeholder="panel.meine-domain.de" spellcheck="false"></label>
+      <label class="field"><span>E-Mail <em class="muted">optional</em></span><input id="tlsEmail" type="email" placeholder="für Ablauf-Warnungen"></label>
+      <p class="note full">Die Domain muss auf deine öffentliche IP zeigen. Im Router Port 80 (für die Prüfung) und Port 443 auf Port <span class="mono" id="tlsPort">8420</span> dieses Rechners weiterleiten – dann ist das Panel unter https://deine-domain erreichbar. Das Zertifikat wird alle 60 Tage von selbst erneuert.</p>
+    </div>
+    <div class="vars" data-tls="custom">
+      <label class="field full"><span>Zertifikat (PEM, mit Zwischenzertifikaten)</span><textarea id="tlsCert" rows="4" placeholder="-----BEGIN CERTIFICATE-----" spellcheck="false"></textarea></label>
+      <label class="field full"><span>Privater Schlüssel (PEM)</span><textarea id="tlsKey" rows="3" placeholder="-----BEGIN PRIVATE KEY----- (leer lassen = bisherigen behalten)" spellcheck="false"></textarea></label>
+    </div>
+    <p class="note">Ausgesperrt? Auf dem Server selbst geht http://localhost:8420 immer, z. B. per SSH-Tunnel. Oder in /etc/systemd/system/gamepanel.service die Zeile <span class="mono">Environment=GP_NO_TLS=1</span> ergänzen und den Dienst neu starten.</p>
+    <p class="err" id="tlsErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="tlsRenew" hidden>Zertifikat jetzt holen</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="aiForm" class="set-block admin-only">
     <h3>KI-Assistent</h3>
     <p class="muted small">Du nutzt deinen eigenen API-Key. Die Kosten rechnet dein Anbieter direkt mit dir ab. Ollama läuft kostenlos auf deinem eigenen Rechner.</p>
     <label class="field"><span>Anbieter</span>
@@ -175,7 +239,7 @@
     <p class="err" id="sErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="sTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
-  <form id="rmForm" class="set-block">
+  <form id="rmForm" class="set-block admin-only">
     <h3>Externe Backups</h3>
     <p class="muted small">Jedes Backup wird zusätzlich außerhalb dieses Servers gespeichert. Fällt die Platte aus, sind die Spielstände noch da.</p>
     <label class="field"><span>Ziel</span>
@@ -194,7 +258,7 @@
     <p class="err" id="rmErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="rmTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
-  <form id="stmForm" class="set-block" autocomplete="off">
+  <form id="stmForm" class="set-block admin-only" autocomplete="off">
     <h3>Steam-Konto</h3>
     <p class="muted small">Nur für Spiele, deren Server Steam nicht anonym herausgibt (Arma 3, DayZ, Killing Floor …). Das Panel speichert dein Passwort nicht, SteamCMD merkt sich nur die Anmeldung. Am besten ein eigenes Konto nur für Server nehmen: wer mit demselben Konto spielt, kann beim Server-Update aus dem Spiel fliegen. Manche Spiele (z. B. DayZ) verlangen, dass das Konto das Spiel besitzt.</p>
     <p id="stmStatus" class="small"></p>
@@ -206,14 +270,14 @@
     <p class="err" id="stmErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="stmLogout" hidden>Abmelden</button><button type="submit" class="btn-accent" id="stmGo">Anmelden</button></div>
   </form>
-  <form id="licForm" class="set-block">
+  <form id="licForm" class="set-block admin-only">
     <h3>Lizenz</h3>
     <p id="licStatus"></p>
     <label class="field"><span>Lizenzschlüssel</span><textarea id="licKey" rows="3" placeholder="GP1.…" spellcheck="false"></textarea></label>
     <p class="err" id="licErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
   </form>
-  <div class="set-block">
+  <div class="set-block admin-only">
     <h3>Selbsttest</h3>
     <p class="muted small">Prüft automatisch, ob die Spielvorlagen auf diesem Rechner funktionieren: herunterladen, starten, auf Bereitschaft und Spielerabfrage warten, wieder löschen. Läuft im Hintergrund, auch über Nacht.</p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="openTest">Selbsttest öffnen</button></div>
@@ -253,10 +317,10 @@
   <div class="dlg-head">
     <div class="mg-title"><span class="mono muted" id="mgGame"></span><h2 id="mgTitle">Server</h2></div>
     <div class="tabs" role="tablist" aria-label="Bereich">
-      <button type="button" role="tab" id="tabSettings" aria-selected="false" data-tab="settings">Einstellungen</button>
-      <button type="button" role="tab" id="tabMods" aria-selected="false" data-tab="mods" hidden>Mods</button>
+      <button type="button" role="tab" id="tabSettings" aria-selected="false" data-tab="settings" class="op-only">Einstellungen</button>
+      <button type="button" role="tab" id="tabMods" aria-selected="false" data-tab="mods" class="op-only" hidden>Mods</button>
       <button type="button" role="tab" id="tabBackups" aria-selected="true" data-tab="backups">Backups</button>
-      <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files">Dateien</button>
+      <button type="button" role="tab" id="tabFiles" aria-selected="false" data-tab="files" class="op-only">Dateien</button>
       <button type="button" role="tab" id="tabTasks" aria-selected="false" data-tab="tasks">Aufgaben</button>
       <button type="button" role="tab" id="tabEvents" aria-selected="false" data-tab="events">Verlauf</button>
     </div>
@@ -381,6 +445,73 @@
   </section>
 </dialog>
 
+<dialog id="dlg2FA" class="dlg small">
+  <div class="dlg-head"><h2>Zwei-Faktor</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <form id="tfForm" autocomplete="off">
+    <div id="tfStep1">
+      <p class="small">1. Scanne den Code mit deiner Authenticator-App.</p>
+      <div class="qr" id="tfQR" aria-label="QR-Code für die Authenticator-App"></div>
+      <p class="small muted">Scannen geht nicht? Diesen Schlüssel von Hand eintragen:</p>
+      <p class="mono secret" id="tfSecret"></p>
+      <label class="field"><span>2. Code aus der App</span><input id="tfCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456"></label>
+    </div>
+    <div id="tfStep2" hidden>
+      <p class="small"><b>Zwei-Faktor-Anmeldung ist an.</b> Bewahre diese Wiederherstellungscodes sicher auf (z. B. in Vaultwarden). Jeder Code funktioniert einmal, falls dein Handy weg ist. Sie werden nur jetzt angezeigt.</p>
+      <ol class="codes mono" id="tfList"></ol>
+    </div>
+    <p class="err" id="tfErr" role="alert" hidden></p>
+    <div class="dlg-actions" id="tfAct1"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Einschalten</button></div>
+    <div class="dlg-actions" id="tfAct2" hidden><button type="button" class="btn-line" id="tfDl">Als Datei speichern</button><button type="button" class="btn-line" id="tfCopy">Kopieren</button><button type="button" class="btn-accent" data-close>Fertig</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgUsers" class="dlg wide" aria-labelledby="usTitle">
+  <div class="dlg-head"><h2 id="usTitle">Benutzer</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Name</th><th>Rolle</th><th>Server</th><th>Zwei-Faktor</th><th>Zuletzt angemeldet</th><th><span class="sr">Aktionen</span></th></tr></thead>
+      <tbody id="usRows"></tbody>
+    </table>
+  </div>
+  <form id="usForm" class="us-form" autocomplete="off">
+    <h3 id="usFormTitle">Neuer Benutzer</h3>
+    <div class="vars">
+      <label class="field"><span>Benutzername</span><input id="usName" maxlength="40" spellcheck="false" autocomplete="off"></label>
+      <label class="field"><span id="usPwLabel">Passwort</span><input id="usPw" type="password" autocomplete="new-password" placeholder="mindestens 10 Zeichen"></label>
+      <label class="field"><span>Rolle</span>
+        <select id="usRole"><option value="viewer">Zuschauer – nur ansehen</option><option value="operator">Betreiber – Server bedienen</option><option value="admin">Admin – alles</option></select></label>
+      <div class="field" id="usSrvWrap"><span>Server</span>
+        <label class="check"><input type="checkbox" id="usAll" checked> Alle Server, auch künftige</label>
+        <div class="us-srv" id="usSrv" hidden></div>
+      </div>
+    </div>
+    <div class="us-extra" id="usExtra" hidden>
+      <label class="check"><input type="checkbox" id="usDis"> Konto sperren</label>
+      <label class="check" id="us2faWrap"><input type="checkbox" id="us2fa"> Zwei-Faktor zurücksetzen (Handy verloren)</label>
+      <label class="check"><input type="checkbox" id="usEnd"> Überall abmelden</label>
+    </div>
+    <p class="err" id="usErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="usCancel" hidden>Abbrechen</button><button type="submit" class="btn-accent" id="usSave">Anlegen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgAudit" class="dlg wide" aria-labelledby="auTitle">
+  <div class="dlg-head"><h2 id="auTitle">Protokoll</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <form class="au-bar" id="auForm" role="search">
+    <label class="field"><span>Suchen</span><input id="auQ" type="search" placeholder="Aktion, Server, Befehl, IP …" autocomplete="off"></label>
+    <label class="field"><span>Benutzer</span><select id="auUser"><option value="">Alle</option></select></label>
+    <label class="field"><span>Zeitraum</span><select id="auDays"><option value="1">Heute</option><option value="7" selected>7 Tage</option><option value="30">30 Tage</option><option value="0">Alles</option></select></label>
+    <label class="check"><input type="checkbox" id="auFail"> Nur Fehlschläge</label>
+  </form>
+  <div class="tbl-wrap au-wrap">
+    <table class="tbl au">
+      <thead><tr><th>Zeit</th><th>Benutzer</th><th>Aktion</th><th>Server</th><th>Details</th><th>IP</th></tr></thead>
+      <tbody id="auRows"></tbody>
+    </table>
+  </div>
+  <p class="mono muted small" id="auCount"></p>
+</dialog>
+
 <dialog id="dlgConfirm" class="dlg small">
   <form method="dialog" id="cfForm">
     <div class="dlg-head"><h2 id="cfTitle">Sicher?</h2></div>
@@ -407,6 +538,7 @@
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script src="vendor/three.min.js"></script>
+<script src="vendor/qrcode.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

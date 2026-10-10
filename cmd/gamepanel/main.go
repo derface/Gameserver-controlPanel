@@ -6,21 +6,23 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/derface/Gameserver-controlPanel/internal/mods"
 	"io/fs"
+
+	"github.com/derface/Gameserver-controlPanel/internal/mods"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/api"
+	"github.com/derface/Gameserver-controlPanel/internal/audit"
 	"github.com/derface/Gameserver-controlPanel/internal/auth"
 	"github.com/derface/Gameserver-controlPanel/internal/docker"
 	"github.com/derface/Gameserver-controlPanel/internal/hoststats"
+	"github.com/derface/Gameserver-controlPanel/internal/https"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
 	"github.com/derface/Gameserver-controlPanel/internal/remote"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
@@ -44,6 +46,8 @@ func main() {
 	if u := os.Getenv("GP_MODRINTH_URL"); u != "" { // for tests
 		mods.BaseURL = u
 	}
+	noTLS := flag.Bool("no-tls", os.Getenv("GP_NO_TLS") != "", "nicht auf HTTPS umleiten (Notausgang, falls HTTPS falsch eingestellt ist)")
+	acmeHTTP := flag.String("acme-http", env("GP_ACME_HTTP", ":80"), "Adresse für die Let's-Encrypt-Prüfung über HTTP")
 	showVersion := flag.Bool("version", false, "Version anzeigen")
 	flag.Parse()
 	if *showVersion {
@@ -63,7 +67,19 @@ func main() {
 	mgr := manager.New(st, dk, tpls, *dataDir)
 	host := hoststats.New(*dataDir)
 	webFS, _ := fs.Sub(web.FS, "static")
-	a := &api.API{Auth: auth.New(st), Store: st, Mgr: mgr, Host: host, Docker: dk, Web: webFS, Version: version}
+	tlsm := https.New(*dataDir)
+	tlsm.Off, tlsm.HTTPAddr = *noTLS, *acmeHTTP
+	var tc store.TLSConfig
+	var publicHost string
+	st.Read(func(d *store.Data) { tc, publicHost = d.Settings.TLS, d.Settings.PublicHost })
+	if err := tlsm.Apply(tc, publicHost); err != nil {
+		log.Printf("[HTTPS] %v", err)
+	}
+	if *noTLS && tc.Mode != "" {
+		log.Printf("[HTTPS] Umleitung auf HTTPS ist abgeschaltet (GP_NO_TLS / -no-tls)")
+	}
+	a := &api.API{Auth: auth.New(st), Store: st, Mgr: mgr, Host: host, Docker: dk, Web: webFS, Version: version,
+		Audit: audit.Open(*dataDir), TLS: tlsm}
 	mgr.Limit = func() int { return a.License().Edition.MaxServers }
 	mgr.AutoBackups = func() bool { return a.License().Edition.AutoBackup }
 	var rmu sync.Mutex
@@ -91,15 +107,16 @@ func main() {
 		log.Printf("Warnung: %v", err)
 	}
 
-	srv := &http.Server{Addr: *listen, Handler: a.Handler(), ReadHeaderTimeout: 10 * time.Second}
-	go func() {
-		<-ctx.Done()
-		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = srv.Shutdown(sctx)
-	}()
-	log.Printf("[Panel] %s läuft auf %s (Daten: %s, %d Vorlagen)", version, *listen, *dataDir, len(tpls.All()))
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	ln, err := net.Listen("tcp", *listen)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mode := "HTTP und HTTPS"
+	if tlsm.Redirect() {
+		mode = "HTTPS (HTTP wird umgeleitet)"
+	}
+	log.Printf("[Panel] %s läuft auf %s, %s (Daten: %s, %d Vorlagen)", version, *listen, mode, *dataDir, len(tpls.All()))
+	if err := tlsm.Serve(ctx, ln, a.Handler()); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -144,6 +144,31 @@ Die S3-Signatur (AWS SigV4) ist gegen botocore geprüft; getestet wurde gegen ei
 
 Seit Laufzeit v3 zeigt das Home-Verzeichnis der Steam-Container auf `/data/home` im Serverordner. Spiele, die dort speichern (Project Zomboid, 7 Days to Die, Satisfactory), verlieren ihre Stände dadurch nicht mehr beim Neuanlegen des Containers.
 
+## Benutzer, Zwei-Faktor, Protokoll, HTTPS
+
+Unter **Einstellungen → Benutzer und Rechte** legt ein Admin weitere Konten an:
+
+| Rolle | darf |
+|---|---|
+| Zuschauer | Server, Konsole, Backup-Liste, Aufgaben und Verlauf ansehen |
+| Betreiber | zusätzlich starten, stoppen, Befehle, Update, Backups, Dateien, Spiel-Einstellungen, Mods, Aufgaben |
+| Admin | alles: Server anlegen/löschen, Panel-Einstellungen, Steam, Lizenz, Selbsttest, KI, Benutzer, Protokoll, HTTPS |
+
+Betreiber und Zuschauer lassen sich auf einzelne Server beschränken; andere Server sehen sie gar nicht. Rechteänderungen und Sperren wirken sofort, gesperrte oder gelöschte Konten werden überall abgemeldet. Der letzte aktive Admin kann nicht gesperrt, herabgestuft oder gelöscht werden.
+
+**Zwei-Faktor-Anmeldung** (Einstellungen → Mein Konto): TOTP nach RFC 6238, funktioniert mit Aegis, 2FAS, Google Authenticator, Bitwarden usw. Dazu 10 Wiederherstellungscodes (einmal gültig, gespeichert nur als Hash). Handy weg und keine Codes mehr: ein anderer Admin setzt die Zwei-Faktor-Anmeldung unter „Benutzer“ zurück.
+
+**Protokoll**: jede ändernde Aktion (Server, Backups, Dateien, Befehle mit Text, Einstellungen, Benutzer, HTTPS) und jede An- und Abmeldung, auch fehlgeschlagene, mit Benutzer, IP und Ergebnis. Passwörter und Schlüssel landen nie im Protokoll. Datei `/var/lib/gamepanel/audit.log`, bei 2 MB rotiert (`audit.log.1`).
+
+Sitzungen werden nur als SHA-256 des Cookies gespeichert. Wer `panel.json` in die Finger bekommt, kann damit niemanden übernehmen.
+
+**HTTPS** (Einstellungen → HTTPS): HTTP und HTTPS laufen auf demselben Port. Ist HTTPS an, leitet das Panel http:// auf https:// um.
+- *Selbst signiert*: für das Heimnetz. Das Zertifikat gilt für alle IPs des Rechners, seinen Namen und die „Adresse für Spieler“; der Browser warnt einmal.
+- *Let's Encrypt*: braucht eine Domain, die auf deine öffentliche IP zeigt, und im Router Port 80 → 80 und 443 → 8420 dieses Rechners. Erneuert sich selbst. Klappt die Prüfung nicht, liefert das Panel solange das selbst signierte Zertifikat aus, statt unerreichbar zu werden.
+- *Eigenes Zertifikat*: PEM mit Kette plus Schlüssel einfügen.
+
+Ausgesperrt? Vom Rechner selbst (`http://localhost:8420`, z. B. per `ssh -L 8420:localhost:8420 admin@192.168.178.54`) wird nie umgeleitet. Oder `Environment=GP_NO_TLS=1` in `/etc/systemd/system/gamepanel.service` eintragen, `systemctl daemon-reload && systemctl restart gamepanel`.
+
 ## Lizenzen
 
 ```bash
@@ -180,7 +205,10 @@ Eine JSON-Datei nach `/var/lib/gamepanel/templates/` legen und das Panel neu sta
 ```
 cmd/gamepanel     Programmstart
 cmd/licgen        Lizenzschlüssel erzeugen (nur für dich)
-internal/api      HTTP-API + Auslieferung der Oberfläche
+internal/api      HTTP-API + Auslieferung der Oberfläche, Rechteprüfung
+internal/auth     Konten, Rollen, Sitzungen, Zwei-Faktor (TOTP)
+internal/audit    Protokoll (audit.log)
+internal/https    HTTP und HTTPS auf einem Port, Zertifikate
 internal/manager  Server anlegen/starten/stoppen, Live-Status, Ports
 internal/docker   Docker-Engine-API über den Unix-Socket
 internal/templates Vorlagen (games/*.json)
@@ -189,19 +217,19 @@ internal/license  Ed25519-Lizenzprüfung
 web/static        Oberfläche (HTML/CSS/JS + three.js), wird in die Datei eingebettet
 scripts/install.sh Installer
 ```
-Nur Go-Standardbibliothek, keine externen Abhängigkeiten. Daten liegen in `/var/lib/gamepanel/panel.json` (Rechte 600).
+Nur Go-Standardbibliothek. Einzige fremde Teile: `internal/thirdparty/acme` (Kopie von golang.org/x/crypto/acme, BSD) für Let's Encrypt und `web/static/vendor/qrcode.js` (MIT) für den QR-Code. Daten liegen in `/var/lib/gamepanel/panel.json` (Rechte 600).
 
 ## Stand & Grenzen von 0.1
 
 - Getestet: kompletter Ablauf mit echtem Docker (anlegen, starten, Konsole, Befehle, stoppen, RAM ändern, zweite Instanz mit neuem Port, löschen), Login, Lizenzen.
 - Auf echter Hardware geprüft (Debian 13, Docker 29): Minecraft Java (Beitritt mit Client), Valheim (SteamCMD-Download, Start). Die übrigen Steam-Vorlagen (Status „Beta“) sind noch ungetestet.
 - Spielerzahlen: Minecraft Java (Server-List-Ping) sowie Valheim, CS2, GMod, TF2, 7DTD (Steam A2S). Übrige Spiele zeigen CPU statt Spieler.
-- Das Panel läuft als root (braucht Docker-Zugriff). Nicht direkt ins Internet stellen – nur im Heimnetz oder hinter Traefik mit HTTPS.
+- Das Panel läuft als root (braucht Docker-Zugriff). Ins Internet nur mit HTTPS (eingebaut oder per Traefik) und Zwei-Faktor-Anmeldung.
 - API-Keys liegen im Klartext in `panel.json` (nur für root lesbar). Verschlüsselung folgt.
 
 ## Nächste Schritte
 
 1. Selbsttest über alle Vorlagen laufen lassen, Fehler korrigieren, Status anpassen
 2. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
-5. Mehrere Rechner (Nodes), Mehrbenutzer, Discord-Webhooks
+5. Mehrere Rechner (Nodes), Discord-Webhooks
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)

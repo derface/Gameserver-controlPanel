@@ -14,9 +14,11 @@ import (
 	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/ai"
+	"github.com/derface/Gameserver-controlPanel/internal/audit"
 	"github.com/derface/Gameserver-controlPanel/internal/auth"
 	"github.com/derface/Gameserver-controlPanel/internal/docker"
 	"github.com/derface/Gameserver-controlPanel/internal/hoststats"
+	"github.com/derface/Gameserver-controlPanel/internal/https"
 	"github.com/derface/Gameserver-controlPanel/internal/license"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
@@ -30,6 +32,8 @@ type API struct {
 	Docker  *docker.Client
 	Web     fs.FS
 	Version string
+	Audit   *audit.Log
+	TLS     *https.Manager
 }
 
 func (a *API) License() license.Status {
@@ -57,22 +61,6 @@ func decode(r *http.Request, v any) error {
 	return nil
 }
 
-// guard requires a session and, for changing requests, the X-Panel header
-// (browsers cannot send it cross-site without CORS, which we never allow).
-func (a *API) guard(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet && r.Header.Get("X-Panel") != "1" {
-			fail(w, http.StatusForbidden, errors.New("Anfrage abgelehnt"))
-			return
-		}
-		if a.Auth.User(r) == "" {
-			fail(w, http.StatusUnauthorized, errors.New("Bitte anmelden"))
-			return
-		}
-		h(w, r)
-	}
-}
-
 func (a *API) csrfOnly(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("X-Panel") != "1" {
@@ -90,24 +78,25 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("POST /api/login", a.csrfOnly(a.login))
 	mux.HandleFunc("POST /api/logout", a.csrfOnly(a.logout))
 
-	mux.HandleFunc("GET /api/host", a.guard(a.host))
-	mux.HandleFunc("GET /api/templates", a.guard(a.templates))
-	mux.HandleFunc("GET /api/servers", a.guard(a.servers))
-	mux.HandleFunc("POST /api/servers", a.guard(a.create))
-	mux.HandleFunc("GET /api/servers/{id}", a.guard(a.server))
-	mux.HandleFunc("PATCH /api/servers/{id}", a.guard(a.update))
-	mux.HandleFunc("DELETE /api/servers/{id}", a.guard(a.remove))
-	mux.HandleFunc("POST /api/servers/{id}/{action}", a.guard(a.action))
-	mux.HandleFunc("GET /api/servers/{id}/console", a.guard(a.console))
+	mux.HandleFunc("GET /api/host", a.need(auth.Viewer, a.host))
+	mux.HandleFunc("GET /api/templates", a.need(auth.Viewer, a.templates))
+	mux.HandleFunc("GET /api/servers", a.need(auth.Viewer, a.servers))
+	mux.HandleFunc("POST /api/servers", a.need(auth.Admin, a.create))
+	mux.HandleFunc("GET /api/servers/{id}", a.need(auth.Viewer, a.server))
+	mux.HandleFunc("PATCH /api/servers/{id}", a.need(auth.Operator, a.update))
+	mux.HandleFunc("DELETE /api/servers/{id}", a.need(auth.Admin, a.remove))
+	mux.HandleFunc("POST /api/servers/{id}/{action}", a.need(auth.Operator, a.action))
+	mux.HandleFunc("GET /api/servers/{id}/console", a.need(auth.Viewer, a.console))
 
 	a.routesManage(mux)
 	a.routesMods(mux)
+	a.routesSecurity(mux)
 
-	mux.HandleFunc("GET /api/settings", a.guard(a.getSettings))
-	mux.HandleFunc("PUT /api/settings", a.guard(a.putSettings))
-	mux.HandleFunc("PUT /api/license", a.guard(a.putLicense))
-	mux.HandleFunc("POST /api/ai/plan", a.guard(a.aiPlan))
-	mux.HandleFunc("POST /api/ai/test", a.guard(a.aiTest))
+	mux.HandleFunc("GET /api/settings", a.need(auth.Admin, a.getSettings))
+	mux.HandleFunc("PUT /api/settings", a.need(auth.Admin, a.putSettings))
+	mux.HandleFunc("PUT /api/license", a.need(auth.Admin, a.putLicense))
+	mux.HandleFunc("POST /api/ai/plan", a.need(auth.Admin, a.aiPlan))
+	mux.HandleFunc("POST /api/ai/test", a.need(auth.Admin, a.aiTest))
 
 	files := http.FileServer(http.FS(a.Web))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -147,9 +136,17 @@ func (a *API) state(w http.ResponseWriter, r *http.Request) {
 	if err := a.Docker.Ping(ctx); err != nil {
 		dockerErr = err.Error()
 	}
+	u, _ := a.Auth.Current(r)
+	publicHost := ""
+	if u.Name != "" {
+		a.Store.Read(func(d *store.Data) { publicHost = d.Settings.PublicHost })
+	}
 	writeJSON(w, 200, map[string]any{
+		"public_host":  publicHost,
 		"setup_needed": !a.Auth.HasUsers(),
-		"user":         a.Auth.User(r),
+		"user":         u.Name,
+		"role":         u.Role,
+		"two_factor":   u.TOTP != "",
 		"version":      a.Version,
 		"docker_error": dockerErr,
 		"license":      a.License(),
@@ -171,6 +168,7 @@ func (a *API) setup(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, err)
 		return
 	}
+	a.logAuth(r, strings.TrimSpace(c.Name), "Erstes Admin-Konto angelegt", nil)
 	a.login2(w, r, c)
 }
 
@@ -184,20 +182,37 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) login2(w http.ResponseWriter, r *http.Request, c creds) {
-	tok, err := a.Auth.Login(r, c.Name, c.Password)
+	res, err := a.Auth.Login(r, c.Name, c.Password)
 	if err != nil {
 		code := 401
 		if errors.Is(err, auth.ErrThrottle) {
 			code = 429
 		}
+		user := res.User
+		if user == "" {
+			user = strings.TrimSpace(c.Name)
+			if len(user) > 40 {
+				user = user[:40]
+			}
+			user += " (unbekannt)"
+		}
+		a.logAuth(r, user, "Anmeldung fehlgeschlagen", err)
 		fail(w, code, err)
 		return
 	}
-	auth.SetCookie(w, r, tok, auth.SessionMaxAge())
-	writeJSON(w, 200, map[string]string{"user": strings.TrimSpace(c.Name)})
+	if res.Ticket != "" {
+		writeJSON(w, 200, map[string]any{"need_code": true, "ticket": res.Ticket})
+		return
+	}
+	a.logAuth(r, res.User, "Angemeldet", nil)
+	auth.SetCookie(w, r, res.Token, auth.SessionMaxAge())
+	writeJSON(w, 200, map[string]string{"user": res.User})
 }
 
 func (a *API) logout(w http.ResponseWriter, r *http.Request) {
+	if u := a.Auth.User(r); u != "" {
+		a.logAuth(r, u, "Abgemeldet", nil)
+	}
 	if c, err := r.Cookie(auth.CookieName); err == nil {
 		a.Auth.Logout(c.Value)
 	}
@@ -216,7 +231,15 @@ func (a *API) templates(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) servers(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, a.Mgr.List())
+	u := userOf(r)
+	list := a.Mgr.List()
+	out := list[:0]
+	for _, s := range list {
+		if auth.CanSee(u, s.ID) {
+			out = append(out, s)
+		}
+	}
+	writeJSON(w, 200, out)
 }
 
 func (a *API) server(w http.ResponseWriter, r *http.Request) {
@@ -362,6 +385,7 @@ func (a *API) action(w http.ResponseWriter, r *http.Request) {
 			fail(w, 400, err)
 			return
 		}
+		Note(r, req.Command)
 		out, err := a.Mgr.Command(r.Context(), id, req.Command)
 		if err != nil {
 			fail(w, 400, err)
@@ -583,6 +607,7 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) aiTest(w http.ResponseWriter, r *http.Request) {
+	noAudit(r)
 	var s store.Settings
 	a.Store.Read(func(d *store.Data) { s = d.Settings })
 	ctx, cancel := context.WithTimeout(r.Context(), 40*time.Second)
