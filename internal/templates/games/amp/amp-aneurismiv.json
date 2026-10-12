@@ -32,7 +32,11 @@
         "aneurismiv",
         "misery"
       ],
-      "default": "aneurismiv"
+      "default": "aneurismiv",
+      "labels": [
+        "Nightmare (Standard)",
+        "Misery"
+      ]
     },
     {
       "key": "password",

@@ -68,7 +68,13 @@
         "-pingboost 2",
         "-pingboost 3"
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "Keine",
+        "1",
+        "2",
+        "3"
+      ]
     },
     {
       "key": "nohltv",
@@ -255,6 +261,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -281,7 +291,19 @@
         "7",
         "255"
       ],
-      "default": "-1"
+      "default": "-1",
+      "labels": [
+        "Keine Region",
+        "USA Ostküste",
+        "USA Westküste",
+        "Südamerika",
+        "Europa",
+        "Asien",
+        "Australien",
+        "Naher Osten",
+        "Afrika",
+        "Welt"
+      ]
     },
     {
       "key": "sv_visiblemaxplayers",
@@ -299,6 +321,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -312,7 +338,13 @@
         "1",
         "2"
       ],
-      "default": "-1"
+      "default": "-1",
+      "labels": [
+        "Keine Einschränkung",
+        "Nur Regeln aus „pure_server_minimal.txt“",
+        "Regeln aus „pure_server_full.txt“, dann „pure_server_whitelist.txt“",
+        "Regeln aus „pure_server_full.txt“"
+      ]
     },
     {
       "key": "sv_pure_kick_clients",
@@ -322,6 +354,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -334,6 +370,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -344,6 +384,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -356,6 +400,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -366,6 +414,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -383,6 +435,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -430,6 +486,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -440,6 +500,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -452,6 +516,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -462,6 +530,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -474,6 +546,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -484,6 +560,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -496,6 +576,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -507,6 +591,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -517,6 +605,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -543,6 +635,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -554,6 +650,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -564,6 +664,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },

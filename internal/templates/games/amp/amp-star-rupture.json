@@ -31,7 +31,10 @@
       "options": [
         ""
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "Server wählt automatisch (Standard)"
+      ]
     },
     {
       "key": "adminpassword",

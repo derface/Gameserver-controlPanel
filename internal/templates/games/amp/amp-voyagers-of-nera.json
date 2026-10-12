@@ -29,7 +29,10 @@
       "options": [
         ""
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "Server wählt automatisch (Standard)"
+      ]
     }
   ],
   "memory_mb": 6144,

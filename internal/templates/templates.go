@@ -25,13 +25,27 @@ type Port struct {
 	Proto string `json:"proto"`
 }
 
+// AMPImport describes how data from a CubeCoders AMP instance lands in a
+// server of this template.
+type AMPImport struct {
+	// Map moves paths below AMP's base directory, e.g. {"Zomboid/":
+	// "home/Zomboid/"}. Everything else goes to "server/".
+	Map map[string]string `json:"map,omitempty"`
+	// Vars are fixed values for an imported server (e.g. resume the save).
+	Vars map[string]string `json:"vars,omitempty"`
+	// VarsFromFiles takes a value from the imported file names: the first
+	// group of the expression, matched against paths below the base directory.
+	VarsFromFiles map[string]string `json:"vars_from_files,omitempty"`
+}
+
 type Var struct {
 	Key     string   `json:"key"`
 	Label   string   `json:"label"`
 	Default string   `json:"default"`
 	Type    string   `json:"type,omitempty"` // text | number | secret | select | bool | slug
 	Options []string `json:"options,omitempty"`
-	Flag    string   `json:"flag,omitempty"` // for bool: text inserted when true
+	Labels  []string `json:"labels,omitempty"` // display names for Options
+	Flag    string   `json:"flag,omitempty"`   // for bool: text inserted when true
 	Help    string   `json:"help,omitempty"`
 	Needed  bool     `json:"required,omitempty"`
 	Group   string   `json:"group,omitempty"` // tab on the settings page, default "Start"
@@ -204,6 +218,7 @@ type Template struct {
 	Ports       []Port            `json:"ports"`
 	FixedPorts  bool              `json:"fixed_ports,omitempty"`
 	Vars        []Var             `json:"vars"`
+	AMPImport   *AMPImport        `json:"amp_import,omitempty"`
 	MemoryMB    int               `json:"memory_mb"`
 	MinMemoryMB int               `json:"min_memory_mb"`
 	JavaMemEnv  string            `json:"java_memory_env,omitempty"`

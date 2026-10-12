@@ -43,7 +43,11 @@
         "/Game/FrozenFlame/Maps/Heaven/Heaven.Heaven",
         "/Game/GameModeSurvive/Maps/Survive/Survive.Survive"
       ],
-      "default": "/Game/FrozenFlame/Maps/Heaven/Heaven.Heaven"
+      "default": "/Game/FrozenFlame/Maps/Heaven/Heaven.Heaven",
+      "labels": [
+        "Heaven/Kampagne (Standard)",
+        "Cataclysm/Survival mode"
+      ]
     },
     {
       "key": "rcon_password",

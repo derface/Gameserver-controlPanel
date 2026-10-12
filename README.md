@@ -208,6 +208,16 @@ Auf der Server-Seite unter *Details* → **Von außen erreichbar? Prüfen**. Das
 
 Die Prüfung läuft nur auf Knopfdruck. Die Dienste (api.ipify.org, check-host.net, mcsrvstat.us) sehen dabei nur die öffentliche IP und den Port.
 
+## Umzug von AMP
+
+Server anlegen → **„Server aus AMP übernehmen“**. Das Panel zeigt einen Befehl mit einem Einmal-Schlüssel (zwei Stunden gültig), der als root auf dem AMP-Rechner läuft:
+
+    curl -fsSk https://<panel>/import/amp.py | python3 - --panel https://<panel> --token <schlüssel> [instanzen …]
+
+Das Skript (`internal/manager/ampexport.py`, nur Python-Standardbibliothek) packt pro AMP-Instanz `GenericModule.kvp` (Einstellungen), die Config-Dateien aus AMPs `metaconfig.json` und die Spielstände (Unreal-Ordner `Saved` außer `Engine/Saved`, `Zomboid`, `savegame` usw., Ordner aus den Instanz-Einstellungen wie `saveDirectory`), ohne Logs, Absturzberichte und `.trash`, und schickt sie ans Panel. Spieldateien werden nicht übertragen. Laufende Instanzen werden übersprungen. In AMP wird nichts verändert.
+
+Im Panel erscheint jede Instanz mit der erkannten Vorlage (über die Steam-App-ID, eigene Vorlagen vor erzeugten). „Übernehmen“ legt den Server an: Instanz-Einstellungen werden auf die Variablen der Vorlage abgebildet (Name ohne Sonderzeichen gleich, `$MaxUsers` → `max_players`), Dateien landen unter `server/`. Vorlagenfeld `amp_import` für Abweichungen: `map` (z. B. Zomboid `{"Zomboid/": "home/Zomboid/"}`), `vars_from_files` (Wert aus einem Dateinamen, z. B. der Zomboid-Servername) und feste `vars` (Icarus setzt die letzte Prospect fort). Empfangene Archive liegen bis zur Übernahme unter `<data>/import/amp`.
+
 ## Lizenzen
 
 ```bash

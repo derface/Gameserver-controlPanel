@@ -59,7 +59,11 @@
         "/Game/Maps/ConanSandbox/ConanSandbox",
         "/Game/DLC_EXT/DLC_Siptah/Maps/DLC_Isle_of_Siptah"
       ],
-      "default": "/Game/Maps/ConanSandbox/ConanSandbox"
+      "default": "/Game/Maps/ConanSandbox/ConanSandbox",
+      "labels": [
+        "Exiled Lands (Standard)",
+        "Isle of Siptah"
+      ]
     },
     {
       "key": "rcon_password",

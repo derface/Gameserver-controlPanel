@@ -40,6 +40,10 @@
         "2",
         "1"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "2"
     },
     {
@@ -57,6 +61,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     }

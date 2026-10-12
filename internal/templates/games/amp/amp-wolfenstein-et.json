@@ -25,6 +25,10 @@
         "2",
         "1"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "2"
     },
     {
@@ -43,6 +47,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -55,7 +63,12 @@
         "1",
         "2"
       ],
-      "default": "1"
+      "default": "1",
+      "labels": [
+        "Kein Log",
+        "Gepuffertes Log (Standard)",
+        "Log nach jeder Ausgabe sofort schreiben"
+      ]
     },
     {
       "key": "g_logsync",
@@ -65,6 +78,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -132,6 +149,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -142,6 +163,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -159,6 +184,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -202,6 +231,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -213,6 +246,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -223,6 +260,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -249,6 +290,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -259,6 +304,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -291,6 +340,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -301,6 +354,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -319,6 +376,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -345,6 +406,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -355,6 +420,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -381,6 +450,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -391,6 +464,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -417,6 +494,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -435,6 +516,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -445,6 +530,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -463,6 +552,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -489,6 +582,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -500,6 +597,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -510,6 +611,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -536,6 +641,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -546,6 +655,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -558,6 +671,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -568,6 +685,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -580,6 +701,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -590,6 +715,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -602,6 +731,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -612,6 +745,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -624,6 +761,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -634,6 +775,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -646,6 +791,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -656,6 +805,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -668,6 +821,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -678,6 +835,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -690,6 +851,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -701,6 +866,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -711,6 +880,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -730,7 +903,13 @@
         "AMP_lmscycle.cfg",
         "AMP_stopwatchcycle.cfg"
       ],
-      "default": "AMP_campaigncycle.cfg"
+      "default": "AMP_campaigncycle.cfg",
+      "labels": [
+        "Kampagne (Standard)",
+        "Ziele",
+        "Last Man Standing",
+        "Stoppuhr"
+      ]
     },
     {
       "key": "com_watchdog",

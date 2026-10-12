@@ -41,7 +41,14 @@
         "3",
         "4"
       ],
-      "default": "2"
+      "default": "2",
+      "labels": [
+        "Eigene",
+        "Leicht",
+        "Normal",
+        "Schwer",
+        "Veteran"
+      ]
     },
     {
       "key": "time_limit",
@@ -94,6 +101,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -105,6 +116,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -115,6 +130,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -142,7 +161,26 @@
         "Tanker",
         "TheFarm"
       ],
-      "default": "747"
+      "default": "747",
+      "labels": [
+        "747",
+        "Arena",
+        "Arena II",
+        "City",
+        "Compound",
+        "Creek",
+        "Depot",
+        "Depot (Compound)",
+        "Docks",
+        "Paintball",
+        "Power Station",
+        "Run Down",
+        "Rig",
+        "Small Town",
+        "Storage Facility",
+        "Tanker",
+        "The Farm"
+      ]
     },
     {
       "key": "server_mission",
@@ -160,7 +198,18 @@
         "Training",
         "Uplink"
       ],
-      "default": "Deathmatch"
+      "default": "Deathmatch",
+      "labels": [
+        "Deathmatch",
+        "Dynamic Take and Secure (DTAS)",
+        "Hostage Rescue",
+        "Intel Retrieval",
+        "Last Man Standing",
+        "Team Elimination",
+        "Terrorist Hunt",
+        "Training",
+        "Uplink"
+      ]
     },
     {
       "key": "custom_server_args",

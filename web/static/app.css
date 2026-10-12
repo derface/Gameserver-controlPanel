@@ -666,3 +666,13 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 #stage .lab .nm{overflow:hidden;text-overflow:ellipsis;min-width:0}
 #stage .lab .dot{flex:none}
 @media (max-width:560px){#stage .lab{max-width:110px;font-size:10px}}
+/* Übernahme aus AMP */
+.amp-hint{margin:0 0 10px}
+.amp-steps{margin:10px 0 14px;padding-left:20px;display:grid;gap:10px;font-size:14px}
+.amp-cmd{display:flex;gap:8px;align-items:stretch;margin:6px 0 4px}
+.amp-cmd code{flex:1;min-width:0;padding:8px 10px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-md);font-size:12px;word-break:break-all;user-select:all}
+.amp-list{display:grid;gap:10px}
+.amp-item{border:1px solid var(--line);border-radius:var(--r-md);padding:12px;background:var(--panel-2)}
+.amp-item .amp-top{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.amp-item p{margin:6px 0}
+.amp-item .dlg-actions{margin-top:8px}

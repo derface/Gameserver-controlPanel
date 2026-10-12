@@ -53,7 +53,11 @@
         "backend-production.last-oasis.com",
         "classic-backend.last-oasis.com"
       ],
-      "default": "backend-production.last-oasis.com"
+      "default": "backend-production.last-oasis.com",
+      "labels": [
+        "Produktiv-Backend (Standard)",
+        "Klassisches S4-Backend"
+      ]
     },
     {
       "key": "override_connection_address",
@@ -63,7 +67,10 @@
       "options": [
         "-OverrideConnectionAddress"
       ],
-      "default": "-OverrideConnectionAddress"
+      "default": "-OverrideConnectionAddress",
+      "labels": [
+        "Server-IP (Standard)"
+      ]
     },
     {
       "key": "noeac",

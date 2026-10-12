@@ -41,7 +41,12 @@
         "2",
         "3"
       ],
-      "default": "3"
+      "default": "3",
+      "labels": [
+        "1 - Small World",
+        "2 - Medium World",
+        "3 - Large World"
+      ]
     },
     {
       "key": "world_name",
@@ -64,6 +69,10 @@
         "true",
         "false"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "false"
     },
     {
@@ -82,7 +91,11 @@
         "0",
         "1"
       ],
-      "default": "0"
+      "default": "0",
+      "labels": [
+        "Klassisch",
+        "Experte"
+      ]
     },
     {
       "key": "password",
@@ -137,6 +150,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -156,7 +173,19 @@
         "pt-BR",
         "pl-PL"
       ],
-      "default": "en-US"
+      "default": "en-US",
+      "labels": [
+        "Englisch",
+        "Deutsch",
+        "Italienisch",
+        "Französisch",
+        "Spanisch",
+        "Russisch",
+        "Chinesisch",
+        "Portugiesisch",
+        "Portugiesisch (Brasilien)",
+        "Polnisch"
+      ]
     },
     {
       "key": "priority",
@@ -171,7 +200,15 @@
         "4",
         "5"
       ],
-      "default": "1"
+      "default": "1",
+      "labels": [
+        "Echtzeit",
+        "Hoch",
+        "Höher als normal",
+        "Normal",
+        "Niedriger als normal",
+        "Leerlauf"
+      ]
     },
     {
       "key": "slowliquids",
@@ -181,6 +218,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     }

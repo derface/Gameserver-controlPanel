@@ -32,6 +32,11 @@ SKIP = {
     "american-truck-simulator": "Server braucht eine im Spiel exportierte Paketdatei",
 }
 
+# Übernahme aus AMP: Werte, die ein übernommener Server bekommt
+AMP_IMPORT = {
+    "icarus": {"vars": {"startup_mode": "-ResumeProspect"}},
+}
+
 # Testergebnisse späterer Selbsttests: Vorlage bleibt drin, Status passt sich an
 PASSED = set()
 BROKEN = {}
@@ -219,16 +224,22 @@ def build(base):
                 if tv != tv.strip() or fv != fv.strip():
                     spaced.add(key)
                 tv, fv = tv.strip(), fv.strip()
-                v.update({"type": "select", "options": [tv, fv], "default": tv if dflt else fv})
+                v.update({"type": "select", "options": [tv, fv], "labels": ["An", "Aus"], "default": tv if dflt else fv})
         elif t == "enum" and isinstance(ev, dict) and ev:
             raw = [str(k) for k in ev if "{{" not in str(k)]
             if any(o != o.strip() for o in raw):
                 spaced.add(key)
-            opts = list(dict.fromkeys(o.strip() for o in raw))
+            opts, labels = [], []
+            for o in raw:
+                if o.strip() not in opts:
+                    opts.append(o.strip())
+                    labels.append(de(ev[o]) if str(ev[o]).strip() else o.strip())
             if not opts:
                 v.update({"default": default})
             else:
                 v.update({"type": "select", "options": opts, "default": default if default in opts else opts[0]})
+                if labels != opts:
+                    v["labels"] = labels
         elif t == "number" and re.fullmatch(r"-?\d*", default):
             v.update({"type": "number", "default": default})
         elif t in ("password", "Password"):
@@ -539,6 +550,8 @@ def build(base):
     if unused:
         t["fixed_ports"] = True
     t["vars"] = vars_
+    if base in AMP_IMPORT:
+        t["amp_import"] = AMP_IMPORT[base]
     t["memory_mb"] = 6144 if wine else 4096
     t["min_memory_mb"] = 2048
     t["console"] = "stdin"

@@ -51,9 +51,18 @@
         "",
         "-ResumeProspect"
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "In der Lobby warten",
+        "Letzte Prospect fortsetzen"
+      ]
     }
   ],
+  "amp_import": {
+    "vars": {
+      "startup_mode": "-ResumeProspect"
+    }
+  },
   "memory_mb": 6144,
   "min_memory_mb": 2048,
   "console": "stdin",

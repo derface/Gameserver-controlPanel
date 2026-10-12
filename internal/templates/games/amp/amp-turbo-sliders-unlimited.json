@@ -45,6 +45,10 @@
         "-public",
         "-hidden"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "-public"
     },
     {

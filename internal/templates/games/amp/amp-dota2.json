@@ -46,6 +46,10 @@
         "true",
         "false"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "false"
     },
     {
@@ -70,7 +74,10 @@
       "options": [
         "dota"
       ],
-      "default": "dota"
+      "default": "dota",
+      "labels": [
+        "Dota"
+      ]
     },
     {
       "key": "mapgroup",
@@ -102,7 +109,12 @@
         "1",
         "2"
       ],
-      "default": "0"
+      "default": "0",
+      "labels": [
+        "Spielerdateien nicht eingeschränkt",
+        "Alle Spielerdateien außer denen in pure_server_whitelist.txt müssen dem Server entsprechen",
+        "Alle Spielerdateien müssen von Steam stammen"
+      ]
     },
     {
       "key": "sv_cheats",
@@ -112,6 +124,10 @@
       "options": [
         "true",
         "false"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "false"
     },

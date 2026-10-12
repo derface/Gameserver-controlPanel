@@ -541,6 +541,7 @@
 <dialog id="dlgCreate" class="dlg">
   <form id="createForm" method="dialog">
     <div class="dlg-head"><h2 id="createTitle">Server anlegen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <p class="small muted amp-hint">Du wechselst von AMP? <button type="button" class="linkbtn" id="cAmp">Server aus AMP übernehmen</button></p>
     <div class="field picker">
       <span>Spiel <b class="mono" id="cCount"></b></span>
       <label class="sr" for="cSearch">Spiel suchen</label>
@@ -556,6 +557,19 @@
     <p class="err" id="cErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="cSubmit">Anlegen</button></div>
   </form>
+</dialog>
+
+<dialog id="dlgAmp" class="dlg">
+  <div class="dlg-head"><h2>Aus AMP übernehmen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <p class="small">Übernommen werden Spielstände, Spiel-Configs und die Einstellungen der AMP-Instanzen (Servername, Passwörter, Spielregeln). Die Spieldateien lädt das Panel frisch über Steam. In AMP bleibt alles, wie es ist.</p>
+  <ol class="amp-steps">
+    <li><b>In AMP die Instanzen stoppen</b>, die du übernehmen willst. Laufende Instanzen werden übersprungen, damit kein halb geschriebener Spielstand mitkommt.</li>
+    <li><b>Auf dem AMP-Rechner als root</b> (<span class="mono">su -</span>) diesen Befehl ausführen. Er gilt zwei Stunden.
+      <div class="amp-cmd"><code class="mono" id="ampCmd">…</code><button type="button" class="btn-line" id="ampCopy">Kopieren</button></div>
+      <span class="small muted">Nur bestimmte Instanzen: die Namen hinten anhängen, z. B. <span class="mono">… --token … pw01 Icarus01</span>.</span></li>
+    <li><b>Hier übernehmen:</b> Jede empfangene Instanz erscheint unten. Name prüfen, „Übernehmen“ klicken, danach den Server starten.</li>
+  </ol>
+  <div id="ampList" class="amp-list" aria-live="polite"></div>
 </dialog>
 
 <dialog id="dlgReach" class="dlg">

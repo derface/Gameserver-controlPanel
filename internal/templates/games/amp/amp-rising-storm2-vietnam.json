@@ -85,7 +85,46 @@
         "VNSP-HelicopterRange",
         "VNSP-ShootingRange"
       ],
-      "default": "VNSU-SongBe"
+      "default": "VNSU-SongBe",
+      "labels": [
+        "Territories - Anlao Valley",
+        "Territories - Apache Snow",
+        "Territories - A Sau",
+        "Territories - Border Watch",
+        "Territories - Compound",
+        "Territories - Cua Viet",
+        "Territories - Cu Chi",
+        "Territories - Da Nang Air Base",
+        "Territories - Demilitarized Zone",
+        "Territories - Dong Ha",
+        "Territories - Firebase",
+        "Territories - Firebase Georgina",
+        "Territories - Highway 14",
+        "Territories - Hill 937",
+        "Territories - Hue City",
+        "Territories - Khe Sanh",
+        "Territories - Long Tan",
+        "Territories - Mekong",
+        "Territories - Ninh Phu",
+        "Territories - Operation Forrest",
+        "Territories - Quang Tri",
+        "Territories - Resort",
+        "Territories - Rung Sac",
+        "Territories - Saigon",
+        "Territories - Song Be",
+        "Supremacy - Anlao Valley",
+        "Supremacy - Hue City",
+        "Supremacy - Operation Forrest",
+        "Supremacy - Quang Tri",
+        "Supremacy – Song Be (Standard)",
+        "Skirmish - Compound",
+        "Skirmish - Firebase",
+        "Skirmish - Jungle Camp",
+        "Skirmish - Riverbed",
+        "Skirmish - Temple",
+        "Training - Helicopter Range",
+        "Training - Shooting Range"
+      ]
     },
     {
       "key": "admin_name",
@@ -111,7 +150,13 @@
         "2",
         "3"
       ],
-      "default": "0"
+      "default": "0",
+      "labels": [
+        "Normal (Standard)",
+        "Schwer",
+        "Selbstmörderisch",
+        "Hölle auf Erden"
+      ]
     },
     {
       "key": "custom_server_options",

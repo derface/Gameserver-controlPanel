@@ -44,7 +44,14 @@
         "41",
         "51"
       ],
-      "default": "11"
+      "default": "11",
+      "labels": [
+        "Klein (Standard)",
+        "Mittel",
+        "Large",
+        "Extra large",
+        "Extra extra large"
+      ]
     },
     {
       "key": "map_id",
@@ -59,7 +66,15 @@
         "1",
         "2"
       ],
-      "default": "768"
+      "default": "768",
+      "labels": [
+        "Wasteland v0.6",
+        "Wasteland v0.6.x latest",
+        "Wasteland v0.7.x latest",
+        "Wasteland v0.8.x, neueste (Standard)",
+        "Dunes v0.4",
+        "Dunes v0.5"
+      ]
     },
     {
       "key": "password",
@@ -87,7 +102,14 @@
         "3",
         "4"
       ],
-      "default": "2"
+      "default": "2",
+      "labels": [
+        "Tourist",
+        "Rookies",
+        "True Wastelander (Standard)",
+        "Veteran",
+        "Overlord"
+      ]
     },
     {
       "key": "server_name",

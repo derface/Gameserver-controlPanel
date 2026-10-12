@@ -30,7 +30,11 @@
         "islands",
         "canyonlands"
       ],
-      "default": "islands"
+      "default": "islands",
+      "labels": [
+        "Inseln (Standard)",
+        "Canyonlands"
+      ]
     },
     {
       "key": "mis_gameserverid",

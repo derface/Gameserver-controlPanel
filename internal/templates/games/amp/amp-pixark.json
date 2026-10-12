@@ -47,7 +47,12 @@
         "Skypiea_light",
         "Underground_Light"
       ],
-      "default": "CubeWorld_Light"
+      "default": "CubeWorld_Light",
+      "labels": [
+        "PixARK (Standard)",
+        "Skyward",
+        "Terracrypt"
+      ]
     },
     {
       "key": "session_name",

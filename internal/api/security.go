@@ -163,6 +163,8 @@ func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 
 var actions = map[string]string{
 	"POST /api/servers":                             "Server angelegt",
+	"DELETE /api/import/amp/{iid}":                  "AMP-Export verworfen",
+	"POST /api/import/amp/{iid}/create":             "Server aus AMP übernommen",
 	"PATCH /api/servers/{id}":                       "Server geändert",
 	"DELETE /api/servers/{id}":                      "Server gelöscht",
 	"POST /api/servers/{id}/backups":                "Backup erstellt",

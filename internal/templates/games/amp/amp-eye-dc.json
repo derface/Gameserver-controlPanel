@@ -41,7 +41,12 @@
         "1",
         "2"
       ],
-      "default": "2"
+      "default": "2",
+      "labels": [
+        "Co-op",
+        "Team Artifact",
+        "Battle Royale (Standard)"
+      ]
     },
     {
       "key": "map",
@@ -97,7 +102,56 @@
         "warp",
         "zxdivine_cybermancy"
       ],
-      "default": "br_street"
+      "default": "br_street",
+      "labels": [
+        "br_arcturus",
+        "br_enceladus",
+        "br_forgeworld",
+        "br_marsarena",
+        "br_marsarena_extended",
+        "br_risingsun",
+        "br_sepulchre",
+        "br_sewer",
+        "br_street (Standard)",
+        "br_xeno",
+        "cc_ancient",
+        "cc_dark",
+        "cc_dreams",
+        "cc_end",
+        "cc_falling",
+        "cc_forgotten",
+        "cc_minos",
+        "cc_monolith",
+        "cc_new_eden",
+        "cc_noctis",
+        "cc_point",
+        "cc_purge",
+        "cc_severed",
+        "cc_shadow",
+        "cc_sheep",
+        "cc_temple1",
+        "cc_temple2",
+        "cc_temple3",
+        "cc_temple4",
+        "cc_temple5",
+        "cc_temple6",
+        "cc_tuto2",
+        "cc_tuto",
+        "divine_cybermancy",
+        "ltemple",
+        "tm_arcturus",
+        "tm_enceladus",
+        "tm_forgeworld",
+        "tm_marsarena",
+        "tm_risingsun",
+        "tm_sepulchre",
+        "tm_sewer",
+        "tm_street",
+        "tm_xeno",
+        "warp2",
+        "warp",
+        "zxdivine_cybermancy"
+      ]
     },
     {
       "key": "mapcyclefile",
@@ -109,7 +163,12 @@
         "TMcycle.txt",
         "BRcycle.txt"
       ],
-      "default": "BRcycle.txt"
+      "default": "BRcycle.txt",
+      "labels": [
+        "Keine",
+        "TMcycle.txt",
+        "BRcycle.txt (Standard)"
+      ]
     },
     {
       "key": "sv_pure",
@@ -120,7 +179,11 @@
         "1",
         "2"
       ],
-      "default": "1"
+      "default": "1",
+      "labels": [
+        "Alle Spielerdateien müssen den Serverdateien entsprechen, außer den in „pure_server_whitelist.txt“ erlaubten",
+        "Alle Spielerdateien müssen den Serverdateien entsprechen"
+      ]
     },
     {
       "key": "nohltv",
@@ -169,6 +232,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -202,7 +269,19 @@
         "7",
         "255"
       ],
-      "default": "-1"
+      "default": "-1",
+      "labels": [
+        "Keine Region",
+        "USA Ostküste",
+        "USA Westküste",
+        "Südamerika",
+        "Europa",
+        "Asien",
+        "Australien",
+        "Naher Osten",
+        "Afrika",
+        "Welt"
+      ]
     },
     {
       "key": "mp_allowspectators",
@@ -212,6 +291,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -224,6 +307,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -235,6 +322,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -245,6 +336,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -262,6 +357,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -315,6 +414,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -325,6 +428,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -337,6 +444,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "1"
     },
     {
@@ -347,6 +458,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -359,6 +474,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -370,6 +489,10 @@
         "1",
         "0"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "0"
     },
     {
@@ -380,6 +503,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },
@@ -433,6 +560,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "0"
     },

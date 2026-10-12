@@ -32,6 +32,14 @@
       "required": true
     }
   ],
+  "amp_import": {
+    "map": {
+      "Zomboid/": "home/Zomboid/"
+    },
+    "vars_from_files": {
+      "server_name": "^Zomboid/Server/([A-Za-z0-9_-]+)\\.ini$"
+    }
+  },
   "memory_mb": 6144,
   "min_memory_mb": 3072,
   "console": "stdin",

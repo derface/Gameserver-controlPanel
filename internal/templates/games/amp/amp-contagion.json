@@ -38,7 +38,14 @@
         "3",
         "4"
       ],
-      "default": "1"
+      "default": "1",
+      "labels": [
+        "Leicht",
+        "Normal",
+        "Schwer",
+        "Extrem",
+        "Albtraum"
+      ]
     },
     {
       "key": "mp_timelimit",
@@ -57,7 +64,12 @@
         "1",
         "2"
       ],
-      "default": "0"
+      "default": "0",
+      "labels": [
+        "Aus",
+        "An (Mikrofon-Symbol über Gegnern ausgeblendet)",
+        "An (Mikrofon-Symbol über Gegnern sichtbar)"
+      ]
     },
     {
       "key": "sv_vote_allow",
@@ -67,6 +79,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -85,6 +101,10 @@
       "options": [
         "1",
         "0"
+      ],
+      "labels": [
+        "An",
+        "Aus"
       ],
       "default": "1"
     },
@@ -185,7 +205,92 @@
         "chm_losmuertos",
         "chm_roanokepd"
       ],
-      "default": "ce_barlowe"
+      "default": "ce_barlowe",
+      "labels": [
+        "[Escape] Barlowe Square",
+        "[Escape] Barlowe Square Ch.2",
+        "[Escape] Barlowe Square (Christmas)",
+        "[Escape] Barlowe Square Ch.2 (Christmas)",
+        "[Escape] Biotec",
+        "[Escape] Biotec (Christmas)",
+        "[Escape] Camp Whitner",
+        "[Escape] Camp Whitner (Halloween)",
+        "[Escape] Downtown Ch.1",
+        "[Escape] Downtown Ch.2",
+        "[Escape] Downtown Ch.3",
+        "[Escape] Downtown Finale",
+        "[Escape] Harvest",
+        "[Escape] Harvest (Halloween)",
+        "[Escape] Last Stop Ch.1",
+        "[Escape] Last Stop Ch.2",
+        "[Escape] Last Stop Ch.3",
+        "[Escape] Last Stop Ch.4",
+        "[Escape] Last Stop Ch.4b",
+        "[Escape] Last Stop Ch.5",
+        "[Escape] Last Stop Ch.5b",
+        "[Escape] Last Stop Ch.6",
+        "[Escape] Last Stop Ch.7",
+        "[Escape] Last Stop Ch.8",
+        "[Escape] Last Stop Ch.9",
+        "[Escape] Last Stop Ch.10",
+        "[Escape] Last Stop Finale",
+        "[Escape] Montclair",
+        "[Escape] Montclair Part B",
+        "[Escape] Roanoke PD",
+        "[Escape] Roanoke PD (Halloween)",
+        "[Escape] Stone Creek",
+        "[Extraction] Aurora Estates",
+        "[Extraction] Aurora Estates (Christmas)",
+        "[Extraction] Barlowe Square",
+        "[Extraction] Biotec",
+        "[Extraction] Camp Whitner",
+        "[Extraction] Lakeland",
+        "[Extraction] Montclair",
+        "[Extraction] Strip Mall",
+        "[Hunted] Aurora Estates",
+        "[Hunted] Barlowe Square",
+        "[Hunted] Biotec",
+        "[Hunted] Camp Whitner",
+        "[Hunted] Cyprus Park",
+        "[Hunted] Cyprus Park (Night)",
+        "[Hunted] Death Train",
+        "[Hunted] Flower Field Mansion",
+        "[Hunted] Harvest",
+        "[Hunted] Lakeland",
+        "[Hunted] Lakeland (Christmas)",
+        "[Hunted] Montclair",
+        "[Hunted] Pioneer Express",
+        "[Hunted] Roanoke PD",
+        "[Hunted] Stone Creek",
+        "[Hunted] Union Station",
+        "[Panic] Broadway",
+        "[Panic] Montclair",
+        "[Panic] Passenger",
+        "[Panic] Pioneer Express",
+        "[Panic] Roanoke PD",
+        "[Flatline] Camp Whitner",
+        "[Flatline] Clocktower",
+        "[Flatline] Clocktower (Halloween)",
+        "[Flatline] Harvest",
+        "[Flatline] Johan Tower",
+        "[Flatline] Los Muertos",
+        "[Flatline] Montclair",
+        "[Flatline] Sewage",
+        "[Flatline] Southwest Bank",
+        "[Flatline] Stone Creek",
+        "[Flatline] Underground",
+        "[Flatline] Union Station",
+        "[Horde] Aurora Estates",
+        "[Horde] Barlowe Square",
+        "[Horde] Biotec",
+        "[Horde] Broadway",
+        "[Horde] Cyprus Park",
+        "[Horde] Flower Field Mansion",
+        "[Horde] Harvest",
+        "[Horde] Lakeland",
+        "[Horde] Los Muertos",
+        "[Horde] Roanoke PD"
+      ]
     },
     {
       "key": "hostname",

@@ -31,7 +31,11 @@
         "adventure",
         "creative"
       ],
-      "default": "adventure"
+      "default": "adventure",
+      "labels": [
+        "Abenteuer (Standard)",
+        "Kreativ"
+      ]
     }
   ],
   "memory_mb": 6144,

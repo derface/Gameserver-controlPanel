@@ -35,6 +35,10 @@
         "2",
         "1"
       ],
+      "labels": [
+        "An",
+        "Aus"
+      ],
       "default": "2"
     },
     {
@@ -51,7 +55,10 @@
       "options": [
         "+map_rotate"
       ],
-      "default": "+map_rotate"
+      "default": "+map_rotate",
+      "labels": [
+        "Kartenrotation (Standard)"
+      ]
     }
   ],
   "memory_mb": 6144,

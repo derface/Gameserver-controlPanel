@@ -35,7 +35,13 @@
         "hard",
         "extreme"
       ],
-      "default": "easy"
+      "default": "easy",
+      "labels": [
+        "Leicht (Standard)",
+        "Mittel",
+        "Schwer",
+        "Extrem"
+      ]
     },
     {
       "key": "enable_cheats",

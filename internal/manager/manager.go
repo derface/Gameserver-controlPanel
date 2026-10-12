@@ -158,6 +158,9 @@ type CreateReq struct {
 	Start     bool              `json:"start"`
 	CreatedBy string            `json:"-"`
 	internal  bool              // self-test: not counted against the license
+	// before runs once the server folder exists, before the container is
+	// created (e.g. to put imported save games in place).
+	before func(dir string, uid int) error
 }
 
 // Validate checks a request without creating anything. It returns the
@@ -284,7 +287,11 @@ func (m *Manager) Create(req CreateReq) (store.Server, error) {
 		return sv, err
 	}
 	m.setJob(sv.ID, "Wird vorbereitet")
-	go m.prepare(sv.ID, req.Start)
+	if req.before != nil {
+		go m.prepare(sv.ID, req.Start, req.before)
+	} else {
+		go m.prepare(sv.ID, req.Start)
+	}
 	return sv, nil
 }
 
@@ -493,7 +500,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 	return cfg
 }
 
-func (m *Manager) prepare(id string, start bool) {
+func (m *Manager) prepare(id string, start bool, before ...func(dir string, uid int) error) {
 	unlock := m.lock(id)
 	defer unlock()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
@@ -516,6 +523,11 @@ func (m *Manager) prepare(id string, start bool) {
 			uid = tpl.DataUID
 		}
 		_ = os.Chown(dir, uid, uid)
+		for _, f := range before {
+			if err := f(dir, uid); err != nil {
+				return err
+			}
+		}
 		if err := m.ensureImage(ctx, id, tpl); err != nil {
 			return fmt.Errorf("Image: %w", err)
 		}

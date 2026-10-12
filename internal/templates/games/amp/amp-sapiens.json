@@ -28,7 +28,12 @@
         "--yes",
         "--yes-upload-world"
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "Nicht senden (Standard)",
+        "Fehlerberichte senden",
+        "Fehlerberichte und Weltstand senden"
+      ]
     },
     {
       "key": "advertise",

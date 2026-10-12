@@ -92,6 +92,7 @@ func (a *API) Handler() http.Handler {
 	a.routesMods(mux)
 	a.routesSecurity(mux)
 	a.routesRouter(mux)
+	a.routesAMPImport(mux)
 
 	mux.HandleFunc("GET /api/settings", a.need(auth.Admin, a.getSettings))
 	mux.HandleFunc("PUT /api/settings", a.need(auth.Admin, a.putSettings))
@@ -101,7 +102,7 @@ func (a *API) Handler() http.Handler {
 
 	files := http.FileServer(http.FS(a.Web))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api/") {
+		if strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/import/") {
 			fail(w, http.StatusNotFound, errors.New("Unbekannter Pfad"))
 			return
 		}

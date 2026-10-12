@@ -613,7 +613,7 @@
     }
     let input;
     if (v.type === 'select') {
-      input = `<select id="${id}" data-var="${esc(v.key)}">${(v.options || []).map(o => `<option ${o === val ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+      input = `<select id="${id}" data-var="${esc(v.key)}">${(v.options || []).map((o, i) => `<option value="${esc(o)}" ${o === val ? 'selected' : ''}>${esc((v.labels && v.labels[i]) || o)}</option>`).join('')}</select>`;
     } else {
       const type = v.type === 'secret' ? 'password' : v.type === 'number' ? 'number' : 'text';
       const secretKeep = forEdit && v.type === 'secret' && val === '••••••';
@@ -690,6 +690,55 @@
       await loadServers(); select(s.id);
     } catch (err) { showErr($('#cErr'), err.message); }
     finally { btn.disabled = false; }
+  });
+
+  /* ---------------- Übernahme aus AMP ---------------- */
+  let ampPoll = null;
+  async function openAmp() {
+    if ($('#dlgCreate').open) $('#dlgCreate').close();
+    $('#ampCmd').textContent = '…';
+    $('#dlgAmp').showModal();
+    try {
+      const t = await api('POST', '/api/import/amp/token');
+      const o = location.origin;
+      $('#ampCmd').textContent = `curl -fsSk ${o}/import/amp.py | python3 - --panel ${o} --token ${t.token}`;
+    } catch (err) { $('#ampCmd').textContent = err.message; }
+    loadAmp();
+    clearInterval(ampPoll); ampPoll = setInterval(() => { if ($('#dlgAmp').open) loadAmp(); else clearInterval(ampPoll); }, 3000);
+  }
+  async function loadAmp() {
+    let list;
+    try { list = await api('GET', '/api/import/amp'); } catch (err) { return; }
+    const box = $('#ampList');
+    const have = new Set([...box.querySelectorAll('[data-amp]')].map(e => e.dataset.amp));
+    if (list.length === have.size && list.every(x => have.has(x.id))) return; // keep typed names
+    box.innerHTML = list.length ? list.map(x => `<div class="amp-item" data-amp="${esc(x.id)}">
+        <div class="amp-top"><b>${esc(x.game || 'Unbekanntes Spiel')}</b> <span class="muted small">AMP-Instanz ${esc(x.instance)} · ${x.files} Dateien · ${fmtSize(x.bytes)} · ${x.settings} Einstellungen</span></div>
+        ${x.problem ? `<p class="err">${esc(x.problem)}</p>` : `<p class="small">Wird zu: <b>${esc(x.template_name)}</b></p>
+        <label class="field"><span>Name im Panel</span><input data-amp-name maxlength="40" value="${esc(x.name)}"></label>`}
+        <div class="dlg-actions"><button type="button" class="btn-line" data-amp-del>Verwerfen</button>${x.problem ? '' : '<button type="button" class="btn-accent" data-amp-go>Übernehmen</button>'}</div>
+      </div>`).join('') : '<p class="muted small">Noch nichts empfangen. Sobald der Befehl auf dem AMP-Rechner läuft, erscheinen die Instanzen hier.</p>';
+  }
+  $('#cAmp').addEventListener('click', openAmp);
+  $('#ampCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('#ampCmd').textContent); toast('Befehl kopiert', 'ok'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#ampCmd')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Bitte mit Strg+C kopieren'); }
+  });
+  $('#ampList').addEventListener('click', async e => {
+    const item = e.target.closest('[data-amp]'); if (!item) return;
+    const id = item.dataset.amp;
+    if (e.target.closest('[data-amp-del]')) {
+      if (!await confirmBox('Export verwerfen?', 'Die übertragenen Spielstände werden im Panel gelöscht. In AMP bleibt alles erhalten.', 'Verwerfen')) return;
+      try { await api('DELETE', '/api/import/amp/' + id); item.remove(); loadAmp(); } catch (err) { toast(err.message, 'bad'); }
+    } else if (e.target.closest('[data-amp-go]')) {
+      const btn = e.target.closest('[data-amp-go]'); btn.disabled = true;
+      try {
+        const s = await api('POST', `/api/import/amp/${id}/create`, { name: item.querySelector('[data-amp-name]').value });
+        toast(s.name + ' wird übernommen', 'ok'); item.remove();
+        await loadServers();
+        if (!$('#ampList [data-amp]')) { $('#dlgAmp').close(); select(s.id); } else loadAmp();
+      } catch (err) { toast(err.message, 'bad'); btn.disabled = false; }
+    }
   });
 
   /* ---------------- Bearbeiten / Löschen ---------------- */
@@ -1412,7 +1461,7 @@
   }
   function varCard(v) {
     const id = 'stv_' + v.key, type = v.type === 'bool' ? 'bool' : v.type === 'select' ? 'select' : v.type === 'secret' ? 'secret' : v.type === 'number' ? 'number' : 'text';
-    return stCard({ id, attrs: `data-var="${esc(v.key)}"`, label: v.label + (v.required ? ' *' : ''), help: v.help, type, value: v.value, options: v.options || [], key: v.key, group: v.group || 'Start', file: 'v' });
+    return stCard({ id, attrs: `data-var="${esc(v.key)}"`, label: v.label + (v.required ? ' *' : ''), help: v.help, type, value: v.value, options: v.options || [], labels: v.labels, key: v.key, group: v.group || 'Start', file: 'v' });
   }
   async function loadSettings() {
     const id = MG.id;

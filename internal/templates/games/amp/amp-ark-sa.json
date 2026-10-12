@@ -41,7 +41,11 @@
         "ArkAscendedServer",
         "AsaApiLoader"
       ],
-      "default": "ArkAscendedServer"
+      "default": "ArkAscendedServer",
+      "labels": [
+        "Normaler Server (Standard)",
+        "ServerAPI launcher"
+      ]
     },
     {
       "key": "map",
@@ -60,7 +64,19 @@
         "LostColony_WP",
         "Genesis_WP"
       ],
-      "default": "TheIsland_WP"
+      "default": "TheIsland_WP",
+      "labels": [
+        "The Island (Standard)",
+        "Scorched Earth",
+        "The Center",
+        "Aberration",
+        "Extinction",
+        "Astraeos",
+        "Ragnarok",
+        "Valguero",
+        "Lost Colony",
+        "Genesis"
+      ]
     },
     {
       "key": "difficulty_override_level",
@@ -138,7 +154,15 @@
         "-PrideColors",
         "-ServerUseEventColors"
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "Keine",
+        "Oster-Farben",
+        "Halloween-Farben",
+        "Olympia-Farben",
+        "Pride-Farben",
+        "Farben des aktuellen Events"
+      ]
     },
     {
       "key": "exclusivejoin",
@@ -297,7 +321,33 @@
         "zh-Hans-CN",
         "zh-TW"
       ],
-      "default": "en"
+      "default": "en",
+      "labels": [
+        "Català",
+        "čeština",
+        "dansk",
+        "Deutsch",
+        "Englisch (Standard)",
+        "Español",
+        "euskara",
+        "suomi",
+        "Français",
+        "magyar",
+        "Italiano",
+        "日本語",
+        "ქართული",
+        "한국어",
+        "Nederlands",
+        "Polski",
+        "Português brasileiro",
+        "Русский",
+        "Svenska",
+        "ไทย",
+        "Türkçe",
+        "中文",
+        "使用者",
+        "国语"
+      ]
     },
     {
       "key": "cluster_dir_override",
@@ -327,7 +377,10 @@
       "options": [
         ""
       ],
-      "default": ""
+      "default": "",
+      "labels": [
+        "Automatisch (Standard)"
+      ]
     },
     {
       "key": "custom_flags",
