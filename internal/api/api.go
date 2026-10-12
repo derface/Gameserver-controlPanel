@@ -93,6 +93,7 @@ func (a *API) Handler() http.Handler {
 	a.routesSecurity(mux)
 	a.routesRouter(mux)
 	a.routesAMPImport(mux)
+	a.routesDiagnose(mux)
 
 	mux.HandleFunc("GET /api/settings", a.need(auth.Admin, a.getSettings))
 	mux.HandleFunc("PUT /api/settings", a.need(auth.Admin, a.putSettings))
@@ -519,6 +520,7 @@ func (a *API) putSettings(w http.ResponseWriter, r *http.Request) {
 		s.AIModel = strings.TrimSpace(in.AIModel)
 		s.OllamaURL = strings.TrimSpace(in.OllamaURL)
 		s.PublicHost = strings.TrimSpace(in.PublicHost)
+		s.AIAutoDiagnose = in.AIAutoDiagnose
 		if in.AnthropicKey != "" && !strings.Contains(in.AnthropicKey, "••") {
 			s.AnthropicKey = strings.TrimSpace(in.AnthropicKey)
 		}

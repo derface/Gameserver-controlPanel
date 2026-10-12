@@ -208,6 +208,14 @@ Auf der Server-Seite unter *Details* → **Von außen erreichbar? Prüfen**. Das
 
 Die Prüfung läuft nur auf Knopfdruck. Die Dienste (api.ipify.org, check-host.net, mcsrvstat.us) sehen dabei nur die öffentliche IP und den Port.
 
+## KI-Diagnose
+
+Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber, Editionen mit KI). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.
+
+Die KI antwortet mit Schweregrad, Zusammenfassung, Befunden mit Beleg und bis zu vier Vorschlägen. Ausführbar per Klick (mit Rückfrage): RAM ändern (auf 256 MB gerundet, höchstens 90 % des Rechners), Startwert ändern (nur vorhandene, nicht geheime Variablen mit erlaubtem Wert), Neustart, Update. Alles andere ist ein Hinweis. Die letzten fünf Diagnosen je Server liegen in `<data>/diagnose/<id>.json`.
+
+Einstellungen → Allgemein & KI → **„Bei Problemen automatisch mit KI prüfen“**: nach einem Absturz, einem Hänger-Neustart oder wenn RAM (über 92 %) bzw. CPU (über 95 %) 15 Minuten am Stück voll sind. Höchstens einmal in sechs Stunden je Server und zwölfmal am Tag. Das Ergebnis steht im Verlauf. Ein Ende mit Exit-Code 137 ohne Zutun des Panels zählt seit 0.21 als Absturz („vom System beendet, oft zu wenig RAM“).
+
 ## Umzug von AMP
 
 Server anlegen → **„Server aus AMP übernehmen“**. Das Panel zeigt einen Befehl mit einem Einmal-Schlüssel (zwei Stunden gültig), der als root auf dem AMP-Rechner läuft:

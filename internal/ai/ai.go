@@ -1,6 +1,7 @@
-// Package ai turns a plain-language request into a server plan using the
-// customer's own AI provider (Anthropic, OpenAI or a local Ollama).
-// The AI only proposes; the user confirms before anything is created.
+// Package ai turns a plain-language request into a server plan and
+// diagnoses server problems, using the customer's own AI provider
+// (Anthropic, OpenAI or a local Ollama). The AI only proposes; the user
+// confirms before anything is created or changed.
 package ai
 
 import (
@@ -139,6 +140,10 @@ func post(ctx context.Context, url string, headers map[string]string, body any, 
 }
 
 func complete(ctx context.Context, s store.Settings, system, user string) (string, error) {
+	return completeN(ctx, s, system, user, 1200)
+}
+
+func completeN(ctx context.Context, s store.Settings, system, user string, maxTokens int) (string, error) {
 	model := s.AIModel
 	if model == "" {
 		model = DefaultModel(s.AIProvider)
@@ -157,7 +162,7 @@ func complete(ctx context.Context, s store.Settings, system, user string) (strin
 		err := post(ctx, "https://api.anthropic.com/v1/messages", map[string]string{
 			"x-api-key": s.AnthropicKey, "anthropic-version": "2023-06-01",
 		}, map[string]any{
-			"model": model, "max_tokens": 1200, "system": system,
+			"model": model, "max_tokens": maxTokens, "system": system,
 			"messages": []map[string]string{{"role": "user", "content": user}},
 		}, &out)
 		if err != nil {

@@ -465,6 +465,7 @@
     <label class="field" data-prov="openai"><span>OpenAI-API-Key</span><input id="sOai" type="password" autocomplete="off" placeholder="sk-…"></label>
     <label class="field" data-prov="ollama"><span>Ollama-Adresse</span><input id="sOll" placeholder="http://192.168.178.20:11434"></label>
     <label class="field" data-prov="any"><span>Modell <em class="muted" id="sModelHint"></em></span><input id="sModel" placeholder="leer = Standard"></label>
+    <label class="check" data-prov="any"><input type="checkbox" id="sAuto"> Bei Problemen automatisch mit KI prüfen <span class="muted small">– nach einem Absturz, einem Hänger oder wenn RAM oder CPU 15 Minuten lang voll sind. Höchstens einmal in 6 Stunden je Server und 12-mal am Tag; das Ergebnis steht im Verlauf.</span></label>
     <p class="err" id="sErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="sTest">Verbindung testen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
@@ -570,6 +571,14 @@
     <li><b>Hier übernehmen:</b> Jede empfangene Instanz erscheint unten. Name prüfen, „Übernehmen“ klicken, danach den Server starten.</li>
   </ol>
   <div id="ampList" class="amp-list" aria-live="polite"></div>
+</dialog>
+
+<dialog id="dlgDiag" class="dlg">
+  <form method="dialog">
+    <div class="dlg-head"><h2>KI-Diagnose</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <div id="dgBody" aria-live="polite"></div>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="dgRun">Jetzt prüfen</button><button type="submit" class="btn-accent">Schließen</button></div>
+  </form>
 </dialog>
 
 <dialog id="dlgReach" class="dlg">

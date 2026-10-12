@@ -52,7 +52,9 @@ func crashReason(prev, l *live) string {
 		switch {
 		case l.State.OOMKilled:
 			return "hatte zu wenig RAM"
-		case code != 0 && code != 130 && code != 137 && code != 143:
+		case code == 137:
+			return "wurde vom System beendet (oft zu wenig RAM)"
+		case code != 0 && code != 130 && code != 143:
 			return fmt.Sprintf("ist abgestürzt (Code %d)", code)
 		}
 	}
@@ -61,6 +63,7 @@ func crashReason(prev, l *live) string {
 
 func (m *Manager) recordCrash(sv store.Server, tpl templates.Template, l *live, run, why string) {
 	l.countedRun = run
+	defer m.AutoDiagnose(sv.ID, "Server "+why)
 	now := time.Now()
 	var keep []time.Time
 	for _, t := range l.crashes {
@@ -106,6 +109,7 @@ func (m *Manager) hangCheck(sv store.Server, l *live) {
 	}
 	l.hangRun = l.State.StartedAt
 	m.Event(sv.ID, "warn", fmt.Sprintf("Server antwortet seit %d Minuten nicht mehr und wird neu gestartet.", lim))
+	m.AutoDiagnose(sv.ID, fmt.Sprintf("Server hing %d Minuten", lim))
 	go func(id string) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()

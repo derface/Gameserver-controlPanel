@@ -676,3 +676,15 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .amp-item .amp-top{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .amp-item p{margin:6px 0}
 .amp-item .dlg-actions{margin-top:8px}
+/* KI-Diagnose */
+.sv-checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.dg-ev{display:block;max-width:100%;margin-top:4px;padding:4px 8px;font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.dg-h{font-size:15px;margin:14px 0 4px}
+.dg-acts{list-style:none;margin:0;padding:0}
+.dg-acts li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.dg-acts li div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.dg-acts li span{font-size:13.5px;color:var(--muted);overflow-wrap:anywhere}
+.dg-acts button{flex-shrink:0}
+.dg-old summary{cursor:pointer;font-size:13.5px;color:var(--muted)}
+.dg-old ul{margin:8px 0 0;padding-left:18px;display:grid;gap:8px;font-size:13.5px}
+@media (max-width:560px){.dg-acts li{flex-direction:column;align-items:stretch}}

@@ -82,6 +82,7 @@ func main() {
 		Audit: audit.Open(*dataDir), TLS: tlsm}
 	mgr.Limit = func() int { return a.License().Edition.MaxServers }
 	mgr.AutoBackups = func() bool { return a.License().Edition.AutoBackup }
+	mgr.AIAllowed = func() bool { return a.License().Edition.AI }
 	var rmu sync.Mutex
 	var rkey string
 	var rt remote.Target

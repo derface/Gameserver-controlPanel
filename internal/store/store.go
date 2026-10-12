@@ -112,6 +112,9 @@ type Settings struct {
 	Remote       remote.Config `json:"remote_backup"`
 	TLS          TLSConfig     `json:"tls"`
 	UPnP         bool          `json:"upnp"` // open game ports in the router automatically
+	// AIAutoDiagnose lets the AI look at a server by itself after a crash,
+	// a hang or sustained full RAM/CPU.
+	AIAutoDiagnose bool `json:"ai_auto_diagnose"`
 }
 
 // RouterMap is a port forwarding the panel created in the router.

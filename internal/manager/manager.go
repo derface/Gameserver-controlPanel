@@ -37,12 +37,14 @@ type Manager struct {
 	dataDir     string
 	Limit       func() (maxServers int) // from the license; <0 = unlimited
 	AutoBackups func() bool             // from the license
+	AIAllowed   func() bool             // from the license
 	Remote      func() (remote.Target, remote.Config)
 	up          uploads
 
 	buildMu   sync.Mutex
 	opMu      sync.Map // id -> *sync.Mutex
 	refreshMu sync.Map // id -> *sync.Mutex
+	hist      sync.Map // id -> *metrics (last hours, for the AI diagnosis)
 
 	testMu     sync.Mutex
 	test       *TestRun
@@ -780,6 +782,9 @@ func (m *Manager) refresh(id string) {
 	}
 	if err == nil && sv.CreatedBy != testCreator {
 		m.watchdog(sv, tpl, prev, l)
+	}
+	if err == nil {
+		m.recordSample(sv, l)
 	}
 	m.mu.Lock()
 	m.live[id] = l

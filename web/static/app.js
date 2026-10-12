@@ -395,7 +395,7 @@
         <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
         <div><dt>ID</dt><dd class="mono">${esc(s.id)}</dd></div>
         ${routerRow(s)}
-      </dl>${can('operator') && port ? `<button type="button" class="btn-line" data-reach>Von außen erreichbar? Prüfen</button>` : ''}${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
+      </dl><div class="sv-checks">${can('operator') ? '<button type="button" class="btn-line" data-diag>Mit KI prüfen</button>' : ''}${can('operator') && port ? `<button type="button" class="btn-line" data-reach>Von außen erreichbar? Prüfen</button>` : ''}</div>${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
   }
   $('#svActs').addEventListener('click', e => {
     const b = e.target.closest('[data-sv]'); if (!b) return;
@@ -809,6 +809,7 @@
     $('#sProv').value = s.ai_provider || '';
     $('#sAnt').value = s.anthropic_key || ''; $('#sOai').value = s.openai_key || '';
     $('#sOll').value = s.ollama_url || ''; $('#sModel').value = s.ai_model || ''; $('#sHost').value = s.public_host || '';
+    $('#sAuto').checked = !!s.ai_auto_diagnose;
     provFields(); showErr($('#sErr'));
   }
   function provFields() {
@@ -819,7 +820,7 @@
   }
   $('#sProv').addEventListener('change', provFields);
   function settingsBody() {
-    return { ai_provider: $('#sProv').value, anthropic_key: $('#sAnt').value, openai_key: $('#sOai').value, ollama_url: $('#sOll').value, ai_model: $('#sModel').value, public_host: $('#sHost').value };
+    return { ai_provider: $('#sProv').value, anthropic_key: $('#sAnt').value, openai_key: $('#sOai').value, ollama_url: $('#sOll').value, ai_model: $('#sModel').value, public_host: $('#sHost').value, ai_auto_diagnose: $('#sAuto').checked };
   }
   $('#aiForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#sErr'));
@@ -1144,7 +1145,7 @@
   /* ---------------- Erreichbarkeit von außen ---------------- */
   const RC = { id: null, busy: false };
   const rcIcon = { ok: '✓', warn: '!', fail: '✕', skip: '–' };
-  $('#svInfo').addEventListener('click', e => { if (e.target.closest('[data-reach]')) checkReach(R.id); });
+  $('#svInfo').addEventListener('click', e => { if (e.target.closest('[data-reach]')) checkReach(R.id); if (e.target.closest('[data-diag]')) openDiag(R.id); });
   $('#rcAgain').onclick = () => checkReach(RC.id);
   async function checkReach(id) {
     if (!id || RC.busy) return;
@@ -1170,6 +1171,69 @@
       ${ports ? `<div class="rc-scroll"><table class="rc-ports"><thead><tr><th scope="col">Port</th><th scope="col">Router</th><th scope="col">Von außen</th></tr></thead><tbody>${ports}</tbody></table></div>` : ''}
       <p class="small muted">Geprüft ${new Date(r.checked).toLocaleTimeString('de-DE')}${r.services && r.services.length ? ' · Für den Test von außen wurden ' + esc(r.services.join(' und ')) + ' gefragt (sie sehen nur deine öffentliche IP und den Port).' : ''}</p>`;
   }
+  /* ---------------- KI-Diagnose ---------------- */
+  const DG = { id: null, busy: false, list: [] };
+  const SEV = { ok: ['ok', '✓', 'Alles in Ordnung'], hinweis: ['warn', 'i', 'Hinweis'], warnung: ['warn', '!', 'Warnung'], kritisch: ['fail', '✕', 'Kritisch'] };
+  async function openDiag(id) {
+    DG.id = id; const d = $('#dlgDiag'); if (!d.open) d.showModal();
+    $('#dgBody').innerHTML = '<p class="rc-wait"><span class="spin" aria-hidden="true"></span> Lade …</p>';
+    try { const r = await api('GET', `/api/servers/${encodeURIComponent(id)}/diagnose`); DG.list = r.diagnoses || []; DG.ai = r.ai; }
+    catch (err) { $('#dgBody').innerHTML = `<p class="err">${esc(err.message)}</p>`; return; }
+    if (!DG.ai) { $('#dgBody').innerHTML = '<p>Die KI-Diagnose gehört zu den Editionen Pro und Ultimate.</p>'; $('#dgRun').hidden = true; return; }
+    $('#dgRun').hidden = false;
+    if (DG.list.length) renderDiag(); else runDiag();
+  }
+  async function runDiag() {
+    if (!DG.id || DG.busy) return;
+    DG.busy = true; $('#dgRun').disabled = true;
+    $('#dgBody').innerHTML = '<p class="rc-wait"><span class="spin" aria-hidden="true"></span> Die KI liest Konsole, Verlauf und Auslastung … (bis zu einer Minute)</p>';
+    try { DG.list.unshift(await api('POST', `/api/servers/${encodeURIComponent(DG.id)}/diagnose`)); renderDiag(); }
+    catch (err) {
+      const setup = /Kein KI-Anbieter|API-Key/.test(err.message);
+      $('#dgBody').innerHTML = `<p class="err">${esc(err.message)}</p>${setup ? '<button type="button" class="btn-line" data-dg-setup>Zu den KI-Einstellungen</button>' : ''}`;
+    }
+    finally { DG.busy = false; $('#dgRun').disabled = false; }
+  }
+  function actionBtn(a, i) {
+    switch (a.kind) {
+      case 'memory': return `<button type="button" class="btn-accent" data-dg-act="${i}">RAM auf ${gb(a.memory_mb)} GB setzen</button>`;
+      case 'var': return `<button type="button" class="btn-accent" data-dg-act="${i}">Übernehmen</button>`;
+      case 'restart': return `<button type="button" class="btn-line" data-dg-act="${i}">Neu starten</button>`;
+      case 'update': return `<button type="button" class="btn-line" data-dg-act="${i}">Aktualisieren</button>`;
+    }
+    return '';
+  }
+  function renderDiag() {
+    const d = DG.list[0]; if (!d) return;
+    const [cls, ic, head] = SEV[d.severity] || SEV.hinweis;
+    const when = new Date(d.time).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+    const finds = (d.findings || []).map(f => `<li class="rc-${cls === 'ok' ? 'ok' : 'warn'}"><span class="rc-ic" aria-hidden="true">${cls === 'ok' ? '✓' : '!'}</span><div><b>${esc(f.title)}</b><span>${esc(f.detail)}</span>${f.evidence ? `<code class="mono dg-ev">${esc(f.evidence)}</code>` : ''}</div></li>`).join('');
+    const acts = (d.actions || []).map((a, i) => `<li><div><b>${esc(a.title)}</b><span>${esc(a.why)}${a.kind === 'var' ? ` <span class="mono">${esc(a.key)} = ${esc(a.value)}</span>` : ''}</span></div>${actionBtn(a, i)}</li>`).join('');
+    const older = DG.list.slice(1).map(o => `<li><span class="muted small">${esc(new Date(o.time).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }))}${o.trigger ? ' · ' + esc(o.trigger) : ''}</span><br>${esc((SEV[o.severity] || SEV.hinweis)[2])}: ${esc(o.summary)}</li>`).join('');
+    $('#dgBody').innerHTML = `<div class="rc-verdict rc-${cls}"><span class="rc-ic big" aria-hidden="true">${ic}</span><div><b>${esc(head)}</b><span>${esc(d.summary)}</span></div></div>
+      ${finds ? `<ul class="rc-steps">${finds}</ul>` : ''}
+      ${acts ? `<h3 class="dg-h">Vorschläge</h3><ul class="dg-acts">${acts}</ul><p class="small muted">Nichts passiert ohne deinen Klick. RAM-Änderungen legen den Container neu an, Spielstände bleiben erhalten.</p>` : ''}
+      <p class="small muted">Geprüft ${esc(when)}${d.trigger ? ' · automatisch nach: ' + esc(d.trigger) : ''} · An die KI gingen Fakten, Verlauf und ein Konsolenauszug, ohne Passwörter, IP-Adressen und Steam-IDs.</p>
+      ${older ? `<details class="dg-old"><summary>Frühere Prüfungen</summary><ul>${older}</ul></details>` : ''}`;
+  }
+  $('#dgRun').onclick = runDiag;
+  $('#dgBody').addEventListener('click', async e => {
+    if (e.target.closest('[data-dg-setup]')) { $('#dlgDiag').close(); openSettings('ki'); return; }
+    const b = e.target.closest('[data-dg-act]'); if (!b) return;
+    const a = DG.list[0].actions[+b.dataset.dgAct], id = encodeURIComponent(DG.id);
+    const s = byId(DG.id);
+    const ask = { memory: ['RAM ändern?', `${s ? s.name : 'Der Server'} bekommt ${gb(a.memory_mb)} GB statt ${s ? gb(s.memory_mb) : '?'} GB. Läuft er, wird er dafür kurz neu gestartet.`],
+      var: ['Wert ändern?', `${a.key} wird auf „${a.value}“ gesetzt. Läuft der Server, wird er dafür kurz neu gestartet.`],
+      restart: ['Neu starten?', 'Spieler werden dabei getrennt.'], update: ['Aktualisieren?', 'Der Server wird gestoppt, aktualisiert und wieder gestartet.'] }[a.kind];
+    if (!ask || !await confirmBox(ask[0], ask[1], a.title)) return;
+    b.disabled = true;
+    try {
+      if (a.kind === 'memory') await api('PATCH', `/api/servers/${id}`, { memory_mb: a.memory_mb });
+      else if (a.kind === 'var') await api('PATCH', `/api/servers/${id}`, { vars: { [a.key]: a.value } });
+      else await api('POST', `/api/servers/${id}/${a.kind}`);
+      toast(a.title + ': erledigt', 'ok'); b.textContent = 'Erledigt'; loadServers();
+    } catch (err) { toast(err.message, 'bad'); b.disabled = false; }
+  });
   async function setServerRouter(s, open) {
     try { await api('PUT', `/api/servers/${encodeURIComponent(s.id)}/router`, { open }); toast(open ? 'Ports werden im Router geöffnet' : 'Ports werden nicht mehr im Router geöffnet', 'ok'); await loadServers(); }
     catch (err) { toast(err.message, 'bad'); }
