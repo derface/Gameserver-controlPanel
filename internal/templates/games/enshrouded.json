@@ -43,7 +43,7 @@
     "server/savegame",
     "server/enshrouded_server.json"
   ],
-  "status": "beta",
+  "status": "stabil",
   "disk_gb": 4,
   "notes": "Läuft über Wine. Name, Passwörter und Spielerzahl stellst du unter „Einstellungen“ ein. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten.",
   "config": [
