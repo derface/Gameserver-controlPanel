@@ -26,11 +26,12 @@ import (
 
 // SteamState is shown in the settings.
 type SteamState struct {
-	User    string `json:"user,omitempty"`      // logged-in account
-	State   string `json:"state"`               // none | working | need_code | need_app | ok | error
-	Pending string `json:"pending,omitempty"`   // account of a login in progress
-	Code    string `json:"code_kind,omitempty"` // email | app
-	Message string `json:"message,omitempty"`
+	User    string   `json:"user,omitempty"`      // logged-in account
+	State   string   `json:"state"`               // none | working | need_code | need_app | ok | error
+	Pending string   `json:"pending,omitempty"`   // account of a login in progress
+	Code    string   `json:"code_kind,omitempty"` // email | app
+	Message string   `json:"message,omitempty"`
+	Log     []string `json:"log,omitempty"` // last SteamCMD lines of the attempt
 }
 
 type steamLogin struct {
@@ -174,19 +175,33 @@ func (m *Manager) runSteamLogin(user, pass, code string) {
 		m.setSteam(func(s *SteamState) { *s = SteamState{State: "ok", Message: "Angemeldet als " + user} })
 	case "need_code":
 		m.setSteam(func(s *SteamState) {
-			s.State, s.Code, s.Pending, s.Message = "need_code", res.kind, user, res.msg
+			s.State, s.Code, s.Pending, s.Message, s.Log = "need_code", res.kind, user, res.msg, res.log
 		})
 	default:
 		fail(res.msg)
+		m.setSteam(func(s *SteamState) { s.Log = res.log })
 	}
 }
 
-type loginResult struct{ state, kind, msg string }
+type loginResult struct {
+	state, kind, msg string
+	log              []string
+}
 
 // watchSteamLogin reads SteamCMD's output and decides how the login ended.
 // It returns as soon as the outcome is clear (SteamCMD waits forever at a
 // code prompt when stdin is closed).
 func watchSteamLogin(r io.Reader, onApp func()) loginResult {
+	var all []string
+	res := watchSteamLines(r, onApp, &all)
+	res.log = all
+	return res
+}
+
+// steamLogLine hides the password and keeps a line for the log view.
+var steamSecret = regexp.MustCompile(`(?i)(\+login\s+\S+\s+)\S+`)
+
+func watchSteamLines(r io.Reader, onApp func(), all *[]string) loginResult {
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 64<<10), 1<<20)
 	var last []string
@@ -196,34 +211,38 @@ func watchSteamLogin(r io.Reader, onApp func()) loginResult {
 			continue
 		}
 		last = append(last, l)
+		*all = append(*all, steamSecret.ReplaceAllString(l, "${1}••••"))
+		if len(*all) > 40 {
+			*all = (*all)[1:]
+		}
 		if len(last) > 6 {
 			last = last[1:]
 		}
 		low := strings.ToLower(l)
 		switch {
 		case strings.Contains(low, "invalid password") || strings.Contains(low, "invalidpassword"):
-			return loginResult{"error", "", "Steam meldet: falsches Passwort oder falscher Kontoname."}
+			return loginResult{"error", "", "Steam meldet: falsches Passwort oder falscher Kontoname.", nil}
 		case strings.Contains(low, "rate limit") || strings.Contains(low, "ratelimit"):
-			return loginResult{"error", "", "Steam meldet: zu viele Anmeldeversuche. Bitte etwa 30 Minuten warten."}
+			return loginResult{"error", "", "Steam meldet: zu viele Anmeldeversuche. Bitte etwa 30 Minuten warten.", nil}
 		case strings.Contains(low, "invalidloginauthcode") || strings.Contains(low, "twofactorcodemismatch") || strings.Contains(low, "invalid login auth code"):
-			return loginResult{"need_code", codeKind(low), "Der Code war falsch oder abgelaufen. Bitte den aktuellen Code eingeben."}
+			return loginResult{"need_code", codeKind(low), "Der Code war falsch oder abgelaufen. Bitte den aktuellen Code eingeben.", nil}
 		case strings.Contains(low, "two-factor") || strings.Contains(low, "two factor") || strings.Contains(low, "mobile authenticator"):
-			return loginResult{"need_code", "app", "Bitte den Code aus der Steam-App (Steam Guard) eingeben."}
+			return loginResult{"need_code", "app", "Bitte den Code aus der Steam-App (Steam Guard) eingeben.", nil}
 		case strings.Contains(low, "steam guard code") || strings.Contains(low, "accountlogondenied") || strings.Contains(low, "account logon denied") || strings.Contains(low, "check your email"):
-			return loginResult{"need_code", "email", "Steam verlangt einen Steam-Guard-Code. Er kommt per E-Mail an die Adresse des Kontos (auch im Spam nachsehen, kann ein paar Minuten dauern). Ist die Steam-App mit Steam Guard eingerichtet, steht er stattdessen dort."}
+			return loginResult{"need_code", "email", "Steam verlangt einen Steam-Guard-Code. Er kommt per E-Mail an die Adresse des Kontos (auch im Spam nachsehen, kann ein paar Minuten dauern). Ist die Steam-App mit Steam Guard eingerichtet, steht er stattdessen dort.", nil}
 		case strings.Contains(low, "steam mobile app") || strings.Contains(low, "confirm the login"):
 			onApp() // keeps waiting: SteamCMD continues once the user taps "approve"
 		case strings.Contains(low, "waiting for user info...ok") || strings.Contains(low, "logged in ok"):
-			return loginResult{"ok", "", ""}
+			return loginResult{"ok", "", "", nil}
 		case strings.Contains(low, "failed") && strings.Contains(low, "login"):
-			return loginResult{"error", "", "Anmeldung fehlgeschlagen: " + l}
+			return loginResult{"error", "", "Anmeldung fehlgeschlagen: " + l, nil}
 		}
 	}
 	msg := "Anmeldung ohne Ergebnis beendet"
 	if len(last) > 0 {
 		msg += ": " + last[len(last)-1]
 	}
-	return loginResult{"error", "", msg}
+	return loginResult{"error", "", msg, nil}
 }
 
 func codeKind(low string) string {

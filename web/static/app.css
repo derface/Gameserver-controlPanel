@@ -593,3 +593,4 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .howto ol{margin:10px 0 2px;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .page form.lcd-in,.page form.ask{flex-direction:row;gap:10px}
 .page form.ask{gap:0}
+.stm-log{margin:8px 0 0;max-height:240px;overflow:auto;font-family:var(--font-mono);font-size:11.5px;white-space:pre-wrap;word-break:break-word;color:var(--muted)}
