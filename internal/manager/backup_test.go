@@ -120,7 +120,7 @@ func TestAllTemplatesRender(t *testing.T) {
 		}
 		for _, m := range regexp.MustCompile(`\{\{\s*([a-z0-9_]+)\s*\}\}`).FindAllStringSubmatch(tpl.Start+strings.Join(tpl.Cmd, " "), -1) {
 			k := m[1]
-			if _, ok := vars[k]; !ok && k != "port" && !regexp.MustCompile(`^port_[0-9]+$`).MatchString(k) {
+			if _, ok := vars[k]; !ok && k != "port" && k != "memory_mb" && k != "heap_mb" && !regexp.MustCompile(`^port_[0-9]+$`).MatchString(k) {
 				t.Errorf("%s: unbekannter Platzhalter %s", tpl.ID, k)
 			}
 			if strings.HasPrefix(k, "port_") {
@@ -137,5 +137,12 @@ func TestAllTemplatesRender(t *testing.T) {
 		if tpl.Query != nil && tpl.Query.Port >= len(tpl.Ports) {
 			t.Errorf("%s: Abfrage-Port %d existiert nicht", tpl.ID, tpl.Query.Port)
 		}
+	}
+}
+
+func TestRunVarsMemory(t *testing.T) {
+	v := runVars(store.Server{MemoryMB: 6144, Vars: map[string]string{"a": "b"}})
+	if v["heap_mb"] != "4608" || v["memory_mb"] != "6144" || v["a"] != "b" {
+		t.Fatalf("%v", v)
 	}
 }

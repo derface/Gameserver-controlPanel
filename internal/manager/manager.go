@@ -401,7 +401,22 @@ func (m *Manager) ensureImage(ctx context.Context, id string, tpl templates.Temp
 	})
 }
 
+// runVars adds the server's RAM to its variables: {{memory_mb}} is the
+// container limit, {{heap_mb}} a Java heap that leaves room for the JVM itself.
+func runVars(sv store.Server) map[string]string {
+	v := make(map[string]string, len(sv.Vars)+2)
+	for k, x := range sv.Vars {
+		v[k] = x
+	}
+	if sv.MemoryMB > 0 {
+		v["memory_mb"] = strconv.Itoa(sv.MemoryMB)
+		v["heap_mb"] = strconv.Itoa(sv.MemoryMB * 3 / 4)
+	}
+	return v
+}
+
 func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docker.ContainerConfig {
+	sv.Vars = runVars(sv)
 	hostPorts := make([]int, len(sv.Ports))
 	for i, p := range sv.Ports {
 		hostPorts[i] = p.Host
