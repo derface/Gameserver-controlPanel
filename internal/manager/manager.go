@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -101,6 +102,9 @@ type Info struct {
 }
 
 func New(st *store.Store, dk *docker.Client, tpls *templates.Set, dataDir string) *Manager {
+	if err := writeRunScript(dataDir); err != nil {
+		log.Printf("[Panel] Startskript: %v", err)
+	}
 	return &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{},
 		Limit: func() int { return -1 }, AutoBackups: func() bool { return true }}
 }
@@ -431,6 +435,10 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			upd = "1"
 		}
 		cfg.Image = SteamImageFor(tpl)
+		// the start script comes from the panel, so a new version does not
+		// need a new image (and no new Wine download)
+		cfg.Labels["gamepanel.script"] = runScriptHash
+		cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, runScriptPath(m.dataDir)+":/usr/local/bin/gp-run:ro")
 		if tpl.SteamLogin {
 			cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, m.SteamAuthDir()+":/home/steam/Steam")
 		}
@@ -508,6 +516,7 @@ func (m *Manager) prepare(id string, start bool) {
 		if start {
 			m.setJob(id, "Wird gestartet")
 			m.expect(id)
+			m.requestUpdate(id)
 			return m.dk.Start(ctx, cid)
 		}
 		return nil
@@ -537,6 +546,7 @@ func (m *Manager) get(id string) (store.Server, templates.Template, error) {
 
 func (m *Manager) Start(ctx context.Context, id string) error {
 	m.expect(id)
+	m.requestUpdate(id)
 	sv, _, err := m.get(id)
 	if err != nil {
 		return err
@@ -575,6 +585,7 @@ func (m *Manager) Stop(ctx context.Context, id string) error {
 
 func (m *Manager) Restart(ctx context.Context, id string) error {
 	m.expect(id)
+	m.requestUpdate(id)
 	sv, tpl, err := m.get(id)
 	if err != nil {
 		return err
@@ -594,8 +605,8 @@ func (m *Manager) outdated(ctx context.Context, sv store.Server) bool {
 	if !ok || tpl.Kind != "steam" || sv.ContainerID == "" {
 		return false
 	}
-	_, img, err := m.dk.InspectImage(ctx, sv.ContainerID)
-	return err == nil && img != "" && img != SteamImageFor(tpl)
+	img, labels, err := m.dk.InspectLabels(ctx, sv.ContainerID)
+	return err == nil && img != "" && (img != SteamImageFor(tpl) || labels["gamepanel.script"] != runScriptHash)
 }
 
 // Recreate rebuilds the container with the current settings (keeps data).

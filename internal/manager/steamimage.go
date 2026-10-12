@@ -55,7 +55,21 @@ steam() {
   fi
   return $rc
 }
-if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
+# Install with "validate" only the first time. Updates run when the panel
+# started the server (it leaves /data/.gp-update-now), not when Docker
+# restarts it after a crash: otherwise every crash checks gigabytes again.
+NEED=""
+if [ ! -f /data/server/.gp-installed ]; then
+  NEED=install
+elif [ "${GP_UPDATE:-1}" = "1" ] && [ -f /data/.gp-update-now ]; then
+  NEED=update
+elif [ "${GP_UPDATE:-1}" = "1" ]; then
+  echo "[panel] Neustart nach Absturz: ohne Update-Prüfung"
+fi
+rm -f /data/.gp-update-now 2>/dev/null || true
+VALIDATE=""
+if [ "${NEED}" = "install" ]; then VALIDATE="validate"; fi
+if [ -n "${NEED}" ]; then
   echo "[panel] SteamCMD: App ${GP_APP_ID} wird installiert oder aktualisiert"
   BETA=""
   if [ -n "${GP_BETA}" ]; then BETA="-beta ${GP_BETA}"; fi
@@ -65,7 +79,7 @@ if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
     if [ -n "${GP_BASE_APP}" ]; then
       echo "[panel] SteamCMD: Basis-App ${GP_BASE_APP} nach ${GP_BASE_DIR}"
       mkdir -p "/data/server/${GP_BASE_DIR}"
-      if ! steam ${PLATFORM} +force_install_dir "/data/server/${GP_BASE_DIR}" +login "${LOGIN}" +app_update "${GP_BASE_APP}" validate; then
+      if ! steam ${PLATFORM} +force_install_dir "/data/server/${GP_BASE_DIR}" +login "${LOGIN}" +app_update "${GP_BASE_APP}" ${VALIDATE}; then
         echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"; sleep 10; continue
       fi
     fi
@@ -73,7 +87,7 @@ if [ "${GP_UPDATE:-1}" = "1" ] || [ ! -f /data/server/.gp-installed ]; then
       echo "[panel] SteamCMD: Erstinstallation mit Plattform ${GP_PREPLATFORM}"
       steam +@sSteamCmdForcePlatformType "${GP_PREPLATFORM}" +force_install_dir /data/server +login "${LOGIN}" +app_update "${GP_APP_ID}" validate && touch /data/server/.gp-preplatform || true
     fi
-    if steam ${PLATFORM} +force_install_dir /data/server +login "${LOGIN}" ${MOD} +app_update "${GP_APP_ID}" ${BETA} validate; then
+    if steam ${PLATFORM} +force_install_dir /data/server +login "${LOGIN}" ${MOD} +app_update "${GP_APP_ID}" ${BETA} ${VALIDATE}; then
       if [ -z "${GP_MOD}" ] || [ -d "/data/server/${GP_MOD}" ]; then
         touch /data/server/.gp-installed
         break

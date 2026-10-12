@@ -316,6 +316,18 @@ func (c *Client) InspectImage(ctx context.Context, id string) (State, string, er
 	return out.State, out.Config.Image, err
 }
 
+// InspectLabels returns the image and the labels a container was created with.
+func (c *Client) InspectLabels(ctx context.Context, id string) (string, map[string]string, error) {
+	var out struct {
+		Config struct {
+			Image  string            `json:"Image"`
+			Labels map[string]string `json:"Labels"`
+		} `json:"Config"`
+	}
+	err := c.simple(ctx, "GET", "/containers/"+id+"/json", nil, nil, &out)
+	return out.Config.Image, out.Config.Labels, err
+}
+
 type Stats struct {
 	CPUPercent float64 `json:"cpu_percent"`
 	MemUsed    uint64  `json:"mem_used"`
