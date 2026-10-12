@@ -78,8 +78,18 @@ func Get(format string, data []byte, key string) (string, bool, error) {
 			return strconv.FormatFloat(x, 'f', -1, 64), true, nil
 		case nil:
 			return "", true, nil
+		case []any: // a list of words, e.g. server tags
+			parts := make([]string, 0, len(x))
+			for _, e := range x {
+				str, ok := e.(string)
+				if !ok {
+					return "", false, nil
+				}
+				parts = append(parts, str)
+			}
+			return strings.Join(parts, ", "), true, nil
 		}
-		return "", false, nil // objects and arrays are not editable values
+		return "", false, nil // objects are not editable values
 	}
 	return "", false, fmt.Errorf("unbekanntes Format %q", format)
 }
@@ -88,8 +98,15 @@ func Get(format string, data []byte, key string) (string, bool, error) {
 // do not exist are appended where the format allows it (properties, cvar,
 // ini); for the others they are an error.
 func Set(format string, data []byte, values map[string]string, keys []string) ([]byte, error) {
+	return SetKinds(format, data, values, keys, nil)
+}
+
+// SetKinds is Set with the value kinds of the keys ("number", "bool",
+// "list", "string"). JSON uses them to create missing values with the right
+// type; without a kind a missing JSON value is an error.
+func SetKinds(format string, data []byte, values map[string]string, keys []string, kinds map[string]string) ([]byte, error) {
 	if format == "json" {
-		return setJSON(data, values, keys)
+		return setJSON(data, values, keys, kinds)
 	}
 	for _, k := range keys {
 		v, ok := values[k]
@@ -384,6 +401,38 @@ func setPal(data []byte, key, val string) ([]byte, error) {
 
 // ---------- json ----------
 
+// CanAdd reports whether a missing key could be created in the file: for
+// JSON only below objects (a missing third user group stays missing).
+func CanAdd(format string, data []byte, key string) bool {
+	if format != "json" {
+		return CanCreate(format)
+	}
+	var doc any
+	if json.Unmarshal(data, &doc) != nil {
+		return false
+	}
+	cur := doc
+	for _, p := range strings.Split(key, ".") {
+		switch c := cur.(type) {
+		case map[string]any:
+			v, ok := c[p]
+			if !ok {
+				return true // the rest is created
+			}
+			cur = v
+		case []any:
+			i, err := strconv.Atoi(p)
+			if err != nil || i < 0 || i >= len(c) {
+				return false
+			}
+			cur = c[i]
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 func jsonGet(doc any, path string) (any, bool) {
 	cur := doc
 	for _, p := range strings.Split(path, ".") {
@@ -408,7 +457,7 @@ func jsonGet(doc any, path string) (any, bool) {
 }
 
 // setJSON keeps the original key order by decoding into ordered nodes.
-func setJSON(data []byte, values map[string]string, keys []string) ([]byte, error) {
+func setJSON(data []byte, values map[string]string, keys []string, kinds map[string]string) ([]byte, error) {
 	root, err := parseOrdered(data)
 	if err != nil {
 		return nil, fmt.Errorf("JSON ungültig: %w", err)
@@ -418,9 +467,25 @@ func setJSON(data []byte, values map[string]string, keys []string) ([]byte, erro
 		if !ok {
 			continue
 		}
-		n := root.find(strings.Split(k, "."))
+		path := strings.Split(k, ".")
+		n := root.find(path)
+		if n == nil && kinds[k] != "" {
+			n = root.create(path, kinds[k])
+		}
 		if n == nil {
 			return nil, fmt.Errorf("%s fehlt in der Datei", k)
+		}
+		if kinds[k] == "list" {
+			if n.kind != 'a' {
+				return nil, fmt.Errorf("%s ist keine Liste", k)
+			}
+			n.vals = nil
+			for _, p := range strings.Split(v, ",") {
+				if p = strings.TrimSpace(p); p != "" {
+					n.vals = append(n.vals, &node{kind: 's', str: p})
+				}
+			}
+			continue
 		}
 		switch n.kind {
 		case 's':

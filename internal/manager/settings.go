@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -33,13 +34,14 @@ type SettingValue struct {
 }
 
 type FileView struct {
-	Title    string         `json:"title"`
-	File     string         `json:"file"`
-	Note     string         `json:"note,omitempty"`
-	Exists   bool           `json:"exists"`
-	Editable bool           `json:"editable"`
-	Error    string         `json:"error,omitempty"`
-	Settings []SettingValue `json:"settings"`
+	Title     string         `json:"title"`
+	File      string         `json:"file"`
+	Note      string         `json:"note,omitempty"`
+	NoteGroup string         `json:"note_group,omitempty"`
+	Exists    bool           `json:"exists"`
+	Editable  bool           `json:"editable"`
+	Error     string         `json:"error,omitempty"`
+	Settings  []SettingValue `json:"settings"`
 }
 
 type SettingsView struct {
@@ -107,17 +109,30 @@ func (m *Manager) readConfig(sv store.Server, tpl templates.Template, c template
 
 func uiValue(s templates.Setting, raw string) string {
 	switch s.Type {
+	case "number":
+		if s.Scale > 0 {
+			if n, err := strconv.ParseFloat(raw, 64); err == nil {
+				return strconv.FormatFloat(n/s.Scale, 'f', -1, 64)
+			}
+		}
 	case "bool":
 		t, _ := s.BoolValues()
 		return strconv.FormatBool(strings.EqualFold(raw, t))
 	case "select":
 		for _, o := range s.Options { // games are not always consistent with case
-			if strings.EqualFold(o, raw) {
+			if strings.EqualFold(o, raw) || sameNumber(o, raw) {
 				return o
 			}
 		}
 	}
 	return raw
+}
+
+// sameNumber treats "1" and "1.0" as equal.
+func sameNumber(a, b string) bool {
+	x, err1 := strconv.ParseFloat(a, 64)
+	y, err2 := strconv.ParseFloat(b, 64)
+	return err1 == nil && err2 == nil && x == y
 }
 
 // Settings returns the form for one server.
@@ -138,7 +153,7 @@ func (m *Manager) Settings(id string) (SettingsView, error) {
 		v.Vars = append(v.Vars, VarValue{Var: tv, Value: val})
 	}
 	for _, c := range tpl.Config {
-		fv := FileView{Title: c.Title, File: configRel(sv, c), Note: c.Note, Settings: []SettingValue{}}
+		fv := FileView{Title: c.Title, File: configRel(sv, c), Note: c.Note, NoteGroup: c.NoteGroup, Settings: []SettingValue{}}
 		data, exists, err := m.readConfig(sv, tpl, c)
 		fv.Exists = exists
 		fv.Editable = exists || gameconfig.CanCreate(c.Format)
@@ -156,7 +171,7 @@ func (m *Manager) Settings(id string) (SettingsView, error) {
 				if gerr != nil {
 					fv.Error, fv.Editable = gerr.Error(), false
 				}
-				sval.Present = ok || gameconfig.CanCreate(c.Format)
+				sval.Present = ok || gameconfig.CanAdd(c.Format, data, s.Key)
 				if ok {
 					sval.Value = uiValue(s, raw)
 				}
@@ -203,6 +218,9 @@ func fileValue(s templates.Setting, v string) (string, error) {
 				hi = strconv.FormatFloat(*s.Max, 'f', -1, 64)
 			}
 			return "", fmt.Errorf("„%s“: erlaubt %s bis %s", s.Label, lo, hi)
+		}
+		if s.Scale > 0 {
+			return strconv.FormatFloat(math.Round(n*s.Scale), 'f', -1, 64), nil
 		}
 	case "select":
 		ok := false
@@ -275,7 +293,7 @@ func (m *Manager) ApplySettings(ctx context.Context, id string, vars map[string]
 		if !exists && !gameconfig.CanCreate(c.Format) {
 			return nil, fmt.Errorf("%s gibt es noch nicht. Starte den Server einmal, dann entsteht die Datei", c.Title)
 		}
-		set, keys := map[string]string{}, []string{}
+		set, keys, kinds := map[string]string{}, []string{}, map[string]string{}
 		for _, s := range c.Settings {
 			v, ok := in[s.Key]
 			if !ok || (s.Type == "secret" && v == secretMask) {
@@ -286,19 +304,22 @@ func (m *Manager) ApplySettings(ctx context.Context, id string, vars map[string]
 				return nil, err
 			}
 			cur, present, _ := gameconfig.Get(c.Format, data, s.Key)
-			if present && cur == fv {
+			if present && (cur == fv || (s.Type == "number" && sameNumber(cur, fv))) {
+				continue
+			}
+			if s.Type == "list" && present && listEqual(cur, fv) {
 				continue
 			}
 			if !present && fv == "" && s.Type != "bool" {
 				continue
 			}
-			set[s.Key], keys = fv, append(keys, s.Key)
+			set[s.Key], keys, kinds[s.Key] = fv, append(keys, s.Key), s.ValueKind()
 			changed = append(changed, s.Label)
 		}
 		if len(keys) == 0 {
 			continue
 		}
-		out, err := gameconfig.Set(c.Format, data, set, keys)
+		out, err := gameconfig.SetKinds(c.Format, data, set, keys, kinds)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", c.Title, err)
 		}
@@ -414,4 +435,17 @@ func checkConfig(c templates.ConfigFile, data []byte) error {
 		}
 	}
 	return nil
+}
+
+func listEqual(a, b string) bool {
+	norm := func(s string) string {
+		var out []string
+		for _, p := range strings.Split(s, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				out = append(out, p)
+			}
+		}
+		return strings.Join(out, ",")
+	}
+	return norm(a) == norm(b)
 }

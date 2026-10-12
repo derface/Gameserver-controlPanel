@@ -128,7 +128,7 @@
       "title": "Spielwelt (server.properties)",
       "file": "server.properties",
       "format": "properties",
-      "note": "Servername, Schwierigkeit, Spielerzahl und Sichtweite stehen oben bei den Start-Einstellungen.",
+      "note": "Servername, Schwierigkeit, Spielerzahl und Sichtweite stehen im Reiter „Start“.",
       "settings": [
         {
           "key": "gamemode",

@@ -203,3 +203,24 @@ func TestEnshroudedGroupRule(t *testing.T) {
 		t.Fatalf("Zufallswerte: %v %v", m, err)
 	}
 }
+
+func TestScaleAndNumbers(t *testing.T) {
+	min, max := 2.0, 60.0
+	s := templates.Setting{Key: "d", Label: "Tag", Type: "number", Scale: 60e9, Min: &min, Max: &max}
+	if v := uiValue(s, "1800000000000"); v != "30" {
+		t.Fatalf("uiValue = %q", v)
+	}
+	if v, err := fileValue(s, "20"); err != nil || v != "1200000000000" {
+		t.Fatalf("fileValue = %q, %v", v, err)
+	}
+	if _, err := fileValue(s, "90"); err == nil {
+		t.Fatal("90 Minuten angenommen")
+	}
+	sel := templates.Setting{Key: "h", Label: "Wärme", Type: "select", Options: []string{"0.5", "1", "1.5"}}
+	if v := uiValue(sel, "1.0"); v != "1" || sel.ValueKind() != "number" {
+		t.Fatalf("Auswahl mit Zahl: %q %s", v, sel.ValueKind())
+	}
+	if !listEqual("pve,  deutsch", "pve, deutsch") || listEqual("pve", "pvp") {
+		t.Fatal("listEqual")
+	}
+}

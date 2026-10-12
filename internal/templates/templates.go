@@ -34,6 +34,7 @@ type Var struct {
 	Flag    string   `json:"flag,omitempty"` // for bool: text inserted when true
 	Help    string   `json:"help,omitempty"`
 	Needed  bool     `json:"required,omitempty"`
+	Group   string   `json:"group,omitempty"` // tab on the settings page, default "Start"
 }
 
 // DefaultContent returns the starting content of the file, or nil.
@@ -82,15 +83,17 @@ type ConfigFile struct {
 	Default json.RawMessage `json:"default,omitempty"`
 	// Check names an extra rule the panel enforces before saving
 	// (enshrouded_groups: group passwords set and different).
-	Check    string    `json:"check,omitempty"`
-	Note     string    `json:"note,omitempty"`
-	Settings []Setting `json:"settings"`
+	Check string `json:"check,omitempty"`
+	Note  string `json:"note,omitempty"`
+	// NoteGroup shows the note only on that tab of the settings page.
+	NoteGroup string    `json:"note_group,omitempty"`
+	Settings  []Setting `json:"settings"`
 }
 
 type Setting struct {
 	Key     string   `json:"key"`
 	Label   string   `json:"label"`
-	Type    string   `json:"type,omitempty"` // text | number | bool | select | secret
+	Type    string   `json:"type,omitempty"` // text | number | bool | select | secret | list
 	Options []string `json:"options,omitempty"`
 	Labels  []string `json:"labels,omitempty"` // display names for options
 	True    string   `json:"true,omitempty"`   // how the file writes yes/no (default true/false)
@@ -98,6 +101,16 @@ type Setting struct {
 	Min     *float64 `json:"min,omitempty"`
 	Max     *float64 `json:"max,omitempty"`
 	Help    string   `json:"help,omitempty"`
+	// Group is the tab the setting is shown in (e.g. "Server", "Gameplay").
+	Group string `json:"group,omitempty"`
+	// Unit is shown inside the field, e.g. "Spieler" or "Minuten".
+	Unit string `json:"unit,omitempty"`
+	// Scale converts the shown value to the file: file = shown × Scale
+	// (Enshrouded stores minutes as nanoseconds).
+	Scale float64 `json:"scale,omitempty"`
+	// When is "key=value" of another setting in the same file; the setting
+	// only takes effect then (e.g. "gameSettingsPreset=Custom").
+	When string `json:"when,omitempty"`
 }
 
 // BoolValues returns how the file spells true and false.
@@ -128,8 +141,18 @@ func (t Template) checkConfig() error {
 				return fmt.Errorf("config %d: Einstellung ohne Schlüssel/Name oder doppelt (%s)", i, s.Key)
 			}
 			seen[s.Key] = true
+			if s.Scale < 0 || (s.Scale > 0 && s.Type != "number") {
+				return fmt.Errorf("config %d: %s: scale nur für Zahlen", i, s.Key)
+			}
+			if s.When != "" && !strings.Contains(s.When, "=") {
+				return fmt.Errorf("config %d: %s: when muss „schlüssel=wert“ sein", i, s.Key)
+			}
 			switch s.Type {
 			case "", "text", "number", "bool", "secret":
+			case "list":
+				if c.Format != "json" {
+					return fmt.Errorf("config %d: %s: Listen gibt es nur in JSON", i, s.Key)
+				}
 			case "select":
 				if len(s.Options) == 0 || (len(s.Labels) > 0 && len(s.Labels) != len(s.Options)) {
 					return fmt.Errorf("config %d: %s braucht passende options/labels", i, s.Key)
@@ -429,4 +452,27 @@ func ParsePorts(s string) ([]Port, error) {
 		return nil, fmt.Errorf("mindestens ein Port ist nötig")
 	}
 	return out, nil
+}
+
+// ValueKind tells how a missing value is created in a JSON file:
+// "number", "bool", "list" or "string".
+func (s Setting) ValueKind() string {
+	switch s.Type {
+	case "number":
+		return "number"
+	case "bool":
+		if s.True == "" && s.False == "" {
+			return "bool"
+		}
+	case "list":
+		return "list"
+	case "select":
+		for _, o := range s.Options {
+			if _, err := strconv.ParseFloat(o, 64); err != nil {
+				return "string"
+			}
+		}
+		return "number"
+	}
+	return "string"
 }

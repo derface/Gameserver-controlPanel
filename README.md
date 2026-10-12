@@ -69,6 +69,12 @@ Die Community-Vorlagen werden automatisch aus den Daten von [LinuxGSM](https://g
 
 Neu erzeugen: `git clone --depth 1 https://github.com/GameServerManagers/LinuxGSM /tmp/lgsm && python3 tools/gen_lgsm.py /tmp/lgsm internal/templates/games/community`. Spiele, die einen Steam-Login brauchen oder deren Ports nur in einer Spielkonfiguration stehen, werden übersprungen.
 
+Beschreibungen, Wertebereiche und Gruppen der Spiel-Einstellungen stammen teils aus [AMPTemplates](https://github.com/CubeCoders/AMPTemplates) von CubeCoders (MIT-Lizenz, siehe `internal/templates/games/AMPTEMPLATES-LICENSE.md`), übersetzt und angepasst.
+
+### Einstellungs-Seite
+
+Jede Einstellung einer Vorlage kann haben: `group` (Reiter, z. B. „Server“, „Spieler“), `help` (Beschreibung), `unit` (steht im Feld, z. B. „Spieler“), `min`/`max`, `scale` (Umrechnung: Wert in der Datei = angezeigter Wert × scale, z. B. Minuten ↔ Nanosekunden) und `when` („schlüssel=wert“: wirkt nur dann, sonst ausgegraut mit Hinweis). Typ `list` ist eine kommagetrennte Liste in JSON. Fehlende JSON-Werte legt das Panel beim Speichern mit dem richtigen Typ an. `note_group` zeigt den Hinweis einer Datei nur in einem Reiter.
+
 Vorlagen-Felder seit 0.6: `steam_mod` (GoldSrc-Mod über App 90), `steam_base_app` + `steam_base_dir` (zusätzliche App, die vorher installiert wird), `steam_preplatform` (Erstinstallation einmal mit anderer Plattform, z. B. L4D2), Status `defekt`. Seit 0.4: `packages` (zusätzliche Debian-Pakete, eigene Image-Schicht je Paketkombination), `runtime: "wine"` + `platform: "windows"` (Windows-Server über Wine), `log_file` (Spiel schreibt in eine Datei, die Konsole liest mit), `data_path` / `data_uid` / `cmd` für Container-Images.
 
 ### Selbsttest

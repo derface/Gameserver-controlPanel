@@ -1333,25 +1333,45 @@
   $('#svTabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) select(MG.id, b.dataset.tab); });
 
   // Spiel-Einstellungen
-  const GS = { data: null, orig: {} };
-  function cfgField(f, s) {
-    const id = `st_${f}_${s.key.replace(/[^A-Za-z0-9_-]/g, '_')}`, attrs = `data-cf="${f}" data-k="${esc(s.key)}"`;
-    const help = s.help ? `<small>${esc(s.help)}</small>` : '';
-    if (s.type === 'bool') return `<label class="check"><input type="checkbox" ${attrs} ${s.value === 'true' ? 'checked' : ''}> ${esc(s.label)}</label>`;
-    let input;
-    if (s.type === 'select') {
-      const opts = s.options.map((o, i) => `<option value="${esc(o)}" ${o === s.value ? 'selected' : ''}>${esc((s.labels && s.labels[i]) || o)}</option>`);
-      if (s.value && !s.options.includes(s.value)) opts.unshift(`<option value="${esc(s.value)}" selected>${esc(s.value)}</option>`);
-      input = `<select id="${id}" ${attrs}>${opts.join('')}</select>`;
-    } else if (s.type === 'secret') {
-      const set = s.value === '••••••';
-      input = `<input id="${id}" ${attrs} type="password" value="" placeholder="${set ? 'gesetzt, unverändert' : 'leer'}" autocomplete="new-password">`;
-    } else if (s.type === 'number') {
-      input = `<input id="${id}" ${attrs} type="number" step="any" value="${esc(s.value)}"${s.min != null ? ` min="${s.min}"` : ''}${s.max != null ? ` max="${s.max}"` : ''}>`;
-    } else {
-      input = `<input id="${id}" ${attrs} type="text" value="${esc(s.value)}" maxlength="300" autocomplete="off">`;
+  const GS = { data: null, orig: {}, group: null };
+  /* Einstellungen im Kachel-Layout: Reiter je Gruppe, eine Kachel je Wert */
+  const numDe = n => String(n).replace('.', ',');
+  function stCard(o) {
+    // o: {id, attrs, label, help, type, value, options, labels, unit, min, max, group, file, key, when}
+    const help = o.help ? `<p class="st-help">${esc(o.help)}</p>` : '';
+    const range = o.type === 'number' && o.min != null && o.max != null ? `<p class="st-range">${numDe(o.min)} bis ${numDe(o.max)}${o.unit ? ' ' + esc(o.unit) : ''}</p>` : '';
+    const when = o.when ? ` data-when="${esc(o.when)}"` : '';
+    const q = esc((o.label + ' ' + (o.help || '') + ' ' + o.key).toLowerCase());
+    const tag = `<span class="st-gtag">${esc(o.group)}</span>`;
+    if (o.type === 'bool') {
+      return `<div class="st-card st-bool" data-g="${esc(o.group)}" data-q="${q}" data-f="${o.file}"${when}>${tag}
+        <div class="st-head"><label for="${o.id}">${esc(o.label)}</label><input type="checkbox" role="switch" class="tgl" id="${o.id}" ${o.attrs} ${o.value === 'true' ? 'checked' : ''}></div>${help}<p class="st-cond" hidden></p></div>`;
     }
-    return `<label class="field"><span>${esc(s.label)}</span>${input}${help}</label>`;
+    let input;
+    if (o.type === 'select') {
+      const opts = o.options.map((x, i) => `<option value="${esc(x)}" ${x === o.value ? 'selected' : ''}>${esc((o.labels && o.labels[i]) || x)}</option>`);
+      if (o.value && !o.options.includes(o.value)) opts.unshift(`<option value="${esc(o.value)}" selected>${esc(o.value)}</option>`);
+      input = `<select id="${o.id}" ${o.attrs}>${opts.join('')}</select>`;
+    } else if (o.type === 'secret') {
+      const set = o.value === '••••••';
+      input = `<input id="${o.id}" ${o.attrs} type="password" value="" placeholder="${set ? 'gesetzt, bleibt unverändert' : 'leer'}" autocomplete="new-password">`;
+    } else if (o.type === 'number') {
+      input = `<input id="${o.id}" ${o.attrs} type="number" step="any" inputmode="decimal" value="${esc(o.value)}"${o.min != null ? ` min="${o.min}"` : ''}${o.max != null ? ` max="${o.max}"` : ''}>`;
+    } else {
+      input = `<input id="${o.id}" ${o.attrs} type="text" value="${esc(o.value)}" maxlength="300" autocomplete="off"${o.type === 'list' ? ' placeholder="Durch Komma getrennt"' : ''}>`;
+    }
+    const unit = o.unit ? `<span class="st-unit" aria-hidden="true">${esc(o.unit)}</span>` : '';
+    return `<div class="st-card" data-g="${esc(o.group)}" data-q="${q}" data-f="${o.file}"${when}>${tag}
+      <label class="st-title" for="${o.id}">${esc(o.label)}</label>${help}
+      <div class="st-in${o.unit ? ' has-unit' : ''}">${input}${unit}</div>${range}<p class="st-cond" hidden></p></div>`;
+  }
+  function cfgField(f, s, group) {
+    const id = `st_${f}_${s.key.replace(/[^A-Za-z0-9_-]/g, '_')}`;
+    return stCard({ ...s, id, attrs: `data-cf="${f}" data-k="${esc(s.key)}"`, group, file: f });
+  }
+  function varCard(v) {
+    const id = 'stv_' + v.key, type = v.type === 'bool' ? 'bool' : v.type === 'select' ? 'select' : v.type === 'secret' ? 'secret' : v.type === 'number' ? 'number' : 'text';
+    return stCard({ id, attrs: `data-var="${esc(v.key)}"`, label: v.label + (v.required ? ' *' : ''), help: v.help, type, value: v.value, options: v.options || [], key: v.key, group: v.group || 'Start', file: 'v' });
   }
   async function loadSettings() {
     const id = MG.id;
@@ -1363,34 +1383,90 @@
   }
   function renderSettings() {
     const d = GS.data;
-    let h = '';
-    if (d.vars.length) {
-      h += `<fieldset class="st-sec"><legend>Start-Einstellungen</legend><p class="small muted st-info">Werden dem Spiel beim Start mitgegeben. Ändern legt den Container neu an, Spielstände bleiben erhalten.</p>
-        <div class="vars" id="stVars">${d.vars.map(v => varField(v, v.value, true, 'stv_')).join('')}</div></fieldset>`;
-    }
+    const groups = [], cards = [], msgs = [];
+    const addG = g => { if (!groups.includes(g)) groups.push(g); return g; };
+    d.vars.forEach(v => { addG(v.group || 'Start'); cards.push(varCard(v)); });
+    if (d.vars.length) msgs.push(`<p class="small muted">${d.files.length ? 'Die Werte unter „' + esc(d.vars[0].group || 'Start') + '“ ' : 'Diese Werte '}bekommt das Spiel beim Start mit. Wer sie ändert, bekommt einen neuen Container; Spielstände bleiben erhalten.</p>`);
     d.files.forEach((f, i) => {
-      const shown = f.settings.filter(s => s.present);
-      h += `<fieldset class="st-sec"><legend>${esc(f.title)}</legend><p class="st-file">${esc(f.file)}</p>`;
-      if (f.note) h += `<p class="small muted st-info">${esc(f.note)}</p>`;
-      if (f.error) h += `<p class="err">${esc(f.error)}</p>`;
+      const fallback = f.title.replace(/\s*\(.*\)\s*$/, '') || 'Einstellungen';
+      if (f.note) msgs.push(`<p class="small muted"${f.note_group ? ` data-mg="${esc(f.note_group)}"` : ''}>${esc(f.note)}</p>`);
+      if (f.error) msgs.push(`<p class="err">${esc(f.error)}</p>`);
       if (!f.editable && !f.error) {
         const sv = byId(MG.id), st = sv ? sv.status : '';
-        h += `<p class="st-wait">${st === 'installing' || st === 'preparing' ? '<span class="spin" aria-hidden="true"></span> Das Spiel wird gerade installiert. Diese Datei gibt es erst nach der Installation oder dem ersten Start – sobald sie da ist, erscheinen die Einstellungen hier von selbst.'
-          : st === 'starting' ? '<span class="spin" aria-hidden="true"></span> Der Server startet zum ersten Mal und legt die Datei gerade an. Die Einstellungen erscheinen hier gleich von selbst.'
-          : st === 'running' ? 'Das Spiel hat die Datei noch nicht angelegt. Manche Spiele tun das erst nach dem ersten Speichern oder Beenden – stoppe den Server einmal, dann erscheinen die Einstellungen.'
-          : 'Diese Datei legt das Spiel beim ersten Start an. Starte den Server einmal, danach kannst du die Werte hier ändern.'}</p>`;
+        msgs.push(`<p class="st-wait">${st === 'installing' || st === 'preparing' ? '<span class="spin" aria-hidden="true"></span> Das Spiel wird gerade installiert. Die Datei ' + esc(f.file) + ' gibt es erst nach der Installation oder dem ersten Start. Sobald sie da ist, erscheinen die Einstellungen hier von selbst.'
+          : st === 'starting' ? '<span class="spin" aria-hidden="true"></span> Der Server startet zum ersten Mal und legt ' + esc(f.file) + ' gerade an. Die Einstellungen erscheinen hier gleich von selbst.'
+          : st === 'running' ? 'Das Spiel hat ' + esc(f.file) + ' noch nicht angelegt. Manche Spiele tun das erst nach dem ersten Speichern oder Beenden. Stoppe den Server einmal, dann erscheinen die Einstellungen.'
+          : 'Die Datei ' + esc(f.file) + ' legt das Spiel beim ersten Start an. Starte den Server einmal, danach kannst du die Werte hier ändern.'}</p>`);
+        return;
       }
-      else if (f.editable) h += `<div class="vars">${shown.map(s => cfgField(i, s)).join('')}</div>`;
-      if (f.editable && shown.length < f.settings.length) { const n = f.settings.length - shown.length; h += `<p class="small muted">${n === 1 ? 'Eine weitere Einstellung gibt' : n + ' weitere Einstellungen gibt'} es in dieser Spielversion nicht.</p>`; }
-      h += '</fieldset>';
+      if (!f.editable) return;
+      f.settings.filter(s => s.present).forEach(s => cards.push(cfgField(i, s, addG(s.group || fallback))));
     });
-    if (!d.vars.length && !d.files.length) h = '<p class="muted">Für dieses Spiel gibt es noch kein Einstellungs-Formular. Die Konfigurationsdateien kannst du unter „Dateien“ bearbeiten.</p>';
-    $('#stBody').innerHTML = h;
-    $('#stSave').hidden = !d.vars.length && !d.files.some(f => f.editable);
+    if (!cards.length && !msgs.length) msgs.push('<p class="muted">Für dieses Spiel gibt es noch kein Einstellungs-Formular. Die Konfigurationsdateien kannst du unter „Dateien“ bearbeiten.</p>');
+    if (!groups.includes(GS.group)) GS.group = groups[0];
+    $('#stBody').innerHTML = `<div class="st-top">${groups.length > 1 ? `<nav class="st-tabs" aria-label="Bereiche">${groups.map(g => `<button type="button" data-st-g="${esc(g)}">${esc(g)}</button>`).join('')}</nav>` : '<span></span>'}
+        ${cards.length > 8 ? '<input type="search" id="stFind" placeholder="Einstellung suchen" aria-label="Einstellung suchen" autocomplete="off">' : ''}</div>
+      ${msgs.length ? `<div class="st-msgs">${msgs.join('')}</div>` : ''}
+      <p class="st-banner" id="stBanner" hidden></p>
+      <div class="st-grid" id="stGrid">${cards.join('')}</div>
+      <p class="muted st-none" id="stNone" hidden>Keine Einstellung gefunden.</p>`;
+    $('#stSave').hidden = !cards.length;
     $('#stNote').textContent = d.running ? 'Der Server läuft. Zum Speichern wird er kurz gestoppt und wieder gestartet, die Spieler werden dabei getrennt.' : '';
     $('.st-foot').hidden = $('#stSave').hidden;
     GS.orig = collectSettings();
+    showStGroup();
   }
+  // which cards are visible: current tab, or all matches while searching
+  function showStGroup() {
+    const find = $('#stFind'), q = find ? find.value.trim().toLowerCase() : '';
+    $$('#stBody [data-st-g]').forEach(b => { const on = !q && b.dataset.stG === GS.group; b.classList.toggle('on', on); b.setAttribute('aria-current', on ? 'true' : 'false'); });
+    let n = 0;
+    $$('#stGrid .st-card').forEach(c => { const show = q ? c.dataset.q.includes(q) : c.dataset.g === GS.group; c.hidden = !show; if (show) n++; });
+    $('#stGrid').classList.toggle('searching', !!q);
+    $$('#stBody [data-mg]').forEach(m => { m.hidden = !!q || m.dataset.mg !== GS.group; });
+    const box = $('#stBody .st-msgs'); if (box) box.hidden = ![...box.children].some(m => !m.hidden);
+    $('#stNone').hidden = n > 0;
+    updateWhen();
+  }
+  // settings that only count when another one has a certain value
+  function whenInfo(card) {
+    const [k, v] = card.dataset.when.split('='), f = card.dataset.f;
+    const el = $$(`#stBody [data-cf="${f}"]`).find(x => x.dataset.k === k);
+    if (!el) return null;
+    const cur = el.type === 'checkbox' ? String(el.checked) : el.value;
+    const label = el.closest('.st-card').querySelector('.st-title, label').textContent.trim();
+    let what;
+    if (el.type === 'checkbox') what = `„${label}“ eingeschaltet ist`;
+    else { const o = [...(el.options || [])].find(o => o.value === v); what = `„${label}“ auf „${o ? o.textContent : v}“ steht`; }
+    return { ok: cur === v, el, v, text: 'Wirkt nur, wenn ' + what + '.' };
+  }
+  function updateWhen() {
+    const vis = $$('#stGrid .st-card:not([hidden])');
+    let shared = null, all = vis.length > 0;
+    $$('#stGrid .st-card[data-when]').forEach(c => {
+      const w = whenInfo(c), off = !!w && !w.ok;
+      c.classList.toggle('st-dim', off);
+      const p = $('.st-cond', c); p.hidden = !off; if (w) p.textContent = w.text;
+    });
+    vis.forEach(c => {
+      if (!c.classList.contains('st-dim')) { all = false; return; }
+      const w = whenInfo(c);
+      if (shared === null) shared = w; else if (!w || !shared || w.text !== shared.text) all = false;
+    });
+    const ban = $('#stBanner');
+    ban.hidden = !(all && shared);
+    $('#stGrid').classList.toggle('shared-cond', !ban.hidden);
+    if (!ban.hidden) {
+      ban.innerHTML = `${esc(shared.text)} <button type="button" class="btn-line" id="stWhenFix">Jetzt umstellen</button>`;
+      $('#stWhenFix').onclick = () => { const el = shared.el; if (el.type === 'checkbox') el.checked = shared.v === 'true'; else el.value = shared.v; updateWhen(); };
+    }
+  }
+  $('#stBody').addEventListener('click', e => {
+    const b = e.target.closest('[data-st-g]'); if (!b) return;
+    GS.group = b.dataset.stG; const f = $('#stFind'); if (f) f.value = ''; showStGroup();
+  });
+  $('#stBody').addEventListener('input', e => { if (e.target.id === 'stFind') showStGroup(); });
+  $('#stBody').addEventListener('change', e => { if (e.target.dataset.cf != null) updateWhen(); });
   function collectSettings() {
     const files = {};
     $$('#stBody [data-cf]').forEach(el => {
@@ -1399,7 +1475,7 @@
       if (el.type === 'password' && v === '') v = '••••••';
       (files[f] = files[f] || {})[k] = v;
     });
-    return { vars: $('#stVars') ? collectVars($('#stVars'), true) : {}, files };
+    return { vars: collectVars($('#stBody'), true), files };
   }
   $('#stForm').addEventListener('submit', async e => {
     e.preventDefault();
@@ -1955,7 +2031,7 @@
     if (n.page === 'home') { requestAnimationFrame(() => { sizeLand(); drawSparks(); }); }
     else if (n.page === 'server') {
       if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
-      if (prevId !== n.id || prev !== 'server') { MG.id = n.id; MG.path = ''; closeEditor(true); if (S.consoleId && S.consoleId !== n.id) closeConsole(); }
+      if (prevId !== n.id || prev !== 'server') { MG.id = n.id; MG.path = ''; GS.group = null; closeEditor(true); if (S.consoleId && S.consoleId !== n.id) closeConsole(); }
       renderServerPage(); mgTab(n.tab);
     }
     else if (n.page === 'ki') { renderKI(); }

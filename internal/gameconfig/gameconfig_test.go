@@ -171,3 +171,37 @@ func TestArmaCfg(t *testing.T) {
 		t.Fatal("Anführungszeichen angenommen")
 	}
 }
+
+func TestJSONCreateAndList(t *testing.T) {
+	in := []byte("{\n\t\"name\": \"x\",\n\t\"tags\": [],\n\t\"gameSettings\": {\n\t\t\"a\": 1\n\t}\n}\n")
+	out, err := SetKinds("json", in, map[string]string{
+		"gameSettings.b": "2.5", "gameSettings.c": "true", "voice.mode": "Global", "tags": "pve, deutsch ,,rp", "gameSettings.a": "3",
+	}, []string{"gameSettings.a", "gameSettings.b", "gameSettings.c", "voice.mode", "tags"},
+		map[string]string{"gameSettings.b": "number", "gameSettings.c": "bool", "voice.mode": "string", "tags": "list", "gameSettings.a": "number"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]string{"gameSettings.a": "3", "gameSettings.b": "2.5", "gameSettings.c": "true", "voice.mode": "Global", "tags": "pve, deutsch, rp", "name": "x"} {
+		if v, ok, _ := Get("json", out, key); !ok || v != want {
+			t.Errorf("%s = %q (%v)\n%s", key, v, ok, out)
+		}
+	}
+	if !strings.Contains(string(out), "\"b\": 2.5") || !strings.Contains(string(out), "\"c\": true") || !strings.Contains(string(out), "\t\"tags\": [\n\t\t\"pve\",") {
+		t.Fatalf("Typen/Format falsch:\n%s", out)
+	}
+	if strings.Index(string(out), "\"a\"") > strings.Index(string(out), "\"b\"") {
+		t.Fatal("Reihenfolge verloren")
+	}
+	// without kind a missing value stays an error; a value below a non-object cannot be created
+	if _, err := Set("json", in, map[string]string{"neu": "1"}, []string{"neu"}); err == nil {
+		t.Fatal("fehlender Wert ohne Art angelegt")
+	}
+	if _, err := SetKinds("json", in, map[string]string{"name.x": "1"}, []string{"name.x"}, map[string]string{"name.x": "number"}); err == nil {
+		t.Fatal("Wert unter einem Text angelegt")
+	}
+	// clearing a list
+	out, _ = SetKinds("json", out, map[string]string{"tags": ""}, []string{"tags"}, map[string]string{"tags": "list"})
+	if v, _, _ := Get("json", out, "tags"); v != "" || !strings.Contains(string(out), "\"tags\": []") {
+		t.Fatalf("Liste nicht geleert:\n%s", out)
+	}
+}

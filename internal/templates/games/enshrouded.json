@@ -45,24 +45,178 @@
   ],
   "status": "stabil",
   "disk_gb": 4,
-  "notes": "Läuft über Wine. Name, Passwörter und Spielerzahl stellst du unter „Einstellungen“ ein. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten.",
+  "notes": "Läuft über Wine. Name, Passwörter, Spielregeln und Spielerzahl stellst du unter „Einstellungen“ ein. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637.",
   "config": [
     {
       "title": "Enshrouded (enshrouded_server.json)",
       "file": "server/enshrouded_server.json",
       "format": "json",
-      "note": "Wer welches Passwort eingibt, landet in der Gruppe: Admin, Freund, Gast oder Besucher. Enshrouded verlangt verschiedene Passwörter; nur „Besucher“ darf leer sein. Neue Server bekommen zufällige Passwörter – trag deine eigenen ein, bevor du sie weitergibst.",
+      "note": "Enshrouded verlangt für jede Gruppe ein anderes Passwort; nur „Besucher“ darf leer sein. Neue Server bekommen zufällige Passwörter. Trag deine eigenen ein, bevor du sie weitergibst.",
       "settings": [
         {
           "key": "name",
-          "label": "Servername"
+          "label": "Servername",
+          "help": "So heißt der Server in der Serverliste.",
+          "group": "Server"
         },
         {
           "key": "slotCount",
           "label": "Spielerplätze",
           "type": "number",
           "min": 1,
-          "max": 16
+          "max": 16,
+          "unit": "Spieler",
+          "help": "Wie viele Spieler gleichzeitig verbunden sein dürfen.",
+          "group": "Server"
+        },
+        {
+          "key": "tags",
+          "label": "Server-Tags",
+          "type": "list",
+          "help": "Stichworte, mit denen man den Server in der Serverliste findet, durch Komma getrennt. Erlaubte Tags stehen in enshrouded_server_readme.txt im Serverordner.",
+          "group": "Server"
+        },
+        {
+          "key": "enableVoiceChat",
+          "label": "Sprachchat",
+          "type": "bool",
+          "help": "Spieler können im Spiel miteinander sprechen.",
+          "group": "Server"
+        },
+        {
+          "key": "voiceChatMode",
+          "label": "Sprachchat-Modus",
+          "type": "select",
+          "options": [
+            "Proximity",
+            "Global"
+          ],
+          "labels": [
+            "In der Nähe (Standard)",
+            "Überall"
+          ],
+          "when": "enableVoiceChat=true",
+          "help": "„In der Nähe“: Man hört nur Spieler in der Umgebung. „Überall“: Alle hören alle.",
+          "group": "Server"
+        },
+        {
+          "key": "enableTextChat",
+          "label": "Textchat",
+          "type": "bool",
+          "help": "Spieler können sich im Spiel schreiben.",
+          "group": "Server"
+        },
+        {
+          "key": "userGroups.0.password",
+          "label": "Passwort Admin",
+          "type": "secret",
+          "help": "Darf alles, auch Spieler kicken und bannen. Wer beim Beitreten dieses Passwort eingibt, landet in der Gruppe „Admin“.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.1.password",
+          "label": "Passwort Freund",
+          "type": "secret",
+          "help": "Wer beim Beitreten dieses Passwort eingibt, landet in der Gruppe „Freund“.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.2.password",
+          "label": "Passwort Gast",
+          "type": "secret",
+          "help": "Wer beim Beitreten dieses Passwort eingibt, landet in der Gruppe „Gast“.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.3.password",
+          "label": "Passwort Besucher",
+          "type": "secret",
+          "help": "Wer beim Beitreten dieses Passwort eingibt, landet in der Gruppe „Besucher“.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.1.canEditBase",
+          "label": "Freund: darf bauen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Freund“ dürfen in Basen bauen und abreißen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.1.canExtendBase",
+          "label": "Freund: darf Basen erweitern",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Freund“ dürfen Flammenaltäre aufwerten und so Basen vergrößern.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.1.canAccessInventories",
+          "label": "Freund: darf Truhen öffnen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Freund“ dürfen Truhen und Lager benutzen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.1.canKickBan",
+          "label": "Freund: darf kicken und bannen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Freund“ dürfen andere vom Server werfen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.2.canEditBase",
+          "label": "Gast: darf bauen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Gast“ dürfen in Basen bauen und abreißen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.2.canExtendBase",
+          "label": "Gast: darf Basen erweitern",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Gast“ dürfen Flammenaltäre aufwerten und so Basen vergrößern.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.2.canAccessInventories",
+          "label": "Gast: darf Truhen öffnen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Gast“ dürfen Truhen und Lager benutzen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.2.canKickBan",
+          "label": "Gast: darf kicken und bannen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Gast“ dürfen andere vom Server werfen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.3.canEditBase",
+          "label": "Besucher: darf bauen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Besucher“ dürfen in Basen bauen und abreißen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.3.canExtendBase",
+          "label": "Besucher: darf Basen erweitern",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Besucher“ dürfen Flammenaltäre aufwerten und so Basen vergrößern.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.3.canAccessInventories",
+          "label": "Besucher: darf Truhen öffnen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Besucher“ dürfen Truhen und Lager benutzen.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.3.canKickBan",
+          "label": "Besucher: darf kicken und bannen",
+          "type": "bool",
+          "help": "Spieler der Gruppe „Besucher“ dürfen andere vom Server werfen.",
+          "group": "Zugang"
         },
         {
           "key": "gameSettingsPreset",
@@ -76,42 +230,458 @@
             "Custom"
           ],
           "labels": [
-            "Standard",
-            "Entspannt",
-            "Schwer",
-            "Survival",
+            "Standard (für Einsteiger)",
+            "Entspannt (Bauen und lockeres Abenteuer)",
+            "Schwer (härtere Kämpfe)",
+            "Survival (mit Strafen)",
             "Eigene"
-          ]
+          ],
+          "help": "Vorgabe für den Schwierigkeitsgrad. Nur bei „Eigene“ gelten die einzelnen Werte in den Reitern Spielregeln, Spieler, Gegner und Fortschritt.",
+          "group": "Spielregeln"
         },
         {
-          "key": "userGroups.0.password",
-          "label": "Passwort Admin",
-          "type": "secret"
+          "key": "gameSettings.dayTimeDuration",
+          "label": "Länge des Tages",
+          "type": "number",
+          "min": 2,
+          "max": 60,
+          "unit": "Minuten",
+          "scale": 60000000000.0,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange ein Tag im Spiel dauert.",
+          "group": "Spielregeln"
         },
         {
-          "key": "userGroups.1.password",
-          "label": "Passwort Freund",
-          "type": "secret"
+          "key": "gameSettings.nightTimeDuration",
+          "label": "Länge der Nacht",
+          "type": "number",
+          "min": 2,
+          "max": 60,
+          "unit": "Minuten",
+          "scale": 60000000000.0,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange eine Nacht im Spiel dauert.",
+          "group": "Spielregeln"
         },
         {
-          "key": "userGroups.2.password",
-          "label": "Passwort Gast",
-          "type": "secret"
+          "key": "gameSettings.weatherFrequency",
+          "label": "Wetter",
+          "type": "select",
+          "options": [
+            "Disabled",
+            "Rare",
+            "Normal",
+            "Often"
+          ],
+          "labels": [
+            "Aus",
+            "Selten",
+            "Normal",
+            "Oft"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie oft neue Wetterereignisse auftreten.",
+          "group": "Spielregeln"
         },
         {
-          "key": "userGroups.3.password",
-          "label": "Passwort Besucher",
-          "type": "secret"
+          "key": "gameSettings.enableGliderTurbulences",
+          "label": "Turbulenzen beim Gleiter",
+          "type": "bool",
+          "when": "gameSettingsPreset=Custom",
+          "help": "Luftturbulenzen schütteln den Gleiter durch.",
+          "group": "Spielregeln"
         },
         {
-          "key": "enableVoiceChat",
-          "label": "Sprachchat",
-          "type": "bool"
+          "key": "gameSettings.tombstoneMode",
+          "label": "Beim Tod",
+          "type": "select",
+          "options": [
+            "AddBackpackMaterials",
+            "Everything",
+            "NoTombstone"
+          ],
+          "labels": [
+            "Materialien im Rucksack verlieren (Standard)",
+            "Alles verlieren",
+            "Alles behalten (kein Grabstein)"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Was mit dem Rucksack passiert, wenn ein Spieler stirbt. Verlorenes liegt im Grabstein und kann dort geholt werden.",
+          "group": "Spielregeln"
         },
         {
-          "key": "enableTextChat",
-          "label": "Textchat",
-          "type": "bool"
+          "key": "gameSettings.enableDurability",
+          "label": "Waffen nutzen sich ab",
+          "type": "bool",
+          "when": "gameSettingsPreset=Custom",
+          "help": "Waffen können kaputtgehen.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.enableStarvingDebuff",
+          "label": "Hunger und Verhungern",
+          "type": "bool",
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wer nichts isst oder trinkt, verliert mit der Zeit Leben bis zum Tod.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.fromHungerToStarving",
+          "label": "Zeit bis zum Verhungern",
+          "type": "number",
+          "min": 5,
+          "max": 20,
+          "unit": "Minuten",
+          "scale": 60000000000.0,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange man hungrig ist, bevor das Verhungern einsetzt.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.foodBuffDurationFactor",
+          "label": "Dauer der Essens-Boni",
+          "type": "number",
+          "min": 0.5,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange die Boni von Essen anhalten. 1 = normal.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.shroudTimeFactor",
+          "label": "Zeit im Nebel",
+          "type": "number",
+          "min": 0.5,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange man im Nebel (Shroud) bleiben kann. 1 = normal.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.curseModifier",
+          "label": "Fluch des Nebels",
+          "type": "select",
+          "options": [
+            "Easy",
+            "Normal",
+            "Hard"
+          ],
+          "labels": [
+            "Aus",
+            "Normal",
+            "Doppelte Chance"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Ob Nebel-Gegner einen verfluchen können und wie oft.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.fishingDifficulty",
+          "label": "Angeln",
+          "type": "select",
+          "options": [
+            "VeryEasy",
+            "Easy",
+            "Normal",
+            "Hard",
+            "VeryHard"
+          ],
+          "labels": [
+            "Sehr leicht",
+            "Leicht",
+            "Normal",
+            "Schwer",
+            "Sehr schwer"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie stark die Fische beim Angel-Minispiel ziehen.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.plantGrowthSpeedFactor",
+          "label": "Pflanzenwachstum",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie schnell Pflanzen wachsen. 1 = normal.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.tamingStartleRepercussion",
+          "label": "Zähmen misslingt",
+          "type": "select",
+          "options": [
+            "KeepProgress",
+            "LoseSomeProgress",
+            "LoseAllProgress"
+          ],
+          "labels": [
+            "Fortschritt behalten",
+            "Etwas Fortschritt verlieren (Standard)",
+            "Allen Fortschritt verlieren"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Was passiert, wenn man ein Tier beim Zähmen erschreckt. Der Fortschritt wird im Spiel mit Herzen angezeigt.",
+          "group": "Spielregeln"
+        },
+        {
+          "key": "gameSettings.playerHealthFactor",
+          "label": "Leben",
+          "type": "number",
+          "min": 0.25,
+          "max": 4,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Maximales Leben der Spieler. 1 = normal.",
+          "group": "Spieler"
+        },
+        {
+          "key": "gameSettings.playerManaFactor",
+          "label": "Mana",
+          "type": "number",
+          "min": 0.25,
+          "max": 4,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Maximales Mana der Spieler. 1 = normal.",
+          "group": "Spieler"
+        },
+        {
+          "key": "gameSettings.playerStaminaFactor",
+          "label": "Ausdauer",
+          "type": "number",
+          "min": 0.25,
+          "max": 4,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Maximale Ausdauer der Spieler. 1 = normal.",
+          "group": "Spieler"
+        },
+        {
+          "key": "gameSettings.playerBodyHeatFactor",
+          "label": "Körperwärme",
+          "type": "select",
+          "options": [
+            "0.5",
+            "1",
+            "1.5",
+            "2"
+          ],
+          "labels": [
+            "Wenig",
+            "Normal",
+            "Viel",
+            "Maximal"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange man es in sehr kalten Gegenden aushält, bevor man unterkühlt.",
+          "group": "Spieler"
+        },
+        {
+          "key": "gameSettings.playerDivingTimeFactor",
+          "label": "Tauchzeit",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viel Luft man unter Wasser hat. 1 = normal.",
+          "group": "Spieler"
+        },
+        {
+          "key": "gameSettings.randomSpawnerAmount",
+          "label": "Anzahl der Gegner",
+          "type": "select",
+          "options": [
+            "Few",
+            "Normal",
+            "Many",
+            "Extreme"
+          ],
+          "labels": [
+            "Wenig",
+            "Normal",
+            "Viel",
+            "Extrem"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viele Gegner es in der Welt gibt.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.aggroPoolAmount",
+          "label": "Gleichzeitige Angriffe",
+          "type": "select",
+          "options": [
+            "Few",
+            "Normal",
+            "Many",
+            "Extreme"
+          ],
+          "labels": [
+            "Wenig",
+            "Normal",
+            "Viel",
+            "Extrem"
+          ],
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viele Gegner gleichzeitig angreifen dürfen.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.enemyDamageFactor",
+          "label": "Schaden der Gegner",
+          "type": "number",
+          "min": 0.25,
+          "max": 5,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Schaden aller Gegner außer Bossen. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.enemyHealthFactor",
+          "label": "Leben der Gegner",
+          "type": "number",
+          "min": 0.25,
+          "max": 4,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Leben aller Gegner außer Bossen. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.enemyStaminaFactor",
+          "label": "Ausdauer der Gegner",
+          "type": "number",
+          "min": 0.5,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Mehr Ausdauer heißt: Gegner lassen sich schwerer betäuben. Ohne Bosse. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.enemyPerceptionRangeFactor",
+          "label": "Wahrnehmung der Gegner",
+          "type": "number",
+          "min": 0.5,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie weit Gegner Spieler sehen und hören. Ohne Bosse. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.threatBonus",
+          "label": "Angriffshäufigkeit",
+          "type": "number",
+          "min": 0.25,
+          "max": 4,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie oft Gegner angreifen. Ohne Bosse. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.bossDamageFactor",
+          "label": "Schaden der Bosse",
+          "type": "number",
+          "min": 0.2,
+          "max": 5,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Schaden der Boss-Angriffe. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.bossHealthFactor",
+          "label": "Leben der Bosse",
+          "type": "number",
+          "min": 0.2,
+          "max": 5,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Leben der Bosse. 1 = normal.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.pacifyAllEnemies",
+          "label": "Friedliche Gegner",
+          "type": "bool",
+          "when": "gameSettingsPreset=Custom",
+          "help": "Gegner greifen erst an, wenn man sie angreift. Bosse ausgenommen.",
+          "group": "Gegner"
+        },
+        {
+          "key": "gameSettings.experienceCombatFactor",
+          "label": "Erfahrung aus Kämpfen",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viel Erfahrung es für Kämpfe gibt. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.experienceMiningFactor",
+          "label": "Erfahrung aus Abbau",
+          "type": "number",
+          "min": 0,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viel Erfahrung es für das Abbauen von Rohstoffen gibt. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.experienceExplorationQuestsFactor",
+          "label": "Erfahrung aus Erkunden",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viel Erfahrung es für Erkunden und Aufgaben gibt. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.miningDamageFactor",
+          "label": "Abbau-Wirkung",
+          "type": "number",
+          "min": 0.5,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Mehr Wirkung heißt: mehr Gelände pro Schlag und mehr Rohstoffe. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.resourceDropStackAmountFactor",
+          "label": "Menge an Beute",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viele Materialien in Truhen, bei besiegten Gegnern usw. liegen. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.factoryProductionSpeedFactor",
+          "label": "Herstellungszeit",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie lange Werkbänke zum Herstellen brauchen. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.perkCostFactor",
+          "label": "Kosten für Waffen-Aufwertungen",
+          "type": "number",
+          "min": 0.25,
+          "max": 2,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viele Runen das Aufwerten von Waffen kostet. 1 = normal.",
+          "group": "Fortschritt"
+        },
+        {
+          "key": "gameSettings.perkUpgradeRecyclingFactor",
+          "label": "Runen beim Zerlegen",
+          "type": "number",
+          "min": 0,
+          "max": 1,
+          "when": "gameSettingsPreset=Custom",
+          "help": "Wie viele Runen man beim Zerlegen aufgewerteter Waffen zurückbekommt. 1 = normal.",
+          "group": "Fortschritt"
         }
       ],
       "default": {
@@ -122,8 +692,49 @@
         "queryPort": 15637,
         "slotCount": 16,
         "gameSettingsPreset": "Default",
+        "gameSettings": {
+          "playerHealthFactor": 1,
+          "playerManaFactor": 1,
+          "playerStaminaFactor": 1,
+          "playerBodyHeatFactor": 1,
+          "playerDivingTimeFactor": 1,
+          "enableDurability": true,
+          "enableStarvingDebuff": false,
+          "foodBuffDurationFactor": 1,
+          "fromHungerToStarving": 600000000000,
+          "shroudTimeFactor": 1,
+          "tombstoneMode": "AddBackpackMaterials",
+          "enableGliderTurbulences": true,
+          "weatherFrequency": "Normal",
+          "fishingDifficulty": "Normal",
+          "miningDamageFactor": 1,
+          "plantGrowthSpeedFactor": 1,
+          "resourceDropStackAmountFactor": 1,
+          "factoryProductionSpeedFactor": 1,
+          "perkUpgradeRecyclingFactor": 0.5,
+          "perkCostFactor": 1,
+          "experienceCombatFactor": 1,
+          "experienceMiningFactor": 1,
+          "experienceExplorationQuestsFactor": 1,
+          "randomSpawnerAmount": "Normal",
+          "aggroPoolAmount": "Normal",
+          "enemyDamageFactor": 1,
+          "enemyHealthFactor": 1,
+          "enemyStaminaFactor": 1,
+          "enemyPerceptionRangeFactor": 1,
+          "bossDamageFactor": 1,
+          "bossHealthFactor": 1,
+          "threatBonus": 1,
+          "pacifyAllEnemies": false,
+          "tamingStartleRepercussion": "LoseSomeProgress",
+          "dayTimeDuration": 1800000000000,
+          "nightTimeDuration": 720000000000,
+          "curseModifier": "Normal"
+        },
         "enableVoiceChat": false,
         "enableTextChat": false,
+        "voiceChatMode": "Proximity",
+        "tags": [],
         "userGroups": [
           {
             "name": "Admin",
@@ -163,7 +774,8 @@
           }
         ]
       },
-      "check": "enshrouded_groups"
+      "check": "enshrouded_groups",
+      "note_group": "Zugang"
     }
   ]
 }

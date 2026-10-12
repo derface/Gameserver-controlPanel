@@ -108,6 +108,42 @@ func (n *node) find(path []string) *node {
 	return cur
 }
 
+// create adds a missing value at path (objects along the way are created
+// too) and returns it; nil if something on the way is not an object.
+func (n *node) create(path []string, kind string) *node {
+	cur := n
+	for i, p := range path {
+		if cur.kind != 'o' {
+			return nil
+		}
+		var next *node
+		for j, k := range cur.keys {
+			if k == p {
+				next = cur.vals[j]
+			}
+		}
+		if next == nil {
+			next = &node{kind: 'o'}
+			if i == len(path)-1 {
+				switch kind {
+				case "number":
+					next = &node{kind: 'n', raw: "0"}
+				case "bool":
+					next = &node{kind: 'b', raw: "false"}
+				case "list":
+					next = &node{kind: 'a'}
+				default:
+					next = &node{kind: 's'}
+				}
+			}
+			cur.keys = append(cur.keys, p)
+			cur.vals = append(cur.vals, next)
+		}
+		cur = next
+	}
+	return cur
+}
+
 func (n *node) write(b *bytes.Buffer, pre, ind string) {
 	switch n.kind {
 	case 'o':
