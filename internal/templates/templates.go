@@ -4,6 +4,7 @@ package templates
 
 import (
 	"bytes"
+	"crypto/rand"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -40,15 +41,33 @@ func (c ConfigFile) DefaultContent() []byte {
 	if len(c.Default) == 0 {
 		return nil
 	}
+	var out []byte
 	var str string
 	if json.Unmarshal(c.Default, &str) == nil {
-		return []byte(str)
+		out = []byte(str)
+	} else {
+		var buf bytes.Buffer
+		if json.Indent(&buf, c.Default, "", "    ") != nil {
+			return nil
+		}
+		out = append(buf.Bytes(), '\n')
 	}
-	var buf bytes.Buffer
-	if json.Indent(&buf, c.Default, "", "    ") != nil {
-		return nil
+	// every {{random}} becomes its own random word, e.g. for passwords that
+	// a game requires to be set and different from each other
+	for bytes.Contains(out, []byte("{{random}}")) {
+		out = bytes.Replace(out, []byte("{{random}}"), []byte(randomWord()), 1)
 	}
-	return append(buf.Bytes(), '\n')
+	return out
+}
+
+func randomWord() string {
+	const abc = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+	b := make([]byte, 12)
+	_, _ = rand.Read(b)
+	for i := range b {
+		b[i] = abc[int(b[i])%len(abc)]
+	}
+	return string(b)
 }
 
 // ConfigFile is one game configuration file with the settings the panel
@@ -60,9 +79,12 @@ type ConfigFile struct {
 	InitFrom string `json:"init_from,omitempty"` // copy this file first if File is missing or empty
 	// Default is the content to start from while the game has not written the
 	// file yet: a JSON object for json files, otherwise a string.
-	Default  json.RawMessage `json:"default,omitempty"`
-	Note     string          `json:"note,omitempty"`
-	Settings []Setting       `json:"settings"`
+	Default json.RawMessage `json:"default,omitempty"`
+	// Check names an extra rule the panel enforces before saving
+	// (enshrouded_groups: group passwords set and different).
+	Check    string    `json:"check,omitempty"`
+	Note     string    `json:"note,omitempty"`
+	Settings []Setting `json:"settings"`
 }
 
 type Setting struct {

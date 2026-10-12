@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -170,5 +171,35 @@ func TestSettingsVars(t *testing.T) {
 	}
 	if _, err := m.ApplySettings(context.Background(), "v", map[string]string{"password": ""}, nil); err == nil {
 		t.Fatal("Pflichtfeld geleert")
+	}
+}
+
+func TestEnshroudedGroupRule(t *testing.T) {
+	c := templates.ConfigFile{Format: "json", Check: "enshrouded_groups"}
+	doc := func(pw ...string) []byte {
+		var g []string
+		for _, p := range pw {
+			g = append(g, `{"name":"x","password":"`+p+`"}`)
+		}
+		return []byte(`{"userGroups":[` + strings.Join(g, ",") + `]}`)
+	}
+	for _, ok := range [][]string{{"a", "b", "c", "d"}, {"a", "b", "c", ""}} {
+		if err := checkConfig(c, doc(ok...)); err != nil {
+			t.Errorf("%v abgelehnt: %v", ok, err)
+		}
+	}
+	for _, bad := range [][]string{{"a", "a", "c", "d"}, {"", "", "c", "d"}, {"a", "", "c", "d"}, {"", "", "", ""}} {
+		if err := checkConfig(c, doc(bad...)); err == nil {
+			t.Errorf("%v angenommen", bad)
+		}
+	}
+	tpl := templates.ConfigFile{Default: []byte(`{"a":"{{random}}","b":"{{random}}"}`)}
+	d := string(tpl.DefaultContent())
+	if strings.Contains(d, "{{random}}") || strings.Count(d, `"`) != 8 {
+		t.Fatalf("Zufallswerte: %s", d)
+	}
+	var m map[string]string
+	if err := json.Unmarshal([]byte(d), &m); err != nil || m["a"] == m["b"] || len(m["a"]) != 12 {
+		t.Fatalf("Zufallswerte: %v %v", m, err)
 	}
 }

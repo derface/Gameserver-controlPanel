@@ -144,6 +144,10 @@ func (m *Manager) Settings(id string) (SettingsView, error) {
 		fv.Editable = exists || gameconfig.CanCreate(c.Format)
 		if err != nil {
 			fv.Error, fv.Editable = err.Error(), false
+		} else if exists {
+			if cerr := checkConfig(c, data); cerr != nil {
+				fv.Error = "So startet das Spiel nicht: " + cerr.Error() + "."
+			}
 		}
 		for _, s := range c.Settings {
 			sval := SettingValue{Setting: s}
@@ -298,6 +302,9 @@ func (m *Manager) ApplySettings(ctx context.Context, id string, vars map[string]
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", c.Title, err)
 		}
+		if err := checkConfig(c, out); err != nil {
+			return nil, err
+		}
 		writes = append(writes, write{configRel(sv, c), out})
 	}
 	if len(changed) == 0 {
@@ -362,4 +369,49 @@ func writeConfig(root files.Root, serverDir string, uid int, rel string, data []
 		return errors.New("Konfigurationsdatei ist zu groß")
 	}
 	return root.WriteText(rel, string(data))
+}
+
+// checkConfig enforces game rules that would otherwise only show up as a
+// crash on the next start.
+func checkConfig(c templates.ConfigFile, data []byte) error {
+	switch c.Check {
+	case "enshrouded_groups":
+		// Enshrouded: group passwords must differ, at most one group may
+		// have none, and that must be the one with the fewest rights (the
+		// last one in the default file).
+		var pws []string
+		for i := 0; ; i++ {
+			v, ok, err := gameconfig.Get(c.Format, data, fmt.Sprintf("userGroups.%d.password", i))
+			if err != nil || !ok {
+				break
+			}
+			pws = append(pws, v)
+		}
+		names := []string{"Admin", "Freund", "Gast", "Besucher"}
+		name := func(i int) string {
+			if i < len(names) {
+				return names[i]
+			}
+			return fmt.Sprintf("Gruppe %d", i+1)
+		}
+		seen := map[string]int{}
+		empty := -1
+		for i, p := range pws {
+			if p == "" {
+				if empty >= 0 {
+					return fmt.Errorf("Enshrouded erlaubt höchstens eine Gruppe ohne Passwort (%s und %s sind leer). Bitte Passwörter vergeben", name(empty), name(i))
+				}
+				empty = i
+				continue
+			}
+			if j, ok := seen[p]; ok {
+				return fmt.Errorf("Enshrouded verlangt verschiedene Passwörter: %s und %s haben dasselbe", name(j), name(i))
+			}
+			seen[p] = i
+		}
+		if empty >= 0 && empty != len(pws)-1 {
+			return fmt.Errorf("Ohne Passwort darf bei Enshrouded nur die Gruppe mit den wenigsten Rechten (%s) sein, nicht %s", name(len(pws)-1), name(empty))
+		}
+	}
+	return nil
 }

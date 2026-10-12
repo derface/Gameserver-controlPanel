@@ -51,7 +51,7 @@
       "title": "Enshrouded (enshrouded_server.json)",
       "file": "server/enshrouded_server.json",
       "format": "json",
-      "note": "Passwörter gelten für die Gruppen Admin, Freund, Gast und Besucher. Wer welches Passwort eingibt, landet in der Gruppe. Du kannst die Werte schon vor dem ersten Start setzen; das Spiel ergänzt beim Start alles Übrige.",
+      "note": "Wer welches Passwort eingibt, landet in der Gruppe: Admin, Freund, Gast oder Besucher. Enshrouded verlangt verschiedene Passwörter; nur „Besucher“ darf leer sein. Neue Server bekommen zufällige Passwörter – trag deine eigenen ein, bevor du sie weitergibst.",
       "settings": [
         {
           "key": "name",
@@ -127,7 +127,7 @@
         "userGroups": [
           {
             "name": "Admin",
-            "password": "",
+            "password": "{{random}}",
             "canKickBan": true,
             "canAccessInventories": true,
             "canEditBase": true,
@@ -136,7 +136,7 @@
           },
           {
             "name": "Friend",
-            "password": "",
+            "password": "{{random}}",
             "canKickBan": false,
             "canAccessInventories": true,
             "canEditBase": true,
@@ -145,7 +145,7 @@
           },
           {
             "name": "Guest",
-            "password": "",
+            "password": "{{random}}",
             "canKickBan": false,
             "canAccessInventories": false,
             "canEditBase": true,
@@ -154,7 +154,7 @@
           },
           {
             "name": "Visitor",
-            "password": "",
+            "password": "{{random}}",
             "canKickBan": false,
             "canAccessInventories": false,
             "canEditBase": false,
@@ -162,7 +162,8 @@
             "reservedSlots": 0
           }
         ]
-      }
+      },
+      "check": "enshrouded_groups"
     }
   ]
 }
