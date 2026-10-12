@@ -91,6 +91,7 @@ func (a *API) Handler() http.Handler {
 	a.routesManage(mux)
 	a.routesMods(mux)
 	a.routesSecurity(mux)
+	a.routesRouter(mux)
 
 	mux.HandleFunc("GET /api/settings", a.need(auth.Admin, a.getSettings))
 	mux.HandleFunc("PUT /api/settings", a.need(auth.Admin, a.putSettings))

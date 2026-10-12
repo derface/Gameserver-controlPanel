@@ -67,6 +67,7 @@ type Server struct {
 	Backup      BackupPlan        `json:"backup"`
 	Tasks       []Task            `json:"tasks,omitempty"`
 	Watch       Watch             `json:"watch"`
+	NoRouter    bool              `json:"no_router,omitempty"` // do not open its ports in the router
 }
 
 // Task is a scheduled action of one server.
@@ -110,6 +111,14 @@ type Settings struct {
 	SteamUser    string        `json:"steam_user,omitempty"`  // logged-in Steam account (the login itself is cached by SteamCMD)
 	Remote       remote.Config `json:"remote_backup"`
 	TLS          TLSConfig     `json:"tls"`
+	UPnP         bool          `json:"upnp"` // open game ports in the router automatically
+}
+
+// RouterMap is a port forwarding the panel created in the router.
+type RouterMap struct {
+	Server string `json:"server"`
+	Port   int    `json:"port"`
+	Proto  string `json:"proto"`
 }
 
 type Data struct {
@@ -118,6 +127,7 @@ type Data struct {
 	Servers  []Server           `json:"servers"`
 	Settings Settings           `json:"settings"`
 	License  string             `json:"license,omitempty"`
+	Router   []RouterMap        `json:"router_maps,omitempty"`
 }
 
 type Store struct {

@@ -587,3 +587,9 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 @media (max-width:900px){.side-search kbd{display:none}}
 .st-wait{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:12px 14px;border-radius:var(--r-md);background:var(--panel-2);margin:4px 0 0}
 .st-wait .spin{flex-shrink:0;margin-top:3px}
+.bad-txt{color:var(--bad)}
+.howto{border:1px solid var(--line);border-radius:var(--r-md);padding:10px 14px;background:var(--bg)}
+.howto summary{cursor:pointer;font-size:14px;font-weight:500}
+.howto ol{margin:10px 0 2px;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.page form.lcd-in,.page form.ask{flex-direction:row;gap:10px}
+.page form.ask{gap:0}

@@ -199,6 +199,8 @@ var actions = map[string]string{
 	"POST /api/me/2fa/recovery":                     "Neue Wiederherstellungscodes",
 	"POST /api/me/logout-all":                       "Auf allen anderen Geräten abgemeldet",
 	"PUT /api/https":                                "HTTPS geändert",
+	"PUT /api/router":                               "Automatische Portfreigabe",
+	"PUT /api/servers/{id}/router":                  "Portfreigabe des Servers geändert",
 	"POST /api/https/renew":                         "Zertifikat angefordert",
 	"POST /api/servers/{id}/{action}#start":         "Server gestartet",
 	"POST /api/servers/{id}/{action}#stop":          "Server gestoppt",

@@ -30,6 +30,7 @@ import (
 const containerUID = 1000
 
 type Manager struct {
+	rt          routerCtl
 	st          *store.Store
 	dk          *docker.Client
 	tpls        *templates.Set
@@ -87,26 +88,29 @@ type live struct {
 // Info is what the API returns for one server.
 type Info struct {
 	store.Server
-	TemplateName string  `json:"template_name"`
-	Category     string  `json:"category"`
-	Console      string  `json:"console"`
-	Status       string  `json:"status"` // preparing | installing | starting | running | stopped | error
-	Message      string  `json:"message,omitempty"`
-	Progress     float64 `json:"progress,omitempty"`
-	CPU          float64 `json:"cpu"`
-	MemMB        float64 `json:"mem_mb"`
-	Players      int     `json:"players"`     // -1 = unbekannt
-	MaxPlayers   int     `json:"max_players"` // 0 = unbekannt
-	Notes        string  `json:"notes,omitempty"`
-	DataDir      string  `json:"data_dir"`
+	TemplateName string       `json:"template_name"`
+	Category     string       `json:"category"`
+	Console      string       `json:"console"`
+	Status       string       `json:"status"` // preparing | installing | starting | running | stopped | error
+	Message      string       `json:"message,omitempty"`
+	Progress     float64      `json:"progress,omitempty"`
+	CPU          float64      `json:"cpu"`
+	MemMB        float64      `json:"mem_mb"`
+	Players      int          `json:"players"`     // -1 = unbekannt
+	MaxPlayers   int          `json:"max_players"` // 0 = unbekannt
+	Notes        string       `json:"notes,omitempty"`
+	DataDir      string       `json:"data_dir"`
+	Router       []RouterPort `json:"router,omitempty"` // automatic port forwarding
 }
 
 func New(st *store.Store, dk *docker.Client, tpls *templates.Set, dataDir string) *Manager {
 	if err := writeRunScript(dataDir); err != nil {
 		log.Printf("[Panel] Startskript: %v", err)
 	}
-	return &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{},
+	m := &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{},
 		Limit: func() int { return -1 }, AutoBackups: func() bool { return true }}
+	m.routerInit()
+	return m
 }
 
 func (m *Manager) lock(id string) func() {
@@ -526,6 +530,7 @@ func (m *Manager) prepare(id string, start bool) {
 		return
 	}
 	m.refresh(id) // first the live state, then drop the job, so the UI never sees a gap
+	m.KickRouter()
 	m.consumeExpect(id)
 	m.clearJob(id)
 }
@@ -546,6 +551,7 @@ func (m *Manager) get(id string) (store.Server, templates.Template, error) {
 
 func (m *Manager) Start(ctx context.Context, id string) error {
 	m.expect(id)
+	defer m.KickRouter()
 	m.requestUpdate(id)
 	sv, _, err := m.get(id)
 	if err != nil {
@@ -574,6 +580,7 @@ func (m *Manager) Start(ctx context.Context, id string) error {
 
 func (m *Manager) Stop(ctx context.Context, id string) error {
 	m.expect(id)
+	defer m.KickRouter()
 	sv, tpl, err := m.get(id)
 	if err != nil || sv.ContainerID == "" {
 		return err
@@ -585,6 +592,7 @@ func (m *Manager) Stop(ctx context.Context, id string) error {
 
 func (m *Manager) Restart(ctx context.Context, id string) error {
 	m.expect(id)
+	defer m.KickRouter()
 	m.requestUpdate(id)
 	sv, tpl, err := m.get(id)
 	if err != nil {
@@ -617,6 +625,7 @@ func (m *Manager) Recreate(id string, start bool) {
 }
 
 func (m *Manager) Delete(ctx context.Context, id string, wipe bool) error {
+	defer m.KickRouter()
 	unlock := m.lock(id)
 	defer unlock()
 	sv, ok := m.st.Server(id)
@@ -849,6 +858,7 @@ func (m *Manager) Run(ctx context.Context) {
 	go m.resumeTest()
 	go m.runSchedule(ctx)
 	go m.runTasks(ctx)
+	go m.runRouter(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {
@@ -871,7 +881,7 @@ func (m *Manager) Run(ctx context.Context) {
 
 func (m *Manager) Info(sv store.Server) Info {
 	tpl, _ := m.tpls.Get(sv.Template)
-	in := Info{Players: -1, Server: sv, TemplateName: tpl.Name, Category: tpl.Category, Console: tpl.Console, Notes: tpl.Notes, DataDir: m.ServerDir(sv.ID)}
+	in := Info{Players: -1, Server: sv, TemplateName: tpl.Name, Category: tpl.Category, Console: tpl.Console, Notes: tpl.Notes, DataDir: m.ServerDir(sv.ID), Router: m.routerPorts(sv.ID)}
 	// never send secrets to the browser in lists
 	in.Vars = map[string]string{}
 	for _, v := range tpl.Vars {

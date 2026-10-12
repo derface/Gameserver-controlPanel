@@ -169,6 +169,15 @@ Sitzungen werden nur als SHA-256 des Cookies gespeichert. Wer `panel.json` in di
 
 Ausgesperrt? Vom Rechner selbst (`http://localhost:8420`, z. B. per `ssh -L 8420:localhost:8420 admin@192.168.178.54`) wird nie umgeleitet. Oder `Environment=GP_NO_TLS=1` in `/etc/systemd/system/gamepanel.service` eintragen, `systemctl daemon-reload && systemctl restart gamepanel`.
 
+## Automatische Portfreigabe (UPnP)
+
+Unter **Einstellungen → Router & Ports** einschalten. Solange ein Server läuft, öffnet das Panel seine Ports im Router; beim Stoppen oder Löschen schließt es sie wieder. Es findet den Router per SSDP und nutzt UPnP-IGD (WANIPConnection/WANPPPConnection), dieselbe Technik wie Konsolen und Steam.
+
+- Fritzbox: *Heimnetz → Netzwerk → Netzwerkeinstellungen* „Statusinformationen über UPnP übertragen“ an, und beim Gerät des Panel-Rechners „Selbstständige Portfreigaben erlauben“.
+- Entfernt werden nur Freigaben, die das Panel selbst angelegt hat (gemerkt in `panel.json`). Von Hand angelegte Freigaben zu diesem Rechner werden erkannt und nie angefasst; Ports, die an ein anderes Gerät gehen, meldet das Panel als Konflikt.
+- Einzelne Server lassen sich auf ihrer Seite im Menü „⋯“ ausnehmen.
+- Abgeglichen wird bei Start/Stopp und alle 2 Minuten, also auch nach einem Router-Neustart. Router, die keine dauerhaften Freigaben erlauben, bekommen eine Stunde und werden erneuert.
+
 ## Lizenzen
 
 ```bash
@@ -209,6 +218,7 @@ internal/api      HTTP-API + Auslieferung der Oberfläche, Rechteprüfung
 internal/auth     Konten, Rollen, Sitzungen, Zwei-Faktor (TOTP)
 internal/audit    Protokoll (audit.log)
 internal/https    HTTP und HTTPS auf einem Port, Zertifikate
+internal/upnp     Portfreigaben im Router (UPnP-IGD)
 internal/manager  Server anlegen/starten/stoppen, Live-Status, Ports
 internal/docker   Docker-Engine-API über den Unix-Socket
 internal/templates Vorlagen (games/*.json)

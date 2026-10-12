@@ -342,6 +342,7 @@
     pw.classList.toggle('btn-accent', !on); pw.classList.toggle('btn-line', on);
     $('[data-sv="restart"]').disabled = !on || busy;
     const m = $('#svMsg'); m.hidden = !s.message; m.textContent = s.message || ''; m.classList.toggle('bad', s.status === 'error');
+    $('#svRouterBtn').textContent = s.no_router ? 'Ports im Router öffnen' : 'Ports nicht im Router öffnen'; $('#svRouterBtn').hidden = !S.routerOn;
     const tpl = S.tplById[s.template];
     $('#tabMods').hidden = !(tpl && tpl.mods);
     // settings that wait for the first start reload once the status moves on
@@ -354,6 +355,7 @@
         <div><dt>Spieler</dt><dd>${hasPl(s) ? s.players + ' von ' + s.max_players : '–'}</dd></div>
         <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
         <div><dt>ID</dt><dd class="mono">${esc(s.id)}</dd></div>
+        ${routerRow(s)}
       </dl>${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
   }
   $('#svActs').addEventListener('click', e => {
@@ -362,6 +364,7 @@
     const a = b.dataset.sv;
     $('#svMore').open = false;
     if (a === 'settings-tab') select(s.id, 'settings');
+    else if (a === 'router') setServerRouter(s, !!s.no_router);
     else if (a === 'power') togglePower(s);
     else if (a === 'restart') act(s, 'restart', 'Neustart ausgelöst');
     else if (a === 'edit') openEdit(s);
@@ -689,7 +692,7 @@
 
   /* ---------------- Einstellungen + Lizenz ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'ki', 'backups', 'steam', 'lizenz'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'backups', 'steam', 'lizenz'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -700,6 +703,7 @@
     clearTimeout(stmTimer);
     if (sec === 'konto') return loadMe();
     if (sec === 'https') return loadTLS();
+    if (sec === 'router') return loadRouter(false);
     if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; return loadSteam(); }
     if (sec === 'lizenz') { showErr($('#licErr')); $('#licKey').value = ''; return renderLicense(); }
     if (sec === 'backups') {
@@ -1036,6 +1040,53 @@
     catch (err) { showErr($('#tlsErr'), err.message); }
     finally { b.disabled = false; b.textContent = 'Zertifikat jetzt holen'; }
   });
+
+  /* ---------------- Router & Ports ---------------- */
+  function routerRow(s) {
+    const r = s.router || [];
+    if (s.no_router) return S.routerOn ? '<div><dt>Von außen</dt><dd class="muted">Ports werden für diesen Server nicht automatisch geöffnet</dd></div>' : '';
+    if (!r.length) return '';
+    const bad = r.filter(p => !p.ok);
+    const list = r.map(p => p.proto + ' ' + p.port).join(', ');
+    if (!bad.length) return `<div><dt>Von außen</dt><dd><span class="on-ok">Ports offen</span><br><span class="small muted">${esc(list)}</span></dd></div>`;
+    return `<div><dt>Von außen</dt><dd><span class="bad-txt">${bad.length} von ${r.length} Ports nicht offen</span><br><span class="small">${esc(bad[0].error || '')}</span></dd></div>`;
+  }
+  async function setServerRouter(s, open) {
+    try { await api('PUT', `/api/servers/${encodeURIComponent(s.id)}/router`, { open }); toast(open ? 'Ports werden im Router geöffnet' : 'Ports werden nicht mehr im Router geöffnet', 'ok'); await loadServers(); }
+    catch (err) { toast(err.message, 'bad'); }
+  }
+  async function loadRouter(check) {
+    showErr($('#rtErr'));
+    const b = $('#rtCheck');
+    if (check) { b.disabled = true; b.textContent = 'Prüfe …'; }
+    try { renderRouter(await api(check ? 'POST' : 'GET', check ? '/api/router/check' : '/api/router')); }
+    catch (err) { showErr($('#rtErr'), err.message); }
+    finally { b.disabled = false; b.textContent = 'Jetzt prüfen'; }
+  }
+  function renderRouter(r) {
+    S.routerOn = r.enabled;
+    $('#rtOn').checked = r.enabled;
+    const when = r.checked && !String(r.checked).startsWith('0001') ? ' · geprüft ' + fmtWhen(r.checked) : '';
+    let txt = '';
+    if (!r.enabled) txt = 'Ausgeschaltet. Ports musst du selbst im Router freigeben.';
+    else if (r.found) txt = `Router: <b>${esc(r.name || 'gefunden')}</b> · dieser Rechner ${esc(r.local_ip || '?')}${r.external_ip ? ' · öffentliche IP ' + esc(r.external_ip) : ''}${when}`;
+    else if (!r.error) txt = '<span class="spin" aria-hidden="true"></span> Router wird gesucht …';
+    $('#rtStatus').innerHTML = txt;
+    showErr($('#rtErr'), r.enabled ? r.error || '' : '');
+    const ports = r.ports || [];
+    $('#rtWrap').hidden = !r.enabled;
+    $('#rtRows').innerHTML = ports.length ? ports.map(p => `<tr><td>${esc(p.name)}</td><td class="mono">${esc(p.proto)} ${p.port}</td>
+        <td class="wrap">${p.ok ? '<span class="on-ok">offen</span>' + (p.manual ? ' <span class="muted small">(von Hand freigegeben)</span>' : '') : `<span class="bad-txt">${esc(p.error || 'nicht offen')}</span>`}</td></tr>`).join('')
+      : '<tr class="empty"><td colspan="3">Gerade läuft kein Server, also ist auch nichts freigegeben.</td></tr>';
+  }
+  $('#rtOn').addEventListener('change', async e => {
+    const on = e.target.checked; e.target.disabled = true;
+    $('#rtStatus').innerHTML = '<span class="spin" aria-hidden="true"></span> ' + (on ? 'Suche den Router und öffne die Ports …' : 'Schließe die Ports …');
+    try { renderRouter(await api('PUT', '/api/router', { enabled: on })); toast(on ? 'Automatische Portfreigabe ist an' : 'Automatische Portfreigabe ist aus', 'ok'); loadServers(); }
+    catch (err) { showErr($('#rtErr'), err.message); e.target.checked = !on; }
+    finally { e.target.disabled = false; }
+  });
+  $('#rtCheck').addEventListener('click', () => loadRouter(true));
 
   /* ---------------- Selbsttest ---------------- */
   const TS = { timer: null, open: {} };
@@ -1927,7 +1978,7 @@
     const vis = fn => () => { if (!document.hidden) fn(); };
     timers.push(setInterval(vis(loadServers), 2500), setInterval(vis(loadHost), 2000), setInterval(vis(loadState), 30000));
     route();
-    if (can('admin')) pollTest();
+    if (can('admin')) { pollTest(); api('GET', '/api/router').then(r => { S.routerOn = r.enabled; }).catch(() => {}); }
   }
   async function boot() {
     let st;

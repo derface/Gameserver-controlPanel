@@ -131,6 +131,7 @@
           <div class="menu" role="menu">
             <button type="button" role="menuitem" data-sv="edit">Name, RAM, Startoptionen</button>
             <button type="button" role="menuitem" data-sv="settings-tab">Spiel-Einstellungen</button>
+            <button type="button" role="menuitem" class="admin-only" data-sv="router" id="svRouterBtn">Ports nicht im Router öffnen</button>
             <button type="button" role="menuitem" class="admin-only danger" data-sv="delete">Server löschen</button>
           </div>
         </details>
@@ -391,6 +392,7 @@
       <nav class="subnav admin-only" id="setNav" aria-label="Einstellungen">
         <a href="#/einstellungen/konto" data-sec="konto">Mein Konto</a>
         <a href="#/einstellungen/https" data-sec="https">HTTPS</a>
+        <a href="#/einstellungen/router" data-sec="router">Router &amp; Ports</a>
         <a href="#/einstellungen/ki" data-sec="ki">Allgemein &amp; KI</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
@@ -504,6 +506,28 @@
     <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
   </form>
 
+        <div class="set-block admin-only" data-sec="router" id="rtBlock">
+          <h2>Router &amp; Ports</h2>
+          <p class="muted small">Das Panel öffnet die Ports eines Servers automatisch in deinem Router, solange er läuft, und schließt sie wieder, wenn du ihn stoppst oder löschst. Freigaben, die du von Hand angelegt hast, fasst es nie an. Einzelne Server nimmst du auf ihrer Seite im Menü „⋯“ aus.</p>
+          <label class="check"><input type="checkbox" id="rtOn"> Ports automatisch im Router freigeben (UPnP)</label>
+          <p id="rtStatus" class="small"></p>
+          <p class="err" id="rtErr" role="alert" hidden></p>
+          <div class="tbl-wrap" id="rtWrap" hidden>
+            <table class="tbl">
+              <thead><tr><th>Server</th><th>Port</th><th>Status</th></tr></thead>
+              <tbody id="rtRows"></tbody>
+            </table>
+          </div>
+          <details class="howto">
+            <summary>So richtest du die Fritzbox ein</summary>
+            <ol class="small">
+              <li><b>Heimnetz → Netzwerk → Netzwerkeinstellungen:</b> „Statusinformationen über UPnP übertragen“ einschalten.</li>
+              <li><b>Internet → Freigaben → Portfreigaben:</b> beim Gerät dieses Rechners auf den Stift klicken und „Selbstständige Portfreigaben für dieses Gerät erlauben“ anhaken.</li>
+              <li>Freigaben, die du für dieselben Ports schon von Hand angelegt hast, löschen. Sonst meldet die Fritzbox „schon vergeben“.</li>
+            </ol>
+          </details>
+          <div class="dlg-actions"><button type="button" class="btn-line" id="rtCheck">Jetzt prüfen</button></div>
+        </div>
         <p class="muted small" id="verLine"></p>
       </div>
     </div>
