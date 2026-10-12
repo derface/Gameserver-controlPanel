@@ -8,3 +8,12 @@ func TestHeader(t *testing.T) {
 		t.Fatal(header(r, "location"))
 	}
 }
+
+func TestCleanName(t *testing.T) {
+	if n := cleanName("InternetGatewayDeviceV2 - FRITZ!Box 6690 Cable"); n != "FRITZ!Box 6690 Cable" {
+		t.Fatal(n)
+	}
+	if n := cleanName("Speedport - Smart 4"); n != "Speedport - Smart 4" {
+		t.Fatal(n)
+	}
+}

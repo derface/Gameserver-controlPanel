@@ -166,7 +166,7 @@ func New(ctx context.Context, location string) (*Client, error) {
 		return nil, err
 	}
 	c := &Client{Location: location, ControlURL: ctl.String(), ServiceType: strings.TrimSpace(found.ServiceType),
-		Name: strings.TrimSpace(root.Device.FriendlyName), http: hc}
+		Name: cleanName(root.Device.FriendlyName), http: hc}
 	// our own address on the way to the router
 	host := ctl.Host
 	if !strings.Contains(host, ":") {
@@ -321,4 +321,14 @@ func (c *Client) Delete(ctx context.Context, port int, proto string) error {
 		{"NewRemoteHost", ""}, {"NewExternalPort", strconv.Itoa(port)}, {"NewProtocol", strings.ToUpper(proto)},
 	})
 	return err
+}
+
+// cleanName turns "InternetGatewayDeviceV2 - FRITZ!Box 6690 Cable" into
+// "FRITZ!Box 6690 Cable".
+func cleanName(n string) string {
+	n = strings.TrimSpace(n)
+	if i := strings.Index(n, " - "); i > 0 && strings.HasPrefix(strings.ToLower(n), "internetgateway") {
+		n = strings.TrimSpace(n[i+3:])
+	}
+	return n
 }
