@@ -226,13 +226,17 @@ func watchSteamLines(r io.Reader, onApp func(), all *[]string) loginResult {
 			return loginResult{"error", "", "Steam meldet: zu viele Anmeldeversuche. Bitte etwa 30 Minuten warten.", nil}
 		case strings.Contains(low, "invalidloginauthcode") || strings.Contains(low, "twofactorcodemismatch") || strings.Contains(low, "invalid login auth code"):
 			return loginResult{"need_code", codeKind(low), "Der Code war falsch oder abgelaufen. Bitte den aktuellen Code eingeben.", nil}
-		case strings.Contains(low, "two-factor") || strings.Contains(low, "two factor") || strings.Contains(low, "mobile authenticator"):
+		case strings.Contains(low, "mobile authenticator") && !strings.Contains(low, "two-factor code"):
+			// "This account is protected by a Steam Guard mobile authenticator."
+			// The next line says whether a code or a tap in the app follows.
+		case strings.Contains(low, "two-factor") || strings.Contains(low, "two factor"):
 			return loginResult{"need_code", "app", "Bitte den Code aus der Steam-App (Steam Guard) eingeben.", nil}
 		case strings.Contains(low, "steam guard code") || strings.Contains(low, "accountlogondenied") || strings.Contains(low, "account logon denied") || strings.Contains(low, "check your email"):
 			return loginResult{"need_code", "email", "Steam verlangt einen Steam-Guard-Code. Er kommt per E-Mail an die Adresse des Kontos (auch im Spam nachsehen, kann ein paar Minuten dauern). Ist die Steam-App mit Steam Guard eingerichtet, steht er stattdessen dort.", nil}
 		case strings.Contains(low, "steam mobile app") || strings.Contains(low, "confirm the login"):
 			onApp() // keeps waiting: SteamCMD continues once the user taps "approve"
-		case strings.Contains(low, "waiting for user info...ok") || strings.Contains(low, "logged in ok"):
+		case strings.Contains(low, "waiting for user info") && strings.HasSuffix(low, "ok"), strings.Contains(low, "logged in ok"):
+			// newer SteamCMD: "Waiting for user info...Waiting for compat in post-logon took: 0.09sOK"
 			return loginResult{"ok", "", "", nil}
 		case strings.Contains(low, "failed") && strings.Contains(low, "login"):
 			return loginResult{"error", "", "Anmeldung fehlgeschlagen: " + l, nil}

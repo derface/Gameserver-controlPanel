@@ -34,6 +34,18 @@ func TestWatchSteamLogin(t *testing.T) {
 	if !app || r.state != "ok" {
 		t.Fatalf("App-Bestätigung: %+v %v", r, app)
 	}
+	// real SteamCMD output of an account with the mobile authenticator (12.10.2026)
+	app = false
+	r = watchSteamLogin(strings.NewReader(head+"Cached credentials not found.\nProceeding with login using username/password.\n"+
+		"Logging in user 'max' [U:1:0] to Steam Public...This account is protected by a Steam Guard mobile authenticator.\n"+
+		"Please confirm the login in the Steam Mobile app on your phone.\n\nWaiting for confirmation...\nWaiting for confirmation...OK\n"+
+		"Waiting for client config...OK\nWaiting for user info...Waiting for compat in post-logon took: 0.098173sOK\n"), func() { app = true })
+	if !app || r.state != "ok" {
+		t.Fatalf("Mobile Authenticator: %+v %v", r, app)
+	}
+	if len(r.log) == 0 || strings.Contains(strings.Join(r.log, ""), "geheim") {
+		t.Fatalf("Log: %v", r.log)
+	}
 }
 
 func TestSteamLoginValidation(t *testing.T) {
