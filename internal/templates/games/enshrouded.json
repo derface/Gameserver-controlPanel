@@ -6,7 +6,7 @@
   "steam_app_id": 2278520,
   "platform": "windows",
   "runtime": "wine",
-  "start": "xvfb-run -a wine ./enshrouded_server.exe",
+  "start": "wine ./enshrouded_server.exe",
   "ports": [
     {
       "name": "Spiel",

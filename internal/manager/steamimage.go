@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:8"
+const SteamImage = "gamepanel/steam-runtime:9"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -105,9 +105,25 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
     export DISPLAY=:99
     sleep 1
   fi
+  # A prefix whose setup was interrupted (container stopped during
+  # wineboot) has system.reg but no system DLLs: Wine then fails with
+  # "could not load kernel32.dll". Such a prefix is moved aside, never
+  # deleted, because some games keep save games in it.
+  K32="$WINEPREFIX/drive_c/windows/system32/kernel32.dll"
+  if [ -d "$WINEPREFIX" ] && [ ! -f "$K32" ]; then
+    OLD="$WINEPREFIX-defekt-$(date +%Y%m%d-%H%M%S)"
+    echo "[panel] Wine-Umgebung ist unvollständig, wird neu eingerichtet (alte nach ${OLD#/data/})"
+    mv "$WINEPREFIX" "$OLD"
+  fi
   if [ ! -f "$WINEPREFIX/system.reg" ]; then
-    echo "[panel] Wine wird eingerichtet (einmalig)"
-    wineboot --init >/dev/null 2>&1 || true
+    echo "[panel] Wine wird eingerichtet (einmalig, 1 bis 3 Minuten)"
+    wineboot --init 2>&1 | grep -iv 'fixme\|^$' | tail -n 15
+    wineserver -w 2>/dev/null || true
+    if [ -f "$K32" ]; then
+      echo "[panel] Wine ist eingerichtet"
+    else
+      echo "[panel] Wine konnte nicht eingerichtet werden (Meldungen oben). Wine: $(wine --version 2>&1)"
+    fi
   fi
 fi
 echo "[panel] Start: ${GP_START}"
