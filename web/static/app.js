@@ -790,7 +790,7 @@
     if (st.state === 'ok' && st.user && st.message && !msg) $('#stmStatus').innerHTML = esc(st.message);
     showErr($('#stmErr'), st.state === 'error' ? st.message : '');
     $('#stmCodeWrap').hidden = st.state !== 'need_code';
-    $('#stmCodeLabel').textContent = st.code_kind === 'app' ? 'Code aus der Steam-App' : 'Code aus der E-Mail von Steam';
+    $('#stmCodeLabel').textContent = st.code_kind === 'app' ? 'Code aus der Steam-App' : 'Steam-Guard-Code (E-Mail oder Steam-App)';
     if (st.pending && !$('#stmUser').value) $('#stmUser').value = st.pending;
     if (st.user && !$('#stmUser').value) $('#stmUser').value = st.user;
     $('#stmLogout').hidden = !st.user || busy;
