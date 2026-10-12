@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:9"
+const SteamImage = "gamepanel/steam-runtime:10"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -106,23 +106,32 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
     sleep 1
   fi
   # A prefix whose setup was interrupted (container stopped during
-  # wineboot) has system.reg but no system DLLs: Wine then fails with
-  # "could not load kernel32.dll". Such a prefix is moved aside, never
-  # deleted, because some games keep save games in it.
-  K32="$WINEPREFIX/drive_c/windows/system32/kernel32.dll"
-  if [ -d "$WINEPREFIX" ] && [ ! -f "$K32" ]; then
-    OLD="$WINEPREFIX-defekt-$(date +%Y%m%d-%H%M%S)"
-    echo "[panel] Wine-Umgebung ist unvollständig, wird neu eingerichtet (alte nach ${OLD#/data/})"
-    mv "$WINEPREFIX" "$OLD"
+  # wineboot) can look complete and still fail with "could not load
+  # kernel32.dll". So the prefix is tried once per Wine version; a broken
+  # one is moved aside, never deleted, because some games keep save games
+  # in it.
+  WV="$(wine --version 2>/dev/null)"
+  wine_ok() { timeout 180 wine cmd /c ver 2>&1 | grep -q "Microsoft Windows"; }
+  if [ -f "$WINEPREFIX/system.reg" ] && [ "$(cat "$WINEPREFIX/.gp-ok" 2>/dev/null)" != "$WV" ]; then
+    echo "[panel] Wine-Umgebung wird geprüft (${WV})"
+    if wine_ok; then
+      echo "$WV" > "$WINEPREFIX/.gp-ok"
+    else
+      OLD="$WINEPREFIX-defekt-$(date +%Y%m%d-%H%M%S)"
+      echo "[panel] Wine-Umgebung ist beschädigt, wird neu eingerichtet (alte nach ${OLD#/data/})"
+      wineserver -k 2>/dev/null || true
+      mv "$WINEPREFIX" "$OLD"
+    fi
   fi
   if [ ! -f "$WINEPREFIX/system.reg" ]; then
     echo "[panel] Wine wird eingerichtet (einmalig, 1 bis 3 Minuten)"
     wineboot --init 2>&1 | grep -iv 'fixme\|^$' | tail -n 15
     wineserver -w 2>/dev/null || true
-    if [ -f "$K32" ]; then
-      echo "[panel] Wine ist eingerichtet"
+    if wine_ok; then
+      echo "$WV" > "$WINEPREFIX/.gp-ok"
+      echo "[panel] Wine ist eingerichtet (${WV})"
     else
-      echo "[panel] Wine konnte nicht eingerichtet werden (Meldungen oben). Wine: $(wine --version 2>&1)"
+      echo "[panel] Wine konnte nicht eingerichtet werden (Meldungen oben, ${WV})"
     fi
   fi
 fi
