@@ -688,3 +688,22 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .dg-old summary{cursor:pointer;font-size:13.5px;color:var(--muted)}
 .dg-old ul{margin:8px 0 0;padding-left:18px;display:grid;gap:8px;font-size:13.5px}
 @media (max-width:560px){.dg-acts li{flex-direction:column;align-items:stretch}}
+/* Installierte Mods */
+.ml-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ml-head h2,.ml-sub{font-size:16px;margin:0}
+.ml-sub{margin:26px 0 6px}
+.ml-list{display:flex;flex-direction:column;margin-top:8px}
+.ml-item{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.ml-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ml-t b{overflow-wrap:anywhere}
+.ml-t a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.ml-t p{margin:2px 0 0}
+.ml-st{flex-shrink:0;width:132px;font-size:12.5px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line);text-align:center}
+.ml-ok{color:var(--ok);border-color:var(--ok)}
+.ml-bad{color:var(--bad);border-color:var(--bad)}
+.ml-warn{color:var(--accent);border-color:var(--accent)}
+.ml-on{color:var(--ink)}
+.ml-muted{color:var(--muted)}
+.ml-upd{color:var(--accent)}
+.ml-item .tgl{flex-shrink:0;margin-top:2px}
+@media (max-width:560px){.ml-item{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"st . sw" "t t t";row-gap:6px}.ml-st{grid-area:st;width:auto}.ml-t{grid-area:t}.ml-item .tgl{grid-area:sw}}

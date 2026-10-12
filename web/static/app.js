@@ -383,7 +383,7 @@
     const m = $('#svMsg'); m.hidden = !s.message; m.textContent = s.message || ''; m.classList.toggle('bad', s.status === 'error');
     $('#svRouterBtn').textContent = s.no_router ? 'Ports im Router öffnen' : 'Ports nicht im Router öffnen'; $('#svRouterBtn').hidden = !S.routerOn;
     const tpl = S.tplById[s.template];
-    $('#tabMods').hidden = !(tpl && tpl.mods);
+    $('#tabMods').hidden = false;
     // settings that wait for the first start reload once the status moves on
     if (MG.tab === 'settings' && GS.data && GS.status !== s.status && GS.data.files.some(f => !f.editable) && !document.activeElement.closest('#stForm')) loadSettings();
     set($('#svInfo'), `<h2>Details</h2><dl class="kv one">
@@ -1468,7 +1468,6 @@
   function openManage(id, tab) { select(id, tab); }
   function mgTab(tab) {
     const s = byId(MG.id), tpl = s && S.tplById[s.template];
-    if (tab === 'mods' && !(tpl && tpl.mods)) tab = 'settings';
     if (!can('operator') && ['settings', 'mods', 'files'].includes(tab)) tab = 'console';
     if (!['console', 'settings', 'mods', 'backups', 'files', 'tasks', 'events'].includes(tab)) tab = 'console';
     MG.tab = tab;
@@ -1479,7 +1478,12 @@
     if (tab !== 'files') closeEditor(true);
     if (tab === 'console') { if (S.consoleId !== MG.id) openConsole(MG.id); setTimeout(() => { const b = $('#lines'); b.scrollTop = b.scrollHeight; }, 0); }
     else if (tab === 'settings') loadSettings();
-    else if (tab === 'mods') loadMods();
+    else if (tab === 'mods') {
+      const mr = !!(tpl && tpl.mods);
+      ['mdTitle', 'mdInfo', 'mdInstalled', 'mdSearchForm', 'mdResults'].forEach(x => { $('#' + x).hidden = !mr; });
+      if (!mr) { $('#mdBar').hidden = true; $('#mdMore').hidden = true; }
+      loadModList(); if (mr) loadMods();
+    }
     else if (tab === 'backups') loadBackups();
     else if (tab === 'files') loadFiles(MG.path);
     else loadTasks();
@@ -1673,6 +1677,43 @@
   // Mods (Modrinth)
   const MD = { st: null, want: [], info: {}, q: '', off: 0, hits: [] };
   const fmtNum = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : n >= 1e3 ? Math.round(n / 1e3) + ' Tsd.' : String(n);
+  /* ---------------- Installierte Mods ---------------- */
+  const ML_STATE = { geladen: ['ok', 'Geladen'], fehler: ['bad', 'Fehler'], fehlt: ['bad', 'Fehlt'], nicht_geladen: ['warn', 'Nicht heruntergeladen'],
+    aktiv: ['on', 'Aktiv'], installiert: ['muted', 'Installiert'], inaktiv: ['muted', 'Aus'] };
+  async function loadModList() {
+    const id = MG.id;
+    $('#mlInfo').textContent = 'Lese Mods und Konsole …';
+    let d;
+    try { d = await api('GET', `/api/servers/${id}/modlist`); } catch (e) { $('#mlInfo').textContent = e.message; return; }
+    if (MG.id !== id) return;
+    const mods = d.mods || [], cnt = k => mods.filter(x => x.state === k).length;
+    const parts = [mods.length + (mods.length === 1 ? ' Mod' : ' Mods')];
+    [['geladen', 'geladen'], ['fehler', 'mit Fehler'], ['fehlt', 'fehlen'], ['nicht_geladen', 'nicht heruntergeladen'], ['inaktiv', 'aus']].forEach(([k, t]) => { if (cnt(k)) parts.push(cnt(k) + ' ' + t); });
+    const since = d.log_since && !String(d.log_since).startsWith('0001') ? new Date(d.log_since).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '';
+    $('#mlInfo').textContent = mods.length
+      ? parts.join(' · ') + (since ? ` · Konsole ${d.running ? 'seit dem Start' : 'des letzten Laufs'} (${since}) ausgewertet` : ' · noch kein Start, deshalb ist unbekannt, was geladen wird') + ((d.notes || []).length ? ' · ' + d.notes.join(' ') : '')
+      : 'Keine Mods gefunden. Das Panel erkennt Steam-Workshop-Inhalte, Project-Zomboid-Mods, BepInEx-Plugins (Valheim), Pak- und UE4SS-Mods (Unreal-Spiele wie Palworld) sowie Minecraft-Mods und -Plugins.';
+    $('#mlList').innerHTML = mods.map(m => {
+      const [cls, lab] = ML_STATE[m.state] || ML_STATE.installiert;
+      const sub = [m.source, m.version ? 'Version ' + m.version : '', m.workshop && m.name !== m.workshop ? 'Workshop ' + m.workshop : '', m.size ? fmtSize(m.size) : '',
+        m.modified && !String(m.modified).startsWith('0001') ? 'Stand ' + new Date(m.modified).toLocaleDateString('de-DE') : ''].filter(Boolean).map(esc).join(' · ');
+      const name = m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.name)}</a>` : esc(m.name);
+      const note = m.note ? (m.state === 'fehler' ? `<code class="mono dg-ev">${esc(m.note)}</code>` : `<p class="small">${esc(m.note)}</p>`) : '';
+      const upd = m.update_hint ? '<p class="small ml-upd">Im Workshop gibt es eine neuere Version. Der Server holt sie beim nächsten Start.</p>' : '';
+      const sw = m.key && m.enabled != null && can('operator') ? `<input type="checkbox" role="switch" class="tgl" aria-label="${esc(m.name)} an oder aus" data-ml="${esc(m.key)}" ${m.enabled ? 'checked' : ''}>` : '';
+      return `<div class="ml-item"><span class="ml-st ml-${cls}">${esc(lab)}</span><div class="ml-t"><b>${name}</b><span class="small muted">${sub}</span>${note}${upd}</div>${sw}</div>`;
+    }).join('');
+  }
+  $('#mlReload').addEventListener('click', loadModList);
+  $('#mlList').addEventListener('change', async e => {
+    const c = e.target.closest('[data-ml]'); if (!c) return;
+    const key = c.dataset.ml, on = c.checked, s = byId(MG.id);
+    if (key.startsWith('pz:') && s && isOn(s) && !await confirmBox(on ? 'Mod einschalten?' : 'Mod ausschalten?', 'Dafür wird die Mod-Liste gespeichert und der Server neu gestartet. Spieler werden kurz getrennt.', on ? 'Einschalten' : 'Ausschalten')) { c.checked = !on; return; }
+    c.disabled = true;
+    try { const r = await api('POST', `/api/servers/${MG.id}/modlist/toggle`, { key, on }); toast(r.message, 'ok'); loadModList(); }
+    catch (err) { toast(err.message, 'bad'); c.checked = !on; c.disabled = false; }
+  });
+
   async function loadMods() {
     const id = MG.id;
     let d;

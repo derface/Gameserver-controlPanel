@@ -208,6 +208,21 @@ Auf der Server-Seite unter *Details* → **Von außen erreichbar? Prüfen**. Das
 
 Die Prüfung läuft nur auf Knopfdruck. Die Dienste (api.ipify.org, check-host.net, mcsrvstat.us) sehen dabei nur die öffentliche IP und den Port.
 
+## Installierte Mods
+
+Reiter **„Mods“** bei jedem Server: „Installiert und geladen“ listet, was auf der Platte liegt:
+- Steam-Workshop-Inhalte, mit Titel und Update-Hinweis über Steams öffentliche Schnittstelle (`GetPublishedFileDetails`, ohne Schlüssel)
+- Project-Zomboid-Mods (`mod.info`, Build 42 bevorzugt)
+- BepInEx-Plugins (`manifest.json` von Thunderstore)
+- Unreal-Pak-Mods (`~mods`, `LogicMods`)
+- UE4SS-Mods (`mods.txt`)
+- Minecraft-Jars
+- Mod-IDs in Startwerten
+
+Dazu gleicht das Panel die Liste des Spiels ab (Zomboid `Mods=` und `WorkshopItems=`: „fehlt“, „nicht heruntergeladen“, „aus“) und wertet die Konsole seit dem letzten Start aus: Mod-Name oder -ID zusammen mit einer Fehlermeldung ergibt „Fehler“ samt Zeile, mit Lade-Wörtern „geladen“. Probleme stehen oben.
+
+Ein- und Ausschalten: Bei Zomboid geht das über die Mod-Liste in der Server-INI, gespeichert wie die übrigen Einstellungen (ein laufender Server wird gestoppt und neu gestartet). BepInEx-, Pak- und UE4SS-Mods werden durch Umbenennen (`.off`) bzw. über `mods.txt` geschaltet und wirken ab dem nächsten Start. Dateien werden nie gelöscht.
+
 ## KI-Diagnose
 
 Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber, Editionen mit KI). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.
