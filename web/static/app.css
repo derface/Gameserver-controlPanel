@@ -661,3 +661,6 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .undo-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .undo-list li div{display:flex;flex-direction:column;gap:2px;min-width:0}
 #dlgUndo[open]{display:flex;flex-direction:column;gap:14px}
+
+#stage .lab{max-width:140px;overflow:hidden;text-overflow:ellipsis;font-size:11px;padding:3px 7px}
+@media (max-width:560px){#stage .lab{max-width:84px;font-size:10px}}

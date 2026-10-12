@@ -128,30 +128,63 @@
     return C;
   }
 
-  /* ============ 3D: Server-Landschaft ============ */
-  const L = { blocks: new Map(), theta: .62, phi: 1.0, r: 18, tr: 18, base: 18, hover: null, drag: false, w: 1, h: 1, pw: 0, pd: 0 };
-  const SP = 4.2;
+  /* ============ 3D: Server-Racks ============ */
+  // Every server is a rack cabinet in a dark room. Height follows the RAM it
+  // gets, the LEDs show the state: cyan = running (more lit units = more load),
+  // orange chasing upwards = starting/installing, red blinking = error,
+  // dark with one standby light = stopped.
+  const L = { blocks: new Map(), theta: 0, phi: 1.32, r: 14, tr: 14, base: 14, hover: null, drag: false, w: 1, h: 1, span: 0, user: 0 };
+  const RW = 1.5, RD = 1.3, UNIT = .26, GAP = 1.05, PER_ROW = 6;
+  const LED = { run: 0x37e8f0, dim: 0x0d3a3e, work: 0xff7a2f, err: 0xff4b3e, off: 0x15171a, standby: 0x5a3a12 };
   function initLand() {
     const cv = $('#land');
     L.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
     L.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     L.scene = new THREE.Scene();
-    L.cam = new THREE.PerspectiveCamera(36, 1, .1, 300);
-    L.target = new THREE.Vector3(); L.tt = new THREE.Vector3();
-    L.scene.add(new THREE.AmbientLight(0xffffff, .62));
-    const d = new THREE.DirectionalLight(0xffffff, .7); d.position.set(6, 14, 9); L.scene.add(d);
-    L.glow = new THREE.PointLight(0xff5a1f, .6, 30); L.glow.position.set(0, 5, 0); L.scene.add(L.glow);
+    L.cam = new THREE.PerspectiveCamera(32, 1, .1, 200);
+    L.target = new THREE.Vector3(0, 1.4, 0);
+    L.amb = new THREE.AmbientLight(0xffffff, .35); L.scene.add(L.amb);
+    L.key = new THREE.DirectionalLight(0xffffff, .75); L.key.position.set(-8, 10, 7); L.scene.add(L.key);
+    L.glow = new THREE.PointLight(0x37e8f0, .5, 6); L.glow.position.set(0, 3.4, -.4); L.scene.add(L.glow);
+    L.fill = new THREE.DirectionalLight(0xdfe8ff, .35); L.fill.position.set(4, 3, 10); L.scene.add(L.fill);
     L.world = new THREE.Group(); L.scene.add(L.world);
-    L.slabMat = new THREE.MeshStandardMaterial({ roughness: .95, metalness: 0 });
-    L.edgeMat = new THREE.LineBasicMaterial();
-    L.gridMat = new THREE.LineBasicMaterial({ transparent: true, opacity: .5 });
-    L.ringGeo = new THREE.RingGeometry(1.6, 1.68, 48);
-    L.dotGeo = new THREE.SphereGeometry(.09, 10, 10);
-    L.dotMat = new THREE.MeshBasicMaterial();
+    // room: back wall with a diagonal light wedge, glossy floor
+    L.wallTex = new THREE.CanvasTexture(document.createElement('canvas'));
+    L.wall = new THREE.Mesh(new THREE.PlaneGeometry(60, 22), new THREE.MeshBasicMaterial({ map: L.wallTex }));
+    L.wall.position.set(0, 9, -6); L.scene.add(L.wall);
+    L.floorMat = new THREE.MeshStandardMaterial({ roughness: .55, metalness: .25 });
+    L.floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 30), L.floorMat);
+    L.floor.rotation.x = -Math.PI / 2; L.floor.position.z = 6; L.scene.add(L.floor);
+    L.poolTex = poolTexture();
+    L.bodyMat = new THREE.MeshStandardMaterial({ roughness: .5, metalness: .55 });
+    L.plateMat = new THREE.MeshStandardMaterial({ roughness: .6, metalness: .4 });
+    L.ventMat = new THREE.MeshBasicMaterial();
+    L.plateGeo = new THREE.BoxGeometry(RW - .22, UNIT - .045, .05);
+    L.ledGeo = new THREE.BoxGeometry(.09, UNIT - .11, .02);
+    L.actGeo = new THREE.BoxGeometry(.035, .035, .02);
+    L.ventGeo = new THREE.BoxGeometry(.5, .012, .01);
     L.ray = new THREE.Raycaster(); L.ndc = new THREE.Vector2(); L.v = new THREE.Vector3();
     bindLandInput(cv);
     new ResizeObserver(sizeLand).observe($('#stage')); sizeLand();
     applySceneColors();
+  }
+  function poolTexture() {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(.45, 'rgba(255,255,255,.25)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  }
+  function paintWall() {
+    const c = L.wallTex.image; c.width = 1024; c.height = 384;
+    const g = c.getContext('2d'), dark = isDark();
+    const base = dark ? '#232528' : '#cfcbc3', lit = dark ? '#4b4d51' : '#f1ede6';
+    g.fillStyle = base; g.fillRect(0, 0, c.width, c.height);
+    // the wedge of light falling in from the left, like light through a door
+    const gr = g.createLinearGradient(0, 0, c.width * .55, c.height);
+    gr.addColorStop(0, lit); gr.addColorStop(1, base);
+    g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.lineTo(c.width * .62, 0); g.lineTo(c.width * .2, c.height); g.lineTo(0, c.height); g.closePath(); g.fill();
+    L.wallTex.needsUpdate = true;
   }
   function sizeLand() {
     const r = $('#stage').getBoundingClientRect(); L.w = r.width; L.h = r.height;
@@ -159,68 +192,62 @@
     L.renderer.setSize(L.w, L.h, false); L.cam.aspect = L.w / L.h; L.cam.updateProjectionMatrix();
     fitBase(); if (!S.sel) L.tr = L.base;
   }
-  function fitBase() { const span = Math.max(L.pw, L.pd, 13); L.base = span * (L.w < 560 ? 2.05 : L.w < 820 ? 1.6 : 1.38); }
-  function layout(n) {
-    const cols = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(Math.max(1, n)))));
-    const rows = Math.max(2, Math.ceil(n / cols));
-    return { cols, rows, pos: i => [((i % cols) - (cols - 1) / 2) * SP, (Math.floor(i / cols) - (rows - 1) / 2) * SP] };
+  function fitBase() {
+    const span = Math.max(L.span, 6), fov = L.cam ? L.cam.fov * Math.PI / 180 : .55, aspect = L.w / Math.max(1, L.h);
+    const byW = (span / 2 + 1) / (Math.tan(fov / 2) * aspect), byH = 3.2 / Math.tan(fov / 2);
+    L.base = Math.max(byW, byH) * .92;
   }
-  function buildPlatform(w, dpt) {
-    if (L.slab) { L.world.remove(L.slab, L.slabEdge, L.grid); L.slab.geometry.dispose(); L.slabEdge.geometry.dispose(); L.grid.geometry.dispose(); }
-    const g = new THREE.BoxGeometry(w, .5, dpt);
-    L.slab = new THREE.Mesh(g, L.slabMat); L.slab.position.y = -.25;
-    L.slabEdge = new THREE.LineSegments(new THREE.EdgesGeometry(g), L.edgeMat); L.slabEdge.position.y = -.25;
-    const pts = [], hw = w / 2, hd = dpt / 2;
-    for (let x = -Math.floor(hw); x <= hw; x++) pts.push(x, .005, -hd, x, .005, hd);
-    for (let z = -Math.floor(hd); z <= hd; z++) pts.push(-hw, .005, z, hw, .005, z);
-    const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    L.grid = new THREE.LineSegments(gg, L.gridMat);
-    L.world.add(L.slab, L.slabEdge, L.grid);
-    L.pw = w; L.pd = dpt; fitBase(); if (!S.sel) L.tr = L.base;
+  const rackUnits = s => clamp(Math.round(5 + (s.memory_mb || 4096) / 1024), 6, 16);
+  function layout(n) {
+    const rows = Math.max(1, Math.ceil(n / PER_ROW)), cols = Math.min(PER_ROW, Math.max(1, Math.ceil(n / rows)));
+    return { cols, rows, pos: i => [((i % cols) - (cols - 1) / 2) * (RW + GAP), -Math.floor(i / cols) * 3] };
   }
   function syncLand() {
     if (!L.renderer) return;
     const lay = layout(S.servers.length);
-    const w = lay.cols * SP + .6, dpt = lay.rows * SP + .4;
-    if (w !== L.pw || dpt !== L.pd) buildPlatform(w, dpt);
+    const span = lay.cols * (RW + GAP);
+    if (span !== L.span) { L.span = span; fitBase(); if (!S.sel) L.tr = L.base; }
+    L.target.z = -(lay.rows - 1) * 1.5;
     const ids = new Set(S.servers.map(s => s.id));
-    L.blocks.forEach((b, id) => { if (!ids.has(id)) { L.world.remove(b.g); b.lab.remove(); L.blocks.delete(id); } });
+    L.blocks.forEach((b, id) => { if (!ids.has(id)) { L.world.remove(b.g); L.scene.remove(b.pool); b.lab.remove(); L.blocks.delete(id); } });
     S.servers.forEach((s, i) => {
       let b = L.blocks.get(s.id);
-      if (!b) b = addBlock(s);
+      if (b && b.units.length !== rackUnits(s)) { L.world.remove(b.g); L.scene.remove(b.pool); b.lab.remove(); L.blocks.delete(s.id); b = null; }
+      if (!b) b = addRack(s);
       b.s = s; const [x, z] = lay.pos(i); b.tx = x; b.tz = z;
-      tintBlock(b); updateLabel(b);
+      updateLabel(b);
     });
     $('#stageEmpty').hidden = S.servers.length > 0;
   }
-  function addBlock(s) {
+  function addRack(s) {
+    const n = rackUnits(s), H = n * UNIT + .34;
     const g = new THREE.Group();
-    const geo = new THREE.BoxGeometry(2.6, 1, 2.6);
-    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ roughness: .7, metalness: .05 }));
-    mesh.userData.id = s.id;
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial());
-    const cap = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ transparent: true, opacity: .9, side: THREE.DoubleSide }));
-    cap.rotation.x = -Math.PI / 2;
-    const r = 1.75, pg = new THREE.BufferGeometry();
-    pg.setAttribute('position', new THREE.Float32BufferAttribute([-r, .012, -r, r, .012, -r, r, .012, r, -r, .012, r], 3));
-    const pad = new THREE.LineLoop(pg, new THREE.LineBasicMaterial({ transparent: true, opacity: .85 }));
-    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 16, 12, 1, true), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
-    beam.position.y = 8;
-    const ring = new THREE.Mesh(L.ringGeo, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
-    ring.rotation.x = -Math.PI / 2; ring.position.y = .02;
-    g.add(mesh, edges, cap, pad, beam, ring);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(RW, H, RD), L.bodyMat);
+    body.position.y = H / 2; body.userData.id = s.id;
+    const outline = new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry), new THREE.LineBasicMaterial({ transparent: true, opacity: 0 }));
+    outline.position.copy(body.position);
+    // little feet and a vented top panel
+    const top = new THREE.Mesh(new THREE.BoxGeometry(RW - .1, .02, RD - .1), L.plateMat); top.position.y = H + .01;
+    g.add(body, outline, top);
+    for (let k = 0; k < 4; k++) {
+      const v = new THREE.Mesh(L.ventGeo, L.ventMat); v.position.set(-.35, H - .08 - k * .035, RD / 2 + .006); g.add(v);
+    }
+    const units = [];
+    for (let u = 0; u < n; u++) {
+      const y = .17 + u * UNIT + UNIT / 2;
+      const plate = new THREE.Mesh(L.plateGeo, L.plateMat); plate.position.set(0, y, RD / 2 + .02);
+      const led = new THREE.Mesh(L.ledGeo, new THREE.MeshBasicMaterial({ color: LED.off })); led.position.set(RW / 2 - .23, y, RD / 2 + .055);
+      const act = new THREE.Mesh(L.actGeo, new THREE.MeshBasicMaterial({ color: LED.off })); act.position.set(-RW / 2 + .22, y, RD / 2 + .055);
+      g.add(plate, led, act);
+      units.push({ led, act, ph: Math.random() * 10, sp: 3 + Math.random() * 5 });
+    }
     L.world.add(g);
+    const pool = new THREE.Mesh(new THREE.PlaneGeometry(RW * 2.2, RD * 3), new THREE.MeshBasicMaterial({ map: L.poolTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, color: LED.run }));
+    pool.rotation.x = -Math.PI / 2; pool.position.y = .005; L.scene.add(pool);
     const lab = document.createElement('div'); lab.className = 'lab'; $('#labels').appendChild(lab);
-    const b = { s, g, mesh, edges, cap, pad, beam, ring, lab, h: .01, tx: 0, tz: 0, ph: Math.random() * 3, dots: [] };
+    const b = { s, g, body, outline, units, pool, lab, H, tx: 0, tz: 0, lit: 0 };
     L.blocks.set(s.id, b);
     return b;
-  }
-  function tintBlock(b) {
-    const c = new THREE.Color(tok(stInfo(b.s).t));
-    b.mesh.material.color.set(tok('--panel-2')); b.mesh.material.emissive.copy(c);
-    b.edges.material.color.copy(c); b.cap.material.color.copy(c); b.pad.material.color.copy(c); b.ring.material.color.copy(c);
-    b.cap.material.opacity = b.s.status === 'stopped' ? .3 : .88;
-    b.beam.material.color.set(tok('--accent'));
   }
   function updateLabel(b) {
     const html = `<span class="dot" style="background:var(${stInfo(b.s).t})"></span>${esc(b.s.name)}`;
@@ -228,28 +255,23 @@
   }
   function applySceneColors() {
     if (L.renderer) {
-      L.slabMat.color.set(tok('--panel')); L.edgeMat.color.set(tok('--line')); L.gridMat.color.set(tok('--line'));
-      L.dotMat.color.set(tok('--ink'));
-      L.blocks.forEach(tintBlock);
+      const dark = isDark();
+      L.bodyMat.color.set(dark ? 0x4a4f58 : 0x555a63); L.plateMat.color.set(dark ? 0x2b2f36 : 0x30343b);
+      L.ventMat.color.set(dark ? 0x17191c : 0x24272c);
+      L.floorMat.color.set(dark ? 0x141516 : 0x8f8b84);
+      L.amb.intensity = dark ? .35 : .55;
+      L.blocks.forEach(b => b.outline.material.color.set(tok('--accent')));
+      paintWall();
     }
     if (KI.core) KI.core.set(KI.core.state);
     if (AuthBg) AuthBg.set('idle');
     drawSparks();
   }
-  function targetH(s) {
-    switch (s.status) {
-      case 'running': return .9 + load(s) * 3.2;
-      case 'starting': return .7;
-      case 'installing': return .25 + (s.progress || 0) * 1.8;
-      case 'preparing': return .25;
-      default: return .3;
-    }
-  }
   function pick(e) {
     const r = $('#land').getBoundingClientRect();
     L.ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     L.ray.setFromCamera(L.ndc, L.cam);
-    const hits = L.ray.intersectObjects([...L.blocks.values()].map(b => b.mesh));
+    const hits = L.ray.intersectObjects([...L.blocks.values()].map(b => b.body));
     return hits.length ? hits[0].object.userData.id : null;
   }
   function bindLandInput(cv) {
@@ -259,7 +281,7 @@
       if (down) {
         const dx = e.clientX - down.x, dy = e.clientY - down.y;
         if (Math.abs(dx) + Math.abs(dy) > 2) { down.moved = true; cv.style.cursor = 'grabbing'; }
-        L.theta -= dx * .008; L.phi = clamp(L.phi - dy * .006, .42, 1.32); down.x = e.clientX; down.y = e.clientY; return;
+        L.user = clamp(L.user - dx * .006, -.75, .75); L.phi = clamp(L.phi - dy * .004, 1.05, 1.5); down.x = e.clientX; down.y = e.clientY; return;
       }
       L.hover = pick(e); cv.style.cursor = L.hover ? 'pointer' : 'grab';
     });
@@ -269,61 +291,74 @@
     });
     cv.addEventListener('pointercancel', () => { down = null; L.drag = false; });
     cv.addEventListener('pointerleave', () => { if (!down) L.hover = null; });
-    cv.addEventListener('wheel', e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); L.tr = clamp(L.tr + e.deltaY * .03, 6, 60); }, { passive: false });
+    cv.addEventListener('wheel', e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); L.tr = clamp(L.tr + e.deltaY * .03, 5, 60); }, { passive: false });
+  }
+  // how many units light up and in which colour
+  function ledState(s, u, n, t, unit) {
+    const blink = motion ? Math.sin(t * 7) > 0 : true;
+    switch (s.status) {
+      case 'running': {
+        const lit = Math.max(1, Math.ceil(n * (.3 + .7 * load(s))));
+        return u < lit ? LED.run : LED.dim;
+      }
+      case 'starting': {
+        const head = motion ? Math.floor(t * 9) % (n + 3) : n;
+        return u <= head && u > head - 3 ? LED.work : LED.off;
+      }
+      case 'installing': case 'preparing': {
+        const done = Math.floor(n * (s.progress || 0));
+        if (u < done) return LED.work;
+        return u === done && blink ? LED.work : LED.off;
+      }
+      case 'error': return blink ? LED.err : LED.off;
+      default: return u === 0 ? LED.standby : LED.off;
+    }
   }
   function tickLand(t, dt) {
     if (!L.renderer || R.page !== 'home') return;
     const k = motion ? 1 - Math.exp(-dt * 3) : 1;
-    if (motion && !L.drag && !S.sel) L.theta += dt * .06;
-    L.r += (L.tr - L.r) * k; L.target.lerp(L.tt, k);
+    // a slow, gentle sway instead of spinning around
+    L.theta = L.user + (motion && !L.drag ? Math.sin(t * .12) * .16 : 0);
+    L.r += (L.tr - L.r) * k;
     const tg = L.target, r = L.r;
-    L.cam.position.set(tg.x + r * Math.sin(L.phi) * Math.sin(L.theta), tg.y + r * Math.cos(L.phi), tg.z + r * Math.sin(L.phi) * Math.cos(L.theta));
+    L.cam.position.set(tg.x + r * Math.sin(L.phi) * Math.sin(L.theta), tg.y + r * Math.cos(L.phi) + .6, tg.z + r * Math.sin(L.phi) * Math.cos(L.theta));
     L.cam.lookAt(tg);
-    L.world.position.y = motion ? Math.sin(t * .7) * .08 : 0;
     const hk = motion ? 1 - Math.exp(-dt * 2.2) : 1;
-    let busy = false;
+    let busy = false, running = 0;
     L.blocks.forEach(b => {
-      const s = b.s;
+      const s = b.s, n = b.units.length;
       b.g.position.x += (b.tx - b.g.position.x) * hk; b.g.position.z += (b.tz - b.g.position.z) * hk;
-      b.h += (targetH(s) - b.h) * hk; const h = Math.max(.02, b.h);
-      b.mesh.scale.y = h; b.mesh.position.y = h / 2; b.edges.scale.y = h; b.edges.position.y = h / 2; b.cap.position.y = h + .004;
-      const work = ['preparing', 'installing', 'starting'].includes(s.status); if (work) busy = true;
-      let ei = s.status === 'stopped' ? 0 : .12;
-      if (work) ei = .18 + (motion ? .14 * Math.sin(t * 5) : 0);
-      if (s.status === 'error') ei = .25;
-      if (L.hover === s.id || S.sel === s.id) ei += .22;
-      b.mesh.material.emissiveIntensity = ei;
-      const bo = (s.status === 'installing' || s.status === 'preparing') ? .4 + (motion ? .2 * Math.sin(t * 7) : 0) : 0;
-      b.beam.material.opacity += (bo - b.beam.material.opacity) * .08;
-      if (s.status === 'running' && motion) {
-        const ph = ((t + b.ph) % 2.6) / 2.6; b.ring.scale.setScalar(1 + ph * 1.4); b.ring.material.opacity = (1 - ph) * .55;
-      } else b.ring.material.opacity = 0;
-      const want = hasPl(s) ? Math.min(s.players, 24) : 0;
-      while (b.dots.length < want) {
-        const m = new THREE.Mesh(L.dotGeo, L.dotMat); b.g.add(m);
-        b.dots.push({ m, x: (Math.random() - .5) * 2.2, z: (Math.random() - .5) * 2.2, tx: (Math.random() - .5) * 2.2, tz: (Math.random() - .5) * 2.2, sp: .4 + Math.random() * .5, ph: Math.random() * 6 });
-      }
-      while (b.dots.length > want) b.g.remove(b.dots.pop().m);
-      b.dots.forEach(d => {
-        if (motion) {
-          const dx = d.tx - d.x, dz = d.tz - d.z, dist = Math.hypot(dx, dz);
-          if (dist < .05) { d.tx = (Math.random() - .5) * 2.2; d.tz = (Math.random() - .5) * 2.2; }
-          else { d.x += dx / dist * dt * d.sp; d.z += dz / dist * dt * d.sp; }
-        }
-        d.m.position.set(d.x, h + .1 + (motion ? Math.abs(Math.sin(t * 6 + d.ph)) * .07 : 0), d.z);
+      b.pool.position.x = b.g.position.x; b.pool.position.z = b.g.position.z + RD;
+      if (['preparing', 'installing', 'starting'].includes(s.status)) busy = true;
+      if (s.status === 'running') running++;
+      const l = load(s);
+      b.units.forEach((x, u) => {
+        const c = ledState(s, u, n, t, x);
+        x.led.material.color.setHex(c);
+        // activity LEDs flicker faster with more load
+        let a = LED.off;
+        if (s.status === 'running') a = (!motion || Math.sin(t * x.sp * (1 + l * 3) + x.ph) > .2) ? (u % 3 ? LED.run : 0x7dff9a) : LED.dim;
+        else if (c !== LED.off && c !== LED.standby) a = c;
+        x.act.material.color.setHex(a);
       });
-      b.g.getWorldPosition(L.v); L.v.y += h + .6; L.v.project(L.cam);
+      const pool = s.status === 'running' ? .22 + l * .25 : s.status === 'error' ? .18 : ['preparing', 'installing', 'starting'].includes(s.status) ? .14 : 0;
+      b.pool.material.opacity += (pool - b.pool.material.opacity) * .06;
+      b.pool.material.color.setHex(s.status === 'error' ? LED.err : s.status === 'running' ? LED.run : LED.work);
+      const hot = L.hover === s.id || S.sel === s.id;
+      b.outline.material.opacity += ((hot ? .9 : 0) - b.outline.material.opacity) * .2;
+      b.g.getWorldPosition(L.v); L.v.y += b.H + .35; L.v.project(L.cam);
       const x = (L.v.x * .5 + .5) * L.w, y = (-L.v.y * .5 + .5) * L.h;
       b.lab.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`;
       b.lab.style.opacity = L.v.z > 1 ? 0 : 1;
-      b.lab.classList.toggle('hot', L.hover === s.id || S.sel === s.id);
+      b.lab.classList.toggle('hot', hot);
     });
-    L.glow.intensity = .5 + ((busy || KI.core && KI.core.state === 'executing') ? (motion ? .7 + .4 * Math.sin(t * 8) : 1) : 0);
+    L.glow.color.setHex(running ? LED.run : LED.work);
+    L.glow.intensity = (running ? .3 : .05) + (busy ? (motion ? .12 + .08 * Math.sin(t * 6) : .15) : 0) + (KI.core && KI.core.state === 'executing' ? .2 : 0);
     L.renderer.render(L.scene, L.cam);
   }
   function select(id, tab) { if (byId(id)) go('#/server/' + encodeURIComponent(id) + (tab && tab !== 'console' ? '/' + tab : '')); }
-  $('#zIn').onclick = () => { L.tr = clamp(L.tr - 3, 6, 60); };
-  $('#zOut').onclick = () => { L.tr = clamp(L.tr + 3, 6, 60); };
+  $('#zIn').onclick = () => { L.tr = clamp(L.tr - 2, 5, 60); };
+  $('#zOut').onclick = () => { L.tr = clamp(L.tr + 2, 5, 60); };
 
   /* ---------------- Server-Seite: Kopf + Infos ---------------- */
   function renderServerPage() {
