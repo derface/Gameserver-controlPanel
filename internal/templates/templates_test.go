@@ -1,6 +1,9 @@
 package templates
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestLoadAndRender(t *testing.T) {
 	set, err := Load("")
@@ -46,4 +49,46 @@ func containsStr(s, sub string) bool {
 		}
 	}
 	return false
+}
+
+// Templates generated from AMP: with default values every placeholder is filled.
+func TestGeneratedTemplatesRender(t *testing.T) {
+	set, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := 0
+	for _, tpl := range set.All() {
+		if !strings.HasPrefix(tpl.ID, "amp-") {
+			continue
+		}
+		n++
+		vars, err := tpl.ResolveVars(map[string]string{})
+		if err != nil {
+			t.Errorf("%s: %v", tpl.ID, err)
+			continue
+		}
+		ports := make([]int, len(tpl.Ports))
+		for i, p := range tpl.Ports {
+			ports[i] = p.Port
+		}
+		check := func(what, s string) {
+			out := tpl.Render(s, vars, ports)
+			if strings.Contains(out, "{{") || strings.Contains(out, "}}") {
+				t.Errorf("%s: %s enthält noch Platzhalter: %.200s", tpl.ID, what, out[strings.Index(out, "{{")-min(60, strings.Index(out, "{{")):])
+			}
+		}
+		check("Startzeile", tpl.Start)
+		for _, c := range tpl.Config {
+			if c.WriteDefault {
+				check(c.File, string(c.DefaultContent()))
+			}
+		}
+		if tpl.Status != "experimentell" && tpl.Status != "beta" && tpl.Status != "defekt" {
+			t.Errorf("%s: Status %q", tpl.ID, tpl.Status)
+		}
+	}
+	if n < 50 {
+		t.Fatalf("nur %d AMP-Vorlagen", n)
+	}
 }

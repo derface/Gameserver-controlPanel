@@ -1,0 +1,474 @@
+{
+  "id": "amp-eye-dc",
+  "name": "E.Y.E: Divine Cybermancy",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 91720,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"91700\" wine \"./srcds.exe\" -game EYE -console -usercon -nobreakpad -port {{port}} -ip 0.0.0.0 -insecure {{nohltv}}{{custom_parameters}} {{custom_con_vars}} +tv_port {{port_3}} +clientport {{port_4}} +sv_logfile 1 +EYE_GameStyleCh {{eye_game_style_ch}} +map {{map}} +mapcyclefile {{mapcyclefile}} +sv_pure {{sv_pure}} +log on",
+  "ports": [
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "tcp"
+    },
+    {
+      "name": "SourceTV",
+      "port": 27020,
+      "proto": "udp"
+    },
+    {
+      "name": "Client",
+      "port": 27005,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "eye_game_style_ch",
+      "label": "Spielmodus beim Start",
+      "help": "Spielmodus beim Start. Startkarte und Kartenrotation passend wählen.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2"
+      ],
+      "default": "2"
+    },
+    {
+      "key": "map",
+      "label": "Startkarte",
+      "help": "Mit welcher Karte der Server startet. Bei „Eigene“ auch die eigene Startkarte eintragen.",
+      "type": "select",
+      "options": [
+        "br_arcturus",
+        "br_enceladus",
+        "br_forgeworld",
+        "br_marsarena",
+        "br_marsarena_extended",
+        "br_risingsun",
+        "br_sepulchre",
+        "br_sewer",
+        "br_street",
+        "br_xeno",
+        "cc_ancient",
+        "cc_dark",
+        "cc_dreams",
+        "cc_end",
+        "cc_falling",
+        "cc_forgotten",
+        "cc_minos",
+        "cc_monolith",
+        "cc_new_eden",
+        "cc_noctis",
+        "cc_point",
+        "cc_purge",
+        "cc_severed",
+        "cc_shadow",
+        "cc_sheep",
+        "cc_temple1",
+        "cc_temple2",
+        "cc_temple3",
+        "cc_temple4",
+        "cc_temple5",
+        "cc_temple6",
+        "cc_tuto2",
+        "cc_tuto",
+        "divine_cybermancy",
+        "ltemple",
+        "tm_arcturus",
+        "tm_enceladus",
+        "tm_forgeworld",
+        "tm_marsarena",
+        "tm_risingsun",
+        "tm_sepulchre",
+        "tm_sewer",
+        "tm_street",
+        "tm_xeno",
+        "warp2",
+        "warp",
+        "zxdivine_cybermancy"
+      ],
+      "default": "br_street"
+    },
+    {
+      "key": "mapcyclefile",
+      "label": "Kartenrotation",
+      "help": "Liste der Karten in der Rotation.",
+      "type": "select",
+      "options": [
+        "",
+        "TMcycle.txt",
+        "BRcycle.txt"
+      ],
+      "default": "BRcycle.txt"
+    },
+    {
+      "key": "sv_pure",
+      "label": "Pure-Server-Modus",
+      "help": "Ob Spieler nur bestimmte Dateien verwenden dürfen.",
+      "type": "select",
+      "options": [
+        "1",
+        "2"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "nohltv",
+      "label": "SourceTV aus",
+      "help": "Wenn an, ist SourceTV ausgeschaltet.",
+      "type": "bool",
+      "flag": "-nohltv ",
+      "default": "true"
+    },
+    {
+      "key": "custom_parameters",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter (beginnen mit -). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "custom_con_vars",
+      "label": "Zusätzliche Konsolenvariablen",
+      "help": "Zusätzliche Konsolenvariablen (beginnen mit +). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "user_settings",
+      "label": "Zusätzliche Server-Einstellungen",
+      "help": "Weitere Einstellungen für server.cfg, eine pro Zeile.",
+      "default": ""
+    },
+    {
+      "key": "hostname",
+      "label": "Servername",
+      "help": "So heißt der Server in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "sv_tags",
+      "label": "Server-Tags",
+      "help": "Stichworte für die Serverliste, durch Komma getrennt.",
+      "default": ""
+    },
+    {
+      "key": "sv_lan",
+      "label": "LAN-Server",
+      "help": "Wenn an, läuft der Server als LAN-Server: ohne Heartbeat, ohne Anmeldung, nur lokale Adressen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Verbinden. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "mp_timelimit",
+      "label": "Zeitlimit pro Karte",
+      "help": "Spielzeit pro Karte. 0 = aus. Standard: Koop = 0, Team Artifact = 20, Battle Royale = 15.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "sv_region",
+      "label": "Server-Region",
+      "help": "Region des Servers in der Serverliste.",
+      "type": "select",
+      "options": [
+        "-1",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "255"
+      ],
+      "default": "-1"
+    },
+    {
+      "key": "mp_allowspectators",
+      "label": "Zuschauer erlauben",
+      "help": "Wenn an, gibt es den Zuschauermodus.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_cheats",
+      "label": "Cheats",
+      "help": "Wenn an, sind Cheat-Variablen auf dem Server erlaubt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_filterban",
+      "label": "IP-Paketfilter",
+      "help": "Wenn an, filtert der Server Pakete nach IP.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_allowdownload",
+      "label": "Download vom Server",
+      "help": "Wenn an, können Spieler Inhalte (Karten, Sprays usw.) vom Server laden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_downloadurl",
+      "label": "Fast-Download-Adresse",
+      "help": "Adresse, von der Spieler eigene Inhalte schneller laden als vom Server.",
+      "default": ""
+    },
+    {
+      "key": "sv_allowupload",
+      "label": "Upload zum Server",
+      "help": "Wenn an, können Spieler eigene Dateien zum Server hochladen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "net_maxfilesize",
+      "label": "Größte Dateigröße",
+      "help": "Wie groß eine hochgeladene Datei höchstens sein darf.",
+      "type": "number",
+      "default": "16"
+    },
+    {
+      "key": "sv_minrate",
+      "label": "Kleinste Client-Rate",
+      "help": "Kleinste Bandbreite, die ein Spieler einstellen darf. 0 = keine Grenze.",
+      "type": "number",
+      "default": "3500"
+    },
+    {
+      "key": "sv_maxrate",
+      "label": "Größte Client-Rate",
+      "help": "Größte Bandbreite, die ein Spieler einstellen darf. 0 = keine Grenze.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "sv_minupdaterate",
+      "label": "Kleinste Update-Rate",
+      "help": "Wie oft der Server mindestens pro Sekunde Positionen (Spieler, Waffen usw.) sendet.",
+      "type": "number",
+      "default": "10"
+    },
+    {
+      "key": "sv_maxupdaterate",
+      "label": "Größte Update-Rate",
+      "help": "Wie oft der Server höchstens pro Sekunde Positionen (Spieler, Waffen usw.) sendet.",
+      "type": "number",
+      "default": "66"
+    },
+    {
+      "key": "decalfrequency",
+      "label": "Abstand zwischen Sprays",
+      "type": "number",
+      "default": "10"
+    },
+    {
+      "key": "mp_friendlyfire",
+      "label": "Friendly Fire",
+      "help": "Wenn an, können Teammitglieder einander Schaden zufügen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "mp_flashlight",
+      "label": "Taschenlampe",
+      "help": "Wenn an, kann man mit F die Taschenlampe nutzen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "mp_footsteps",
+      "label": "Schrittgeräusche",
+      "help": "Wenn an, hört man Schritte.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "mp_autocrosshair",
+      "label": "Automatisches Fadenkreuz",
+      "help": "Wenn an, gibt es das automatische Fadenkreuz.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_pausable",
+      "label": "Spieler dürfen pausieren",
+      "help": "Wenn an, können Spieler den Server pausieren. Nicht empfohlen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_alltalk",
+      "label": "Sprachchat für alle",
+      "help": "Wenn an, hören alle Spieler einander, unabhängig vom Team.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "mp_fadetoblack",
+      "label": "Schwarzblende nach dem Tod",
+      "help": "Wenn an, wird der Bildschirm nach dem Tod bis Rundenende schwarz (HUD und Chat gehen weiter).",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_eye_difficulty_mp",
+      "label": "Schwierigkeitsgrad",
+      "help": "Schwierigkeitsstufe.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "sv_eye_makeratio_mp",
+      "label": "Respawn-Stufe",
+      "help": "Stufe für den Respawn.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "sv_eye_reaction_mp",
+      "label": "Reaktion der KI",
+      "help": "Wie schnell die KI reagiert.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "sv_eye_viewlevel_mp",
+      "label": "Sichtweite der KI",
+      "help": "Wie weit die KI sieht.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "sv_eye_listen_mp",
+      "label": "Wahrnehmung der KI",
+      "help": "Wie gut die KI Spieler bemerkt.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "sv_eye_accuracy_mp",
+      "label": "Treffsicherheit der KI",
+      "help": "Wie genau die KI trifft.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "tv_autorecord",
+      "label": "Automatische Demo-Aufnahme",
+      "help": "Wenn an, wird jedes Spiel als SourceTV-Demo aufgenommen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "tv_maxclients",
+      "label": "SourceTV-Zuschauer",
+      "help": "Wie viele Zuschauer sich höchstens mit SourceTV verbinden. 0 = keine, nur lokale Aufnahme.",
+      "type": "number",
+      "default": "128"
+    },
+    {
+      "key": "tv_maxrate",
+      "label": "Höchste SourceTV-Bandbreite",
+      "help": "Größte Bandbreite für SourceTV-Zuschauer. 0 = unbegrenzt.",
+      "type": "number",
+      "default": "8000"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Connection to Steam servers successful\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "config": [
+    {
+      "title": "server.cfg",
+      "file": "server/EYE/cfg/server.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "// This file is controlled by AMP\n// Configure any additional required settings via the AMP UI\n\n{{user_settings}}\nhostname \"{{hostname}}\"\nsv_tags \"{{sv_tags}}\"\nsv_lan {{sv_lan}}\nsv_password \"{{sv_password}}\"\nrcon_password \"\"\nmp_timelimit {{mp_timelimit}}\nsv_region {{sv_region}}\nmp_allowspectators {{mp_allowspectators}}\nsv_cheats {{sv_cheats}}\nsv_filterban {{sv_filterban}}\nsv_allowdownload {{sv_allowdownload}}\nsv_downloadurl \"{{sv_downloadurl}}\"\nsv_allowupload {{sv_allowupload}}\nnet_maxfilesize {{net_maxfilesize}}\nsv_minrate {{sv_minrate}}\nsv_maxrate {{sv_maxrate}}\nsv_minupdaterate {{sv_minupdaterate}}\nsv_maxupdaterate {{sv_maxupdaterate}}\ndecalfrequency {{decalfrequency}}\nmp_friendlyfire {{mp_friendlyfire}}\nmp_flashlight {{mp_flashlight}}\nmp_footsteps {{mp_footsteps}}\nmp_autocrosshair {{mp_autocrosshair}}\nsv_pausable {{sv_pausable}}\nsv_alltalk {{sv_alltalk}}\nmp_fadetoblack {{mp_fadetoblack}}\nsv_eye_difficulty_mp {{sv_eye_difficulty_mp}}\nsv_eye_makeratio_mp {{sv_eye_makeratio_mp}}\nsv_eye_reaction_mp {{sv_eye_reaction_mp}}\nsv_eye_viewlevel_mp {{sv_eye_viewlevel_mp}}\nsv_eye_listen_mp {{sv_eye_listen_mp}}\nsv_eye_accuracy_mp {{sv_eye_accuracy_mp}}\ntv_autorecord {{tv_autorecord}}\ntv_maxclients {{tv_maxclients}}\ntv_maxrate {{tv_maxrate}}\nexec banned_ip.cfg \nexec banned_user.cfg \n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

@@ -1,0 +1,46 @@
+{
+  "id": "amp-empyrion-galactic-survival",
+  "name": "Empyrion Galactic Survival",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 530870,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"383120\" wine \"./DedicatedServer/EmpyrionDedicated.exe\" -batchmode -nographics -dedicated empyriondedicated.yaml -logFile -",
+  "ports": [
+    {
+      "name": "Spiel-Port 1",
+      "port": 30000,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel-Port 1",
+      "port": 30000,
+      "proto": "tcp"
+    },
+    {
+      "name": "Telnet",
+      "port": 30004,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^.*-LOG- Server started listening on port .*$",
+  "config": [
+    {
+      "title": "empyriondedicated.yaml",
+      "file": "server/empyriondedicated.yaml",
+      "format": "properties",
+      "write_default": true,
+      "default": "{\n  \"ServerConfig\": {\n    \"Srv_Port\": 30000,\n    \"Srv_Name\": \"AMP Powered Server\",\n    \"Srv_Password\": \"\",\n    \"Srv_MaxPlayers\": 8,\n    \"Srv_ReservePlayfields\": 1,\n    \"Srv_Description\": \"AMP Powered Empyrion Server\",\n    \"Srv_Public\": true,\n    \"Srv_StopPeriod\": 48,\n    \"Tel_Enabled\": true,\n    \"Tel_Port\": 30004,\n    \"Tel_Pwd\": \"\",\n    \"EACActive\": true,\n    \"SaveDirectory\": \"Saves\",\n    \"MaxAllowedSizeClass\": 10,\n    \"AllowedBlueprints\": \"All\",\n    \"HeartbeatServer\": 15,\n    \"HeartbeatClient\": 30,\n    \"LogFlags\": 0,\n    \"DisableSteamFamilySharing\": false,\n    \"KickPlayerWithPing\": 300,\n    \"TimeoutBootingPfServer\": 90,\n    \"PlayerLoginParallelCount\": 5,\n    \"PlayerLoginVipNames\": \"\"\n  },\n  \"GameConfig\": {\n    \"GameName\": \"DediGame\",\n    \"Mode\": \"Survival\",\n    \"Seed\": 1011345,\n    \"CustomScenario\": \"Default Multiplayer\"\n  }\n}",
+      "settings": [],
+      "auto": false
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

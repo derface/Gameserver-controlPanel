@@ -1,0 +1,64 @@
+{
+  "id": "amp-the-forest",
+  "name": "The Forest",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 556450,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"242760\" wine \"./TheForestDedicatedServer.exe\" -showlogs -batchmode -configfilepath the-forestserver.cfg -savefolderpath saves",
+  "ports": [
+    {
+      "name": "Spiel-Hauptport",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel-Hauptport",
+      "port": 27015,
+      "proto": "tcp"
+    },
+    {
+      "name": "Steam-Hauptport",
+      "port": 8766,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam-Hauptport",
+      "port": 8766,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^GameServer init success.*$",
+  "query": {
+    "type": "a2s",
+    "port": 4
+  },
+  "config": [
+    {
+      "title": "the-forestserver.cfg",
+      "file": "server/the-forestserver.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "// Dedicated Server Settings.\n// Server IP address - Note: If you have a router, this address is the internal address, and you need to configure ports forwarding\nserverIP 0.0.0.0\n// Steam Communication Port - Note: If you have a router you will need to open this port.\nserverSteamPort 8766\n// Game Communication Port - Note: If you have a router you will need to open this port.\nserverGamePort 27015\n// Query Communication Port - Note: If you have a router you will need to open this port.\nserverQueryPort 27016\n// Server display name\nserverName AMP Forest Server\n// Maximum number of players\nserverPlayers 4\n// Enable VAC (Valve Anti-cheat System at the server. Must be set off or on\nenableVAC off\n// Server password. blank means no password\nserverPassword \n// Server administration password. blank means no password\nserverPasswordAdmin \n// Your Steam account name. blank means anonymous\nserverSteamAccount \n// Time between server auto saves in minutes - The minumum time is 15 minutes, the default time is 30\nserverAutoSaveInterval 30\n// Game difficulty mode. Must be set to Peaceful Normal or Hard\ndifficulty Normal\n// New or continue a game. Must be set to New or Continue\ninitType Continue\n// Slot to save the game. Must be set 1 2 3 4 or 5\nslot 1\n// Show event log. Must be set off or on\nshowLogs off\n// Contact email for server admin\nserverContact email@gmail.com\n// No enemies\nveganMode off\n// No enemies during day time\nvegetarianMode off\n// Reset all structure holes when loading a save\nresetHolesMode off\n// Regrow 10% of cut down trees when sleeping\ntreeRegrowMode off\n// Allow building destruction\nallowBuildingDestruction on\n// Allow enemies in creative games\nallowEnemiesCreativeMode off\n// Allow clients to use the built in debug console\nallowCheats off\n// Use full weapon damage values when attacking other players\nrealisticPlayerDamage off\n// Allows defining a custom folder for save slots, leave empty to use the default location\nsaveFolderPath saves\n// Target FPS when no client is connected\ntargetFpsIdle 5\n// Target FPS when there is at least one client connected\ntargetFpsActive 60\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

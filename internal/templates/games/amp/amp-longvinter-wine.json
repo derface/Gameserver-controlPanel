@@ -1,0 +1,37 @@
+{
+  "id": "amp-longvinter-wine",
+  "name": "Longvinter (Linux Wine)",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 1639880,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"Longvinter/Saved/Config/WindowsServer\" ; SteamAppId=\"1635450\" wine \"./Longvinter/Binaries/Win64/LongvinterServer-Win64-Shipping.exe\" Longvinter -stdout -FullStdOutLogOutput -Port={{port}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogWorld: Bringing up level for play took: \\d+\\.\\d+$",
+  "backup_include": [
+    "server/Longvinter/Saved"
+  ],
+  "config": [
+    {
+      "title": "Game.ini",
+      "file": "server/Longvinter/Saved/Config/WindowsServer/Game.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Game/Blueprints/Server/GI_AdvancedSessions.GI_AdvancedSessions_C]\nServerName=AMP Powered Longvinter Server\nServerMOTD=Welcome to Longvinter Island!\nMaxPlayers=64\nPassword=\nCommunityWebsite=\nCoopPlay=false\nCheckVPN=true\nCoopSpawn=0\nTag=none\nChestRespawnTime=900\nDisableWanderingTraders=false\n\n[/Game/Blueprints/Server/GM_Longvinter.GM_Longvinter_C]\nAdminSteamID=\nPVP=false\nTentDecay=true\nMaxTents=3\nRestartTime24h=\nSaveBackups=true",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

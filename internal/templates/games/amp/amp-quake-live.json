@@ -1,0 +1,80 @@
+{
+  "id": "amp-quake-live",
+  "name": "Quake Live",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 349090,
+  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"282440\" ./qzeroded.x64 +set net_strict 1 +set fs_homepath \"/data/server/\" +set sv_master {{sv_master}} +set net_port {{port}} +set zmq_stats_port {{port}} +set zmq_rcon_port {{port_3}} +set net_ip 0.0.0.0 +set zmq_stats_ip 0.0.0.0 +set zmq_rcon_ip 0.0.0.0 +set zmq_stats_enable {{zmq_stats_enable}} +set zmq_stats_password \"{{zmq_stats_password}}\" +set zmq_rcon_enable {{zmq_rcon_enable}} +set zmq_rcon_password \"{{zmq_rcon_password}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 27960,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 27960,
+      "proto": "tcp"
+    },
+    {
+      "name": "RCON",
+      "port": 28960,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "sv_master",
+      "label": "Auf Server-Abfragen antworten",
+      "help": "Wenn an, antwortet der Server auf Abfragen. Aus = erscheint nicht in der Serverliste (auch nicht im LAN).",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "zmq_stats_enable",
+      "label": "Statistik senden",
+      "help": "Wenn an, sendet der Server Statistiken per ZeroMQ an QLStats.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "zmq_stats_password",
+      "label": "Statistik-Passwort",
+      "help": "Passwort für den Zugriff auf die Statistik per ZeroMQ.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "zmq_rcon_enable",
+      "label": "RCON",
+      "help": "Wenn an, ist ZeroMQ-RCON aktiv.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "zmq_rcon_password",
+      "label": "RCON-Passwort",
+      "help": "Passwort für ZeroMQ-RCON.",
+      "type": "secret",
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^--- Common Initialization Complete ---$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

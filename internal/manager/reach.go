@@ -62,7 +62,12 @@ var reachAsk = query.Ask
 // internet (RCON, Telnet, web admin …). They are never forwarded.
 func privatePort(name string) bool {
 	n := strings.ToLower(name)
-	for _, w := range []string{"rcon", "telnet", "web-admin", "webadmin", "web interface", "serverquery", "shutdown"} {
+	// a shared port ("Port für Spiel und RCON") carries game traffic
+	if strings.Contains(n, "spiel") || strings.Contains(n, "game") {
+		return false
+	}
+	for _, w := range []string{"rcon", "telnet", "web-admin", "webadmin", "web interface", "serverquery", "shutdown",
+		"fernverwaltung", "remote admin", "admin-port", "konsolen-port", "console port"} {
 		if strings.Contains(n, w) {
 			return true
 		}

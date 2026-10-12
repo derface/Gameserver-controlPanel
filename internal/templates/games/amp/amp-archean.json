@@ -1,0 +1,27 @@
+{
+  "id": "amp-archean",
+  "name": "Archean",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 3557220,
+  "start": "cd \"Archean-game\" && SteamAppId=\"2941660\" ./Archean_server -port {{port}}",
+  "ports": [
+    {
+      "name": "Spiel-Port",
+      "port": 8881,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel-Port",
+      "port": 8881,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Server Info \\[.+\\] Server started$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

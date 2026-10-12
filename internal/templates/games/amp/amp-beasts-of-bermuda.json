@@ -1,0 +1,78 @@
+{
+  "id": "amp-beasts-of-bermuda",
+  "name": "Beasts of Bermuda",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 882430,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"719890\" wine \"./WindowsServer/BeastsOfBermuda/Binaries/Win64/BeastsOfBermudaServer.exe\" BeastsOfBermuda -Port={{port}} -QueryPort={{port_2}} -MultiHome=0.0.0.0 -SessionName {{session_name}} -MapName {{map_name}} -GameMode {{game_mode}} -ServerPassword {{server_password}} -AdminPassword {{admin_password}} -stdout -FullStdOutLogOutput",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "session_name",
+      "label": "Sitzungsname",
+      "help": "Name in der Serverliste. Unterstriche (_) statt Leerzeichen nutzen!",
+      "default": "AMP_Powered_Beasts_of_Bermuda_Server"
+    },
+    {
+      "key": "map_name",
+      "label": "Anzeige des Kartennamens",
+      "help": "Ob die echte Karte oder ein eigener Anzeigename in der Serverliste steht. Die geladene Karte ändert sich dadurch nicht.",
+      "default": ""
+    },
+    {
+      "key": "game_mode",
+      "label": "Spielmodus",
+      "default": ""
+    },
+    {
+      "key": "server_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Beitreten.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "admin_password",
+      "label": "Admin-Passwort",
+      "help": "Admin-Passwort. Standard ist ein starkes Zufallspasswort.",
+      "type": "secret",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogServerSave: Display: Finished loading server data, game is now broadcasting online\\. Your server ID is: \\d+\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/WindowsServer/BeastsOfBermuda/Saved"
+  ],
+  "config": [
+    {
+      "title": "Game.ini",
+      "file": "server/WindowsServer/BeastsOfBermuda/Saved/Config/WindowsServer/Game.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/BeastsOfBermuda.ServerGameInstance]\nMapNameOverride=\"Forest_Island\"\nGameMode=Free_Roam\nDiscordLink=\"\"",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

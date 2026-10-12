@@ -1,0 +1,50 @@
+{
+  "id": "amp-nuclear-option",
+  "name": "Nuclear Option",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 3930080,
+  "start": "mkdir -p \"Missions\" ; DOORSTOP_ENABLED=\"1\" DOORSTOP_TARGET_ASSEMBLY=\"/data/server/BepInEx/core/BepInEx.Preloader.dll\" LD_LIBRARY_PATH=\"/data/server/linux64:/data/server/:$LD_LIBRARY_PATH\" LD_PRELOAD=\"libdoorstop.so\" SteamAppId=\"2168680\" ./NuclearOptionServer.x86_64 -logFile - -limitframerate {{limitframerate}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 7778,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "limitframerate",
+      "label": "FPS-Grenze",
+      "help": "FPS-Grenze des Servers.",
+      "type": "number",
+      "default": "30"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\d+\\.\\d+: \\[NetworkManagerNuclearOption\\] Server finished loading$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "config": [
+    {
+      "title": "DedicatedServerConfig.json",
+      "file": "server//DedicatedServerConfig.json",
+      "format": "json",
+      "write_default": true,
+      "default": "{\n  \"MissionDirectory\": \"\",\n  \"ModdedServer\": false,\n  \"ServerName\": \"AMP Powered Nuclear Option Server\",\n  \"Port\": {\n    \"IsOverride\": true,\n    \"Value\": 7777\n  },\n  \"QueryPort\": {\n    \"IsOverride\": true,\n    \"Value\": 7778\n  },\n  \"Password\": \"\",\n  \"MaxPlayers\": 16,\n  \"NoPlayerStopTime\": 30.0,\n  \"RotationType\": 0,\n  \"MissionRotation\": [\n    {\n      \"Key\": {\n        \"Group\": \"BuiltIn\",\n        \"Name\": \"Escalation\"\n      },\n      \"MaxTime\": 7200.0\n    },\n    {\n      \"Key\": {\n        \"Group\": \"BuiltIn\",\n        \"Name\": \"Terminal Control\"\n      },\n      \"MaxTime\": 7200.0\n    }\n  ]\n}",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

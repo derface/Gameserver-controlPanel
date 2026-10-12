@@ -1,0 +1,42 @@
+{
+  "id": "amp-night-of-the-dead",
+  "name": "Night of the Dead",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 1420710,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"LF/Saved/Config\" ; [ -e \"LF/Saved/Config/ServerSettings.ini\" ] || { mkdir -p \"$(dirname \"LF/Saved/Config/ServerSettings.ini\")\"; cp -rn \"ServerSettings.ini\" \"LF/Saved/Config/ServerSettings.ini\" 2>/dev/null; } ; SteamAppId=\"1377380\" wine \"./LF/Binaries/Win64/LFServer-Win64-Shipping.exe\" ?listen -Port={{port}} -QueryPort={{port_2}} -MultiHome=0.0.0.0 {{disable_anti_cheat}} -stdout -FullStdOutLogOutput -CRASHREPORTS",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "disable_anti_cheat",
+      "label": "Anti-Cheat aus",
+      "help": "Wenn an, ist der Anti-Cheat auf dem Server aus.",
+      "type": "bool",
+      "flag": "-DisableAntiCheat ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogBlueprintUserMessages: \\[BP_LFGameMode_C_\\d+\\] Session Update success$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

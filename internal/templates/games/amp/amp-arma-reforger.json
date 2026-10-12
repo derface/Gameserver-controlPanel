@@ -1,0 +1,113 @@
+{
+  "id": "amp-arma-reforger",
+  "name": "Arma Reforger",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1874900,
+  "start": "mkdir -p \"Configs\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1874880\" ./ArmaReforgerServer -gproj \"/data/server/addons/data/ArmaReforger.gproj\" -profile \"/data/server/AReforgerMaster\" -bepath \"/data/server/battleye\" -bindPort {{port}} -a2sPort {{port_2}} -config \"/data/server/Configs/serverconfig.json\" -a2sIpAddress 0.0.0.0 -listScenarios -noThrow -maxFPS \"{{max_fps}}\" -freezeCheck \"{{freeze_check}}\" -freezeCheckMode \"{{freeze_check_mode}}\" {{addons_verify}}{{addons_repair}}{{log_stats}} {{custom_server_args}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 2001,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 17777,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 19999,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "max_fps",
+      "label": "FPS-Grenze des Servers",
+      "help": "FPS des Servers. Empfohlen sind 60 bis 120, damit der Server nicht alle Ressourcen belegt.",
+      "type": "number",
+      "default": "60"
+    },
+    {
+      "key": "freeze_check",
+      "label": "Prüfzeit für Hänger",
+      "help": "Nach welcher Zeit der Server bei einem Hänger gezielt abstürzt. 0 = Erkennung ganz aus.",
+      "type": "number",
+      "default": "300"
+    },
+    {
+      "key": "freeze_check_mode",
+      "label": "Verhalten bei Hängern",
+      "help": "Legt fest, was der Server bei einem erkannten Hänger tut.",
+      "type": "select",
+      "options": [
+        "",
+        "crash",
+        "minidump",
+        "kill"
+      ],
+      "default": ""
+    },
+    {
+      "key": "addons_verify",
+      "label": "Mods prüfen",
+      "help": "Wenn an, prüft der Server alle installierten Mods. Bei beschädigten Mods beendet er sich und loggt die betroffenen Dateien.",
+      "type": "bool",
+      "flag": "-addonsVerify ",
+      "default": "false"
+    },
+    {
+      "key": "addons_repair",
+      "label": "Mods reparieren",
+      "help": "Wenn an, prüft der Server alle installierten Mods und repariert beschädigte automatisch. Klappt die Reparatur nicht, beendet er sich.",
+      "type": "bool",
+      "flag": "-addonsRepair ",
+      "default": "false"
+    },
+    {
+      "key": "log_stats_interval",
+      "label": "Abstand für Statistik-Logs",
+      "help": "Wie oft Leistungsdaten geloggt werden, wenn „Statistik loggen“ an ist.",
+      "type": "number",
+      "default": "1000"
+    },
+    {
+      "key": "log_stats",
+      "label": "Statistik loggen",
+      "help": "Wenn an, loggt der Server Leistungsdaten jede Sekunde oder im eingestellten Abstand.",
+      "type": "bool",
+      "flag": "-logStats {{log_stats_interval}}",
+      "default": "false"
+    },
+    {
+      "key": "custom_server_args",
+      "label": "Zusätzliche Server-Startparameter",
+      "help": "Zusätzliche Startparameter. Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "release_version",
+      "label": "Version",
+      "help": "Welche Version installiert wird. Nach dem Wechsel den Server aktualisieren. Spieler brauchen die passende Version.",
+      "type": "select",
+      "options": [
+        "1874880",
+        "1890860"
+      ],
+      "default": "1874880"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^[\\d:\\s]*ENGINE\\s+: Game successfully created\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

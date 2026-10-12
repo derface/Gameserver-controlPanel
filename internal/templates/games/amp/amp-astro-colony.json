@@ -1,0 +1,26 @@
+{
+  "id": "amp-astro-colony",
+  "name": "Astro Colony",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2934900,
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1614550\" ./AstroColony/Binaries/Linux/AstroColonyServer AstroColony -QueryPort={{port}}",
+  "ports": [
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogBlueprintUserMessages: \\[BP_DedicatedServerPlayerController_C_\\d+\\] server create success$",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

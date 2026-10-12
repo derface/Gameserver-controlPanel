@@ -226,7 +226,8 @@ func TestCheckReach(t *testing.T) {
 
 func TestPrivatePort(t *testing.T) {
 	for name, want := range map[string]bool{"RCON": true, "Telnet": true, "Web-Admin": true, "ServerQuery": true, "Web Interface": true,
-		"Spiel": false, "Query": false, "Abfrage": false, "Web": false, "Dateien": false, "": false} {
+		"Spiel": false, "Query": false, "Abfrage": false, "Web": false, "Dateien": false, "": false,
+		"Port für Spiel und RCON": false, "Fernverwaltungs-Port": true, "Admin-Port": true, "Konsolen-Port": true} {
 		if privatePort(name) != want {
 			t.Errorf("%q: %v", name, !want)
 		}

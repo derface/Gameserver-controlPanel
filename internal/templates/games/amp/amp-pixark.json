@@ -1,0 +1,120 @@
+{
+  "id": "amp-pixark",
+  "name": "PixARK",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 824360,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "cd \"ShooterGame/Binaries/Win64\" && SteamAppId=\"593600\" wine \"./PixARKServer.exe\" {{map}}?listen?DelayRegisterServer=True?bRawSockets=True?Port={{port}}?QueryPort={{port_2}}?RCONEnabled=True?RCONPort={{port_3}}?SessionName=\"{{session_name}}\"?MultiHome=0.0.0.0?ServerPassword={{server_password}}?ServerAdminPassword={{rcon_password}}{{custom_options}} -Seed={{seed}} -CULTUREFORCOOKING=en -NoBattlEye -CubePort={{port_4}} -cubeworld={{cubeworld}} -nosteamclient -NoHangDetection {{no_transfer_from_filtering}}-ClusterDirOverride=\"{{cluster_dir_override}}\" -clusterid={{clusterid}} -server {{custom_flags}} -gameplaylogging -log",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 27020,
+      "proto": "tcp"
+    },
+    {
+      "name": "Cube-Port",
+      "port": 14999,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "server_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Beitreten. Ohne Fragezeichen.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "map",
+      "label": "Karte",
+      "help": "Karte des Servers. Terracrypt braucht das Terracrypt-DLC. Bei „Eigene“ auch den eigenen Kartennamen eintragen. Jede Karte hat eigene Spielstände; ein Wechsel startet eine neue Welt.",
+      "type": "select",
+      "options": [
+        "CubeWorld_Light",
+        "Skypiea_light",
+        "Underground_Light"
+      ],
+      "default": "CubeWorld_Light"
+    },
+    {
+      "key": "session_name",
+      "label": "Servername",
+      "help": "So heißt der Server öffentlich. Kein Fragezeichen verwenden.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    },
+    {
+      "key": "custom_options",
+      "label": "Eigene Start-Optionen",
+      "help": "Eigene Start-Optionen (beginnen mit ?), mit Fragezeichen und ohne Leerzeichen.",
+      "default": ""
+    },
+    {
+      "key": "seed",
+      "label": "Server-Seed",
+      "help": "Startwert für die Karte. Standard: zufällig.",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "cubeworld",
+      "label": "Name des Weltstands",
+      "help": "Name des Weltstands, der geladen bzw. angelegt wird.",
+      "default": "world"
+    },
+    {
+      "key": "no_transfer_from_filtering",
+      "label": "Transfers filtern",
+      "help": "Wenn an, können ARK-Daten nicht zwischen Einzelspieler und Servern ohne Cluster-ID übertragen werden. Auch mit Cluster-ID empfohlen.",
+      "type": "bool",
+      "flag": "-NoTransferFromFiltering ",
+      "default": "false"
+    },
+    {
+      "key": "cluster_dir_override",
+      "label": "Cluster-Ordner",
+      "help": "Pfad zu einem gemeinsamen Cluster-Ordner. Alle Cluster-Server müssen darauf zugreifen können. In Docker muss der Ordner im Container eingebunden sein.",
+      "default": ""
+    },
+    {
+      "key": "clusterid",
+      "label": "Cluster-ID",
+      "help": "Cluster-ID. Muss auf allen Servern des Clusters gleich sein.",
+      "default": ""
+    },
+    {
+      "key": "custom_flags",
+      "label": "Eigene Start-Flags",
+      "help": "Eigene Start-Flags (beginnen mit -), mit Bindestrich und durch Leerzeichen getrennt.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

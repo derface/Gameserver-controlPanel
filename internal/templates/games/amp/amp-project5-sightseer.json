@@ -1,0 +1,44 @@
+{
+  "id": "amp-project5-sightseer",
+  "name": "Project 5: Sightseer",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 655780,
+  "steam_login": true,
+  "start": "mkdir -p \"ServerConfig\" ; [ -f \"ServerConfig/ban.txt\" ] || { mkdir -p \"$(dirname \"ServerConfig/ban.txt\")\"; printf %s \"\" > \"ServerConfig/ban.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"655780\" /usr/bin/mono ./P5SServer.exe -port {{port}} -http -localPath -name \"{{name}}\" -fn \"{{fn}}\" {{public}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 5190,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "name",
+      "label": "Servername",
+      "help": "Name in der Serverliste im Spiel.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "fn",
+      "label": "Name des Weltstands",
+      "help": "Name des Weltstands, der geladen bzw. angelegt wird. Gibt es ihn noch nicht, muss ein Admin ihn nach dem Verbinden im Spiel anlegen.",
+      "default": "World.dat"
+    },
+    {
+      "key": "public",
+      "label": "Server öffentlich",
+      "help": "Wenn an, meldet sich der Server in der öffentlichen Lobby an und ist in der Serverliste sichtbar.",
+      "type": "bool",
+      "flag": "-public",
+      "default": "true"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\/]+ [\\d:]+\\] Game server started on port \\d+ using protocol version \\d+$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

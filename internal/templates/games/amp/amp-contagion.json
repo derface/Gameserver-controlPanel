@@ -1,0 +1,219 @@
+{
+  "id": "amp-contagion",
+  "name": "Contagion",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 293030,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"238430\" wine \"./contagionds.exe\" -game contagion -console -usercon -port {{port}} -ip 0.0.0.0 -maxplayers {{max_players}} +rcon_password \"{{rcon_password}}\" +sv_logfile 1 +difficulty {{difficulty}} +mp_timelimit {{mp_timelimit}} +sv_alltalk {{sv_alltalk}} +sv_vote_allow {{sv_vote_allow}} +cx_max_zombies {{cx_max_zombies}} +cp_betterstartingweapons {{cp_betterstartingweapons}} +exec server.cfg +map {{map}} +log on",
+  "ports": [
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "16"
+    },
+    {
+      "key": "difficulty",
+      "label": "Schwierigkeit",
+      "help": "Allgemeine Schwierigkeit. Beeinflusst Leben, Schaden, Treffsicherheit und Infektionsrate der Zombies.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "mp_timelimit",
+      "label": "Zeitlimit pro Karte",
+      "help": "Spielzeit pro Karte bis zum Wechsel. 0 = kein Zeitlimit.",
+      "type": "number",
+      "default": "25"
+    },
+    {
+      "key": "sv_alltalk",
+      "label": "Sprachchat für alle",
+      "help": "Alle Spieler hören sich im Sprachchat, egal in welchem Team.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_vote_allow",
+      "label": "Abstimmungen erlauben",
+      "help": "Spieler dürfen Abstimmungen starten (Kick, Kartenwechsel, Neustart, Schwierigkeit usw.).",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "cx_max_zombies",
+      "label": "Max. Zombies (Extraction)",
+      "help": "Wie viele Zombies im Modus Extraction höchstens gleichzeitig leben.",
+      "type": "number",
+      "default": "45"
+    },
+    {
+      "key": "cp_betterstartingweapons",
+      "label": "Bessere Startwaffen (Panic)",
+      "help": "Überlebende bekommen im Modus Panic bessere Startwaffen, wenn sie öfter verlieren.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    },
+    {
+      "key": "map",
+      "label": "Startkarte",
+      "help": "Karte beim Start. Das Präfix legt den Modus fest: ce=Escape, cx=Extraction, ch=Hunted, cp=Panic, cf=Flatline, chm=Horde.",
+      "type": "select",
+      "options": [
+        "ce_barlowe",
+        "ce_barlowe_02",
+        "ce_barlowe_christmas",
+        "ce_barlowe_02_christmas",
+        "ce_biotec",
+        "ce_biotec_christmas",
+        "ce_campwhitner",
+        "ce_campwhitner_halloween",
+        "ce_downtown_01",
+        "ce_downtown_02",
+        "ce_downtown_03",
+        "ce_downtown_finale",
+        "ce_harvest",
+        "ce_harvest_halloween",
+        "ce_laststop",
+        "ce_laststop_02",
+        "ce_laststop_03",
+        "ce_laststop_04",
+        "ce_laststop_04b",
+        "ce_laststop_05",
+        "ce_laststop_05b",
+        "ce_laststop_06",
+        "ce_laststop_07",
+        "ce_laststop_08",
+        "ce_laststop_09",
+        "ce_laststop_10",
+        "ce_laststop_finale",
+        "ce_montclair",
+        "ce_montclair_partb",
+        "ce_roanokepd",
+        "ce_roanokepd_halloween",
+        "ce_stonecreek",
+        "cx_auroraestates",
+        "cx_auroraestates_christmas",
+        "cx_barlowesquare",
+        "cx_biotec",
+        "cx_campwhitner",
+        "cx_lakeland",
+        "cx_montclair",
+        "cx_stripmall",
+        "ch_auroraestates",
+        "ch_barlowesquare",
+        "ch_biotec",
+        "ch_campwhitner",
+        "ch_cypruspark",
+        "ch_cypruspark_night",
+        "ch_deathtrain",
+        "ch_flowerfieldmansion",
+        "ch_harvest",
+        "ch_lakeland",
+        "ch_lakeland_christmas",
+        "ch_montclair",
+        "ch_pioneerexpress",
+        "ch_roanokepd",
+        "ch_stonecreek",
+        "ch_unionstation",
+        "cp_broadway",
+        "cp_montclair",
+        "cp_passenger",
+        "cp_pioneerexpress",
+        "cp_roanokepd",
+        "cf_campwhitner",
+        "cf_clocktower",
+        "cf_clocktower_halloween",
+        "cf_harvest",
+        "cf_johantower",
+        "cf_losmuertos",
+        "cf_montclair",
+        "cf_sewage",
+        "cf_southwestbank",
+        "cf_stonecreek",
+        "cf_underground",
+        "cf_unionstation",
+        "chm_auroraestates",
+        "chm_barlowesquare",
+        "chm_biotec",
+        "chm_broadway",
+        "chm_cypruspark",
+        "chm_flowerfieldmansion",
+        "chm_harvest",
+        "chm_lakeland",
+        "chm_losmuertos",
+        "chm_roanokepd"
+      ],
+      "default": "ce_barlowe"
+    },
+    {
+      "key": "hostname",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "sv_password",
+      "label": "Serverpasswort",
+      "help": "Leer lassen für einen öffentlichen Server. Mit Passwort ist der Zugang beschränkt.",
+      "type": "secret",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "config": [
+    {
+      "title": "server.cfg",
+      "file": "server/contagion/cfg/server.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "// Contagion Server Config\nhostname \"{{hostname}}\"\nsv_password \"{{sv_password}}\"\nrcon_password \"{{rcon_password}}\"\nexec banned_user.cfg\nexec banned_ip.cfg\nwriteid\nwriteip\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

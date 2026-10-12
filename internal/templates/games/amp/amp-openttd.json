@@ -1,0 +1,73 @@
+{
+  "id": "amp-openttd",
+  "name": "OpenTTD",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1536610,
+  "steam_login": true,
+  "start": "mkdir -p \"config\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1536610\" ./openttd -D 0.0.0.0:{{port}} -c config/openttd.cfg -g \"{{g}}\" -G \"{{g}}\" -t \"{{t}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 3979,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 3979,
+      "proto": "tcp"
+    },
+    {
+      "name": "Admin-Port",
+      "port": 3977,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "g",
+      "label": "Name des Spielstands",
+      "help": "Name des Spielstands, der beim Start geladen wird. Spielstände und Szenarien gehen. Ohne Angabe beginnt ein neues Spiel. Mit „config/save/autosave/exit.sav“ wird nach dem ersten Autosave der Standard-Autosave geladen.",
+      "default": ""
+    },
+    {
+      "key": "t",
+      "label": "Startjahr",
+      "type": "number",
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^(?:\\[[\\d-]+ [\\d:]+\\] )?dbg: \\[net(?::\\d+)?\\] Listening on [\\d.:]+ \\(IPv4\\)$",
+  "config": [
+    {
+      "title": "openttd.cfg",
+      "file": "server/config/openttd.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "[network]\ncommands_per_frame = 2\nmax_commands_in_queue = 16\nbytes_per_frame = 8\nbytes_per_frame_burst = 256\nmax_init_time = 100\nmax_join_time = 500\nmax_download_time = 1000\nmax_password_time = 2000\nmax_lag_time = 500\npause_on_join = true\nserver_port = 3979\nserver_admin_port = 3977\nserver_admin_chat = true\nserver_game_type = local\nautoclean_companies = false\nautoclean_unprotected = 12\nautoclean_protected = 36\nautoclean_novehicles = 0\nmax_companies = 15\nmax_clients = 25\nrestart_game_year = 0\nmin_active_clients = 0\nreload_cfg = false\nno_http_content_downloads = false\ncommands_per_frame_server = 16\nrestart_hours = 0\n\n[misc]\ndisplay_opt = SHOW_TOWN_NAMES|SHOW_STATION_NAMES|SHOW_SIGNS|FULL_ANIMATION|FULL_DETAIL|WAYPOINTS|SHOW_COMPETITOR_SIGNS\nfullscreen = false\nvideo_hw_accel = true\nvideo_vsync = false\nsupport8bpp = no\ngraphicsset = \nsoundsset = \nmusicset = \nvideodriver = \nmusicdriver = \nsounddriver = \nblitter = \nlanguage = english.lng\nresolution = 640,480\nscreenshot_format = \nsavegame_format = \nrightclick_emulate = false\nsmall_font = \nmedium_font = \nlarge_font = \nmono_font = \nsmall_size = 0\nmedium_size = 0\nlarge_size = 0\nmono_size = 0\nsmall_aa = false\nmedium_aa = false\nlarge_aa = false\nmono_aa = false\nsprite_cache_size_px = 128\nplayer_face = 0\ntransparency_options = 0\ntransparency_locks = 0\ninvisibility_options = 0\nkeyboard = \nkeyboard_caps = \nlast_newgrf_count = 0\ngui_scale = -1\nglobal_aa = true\nprefer_sprite_font = false\n\n[difficulty]\nmax_no_competitors = 0\nnumber_towns = 2\nindustry_density = 4\nmax_loan = 300000\ninitial_interest = 2\nvehicle_costs = 0\ncompetitor_speed = 2\nvehicle_breakdowns = 1\nsubsidy_multiplier = 2\nsubsidy_duration = 1\nconstruction_cost = 0\nterrain_type = 1\nquantity_sea_lakes = 0\neconomy = false\nline_reverse_mode = false\ndisasters = false\ntown_council_tolerance = 0\ncompetitors_interval = 10\ninfinite_money = false\n\n[economy]\ntown_layout = 0\nallow_town_roads = true\nfound_town = 0\nallow_town_level_crossings = true\ntown_cargogen_mode = 1\nstation_noise_level = false\ninflation = false\nmultiple_industry_per_town = false\nbribe = true\nexclusive_rights = true\nfund_buildings = true\nfund_roads = true\ngive_money = true\ntype = 1\nallow_shares = false\nmin_years_for_shares = 6\nfeeder_payment_share = 75\ntown_growth_rate = 2\nlarger_towns = 4\ninitial_city_size = 2\nmod_road_rebuild = true\ndist_local_authority = 20\ntown_noise_population[0] = 800\ntown_noise_population[1] = 2000\ntown_noise_population[2] = 4000\ntown_noise_population[3] = 400\ninfrastructure_maintenance = false\ntimekeeping_units = 0\nminutes_per_calendar_year = 12\ntown_cargo_scale = 100\nindustry_cargo_scale = 100\n\n[order]\nno_servicing_if_no_breakdowns = true\nimproved_load = true\nselectgoods = true\nserviceathelipad = true\ngradual_loading = true\nstation_length_loading_penalty = true\n\n[station]\nnever_expire_airports = false\nstation_spread = 12\nmodified_catchment = true\nserve_neutral_industries = true\nadjacent_stations = true\ndistant_join_stations = true\n\n[vehicle]\nroad_side = right\ntrain_acceleration_model = 1\nroadveh_acceleration_model = 1\ntrain_slope_steepness = 3\nroadveh_slope_steepness = 7\nmax_train_length = 7\nsmoke_amount = 1\nnever_expire_vehicles = false\nmax_trains = 500\nmax_roadveh = 500\nmax_aircraft = 200\nmax_ships = 300\nwagon_speed_limits = true\ndisable_elrails = false\nfreight_trains = 1\nplane_speed = 4\ndynamic_engines = true\nplane_crashes = 2\nextend_vehicle_life = 0\nservint_ispercent = false\nservint_trains = 150\nservint_roadveh = 150\nservint_ships = 360\nservint_aircraft = 100\n\n[gui]\nautosave = monthly\nthreaded_saves = true\ndate_format_in_default_names = iso\nshow_finances = true\nauto_scrolling = 0\nscroll_mode = 2\nsmooth_scroll = false\nright_mouse_wnd_close = false\nmeasure_tooltip = true\nerrmsg_duration = 5\nhover_delay_ms = 250\nosk_activation = double\ntoolbar_pos = 1\nstatusbar_pos = 1\nwindow_snap_radius = 10\nwindow_soft_limit = 20\nzoom_min = 0\nzoom_max = 5\nsprite_zoom_min = 0\npopulation_in_label = true\nlink_terraform_toolbar = false\nsmallmap_land_colour = 0\nlinkgraph_colours = 0\nliveries = 2\nstarting_colour = 16\nauto_remove_signals = false\nprefer_teamchat = false\nscrollwheel_scrolling = 0\nscrollwheel_multiplier = 5\npause_on_newgame = false\nadvanced_vehicle_list = 1\ntimetable_in_ticks = false\ntimetable_arrival_departure = true\nquick_goto = true\nloading_indicators = 1\ndefault_rail_type = 0\nsignal_gui_mode = 0\ndefault_signal_type = 5\ncoloured_news_year = 2000\ncycle_signal_types = 0\ndrag_signals_density = 4\ndrag_signals_fixed_distance = false\nsemaphore_build_before = 1950\nvehicle_income_warn = true\norder_review_system = 2\nlost_vehicle_warn = true\nnew_nonstop = true\nstop_location = 2\nkeep_all_autosave = false\nautosave_on_exit = true\nautosave_on_network_disconnect = true\nmax_num_autosaves = 16\nauto_euro = true\nnews_message_timeout = 2\nshow_track_reservation = true\nstation_numtracks = 1\nstation_platlength = 5\nstation_dragdrop = true\nstation_show_coverage = false\npersistent_buildingtools = true\nstation_gui_group_order = 0\nstation_gui_sort_by = 0\nstation_gui_sort_order = 0\nmissing_strings_threshold = 25\ngraph_line_thickness = 3\nshow_newgrf_name = false\nshow_cargo_in_vehicle_lists = false\nshow_date_in_logs = false\nsettings_restriction_mode = 0\ndeveloper = 1\nnewgrf_developer_tools = false\nai_developer_tools = false\nscenario_developer = false\nnewgrf_show_old_versions = false\nnewgrf_default_palette = 1\nconsole_backlog_timeout = 100\nconsole_backlog_length = 100\nrefresh_rate = 60\nfast_forward_speed_limit = 2500\nnetwork_chat_box_width_pct = 40\nnetwork_chat_box_height = 25\nnetwork_chat_timeout = 20\nscale_bevels = true\nautosave_interval = 10\nright_click_wnd_close = no\nstarting_colour_secondary = 16\ntimetable_mode = 0\n\n[linkgraph]\nrecalc_interval = 8\nrecalc_time = 32\ndistribution_pax = 0\ndistribution_mail = 0\ndistribution_armoured = 0\ndistribution_default = 0\naccuracy = 16\ndemand_distance = 100\ndemand_size = 100\nshort_path_saturation = 80\n\n[locale]\ncurrency = GBP\nunits_velocity = metric\nunits_power = metric\nunits_weight = metric\nunits_volume = metric\nunits_force = si\nunits_height = metric\ndigit_group_separator = \ndigit_group_separator_currency = \ndigit_decimal_separator = \nunits_velocity_nautical = metric\n\n[sound]\nnews_ticker = true\nnews_full = true\nnew_year = true\nconfirm = true\nclick_beep = true\ndisaster = true\nvehicle = true\nambient = true\n\n[music]\nplaylist = 0\nmusic_vol = 50\neffect_vol = 100\ncustom_1 = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\ncustom_2 = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\nplaying = true\nshuffle = false\n\n[news_display]\narrival_player = full\narrival_other = summarized\naccident = full\naccident_other = full\ncompany_info = full\nopen = summarized\nclose = summarized\neconomy = full\nproduction_player = summarized\nproduction_other = off\nproduction_nobody = off\nadvice = full\nnew_vehicles = full\nacceptance = full\nsubsidies = summarized\ngeneral = full\n\n[pf]\nforbid_90_deg = false\nroadveh_queue = true\npathfinder_for_trains = 2\npathfinder_for_roadvehs = 2\npathfinder_for_ships = 2\nreverse_at_signals = false\nwait_oneway_signal = 15\nwait_twoway_signal = 41\nwait_for_pbs_path = 30\nreserve_paths = false\npath_backoff_interval = 20\nnpf.npf_max_search_nodes = 10000\nnpf.npf_rail_firstred_penalty = 1000\nnpf.npf_rail_firstred_exit_penalty = 10000\nnpf.npf_rail_lastred_penalty = 1000\nnpf.npf_rail_station_penalty = 100\nnpf.npf_rail_slope_penalty = 100\nnpf.npf_rail_curve_penalty = 100\nnpf.npf_rail_depot_reverse_penalty = 5000\nnpf.npf_rail_pbs_cross_penalty = 300\nnpf.npf_rail_pbs_signal_back_penalty = 1500\nnpf.npf_buoy_penalty = 200\nnpf.npf_water_curve_penalty = 100\nnpf.npf_road_curve_penalty = 100\nnpf.npf_crossing_penalty = 300\nnpf.npf_road_drive_through_penalty = 800\nnpf.npf_road_dt_occupied_penalty = 800\nnpf.npf_road_bay_occupied_penalty = 1500\nnpf.maximum_go_to_depot_penalty = 2000\nyapf.disable_node_optimization = false\nyapf.max_search_nodes = 10000\nyapf.rail_firstred_twoway_eol = true\nyapf.rail_firstred_penalty = 1000\nyapf.rail_firstred_exit_penalty = 10000\nyapf.rail_lastred_penalty = 1000\nyapf.rail_lastred_exit_penalty = 10000\nyapf.rail_station_penalty = 1000\nyapf.rail_slope_penalty = 200\nyapf.rail_curve45_penalty = 100\nyapf.rail_curve90_penalty = 600\nyapf.rail_depot_reverse_penalty = 5000\nyapf.rail_crossing_penalty = 300\nyapf.rail_look_ahead_max_signals = 10\nyapf.rail_look_ahead_signal_p0 = 500\nyapf.rail_look_ahead_signal_p1 = -100\nyapf.rail_look_ahead_signal_p2 = 5\nyapf.rail_pbs_cross_penalty = 300\nyapf.rail_pbs_station_penalty = 800\nyapf.rail_pbs_signal_back_penalty = 1500\nyapf.rail_doubleslip_penalty = 100\nyapf.rail_longer_platform_penalty = 800\nyapf.rail_longer_platform_per_tile_penalty = 0\nyapf.rail_shorter_platform_penalty = 4000\nyapf.rail_shorter_platform_per_tile_penalty = 0\nyapf.road_slope_penalty = 200\nyapf.road_curve_penalty = 100\nyapf.road_crossing_penalty = 300\nyapf.road_stop_penalty = 800\nyapf.road_stop_occupied_penalty = 800\nyapf.road_stop_bay_occupied_penalty = 1500\nyapf.maximum_go_to_depot_penalty = 2000\nyapf.ship_curve45_penalty = 100\nyapf.ship_curve90_penalty = 600\n\n[script]\nsettings_profile = easy\nscript_max_opcode_till_suspend = 10000\nscript_max_memory_megabytes = 1024\n\n[ai]\nai_in_multiplayer = true\nai_disable_veh_train = false\nai_disable_veh_roadveh = false\nai_disable_veh_aircraft = false\nai_disable_veh_ship = false\n\n[game_creation]\ntown_name = english\nlandscape = temperate\nheightmap_height = 30\nsnow_line_height = 10\nsnow_coverage = 40\ndesert_coverage = 50\nstarting_year = 1950\nending_year = 2050\nland_generator = 1\noil_refinery_limit = 32\ntgen_smoothness = 1\nvariety = 0\ntree_placer = 2\nheightmap_rotation = 0\nse_flat_world_height = 1\nmap_x = 8\nmap_y = 8\nwater_borders = 15\ncustom_town_number = 1\ncustom_industry_number = 1\ncustom_terrain_type = 30\ncustom_sea_level = 1\nmin_river_length = 16\nriver_route_random = 5\namount_of_rivers = 2\n\n[construction]\nmap_height_limit = 0\nbuild_on_slopes = true\ncommand_pause_level = 1\nterraform_per_64k_frames = 4194304\nterraform_frame_burst = 4096\nclear_per_64k_frames = 4194304\nclear_frame_burst = 4096\ntree_per_64k_frames = 4194304\ntree_frame_burst = 4096\nbuild_object_per_64k_frames = 2097152\nbuild_object_frame_burst = 2048\nautoslope = true\nextra_dynamite = true\nmax_bridge_length = 64\nmax_bridge_height = 12\nmax_tunnel_length = 64\ntrain_signal_side = 1\nroad_stop_on_town_road = true\nroad_stop_on_competitor_road = true\nraw_industry_construction = 0\nindustry_platform = 1\nfreeform_edges = true\nextra_tree_placement = 2\ncrossing_with_competitor = true\n\n[currency]\nrate = 1\nseparator = \".\"\nto_euro = 0\nprefix = \nsuffix = \" credits\"\n\n[company]\nengine_renew = true\nengine_renew_months = 6\nengine_renew_money = 100000\nrenew_keep_length = false\n\n[newgrf]\n\n[newgrf-static]\n\n[ai_players]\nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \nnone = \n\n[game_scripts]\nnone = \n",
+      "settings": []
+    },
+    {
+      "title": "private.cfg",
+      "file": "server/config/private.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "; This file possibly contains private information which can identify you as person.\n[private]\n\n[network]\nclient_name = AMPServer\nserver_name = AMP Powered OpenTTD Server\nconnect_to_ip = \nlast_joined = \n\n[server_bind_addresses]\n0.0.0.0 = \n\n[servers]\n\n[bans]\n",
+      "settings": []
+    },
+    {
+      "title": "secrets.cfg",
+      "file": "server/config/secrets.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "; Do not share this file with others, not even if they claim to be technical support.\n; This file contains saved passwords and other secrets that should remain private to you!\n[secrets]\n\n[network]\nserver_password = \nrcon_password = \nadmin_password = \ndefault_company_pass = \nnetwork_id = \nserver_invite_code = \nserver_invite_code_secret = \n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

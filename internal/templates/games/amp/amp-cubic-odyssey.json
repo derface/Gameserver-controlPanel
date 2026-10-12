@@ -1,0 +1,43 @@
+{
+  "id": "amp-cubic-odyssey",
+  "name": "Cubic Odyssey",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 3858450,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "[ -e \"config/server_config.txt\" ] || { mkdir -p \"$(dirname \"config/server_config.txt\")\"; cp -rn \"config/server_config.txt.sample\" \"config/server_config.txt\" 2>/dev/null; } ; cd \"server\" && SteamAppId=\"3400000\" wine \"./CubicOdysseyServer.exe\" -Gamemode={{gamemode}} -MaxNumPlayers={{max_players}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 27000,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "48"
+    },
+    {
+      "key": "gamemode",
+      "label": "Spielmodus",
+      "help": "Spielmodus.",
+      "type": "select",
+      "options": [
+        "adventure",
+        "creative"
+      ],
+      "default": "adventure"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Try \"help\" for the list of commands\\.$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

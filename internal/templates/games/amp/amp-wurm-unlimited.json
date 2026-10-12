@@ -1,0 +1,132 @@
+{
+  "id": "amp-wurm-unlimited",
+  "name": "Wurm Unlimited",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 402370,
+  "start": "LD_LIBRARY_PATH=\"./linux64:$LD_LIBRARY_PATH\" SteamAppId=\"366220\" ./WurmServerLauncher{{mod_launcher}} ip=\"0.0.0.0\" externalport=\"{{port}}\" queryport=\"{{port_2}}\" servername=\"{{servername}}\" serverpassword=\"{{serverpassword}}\" adminpwd=\"{{adminpwd}}\" start=\"{{start}}\" epicsettings=\"{{epicsettings}}\" pvp=\"{{pvp}}\" loginserver=\"{{loginserver}}\" homeserver=\"{{homeserver}}\" homekingdom=\"{{homekingdom}}\" rmiport=\"{{rmiport}}\" rmiregport=\"{{rmiregport}}\"",
+  "ports": [
+    {
+      "name": "Client",
+      "port": 3724,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "serverpassword",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Verbinden mit dem Server.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "adminpwd",
+      "label": "Admin-Passwort",
+      "help": "Schaltet Admin-Befehle im Spiel frei, mit denen sich Spielregeln wie Fertigkeitszuwachs oder Wachstumszeit von Feldern ändern lassen.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "start",
+      "label": "Spielmodus",
+      "help": "Startet den Server mit Konfiguration und Weltdaten aus diesem Unterordner. Bei „Eigene“ auch den eigenen Spielmodus eintragen.",
+      "type": "select",
+      "options": [
+        "dist/Adventure",
+        "dist/Creative"
+      ],
+      "default": "dist/Adventure"
+    },
+    {
+      "key": "epicsettings",
+      "label": "Epic-Regeln",
+      "help": "Wenn an, gelten die Regeln der Epic-Server von Wurm Online, z. B. die Fertigkeitskurve.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "pvp",
+      "label": "PvP",
+      "help": "Schaltet PvP auf dem Server an oder aus.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "loginserver",
+      "label": "Als Login-Server",
+      "help": "Standard: an. Nur ausschalten, wenn der Server mit einem anderen Server verbunden wird, der Login-Server ist.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "homeserver",
+      "label": "Heimat-Server",
+      "help": "Ob der Server ein Heimat-Server ist (gehört zu einem einzigen Königreich).",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "homekingdom",
+      "label": "ID des Heimat-Königreichs",
+      "help": "Königreich, zu dem der Server gehört.",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "rmiport",
+      "label": "RMI-Port",
+      "help": "Für die Verbindung zwischen Servern.",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "rmiregport",
+      "label": "RMI-REG-Port",
+      "help": "Für die Verbindung zwischen Servern.",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "mod_launcher",
+      "label": "Mod-Starter",
+      "help": "Installiert beim Aktualisieren Agos Wurm Server Mod Launcher und startet den Server damit. Wird für alle Server-Mods gebraucht, auch für den Announcer-Mod.",
+      "type": "bool",
+      "flag": "-patched",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Wurm Server launcher finished at.+$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

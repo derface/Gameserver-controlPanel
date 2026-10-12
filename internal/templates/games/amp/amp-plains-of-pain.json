@@ -1,0 +1,117 @@
+{
+  "id": "amp-plains-of-pain",
+  "name": "Plains of Pain",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2227360,
+  "start": "mkdir -p \"PlainsOfPain\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"2218970\" ./PlainsOfPain.x86_64 -nographics -batchmode -ignorecompilererrors -port {{port}} -queryPort {{port_2}} -userdir ./PlainsOfPain -namespace \"main\" -serverName \"{{server_name}}\" {{cc}}-worldId {{world_id}} -seed {{seed}} -worldSize {{world_size}} -mapId {{map_id}} -password {{password}} -maxPlayers {{max_players}} -difficulty {{difficulty}} -ttr 0",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "world_id",
+      "label": "Welt-ID",
+      "help": "ID der Welt, die geladen bzw. angelegt wird.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "seed",
+      "label": "Welt-Seed",
+      "help": "Startwert für den Weltgenerator.",
+      "type": "number",
+      "default": "40377"
+    },
+    {
+      "key": "world_size",
+      "label": "Weltgröße",
+      "help": "Größe der Welt.",
+      "type": "select",
+      "options": [
+        "11",
+        "21",
+        "31",
+        "41",
+        "51"
+      ],
+      "default": "11"
+    },
+    {
+      "key": "map_id",
+      "label": "Karten-ID",
+      "help": "ID der Karte.",
+      "type": "select",
+      "options": [
+        "0",
+        "256",
+        "512",
+        "768",
+        "1",
+        "2"
+      ],
+      "default": "768"
+    },
+    {
+      "key": "password",
+      "label": "Serverpasswort",
+      "help": "Passwort, das Spieler zum Beitreten brauchen. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "max_players",
+      "label": "Spielerlimit",
+      "help": "Wie viele Spieler gleichzeitig verbunden sein dürfen.",
+      "type": "number",
+      "default": "10"
+    },
+    {
+      "key": "difficulty",
+      "label": "Schwierigkeitsgrad",
+      "help": "Schwierigkeitsstufe.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "default": "2"
+    },
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "cc",
+      "label": "Konsolenbefehle",
+      "help": "Wenn an, sind Konsolenbefehle erlaubt.",
+      "type": "bool",
+      "flag": "-cc ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^(Set Game State: RUNNING|Server Ready)$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

@@ -1,0 +1,46 @@
+{
+  "id": "amp-vein",
+  "name": "VEIN",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2131400,
+  "start": "mkdir -p \"Vein/Saved/Config/LinuxServer\" ; [ -f \"Vein/Saved/Config/LinuxServer/Game.ini\" ] || { mkdir -p \"$(dirname \"Vein/Saved/Config/LinuxServer/Game.ini\")\"; printf %s \"\" > \"Vein/Saved/Config/LinuxServer/Game.ini\"; } ; LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1857950\" ./Vein/Binaries/Linux/VeinServer-Linux-Test Vein -Port={{port}} -QueryPort={{port_2}} {{multi_home}} -UseGameSaveDir -stdout -FullStdOutLogOutput",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 7878,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "multi_home",
+      "label": "MultiHome",
+      "help": "Wenn an, wird der MultiHome-Parameter auf die gebundene IP gesetzt.",
+      "type": "bool",
+      "flag": "-MultiHome=0.0.0.0 ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogInit: Display: Game Engine Initialized\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

@@ -1,0 +1,605 @@
+{
+  "id": "amp-synergy",
+  "name": "Synergy",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 17520,
+  "steam_login": true,
+  "start": "LD_LIBRARY_PATH=\"/data/server/:/data/server/bin:$LD_LIBRARY_PATH\" SteamAppId=\"17520\" ./srcds_linux -game synergy -console -usercon -nobreakpad -port {{port}} -ip 0.0.0.0 -maxplayers {{max_players}} -tickrate {{tickrate}} {{insecure}}{{pingboost}} {{nohltv}}{{custom_parameters}} {{custom_con_vars}} +tv_port {{port_3}} +clientport {{port_4}} +sv_logfile 1 +sv_setsteamaccount {{sv_setsteamaccount}} +exec server.cfg +map {{map}} +log on",
+  "ports": [
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "tcp"
+    },
+    {
+      "name": "SourceTV",
+      "port": 27020,
+      "proto": "udp"
+    },
+    {
+      "name": "Client",
+      "port": 27005,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "12"
+    },
+    {
+      "key": "sv_setsteamaccount",
+      "label": "Game Server Login Token (GSLT)",
+      "help": "Steam Game Server Login Token, damit der Server in der Serverliste erscheint. Beim Erstellen die App-ID 17520 nutzen.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "tickrate",
+      "label": "Tickrate",
+      "help": "Tickrate des Servers.",
+      "type": "number",
+      "default": "64"
+    },
+    {
+      "key": "insecure",
+      "label": "Valve-Anti-Cheat aus",
+      "help": "Wenn an, ist Valve-Anti-Cheat (VAC) ausgeschaltet.",
+      "type": "bool",
+      "flag": "-insecure ",
+      "default": "false"
+    },
+    {
+      "key": "pingboost",
+      "label": "Ping-Boost",
+      "help": "Optimierter Netzwerkcode. Bei 2 sinkt die Latenz meist Richtung 1 ms, ohne dass Eingaben verloren gehen.",
+      "type": "select",
+      "options": [
+        "",
+        "-pingboost 1",
+        "-pingboost 2",
+        "-pingboost 3"
+      ],
+      "default": ""
+    },
+    {
+      "key": "nohltv",
+      "label": "SourceTV aus",
+      "help": "Wenn an, ist SourceTV ausgeschaltet.",
+      "type": "bool",
+      "flag": "-nohltv ",
+      "default": "true"
+    },
+    {
+      "key": "custom_parameters",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter (beginnen mit -). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "custom_con_vars",
+      "label": "Zusätzliche Konsolenvariablen",
+      "help": "Zusätzliche Konsolenvariablen (beginnen mit +). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "map",
+      "label": "Startkarte",
+      "help": "Mit welcher Karte der Server startet. Bei „Eigene“ auch die eigene Startkarte eintragen.",
+      "type": "select",
+      "options": [
+        "syn_antlions_way",
+        "syn_apprehension",
+        "syn_bunker",
+        "syn_canal_escape_part1",
+        "syn_canal_escape_part2",
+        "syn_canal_escape_part3",
+        "syn_deadsimple",
+        "syn_desolate",
+        "syn_farm",
+        "syn_fogisland",
+        "syn_forgotten_evils",
+        "syn_heat_wave",
+        "syn_oldcanals",
+        "syn_sevenhourwar_part1",
+        "syn_silent_house",
+        "syn_takeover",
+        "syn_trials4",
+        "syn_trials4b",
+        "syn_trials4c",
+        "syn_trials4d",
+        "syn_urbanchaos",
+        "ep2_outland_01",
+        "ep2_outland_01a",
+        "ep2_outland_02",
+        "ep2_outland_03",
+        "ep2_outland_04",
+        "ep2_outland_05",
+        "ep2_outland_06",
+        "ep2_outland_06a",
+        "ep2_outland_07",
+        "ep2_outland_08",
+        "ep2_outland_09",
+        "ep2_outland_10",
+        "ep2_outland_10a",
+        "ep2_outland_11",
+        "ep2_outland_11a",
+        "ep2_outland_11b",
+        "ep2_outland_12",
+        "ep2_outland_12a",
+        "ep1_c17_00",
+        "ep1_c17_00a",
+        "ep1_c17_01",
+        "ep1_c17_01a",
+        "ep1_c17_02",
+        "ep1_c17_02a",
+        "ep1_c17_02b",
+        "ep1_c17_05",
+        "ep1_c17_06",
+        "ep1_citadel_00",
+        "ep1_citadel_01",
+        "ep1_citadel_02",
+        "ep1_citadel_02b",
+        "ep1_citadel_03",
+        "ep1_citadel_04",
+        "d1_canals_01",
+        "d1_canals_01a",
+        "d1_canals_02",
+        "d1_canals_03",
+        "d1_canals_05",
+        "d1_canals_06",
+        "d1_canals_07",
+        "d1_canals_08",
+        "d1_canals_09",
+        "d1_canals_10",
+        "d1_canals_11",
+        "d1_canals_12",
+        "d1_canals_13",
+        "d1_eli_01",
+        "d1_eli_02",
+        "d1_town_01",
+        "d1_town_01a",
+        "d1_town_02",
+        "d1_town_02a",
+        "d1_town_03",
+        "d1_town_04",
+        "d1_town_05",
+        "d1_trainstation_01",
+        "d1_trainstation_02",
+        "d1_trainstation_03",
+        "d1_trainstation_04",
+        "d1_trainstation_05",
+        "d1_trainstation_06",
+        "d2_coast_01",
+        "d2_coast_02",
+        "d2_coast_03",
+        "d2_coast_04",
+        "d2_coast_05",
+        "d2_coast_07",
+        "d2_coast_08",
+        "d2_coast_09",
+        "d2_coast_10",
+        "d2_coast_11",
+        "d2_coast_12",
+        "d2_prison_01",
+        "d2_prison_02",
+        "d2_prison_03",
+        "d2_prison_04",
+        "d2_prison_05",
+        "d2_prison_06",
+        "d2_prison_07",
+        "d2_prison_08",
+        "d3_breen_01",
+        "d3_c17_01",
+        "d3_c17_02",
+        "d3_c17_03",
+        "d3_c17_04",
+        "d3_c17_05",
+        "d3_c17_06a",
+        "d3_c17_06b",
+        "d3_c17_07",
+        "d3_c17_08",
+        "d3_c17_09",
+        "d3_c17_10a",
+        "d3_c17_10b",
+        "d3_c17_11",
+        "d3_c17_12",
+        "d3_c17_12b",
+        "d3_c17_13",
+        "d3_citadel_01",
+        "d3_citadel_02",
+        "d3_citadel_03",
+        "d3_citadel_04",
+        "d3_citadel_05"
+      ],
+      "default": "d1_trainstation_01"
+    },
+    {
+      "key": "user_settings",
+      "label": "Zusätzliche Server-Einstellungen",
+      "help": "Weitere Einstellungen für server.cfg, eine pro Zeile.",
+      "default": ""
+    },
+    {
+      "key": "hostname",
+      "label": "Servername",
+      "help": "So heißt der Server in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "sv_tags",
+      "label": "Server-Tags",
+      "help": "Stichworte für die Serverliste, durch Komma getrennt.",
+      "default": ""
+    },
+    {
+      "key": "sv_steamgroup",
+      "label": "Steam-Gruppe",
+      "help": "ID der Steam-Gruppe des Servers. Sie steht auf der Admin-Profilseite der Gruppe in der Steam-Community.",
+      "default": ""
+    },
+    {
+      "key": "sv_lan",
+      "label": "LAN-Server",
+      "help": "Wenn an, läuft der Server als LAN-Server: ohne Heartbeat, ohne Anmeldung, nur lokale Adressen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Verbinden. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "sv_region",
+      "label": "Server-Region",
+      "help": "Region des Servers in der Serverliste.",
+      "type": "select",
+      "options": [
+        "-1",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "255"
+      ],
+      "default": "-1"
+    },
+    {
+      "key": "sv_visiblemaxplayers",
+      "label": "Angezeigtes Spielerlimit",
+      "help": "Spielerlimit, das in der Serverliste steht, unabhängig vom echten Limit. -1 = aus.",
+      "type": "number",
+      "default": "-1"
+    },
+    {
+      "key": "mp_allowspectators",
+      "label": "Zuschauer erlauben",
+      "help": "Wenn an, gibt es den Zuschauermodus.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_pure",
+      "label": "Pure-Server-Modus",
+      "help": "Ob Spieler nur bestimmte Dateien verwenden dürfen.",
+      "type": "select",
+      "options": [
+        "-1",
+        "0",
+        "1",
+        "2"
+      ],
+      "default": "-1"
+    },
+    {
+      "key": "sv_pure_kick_clients",
+      "label": "Kick bei abweichenden Dateien",
+      "help": "Wenn an, werden Spieler mit abweichenden Dateien gekickt, sonst nur gewarnt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_forcepreload",
+      "label": "Vorladen erzwingen",
+      "help": "Wenn an, lädt der Server Inhalte vorab.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_cheats",
+      "label": "Cheats",
+      "help": "Wenn an, sind Cheat-Variablen auf dem Server erlaubt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_filterban",
+      "label": "IP-Paketfilter",
+      "help": "Wenn an, filtert der Server Pakete nach IP.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_allowdownload",
+      "label": "Download vom Server",
+      "help": "Wenn an, können Spieler Inhalte (Karten, Sprays usw.) vom Server laden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_downloadurl",
+      "label": "Fast-Download-Adresse",
+      "help": "Adresse, von der Spieler eigene Inhalte schneller laden als vom Server.",
+      "default": ""
+    },
+    {
+      "key": "sv_allowupload",
+      "label": "Upload zum Server",
+      "help": "Wenn an, können Spieler eigene Dateien zum Server hochladen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "net_maxfilesize",
+      "label": "Größte Dateigröße",
+      "help": "Wie groß eine hochgeladene Datei höchstens sein darf.",
+      "type": "number",
+      "default": "16"
+    },
+    {
+      "key": "sv_minrate",
+      "label": "Kleinste Client-Rate",
+      "help": "Kleinste Bandbreite, die ein Spieler einstellen darf. 0 = keine Grenze.",
+      "type": "number",
+      "default": "3500"
+    },
+    {
+      "key": "sv_maxrate",
+      "label": "Größte Client-Rate",
+      "help": "Größte Bandbreite, die ein Spieler einstellen darf. 0 = keine Grenze.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "sv_minupdaterate",
+      "label": "Kleinste Update-Rate",
+      "help": "Wie oft der Server mindestens pro Sekunde Positionen (Spieler, Waffen usw.) sendet.",
+      "type": "number",
+      "default": "10"
+    },
+    {
+      "key": "sv_maxupdaterate",
+      "label": "Größte Update-Rate",
+      "help": "Wie oft der Server höchstens pro Sekunde Positionen (Spieler, Waffen usw.) sendet.",
+      "type": "number",
+      "default": "66"
+    },
+    {
+      "key": "sv_stats",
+      "label": "CPU-Statistik",
+      "help": "Wenn an, sammelt der Server CPU-Statistiken.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "mp_friendlyfire",
+      "label": "Friendly Fire",
+      "help": "Wenn an, können Teammitglieder einander Schaden zufügen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "mp_footsteps",
+      "label": "Schrittgeräusche",
+      "help": "Wenn an, spielt der Server immer Schrittgeräusche ab.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_pausable",
+      "label": "Spieler dürfen pausieren",
+      "help": "Wenn an, können Spieler den Server pausieren. Nicht empfohlen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_allow_wait_command",
+      "label": "Wait-Befehl erlauben",
+      "help": "Wenn an, dürfen Spieler den wait-Befehl nutzen. Besser aus lassen, sonst kann man den Server zum Absturz bringen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_voiceenable",
+      "label": "Sprachkommunikation",
+      "help": "Wenn an, gibt es Sprachchat auf dem Server.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_alltalk",
+      "label": "Sprachchat für alle",
+      "help": "Wenn an, hören alle Spieler einander, unabhängig vom Team.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "mp_forcerespawn",
+      "label": "Wiedererscheinen erzwingen",
+      "help": "Wenn an, erscheinen Spieler nach dem Tod zwangsweise wieder.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "mp_fadetoblack",
+      "label": "Schwarzblende nach dem Tod",
+      "help": "Wenn an, wird der Bildschirm nach dem Tod bis Rundenende schwarz (HUD und Chat gehen weiter).",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "mp_timelimit",
+      "label": "Zeitlimit pro Karte",
+      "help": "Spielzeit pro Karte. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "mp_fraglimit",
+      "label": "Kill-Limit pro Runde",
+      "help": "Bei so vielen Kills endet die Karte. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "mp_forcecamera",
+      "label": "Zuschauermodus einschränken",
+      "help": "Wenn an, ist der Zuschauermodus für tote Spieler eingeschränkt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_alternateticks",
+      "label": "Abwechselnde Ticks",
+      "help": "Wenn an, simuliert der Server Entities nur bei geraden Ticks.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "tv_autorecord",
+      "label": "Automatische Demo-Aufnahme",
+      "help": "Wenn an, wird jedes Spiel als SourceTV-Demo aufgenommen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "tv_maxclients",
+      "label": "SourceTV-Zuschauer",
+      "help": "Wie viele Zuschauer sich höchstens mit SourceTV verbinden. 0 = keine, nur lokale Aufnahme.",
+      "type": "number",
+      "default": "128"
+    },
+    {
+      "key": "tv_maxrate",
+      "label": "Höchste SourceTV-Bandbreite",
+      "help": "Größte Bandbreite für SourceTV-Zuschauer. 0 = unbegrenzt.",
+      "type": "number",
+      "default": "8000"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Connection to Steam servers successful\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "config": [
+    {
+      "title": "server.cfg",
+      "file": "server/synergy/cfg/server.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "// This file is controlled by AMP\n// Configure any additional required settings via the AMP UI\n\n{{user_settings}}\nhostname \"{{hostname}}\"\nsv_tags \"{{sv_tags}}\"\nsv_steamgroup {{sv_steamgroup}}\nsv_lan {{sv_lan}}\nsv_password \"{{sv_password}}\"\nrcon_password \"\"\nsv_region {{sv_region}}\nsv_visiblemaxplayers {{sv_visiblemaxplayers}}\nmp_allowspectators {{mp_allowspectators}}\nsv_pure {{sv_pure}}\nsv_pure_kick_clients {{sv_pure_kick_clients}}\nsv_forcepreload {{sv_forcepreload}}\nsv_cheats {{sv_cheats}}\nsv_filterban {{sv_filterban}}\nsv_allowdownload {{sv_allowdownload}}\nsv_downloadurl \"{{sv_downloadurl}}\"\nsv_allowupload {{sv_allowupload}}\nnet_maxfilesize {{net_maxfilesize}}\nsv_minrate {{sv_minrate}}\nsv_maxrate {{sv_maxrate}}\nsv_minupdaterate {{sv_minupdaterate}}\nsv_maxupdaterate {{sv_maxupdaterate}}\nsv_stats {{sv_stats}}\nmp_friendlyfire {{mp_friendlyfire}}\nmp_footsteps {{mp_footsteps}}\nsv_pausable {{sv_pausable}}\nsv_allow_wait_command {{sv_allow_wait_command}}\nsv_voiceenable {{sv_voiceenable}}\nsv_alltalk {{sv_alltalk}}\nmp_forcerespawn {{mp_forcerespawn}}\nmp_fadetoblack {{mp_fadetoblack}}\nmp_timelimit {{mp_timelimit}}\nmp_fraglimit {{mp_fraglimit}}\nmp_forcecamera {{mp_forcecamera}}\nsv_alternateticks {{sv_alternateticks}}\ntv_autorecord {{tv_autorecord}}\ntv_maxclients {{tv_maxclients}}\ntv_maxrate {{tv_maxrate}}\nexec banned_ip.cfg \nexec banned_user.cfg\nwriteip\nwriteid",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

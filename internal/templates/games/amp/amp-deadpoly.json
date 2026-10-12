@@ -1,0 +1,24 @@
+{
+  "id": "amp-deadpoly",
+  "name": "DeadPoly",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2208380,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"DeadPoly/Saved/Config/WindowsServer\" ; [ -e \"DeadPoly/Saved/Config/WindowsServer/Engine.ini\" ] || { mkdir -p \"$(dirname \"DeadPoly/Saved/Config/WindowsServer/Engine.ini\")\"; cp -rn \"DeadPoly/Saved/1 RENAME Config/WindowsServer/Engine.ini\" \"DeadPoly/Saved/Config/WindowsServer/Engine.ini\" 2>/dev/null; } ; [ -e \"DeadPoly/Saved/Config/WindowsServer/Game.ini\" ] || { mkdir -p \"$(dirname \"DeadPoly/Saved/Config/WindowsServer/Game.ini\")\"; cp -rn \"DeadPoly/Saved/1 RENAME Config/WindowsServer/Game.ini\" \"DeadPoly/Saved/Config/WindowsServer/Game.ini\" 2>/dev/null; } ; [ -e \"DeadPoly/Saved/Config/WindowsServer/GameUserSettings.ini\" ] || { mkdir -p \"$(dirname \"DeadPoly/Saved/Config/WindowsServer/GameUserSettings.ini\")\"; cp -rn \"DeadPoly/Saved/1 RENAME Config/WindowsServer/GameUserSettings.ini\" \"DeadPoly/Saved/Config/WindowsServer/GameUserSettings.ini\" 2>/dev/null; } ; SteamAppId=\"1621070\" wine \"./DeadPoly/Binaries/Win64/DeadPolyServer.exe\" DeadPoly -Port={{port}} -stdout -FullStdOutLogOutput -nosteam",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogRedpointEOS: Verbose: CreateSession: Successfully created session '.*' with ID '.*'$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

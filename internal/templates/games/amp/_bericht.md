@@ -1,0 +1,182 @@
+# AMP-Vorlagen
+
+Erzeugt: 63 · übersprungen: 177
+
+## Erzeugt
+
+- Alchemy Factory (amp-alchemy-factory, App 4550060)
+- ANEURISM IV (amp-aneurismiv, App 2832030)
+- Archean (amp-archean, App 3557220)
+- ARK: Survival Ascended (amp-ark-sa, App 2430930)
+- Arma Reforger (amp-arma-reforger, App 1874900)
+- Assetto Corsa Competizione (amp-assetto-corsa-comp, App 1430110)
+- Assetto Corsa (amp-assetto-corsa, App 302550)
+- Astro Colony (amp-astro-colony, App 2934900)
+- Astroneer (amp-astroneer, App 728470)
+- Beasts of Bermuda (amp-beasts-of-bermuda, App 882430)
+- Blackwake (amp-blackwake, App 423410)
+- Call of Duty 4: Modern Warfare (amp-call-of-duty4mw, App 7940)
+- Call of Duty: Modern Warfare 3 (2011) (amp-call-of-dutymw3, App 42750)
+- Carrier Command 2 (amp-carrier-command2, App 1489630)
+- Conan Exiles (Legacy) (amp-conan-exiles, App 443030)
+- Contagion (amp-contagion, App 293030)
+- Cubic Odyssey (amp-cubic-odyssey, App 3858450)
+- Dead Matter (amp-deadmatter, App 2584780)
+- DeadPoly (amp-deadpoly, App 2208380)
+- Desynced (amp-desynced, App 2943070)
+- Dota 2 (amp-dota2, App 570)
+- Empyrion Galactic Survival (amp-empyrion-galactic-survival, App 530870)
+- E.Y.E: Divine Cybermancy (amp-eye-dc, App 91720)
+- FOUNDRY (amp-foundry, App 2915550)
+- Frozen Flame (amp-frozen-flame, App 1348640)
+- Ground Branch (amp-ground-branch, App 476400)
+- Icarus (amp-icarus, App 2089300)
+- Last Oasis (amp-last-oasis, App 920720)
+- Longvinter (Linux Wine) (amp-longvinter-wine, App 1639880)
+- The Lord of the Rings: Return to Moria (amp-lotr-moria, App 3349480)
+- Miscreated (amp-miscreated, App 302200)
+- MX Bikes (amp-mxbikes, App 655500)
+- Myth of Empires (amp-myth-of-empires, App 1794810)
+- NEBULOUS: Fleet Command (amp-nebulous-fleet-command, App 2353090)
+- Night of the Dead (amp-night-of-the-dead, App 1420710)
+- Nightingale (amp-nightingale, App 3796810)
+- No One Survived (amp-no-one-survived, App 2329680)
+- Nuclear Option (amp-nuclear-option, App 3930080)
+- OpenTTD (amp-openttd, App 1536610)
+- PixARK (amp-pixark, App 824360)
+- Plains of Pain (amp-plains-of-pain, App 2227360)
+- Project 5: Sightseer (amp-project5-sightseer, App 655780)
+- Puck (amp-puck, App 3481440)
+- Quake Live (amp-quake-live, App 349090)
+- Renown (amp-renown, App 1512690)
+- Rising Storm 2: Vietnam (amp-rising-storm2-vietnam, App 418480)
+- RuneScape: Dragonwilds (amp-runescape-dragonwilds, App 4019830)
+- Sapiens (amp-sapiens, App 2886350)
+- SCUM (amp-scum, App 3792580)
+- Smalland: Survive the Wilds (amp-smalland, App 808040)
+- Soldat (amp-soldat, App 638500)
+- StarRupture (amp-star-rupture, App 3809400)
+- Stormworks (amp-stormworks, App 573090)
+- Synergy (amp-synergy, App 17520)
+- The Forest (amp-the-forest, App 556450)
+- tModLoader (Legacy) (amp-tmodloader, App 1281930)
+- Turbo Sliders Unlimited (amp-turbo-sliders-unlimited, App 1815810)
+- VEIN (amp-vein, App 2131400)
+- Voyagers of Nera (amp-voyagers-of-nera, App 3937860)
+- Wolfenstein: Enemy Territory (amp-wolfenstein-et, App 1873030)
+- Wreckfest (amp-wreckfest, App 361580)
+- Wreckfest 2 (amp-wreckfest2, App 3519390)
+- Wurm Unlimited (amp-wurm-unlimited, App 402370)
+
+## Übersprungen
+
+- alien-swarm-reactive-drop: läuft laut AMP nicht unter Linux
+- american-truck-simulator: Server braucht eine im Spiel exportierte Paketdatei
+- ark-sa-min: Variante von ARK: Survival Ascended
+- aska: Zusatzschritt Executable: Saves Directory Creation
+- beammp: kein SteamCMD-Download
+- broke-protocol: Zusatzschritt FetchURL: Server Download
+- bun-app-runner: kein SteamCMD-Download
+- call-of-dutybo1: eigener Plutonium-Installer
+- call-of-dutybo2: eigener Plutonium-Installer
+- call-of-dutymw2: eigener IW4x-Installer
+- call-of-dutymw3-plutonium: eigener Plutonium-Installer
+- call-of-dutywaw: eigener Plutonium-Installer
+- clone-hero: kein SteamCMD-Download
+- code-server: kein SteamCMD-Download
+- colony-survival: grafischer Start ohne Wine
+- conan-exiles-enhanced: Arbeitsordner hängt von Einstellungen ab
+- creativerse: Config-Vorlage fehlt: creativerseconfig_world.json
+- cryofall: Zusatzschritt Executable: ASP.NET Core Runtime Download
+- cube2-sauerbraten: kein SteamCMD-Download
+- dayz-experimental: Skript: dayz-experimentalmanagemods.sh
+- deno-app-runner: kein SteamCMD-Download
+- dont-starve-together: Arbeitsordner hängt von Einstellungen ab
+- doom2: Zusatzschritt Executable: Zandronum Download
+- dotnet-app-runner: kein SteamCMD-Download
+- duneawakening: eigene Datei: Write Dune AMP scripts tarball (base64 inline)
+- et-legacy: kein SteamCMD-Download
+- euro-truck-simulator-2: Server braucht eine im Spiel exportierte Paketdatei
+- exfil: eigene Datei: AdminSettings.JSON Creation
+- factorio: kein SteamCMD-Download
+- farming-simulator-19: kein SteamCMD-Download
+- farming-simulator-22: kein SteamCMD-Download
+- farming-simulator-25: kein SteamCMD-Download
+- fivem: kein SteamCMD-Download
+- foundry-vtt: kein SteamCMD-Download
+- gatekeeperv2: läuft laut AMP nicht unter Linux
+- geyser: kein SteamCMD-Download
+- hytale: kein SteamCMD-Download
+- impostor: kein SteamCMD-Download
+- java-app-runner: kein SteamCMD-Download
+- jc3mp: keine Startzeile
+- jedi-academy: Zusatzschritt Executable: Client File Copy
+- kaboom: unbekannte Platzhalter: $AMPToken
+- killing-floor: unbekannte Platzhalter: $QueryPort, $WebAdminPort
+- longvinter: läuft laut AMP nicht unter Linux
+- luanti: kein SteamCMD-Download
+- mariadb: kein SteamCMD-Download
+- mindustry: kein SteamCMD-Download
+- minecraft-bedrock: kein SteamCMD-Download
+- minetest: kein SteamCMD-Download
+- mongodb: kein SteamCMD-Download
+- mount-and-blade2: Arbeitsordner hängt von Einstellungen ab
+- mta-sa: kein SteamCMD-Download
+- mysql: kein SteamCMD-Download
+- node: kein SteamCMD-Download
+- nukkit: kein SteamCMD-Download
+- open-mp: kein SteamCMD-Download
+- open-world: kein SteamCMD-Download
+- openrct2: Zusatzschritt Executable: OpenRCT2 Download
+- path-of-titans: kein SteamCMD-Download
+- pocketmine-mp: kein SteamCMD-Download
+- portal-knights: keine Ports bekannt
+- postgresql: kein SteamCMD-Download
+- pre-fortress2: Zusatzschritt Executable: 7-Zip Installation
+- pumpkin: kein SteamCMD-Download
+- python-app-runner: kein SteamCMD-Download
+- quake3-arena: Zusatzschritt FetchURL: Server Download
+- ragemp: kein SteamCMD-Download
+- redm: kein SteamCMD-Download
+- reign-of-kings: Zusatzschritt Executable: Install Mono
+- rimworld-together: kein SteamCMD-Download
+- risk-of-rain-2: läuft laut AMP nicht unter Linux
+- romestead: Zusatzschritt Executable: .NET Runtime Download
+- sa-mp: kein SteamCMD-Download
+- scp-secret-laboratory: Kopierschritt: Gameplay Config Template Copy
+- sinusbot: kein SteamCMD-Download
+- skyrim-together-reborn: kein SteamCMD-Download
+- space-engineers-generic: Skript: space-engineers-genericwinescript.sh
+- space-engineers-torch: Zusatzschritt FetchURL: Torch Download
+- spellmasons: kein SteamCMD-Download
+- stardew-valley: grafischer Start ohne Wine
+- starmade: kein SteamCMD-Download
+- staxel: Zusatzschritt Executable: FNA Native Libraries Download
+- stay-in-tarkov: läuft laut AMP nicht unter Linux
+- subnautica-legacy: läuft laut AMP nicht unter Linux
+- subnautica2: Zusatzschritt Executable: .NET Runtime Download
+- subsistence: Skript: subsistencewinescript.sh
+- sunkenland: Zusatzschritt Executable: Saves Directory Creation
+- swords-n-magic-and-stuff: Skript: swords-n-magic-and-stuffwinescript.sh
+- tarkov-fika: kein SteamCMD-Download
+- tarkov-fika-4-1: kein SteamCMD-Download
+- tarkov-fika-new: kein SteamCMD-Download
+- teamspeak3: kein SteamCMD-Download
+- teamspeak6: kein SteamCMD-Download
+- teaspeak: kein SteamCMD-Download
+- teeworlds: kein SteamCMD-Download
+- terratech-worlds: Skript: terratech-worldswinescript.sh
+- tes3mp: kein SteamCMD-Download
+- titanfall2: Zusatzschritt GithubRelease: Northstar Download
+- tmodloader14: Zusatzschritt Executable: .NET Runtime Download
+- tshock: kein SteamCMD-Download
+- txadmin: kein SteamCMD-Download
+- ut2004: kein SteamCMD-Download
+- ut99: kein SteamCMD-Download
+- veloren: kein SteamCMD-Download
+- vintage-story: kein SteamCMD-Download
+- vintage-story-new: kein SteamCMD-Download
+- windrose: Zusatzschritt Executable: PowerShell Download
+- windward: kein SteamCMD-Download
+- windward-horizon: kein SteamCMD-Download
+- xonotic: kein SteamCMD-Download

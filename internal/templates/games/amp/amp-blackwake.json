@@ -1,0 +1,33 @@
+{
+  "id": "amp-blackwake",
+  "name": "Blackwake",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 423410,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"420290\" wine \"./BlackwakeServer.exe\" -batchmode -nographics -logfile -",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 25001,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

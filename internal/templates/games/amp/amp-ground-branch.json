@@ -1,0 +1,208 @@
+{
+  "id": "amp-ground-branch",
+  "name": "Ground Branch",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 476400,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"GroundBranch/ServerConfig\" ; mkdir -p \"GroundBranch/Mods\" ; SteamAppId=\"16900\" wine \"./GroundBranch/Binaries/Win64/GroundBranchServer-Win64-Shipping.exe\" {{server_map}}?Mission={{server_mission}}?MaxAI={{max_ai}} OpForCount={{op_for_count}} Difficulty={{difficulty}} TimeLimit={{time_limit}} ReadyCountdownTime={{ready_countdown_time}} PreRoundWaitTime={{pre_round_wait_time}} RoundTime={{round_time}} PostRoundWaitTime={{post_round_wait_time}} TimeOfDay={{time_of_day}} SpectateFreeCam={{spectate_free_cam}} SpectateEnemies={{spectate_enemies}} SpectateForceFirstPerson={{spectate_force_first_person}}{{custom_server_args}} QueryPort={{port}} MultiHome=0.0.0.0 -nohomedir -stdout -FullStdOutLogOutput",
+  "ports": [
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_ai",
+      "label": "Maximale KI",
+      "help": "Höchstzahl an KI-Gegnern in allen Modi. Empfohlen: höchstens 30.",
+      "type": "number",
+      "default": "2"
+    },
+    {
+      "key": "op_for_count",
+      "label": "KI-Anzahl für Intel Retrieval / Terrorist Hunt",
+      "help": "Wie viele KI-Gegner in Intel Retrieval und Terrorist Hunt erscheinen. Höchstens „Maximale KI“.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "difficulty",
+      "label": "Schwierigkeit der KI",
+      "help": "Schwierigkeit der KI in Intel Retrieval und Terrorist Hunt.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "default": "2"
+    },
+    {
+      "key": "time_limit",
+      "label": "Zeitlimit",
+      "help": "Zeit bis zum Spielende und Kartenwechsel. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "ready_countdown_time",
+      "label": "Countdown nach „Bereit“",
+      "help": "Zeit zwischen „Bereit“ und dem Wechsel aller Spieler ins Spielgebiet.",
+      "type": "number",
+      "default": "5"
+    },
+    {
+      "key": "pre_round_wait_time",
+      "label": "Wartezeit vor der Runde",
+      "help": "Wie lange Spieler vor Rundenbeginn eingefroren sind.",
+      "type": "number",
+      "default": "5"
+    },
+    {
+      "key": "round_time",
+      "label": "Rundendauer",
+      "help": "Wie lange eine Runde dauert.",
+      "type": "number",
+      "default": "3"
+    },
+    {
+      "key": "post_round_wait_time",
+      "label": "Wartezeit nach der Runde",
+      "help": "Zeit nach Rundenende, bis Spieler zurück in den Bereitschaftsraum kommen.",
+      "type": "number",
+      "default": "5"
+    },
+    {
+      "key": "time_of_day",
+      "label": "Tageszeit",
+      "help": "Tageszeit beim Start, im 24-Stunden-Format.",
+      "type": "number",
+      "default": "1200"
+    },
+    {
+      "key": "spectate_free_cam",
+      "label": "Freie Kamera für Zuschauer",
+      "help": "Wenn an, können Zuschauer frei herumfliegen, ohne jemandem zu folgen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "spectate_enemies",
+      "label": "Zuschauer dürfen Gegnern folgen",
+      "help": "Wenn an, können Zuschauer auch Spielern gegnerischer Teams folgen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "spectate_force_first_person",
+      "label": "Zuschauer nur in Ego-Sicht",
+      "help": "Wenn an, sehen Zuschauer nur aus der Ego-Perspektive.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "server_map",
+      "label": "Karte",
+      "help": "Karte des Servers, wenn in MapList.ini keine Liste steht. Die Mission muss auch gesetzt sein, sonst wird die Standardkarte genutzt. Für andere Karten „Eigene“ wählen und den eigenen Kartennamen eintragen.",
+      "type": "select",
+      "options": [
+        "747",
+        "Arena",
+        "Arena2",
+        "City",
+        "Compound",
+        "Creek",
+        "Depot",
+        "Depot_Compound",
+        "Docks",
+        "Paintball",
+        "PowerStation",
+        "RunDown",
+        "Rig",
+        "SmallTown",
+        "StorageFacility",
+        "Tanker",
+        "TheFarm"
+      ],
+      "default": "747"
+    },
+    {
+      "key": "server_mission",
+      "label": "Mission",
+      "help": "Mission für die gewählte Karte. Verfügbare Missionen stehen in GroundBranch/Content/GroundBranch/Mission. Für andere Missionen „Eigene“ wählen und den eigenen Missionsnamen eintragen.",
+      "type": "select",
+      "options": [
+        "Deathmatch",
+        "DTAS",
+        "HostageRescue",
+        "IntelRetrieval",
+        "LastManStanding",
+        "TeamElimination",
+        "TerroristHunt",
+        "Training",
+        "Uplink"
+      ],
+      "default": "Deathmatch"
+    },
+    {
+      "key": "custom_server_args",
+      "label": "Weitere Startoptionen",
+      "help": "Weitere Startoptionen, die sonst nirgends gesetzt werden. NUR EINE ZEILE! Format: ?<Einstellung>=<Wert> (ohne Leerzeichen dazwischen). Mit Vorsicht nutzen.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogWorld: Bringing up level for play took: \\d+\\.\\d+$",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "config": [
+    {
+      "title": "Server.ini",
+      "file": "server/GroundBranch/ServerConfig/Server.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/RBZooKeeper.ZKServer]\nServerName=AMP Powered Ground Branch Server\nServerMOTD=<h1>Welcome!<br>This is my Ground Branch server.<br><b>Enjoy!\nServerPassword=\nSpectatorOnlyPassword=\nMaxPlayers=16\nMaxSpectators=0\nServerWebBanner=\nPVEMatchType=Continuous\nPVERoundLimit=2\nPVPMatchType=Continuous\nPVPRoundLimit=3\nPVPFFAMatchType=Continuous\nPVPFFARoundLimit=1\nGameRules=((\"AllowCheats\", False),(\"AllowDeadChat\", True),(\"AllowUnrestrictedRadio\", False),(\"AllowUnrestrictedVoice\", False),(\"SpectateEnemies\", True),(\"SpectateForceFirstPerson\", False),(\"SpectateFreeCam\", True),(\"UseTeamRestrictions\", False))\n",
+      "settings": []
+    },
+    {
+      "title": "Vote.ini",
+      "file": "server/GroundBranch/ServerConfig/Vote.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/RBZooKeeper.ZKVote]\n; The following settings must be set via the AMP UI\n\nVoteDuration=30\nVoteSucceededTimeout=60\nVoteFailedTimeout=180\nMapVoteTimeout=300\nMinPlayers=1\nbAllowVotingOffMapList=False\n\n; The following settings must be set manually in this file\n\n; VotingCommands sets the voting commands that will be available to the users\n; Only changemap, nextmap, kick, missionsettings and restartround are available\nVotingCommands=changemap\nVotingCommands=nextmap\nVotingCommands=kick\nVotingCommands=missionsettings\nVotingCommands=restartround\n\n; PermittedGameModes allows server admins to specify particular game modes which can be selected \n; (without any restriction on which missions can be selected for those modes).\n; For example (multiple can be listed):\n; PermittedGameModes=TerroristHunt\n; PermittedGameModes=IntelRetrieval\n; Custom game modes can be listed here also (use the Lua script name - without spaces)\n; Specify \"any\" to allow all game modes\nPermittedGameModes=any\n\n; Note: restrictions to map list and restrictions to specific game modes are cumulative, i.e. both will restrict the selection in turn",
+      "settings": []
+    },
+    {
+      "title": "TeamKill.ini",
+      "file": "server/GroundBranch/ServerConfig/TeamKill.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/RBZooKeeper.ZKTeamKill]\nMaxTeamKills=3\nBanTime=60\nTeamKillExpireTime=30\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

@@ -521,6 +521,9 @@ func (m *Manager) prepare(id string, start bool) {
 			m.setJob(id, "Wird gestartet")
 			m.expect(id)
 			m.requestUpdate(id)
+			if cur, tp, err := m.get(id); err == nil {
+				m.writeDefaults(cur, tp)
+			}
 			return m.dk.Start(ctx, cid)
 		}
 		return nil
@@ -553,10 +556,11 @@ func (m *Manager) Start(ctx context.Context, id string) error {
 	m.expect(id)
 	defer m.KickRouter()
 	m.requestUpdate(id)
-	sv, _, err := m.get(id)
+	sv, tpl, err := m.get(id)
 	if err != nil {
 		return err
 	}
+	m.writeDefaults(sv, tpl)
 	if sv.ContainerID == "" {
 		m.setJob(id, "Wird vorbereitet")
 		go m.prepare(id, true)
@@ -601,6 +605,7 @@ func (m *Manager) Restart(ctx context.Context, id string) error {
 	if sv.ContainerID == "" || m.outdated(ctx, sv) {
 		return m.Start(ctx, id)
 	}
+	m.writeDefaults(sv, tpl)
 	err = m.dk.Restart(ctx, sv.ContainerID, tpl.StopTimeout)
 	m.refresh(id)
 	return err

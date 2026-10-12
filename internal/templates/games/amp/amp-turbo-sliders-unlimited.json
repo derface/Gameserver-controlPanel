@@ -1,0 +1,69 @@
+{
+  "id": "amp-turbo-sliders-unlimited",
+  "name": "Turbo Sliders Unlimited",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1815810,
+  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1478340\" ./TSUs.x86_64 {{custom_server_args}} -port {{port}} -queryPort {{port_2}} -ip 0.0.0.0 {{visibility}} {{relay}}-name \"{{name}}\" -info \"{{info}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7755,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 7756,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "name",
+      "label": "Servername",
+      "help": "Name in der Serverliste. Höchstens 16 Zeichen.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "info",
+      "label": "Server-Info",
+      "help": "Info-Text des Servers. Zusammen mit dem Namen höchstens 63 Zeichen.",
+      "default": ""
+    },
+    {
+      "key": "custom_server_args",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter, die sonst nirgends gesetzt werden. Mit Vorsicht nutzen.",
+      "default": ""
+    },
+    {
+      "key": "visibility",
+      "label": "Server öffentlich",
+      "help": "Wenn an, ist der Server in der Serverliste sichtbar, sonst versteckt.",
+      "type": "select",
+      "options": [
+        "-public",
+        "-hidden"
+      ],
+      "default": "-public"
+    },
+    {
+      "key": "relay",
+      "label": "Steam-Relay nutzen",
+      "help": "Wenn an, verbinden sich Spieler über das Steam-Relay-Netz.",
+      "type": "bool",
+      "flag": "-relay ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Operation Starting game\\.\\.\\. finished in \\d+ ms\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

@@ -1,0 +1,37 @@
+{
+  "id": "amp-carrier-command2",
+  "name": "Carrier Command 2",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 1489630,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"saved_games\" ; SteamAppId=\"1489630\" wine \"./dedicated_server.exe\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 25565,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^[\\d:]+ : connected to Steam$",
+  "config": [
+    {
+      "title": "server_config.xml",
+      "file": "server//server_config.xml",
+      "format": "properties",
+      "write_default": true,
+      "default": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<data port=\"25565\" max_players=\"4\" server_name=\"AMP Powered Carrier Command 2 Server\" password=\"\" save_name=\"\" island_count=\"16\" island_count_per_team=\"1\" carrier_count_per_team=\"1\" team_count_ai=\"1\" team_count_human=\"1\" base_difficulty=\"1\" loadout_type=\"0\" blueprints=\"0\" game_data_path=\"rom_0\">\n\t<permissions/>\n\t<active_mod_folders/>\n</data>\n",
+      "settings": [],
+      "auto": false
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

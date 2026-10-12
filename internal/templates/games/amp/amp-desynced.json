@@ -1,0 +1,250 @@
+{
+  "id": "amp-desynced",
+  "name": "Desynced",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2943070,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"1450900\" wine \"./Desynced/Binaries/Win64/DesyncedServer.exe\" {{savename}}.desynced -stdout -Port={{port_3}} -QueryPort={{port}} -SessionSettings=\"{'name': '{{session_name}}', 'players': {{session_players}}, 'password': '{{session_password}}', 'visibility': '{{session_visibility}}', 'mode': '{{session_mode}}', 'allow_faction_switch': {{session_allow_faction_switch}}, 'block_unlocked_behaviors': {{session_block_unlocked_behaviors}}, 'run_without_players': {{session_run_without_players}}, 'disable_client_save': {{session_disable_client_save}}}\" -GameSettings=\"{'seed': {{game_seed}}, 'elevation_params_freq': {{game_elevation_params_freq}}, 'elevation_params_scale': {{game_elevation_params_scale}}, 'blight_threshold': {{game_blight_threshold}}, 'plateau_level': {{game_plateau_level}}, 'resource_amt': {{game_resource_amt}}, 'resource_inf': {{game_resource_inf}}, 'enable_day_night': {{game_enable_day_night}}, 'day_period': {{game_day_period}}, 'year_period': {{game_year_period}}, 'peaceful': {{game_peaceful}}, 'difficulty': {{game_difficulty}}, 'creep': {{game_creep}}, 'disable_minigames': {{game_disable_minigames}}}",
+  "ports": [
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "tcp"
+    },
+    {
+      "name": "Spiel-Port",
+      "port": 10099,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel-Port",
+      "port": 10099,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "savename",
+      "label": "Name des Spielstands",
+      "help": "Dateiname für den Spielstand.",
+      "default": "savedata"
+    },
+    {
+      "key": "session_name",
+      "label": "Name",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "session_players",
+      "label": "Maximale Spieler",
+      "help": "Höchstzahl an Spielern.",
+      "type": "number",
+      "default": "8"
+    },
+    {
+      "key": "session_password",
+      "label": "Passwort",
+      "help": "Passwort zum Beitreten (leer = kein Passwort).",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "session_visibility",
+      "label": "Sichtbarkeit",
+      "help": "Ob der Server in der öffentlichen Liste steht.",
+      "type": "select",
+      "options": [
+        "private",
+        "public"
+      ],
+      "default": "private"
+    },
+    {
+      "key": "session_mode",
+      "label": "Sitzungsmodus",
+      "help": "Spielmodus der Sitzung.",
+      "type": "select",
+      "options": [
+        "Separate/Versus",
+        "Shared/Coop"
+      ],
+      "default": "Separate/Versus"
+    },
+    {
+      "key": "session_allow_faction_switch",
+      "label": "Fraktionswechsel erlauben",
+      "help": "Spieler dürfen die Fraktion wechseln.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "session_block_unlocked_behaviors",
+      "label": "Freigeschaltete Verhalten sperren",
+      "help": "Freigeschaltete Verhalten können nicht genutzt werden.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "session_run_without_players",
+      "label": "Ohne Spieler weiterlaufen",
+      "help": "Die Simulation läuft weiter, auch wenn niemand verbunden ist.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "session_disable_client_save",
+      "label": "Speichern beim Spieler aus",
+      "help": "Spieler dürfen nicht lokal speichern.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "game_seed",
+      "label": "Karten-Seed",
+      "help": "Fester Startwert für neue Karten.",
+      "type": "number",
+      "default": "123"
+    },
+    {
+      "key": "game_elevation_params_freq",
+      "label": "Biom-Dichte",
+      "help": "Dichte der Biome (elevation_params_freq).",
+      "default": "0.8"
+    },
+    {
+      "key": "game_elevation_params_scale",
+      "label": "Dichte von Wasser/Plateaus",
+      "help": "Dichte von Wasser und Plateaus (elevation_params_scale).",
+      "default": "1.0"
+    },
+    {
+      "key": "game_blight_threshold",
+      "label": "Verderbnis (Blight)",
+      "help": "Schwelle für die Verderbnis (kleiner = mehr).",
+      "default": "0.2"
+    },
+    {
+      "key": "game_plateau_level",
+      "label": "Menge an Plateaus",
+      "help": "Menge an Plateaus (kleiner = mehr).",
+      "default": "0.15"
+    },
+    {
+      "key": "game_resource_amt",
+      "label": "Rohstoffreichtum",
+      "help": "Faktor für den Rohstoffreichtum.",
+      "default": "1.0"
+    },
+    {
+      "key": "game_resource_inf",
+      "label": "Unendliche Rohstoffe",
+      "help": "Rohstoffe gehen nie aus.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "game_enable_day_night",
+      "label": "Tag und Nacht",
+      "help": "Tag-Nacht-Wechsel an.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "game_day_period",
+      "label": "Länge des Tages",
+      "help": "Länge eines Tages.",
+      "type": "number",
+      "default": "1000"
+    },
+    {
+      "key": "game_year_period",
+      "label": "Jahreslänge",
+      "help": "Länge eines Jahres.",
+      "type": "number",
+      "default": "20"
+    },
+    {
+      "key": "game_peaceful",
+      "label": "Feindseligkeit",
+      "help": "Voreinstellung für die Feindseligkeit der Gegner.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "3"
+    },
+    {
+      "key": "game_difficulty",
+      "label": "Schwierigkeit",
+      "help": "Allgemeine Schwierigkeit.",
+      "default": "1.0"
+    },
+    {
+      "key": "game_creep",
+      "label": "Entwicklung der Insektennester",
+      "help": "Insektennester entwickeln sich weiter.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "game_disable_minigames",
+      "label": "Minispiele aus",
+      "help": "Schaltet Minispiele aus.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[BOOT\\] Running dedicated server.*$",
+  "query": {
+    "type": "a2s",
+    "port": 0
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

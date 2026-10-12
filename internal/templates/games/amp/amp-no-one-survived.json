@@ -1,0 +1,33 @@
+{
+  "id": "amp-no-one-survived",
+  "name": "No One Survived",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2329680,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"1963370\" wine \"./WRSH/Binaries/Win64/WRSHServer.exe\" WRSH -server -stdout -FullStdOutLogOutput -Port={{port}} -QueryPort={{port_2}} -MultiHome=0.0.0.0",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogSteamSocketsAPI: Verbose: SteamSockets API: Log AuthStatus \\(steamid:\\d+\\):\\s+OK\\s+\\(OK\\)$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

@@ -1,0 +1,45 @@
+{
+  "id": "amp-wreckfest2",
+  "name": "Wreckfest 2",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 3519390,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"server_data\" ; SteamAppId=\"1203190\" wine \"./Wreckfest2.exe\" --server --save-dir=.\\server_data",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 30100,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^[\\d:\\.]+: Server Started$",
+  "config": [
+    {
+      "title": "server_config.scnf",
+      "file": "server/server_data/server_config.scnf",
+      "format": "properties",
+      "write_default": true,
+      "default": "{\n    \"bbmeta\": \"scnf v0 n1\",\n    \"net server config\": [\n        {\n            \"bbmeta\": \"ncnf v1 n1\",\n            \"name\": \"AMP Powered Wreckfest 2 Server\",\n            \"description\": \"Welcome to my server!\",\n            \"password\": \"\",\n            \"game port\": 30100\n        }\n    ],\n    \"game server config\": [\n        {\n            \"bbmeta\": \"gcnf v2 n1\",\n            \"event loop name\": \"default_loop\",\n            \"countdown time\": 100000,\n            \"flags\": \"leader enabled\"\n        }\n    ]\n}",
+      "settings": [],
+      "auto": false
+    },
+    {
+      "title": "server_privilege.sprv",
+      "file": "server/server_data/server_privilege.sprv",
+      "format": "properties",
+      "write_default": true,
+      "default": "{\n    \"bbmeta\": \"sprv v0 n1\",\n    \"roles\": [],\n    \"bans\": []\n}",
+      "settings": [],
+      "auto": false
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

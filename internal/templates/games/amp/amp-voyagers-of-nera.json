@@ -1,0 +1,62 @@
+{
+  "id": "amp-voyagers-of-nera",
+  "name": "Voyagers of Nera",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 3937860,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"BoatGame/Saved/PersistedData/CustomConfig\" ; SteamAppId=\"2686630\" wine \"./BoatGame/Binaries/Win64/BoatGameServer-Win64-Shipping.exe\" BoatGame -Port={{port}} -log=BoatGame.log -LoggingInShippingEnabled=true {{custom_args}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "custom_args",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter (beginnen mit -). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "eos_override_host_ip",
+      "label": "Auswahl der öffentlichen IP",
+      "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
+      "type": "select",
+      "options": [
+        ""
+      ],
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.]+:\\d+\\]\\[[\\d ]+\\]LogCommonSession: OnStartSessionComplete\\(SessionName: GameSession, bWasSuccessful: 1\\)$",
+  "backup_include": [
+    "server/BoatGame/Saved"
+  ],
+  "config": [
+    {
+      "title": "CustomHostServerUserSettings.ini",
+      "file": "server/BoatGame/Saved/PersistedData/CustomConfig/CustomHostServerUserSettings.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/BoatGame.BGCustomHostServerSettings]\nHostServerDisplayName=AMP Voyagers of Nera Server\nHostServerPassword=\nMaxPlayers=10\nAutosaveTimerSeconds=300\n",
+      "settings": []
+    },
+    {
+      "title": "CustomGameUserSettings.ini",
+      "file": "server/BoatGame/Saved/PersistedData/CustomConfig/CustomGameUserSettings.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/BoatGame.BGCustomGameSettings]\nGatheringRateMultiplier=1.000000\nEnemyDamageMultiplier=1.000000\nPlayerDamageMultiplier=1.000000\nDisableEquipmentDurability=False\nDisableDropItemsOnDeath=False\nDisableEncumbrance=False\nDisableFogOfWar=False\nDisableWeather=False\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

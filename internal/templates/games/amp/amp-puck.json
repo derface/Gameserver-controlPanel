@@ -1,0 +1,38 @@
+{
+  "id": "amp-puck",
+  "name": "Puck",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 3481440,
+  "start": "LD_LIBRARY_PATH=\"/data/server/:$LD_LIBRARY_PATH\" SteamAppId=\"2994020\" ./Puck",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 30609,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 30609,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^.*\\[INFO\\] \\[SceneManager\\] Scene load event completed on server$",
+  "config": [
+    {
+      "title": "server_config.json",
+      "file": "server//server_config.json",
+      "format": "json",
+      "write_default": true,
+      "default": "{\n  \"port\": 30609,\n  \"name\": \"AMP Powered Puck Server\",\n  \"maxPlayers\": 12,\n  \"password\": null,\n  \"tickRate\": 200,\n  \"isPublic\": true,\n  \"useVoip\": false,\n  \"useWhitelist\": false,\n  \"mods\": [],\n  \"gameMode\": \"public\",\n  \"level\": \"default\"\n}",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

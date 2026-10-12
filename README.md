@@ -58,7 +58,7 @@ ls /var/lib/gamepanel/servers/        # Spieldaten, ein Ordner pro Server
 
 ## Spiele und Vorlagen
 
-Das Panel bringt **88 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe unten):
+Das Panel bringt **151 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe unten):
 
 - **stabil** (im Spiel erprobt): Minecraft Java, Minecraft Bedrock, Valheim, Palworld.
 - **beta** (Selbsttest bestanden): Enshrouded und Abiotic Factor (beide über Wine), Rust, 7 Days to Die, Project Zomboid, Satisfactory, Factorio, Terraria, TeamSpeak 3 sowie 40 Community-Spiele, u. a. ARK: Survival Evolved, CS 1.6, CS: Condition Zero, CS: Source, CS:GO, Left 4 Dead 1 und 2, Day of Defeat, TFC, TF2 Classified, Squad 44, Soulmask, The Front, Mordhau, Pavlov VR, Core Keeper, Tower Unite.
@@ -68,6 +68,8 @@ Das Panel bringt **88 Vorlagen** mit. Der Status kommt aus dem Selbsttest (siehe
 Die Community-Vorlagen werden automatisch aus den Daten von [LinuxGSM](https://github.com/GameServerManagers/LinuxGSM) erzeugt (MIT-Lizenz, siehe `internal/templates/games/community/LINUXGSM-LICENSE.md`), inklusive der Nacharbeiten aus LinuxGSMs `fix_*.sh` (Bibliothekspfade, steamclient.so, GoldSrc-Mods per `app_set_config`, Basis-Apps wie TF2 für TF2 Classified).
 
 Neu erzeugen: `git clone --depth 1 https://github.com/GameServerManagers/LinuxGSM /tmp/lgsm && python3 tools/gen_lgsm.py /tmp/lgsm internal/templates/games/community`. Spiele, die einen Steam-Login brauchen oder deren Ports nur in einer Spielkonfiguration stehen, werden übersprungen.
+
+Weitere 63 Vorlagen (`internal/templates/games/amp`, IDs `amp-…`) werden aus [AMPTemplates](https://github.com/CubeCoders/AMPTemplates) erzeugt: Startzeile, Ports, Einstellungen, Vorbereitungsschritte und Config-Vorlagen, Texte deutsch. Übernommen werden Spiele mit SteamCMD-Download, die unter Linux laufen (nativ oder über Wine) und die das Panel noch nicht hat. Alle sind „experimentell“, bis der Selbsttest sie bestätigt. Neu erzeugen: `git clone --depth 1 https://github.com/CubeCoders/AMPTemplates /tmp/ampt && python3 tools/gen_amp.py /tmp/ampt internal/templates/games internal/templates/games/amp`; was übersprungen wurde und warum, steht in `amp/_bericht.md`. Vorlagenfeld `config[].write_default: true`: Fehlt die Datei vor dem Start, legt das Panel sie aus der Vorlage an (mit eingesetzten Werten und Ports).
 
 Beschreibungen, Wertebereiche und Gruppen der Spiel-Einstellungen stammen teils aus [AMPTemplates](https://github.com/CubeCoders/AMPTemplates) von CubeCoders (MIT-Lizenz, siehe `internal/templates/games/AMPTEMPLATES-LICENSE.md`), übersetzt und angepasst.
 

@@ -1,0 +1,91 @@
+{
+  "id": "amp-last-oasis",
+  "name": "Last Oasis",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 920720,
+  "start": "[ -f \"Mist/Binaries/Linux/steam_appid.txt\" ] || { mkdir -p \"$(dirname \"Mist/Binaries/Linux/steam_appid.txt\")\"; printf %s \"903950\" > \"Mist/Binaries/Linux/steam_appid.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"903950\" ./Mist/Binaries/Linux/MistServer-Linux-Shipping Mist -force_steamclient_link -messaging -NoLiveServer -EnableCheats -backendapiurloverride=\"{{backendapiurloverride}}\" -slots={{max_players}} -port={{port}} -QueryPort={{port_2}} {{override_connection_address}} {{noeac}}{{noupnp}}-ProviderKey=\"{{provider_key}}\" -CustomerKey=\"{{customer_key}}\" -identifier=\"{{identifier}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 5555,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "20"
+    },
+    {
+      "key": "provider_key",
+      "label": "Anbieter-Schlüssel",
+      "help": "Dein Anbieter-Schlüssel von der Last-Oasis-MyRealm-Seite.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "customer_key",
+      "label": "Kunden-Schlüssel",
+      "help": "Dein Kunden-Schlüssel von der Last-Oasis-MyRealm-Seite.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "identifier",
+      "label": "Kennung",
+      "help": "Eindeutiger Name, um den Server zu erkennen.",
+      "default": ""
+    },
+    {
+      "key": "backendapiurloverride",
+      "label": "Backend-API-Adresse überschreiben",
+      "help": "Eigene Backend-API-Adresse, passend zum Server-Zweig.",
+      "type": "select",
+      "options": [
+        "backend-production.last-oasis.com",
+        "classic-backend.last-oasis.com"
+      ],
+      "default": "backend-production.last-oasis.com"
+    },
+    {
+      "key": "override_connection_address",
+      "label": "Auswahl der Verbindungsadresse",
+      "help": "Welche Verbindungsadresse der Server anzeigt: „Server-IP“ = IP des Servers, „Automatische öffentliche IP“ = automatisch ermittelt, „Manuelle Adresse“ = die eingetragene Adresse.",
+      "type": "select",
+      "options": [
+        "-OverrideConnectionAddress"
+      ],
+      "default": "-OverrideConnectionAddress"
+    },
+    {
+      "key": "noeac",
+      "label": "EasyAntiCheat aus",
+      "help": "Wenn an, startet der Server ohne EasyAntiCheat (EAC).",
+      "type": "bool",
+      "flag": "-noeac ",
+      "default": "false"
+    },
+    {
+      "key": "noupnp",
+      "label": "UPnP aus",
+      "help": "Wenn an, nutzt der Server kein UPnP.",
+      "type": "bool",
+      "flag": "-noupnp ",
+      "default": "true"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^(LogInit: Display: Starting Game\\.)|(LogOnline: GotoState: NewState: Playing)$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

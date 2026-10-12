@@ -1,0 +1,75 @@
+{
+  "id": "amp-miscreated",
+  "name": "Miscreated",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 302200,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"299740\" wine \"./Bin64_dedicated/MiscreatedServer.exe\" -sv_port {{port}} -sv_bind 0.0.0.0 -mis_gameserverid {{mis_gameserverid}} {{http_startserver}}{{mis_whitelist}}+sv_servername \"{{sv_servername}}\" +map \"{{map}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 64090,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "sv_servername",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "map",
+      "label": "Karte",
+      "help": "Karte des Servers. Bei „Eigene“ auch den eigenen Kartennamen eintragen.",
+      "type": "select",
+      "options": [
+        "islands",
+        "canyonlands"
+      ],
+      "default": "islands"
+    },
+    {
+      "key": "mis_gameserverid",
+      "label": "Server-ID",
+      "help": "Eindeutige Nummer des Servers.",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "http_startserver",
+      "label": "RCON",
+      "help": "Wenn an, ist der RCON-Server aktiv.",
+      "type": "bool",
+      "flag": "+http_startserver ",
+      "default": "false"
+    },
+    {
+      "key": "mis_whitelist",
+      "label": "Whitelist",
+      "help": "Wenn an, können nur SteamIDs aus der Whitelist beitreten.",
+      "type": "bool",
+      "flag": "-mis_whitelist ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\<[\\d:]+\\> CGame::OnPolicyResponse - LoggedOn: 1, Secure: 1, SteamID: \\d+$",
+  "config": [
+    {
+      "title": "hosting.cfg",
+      "file": "server//hosting.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "http_password=\"\"\ng_pinglimit=\"1000\"\ng_pingLimitTimer=\"15\"\ng_gameRules_Camera=\"0\"\nwm_disable=\"0\"\nwm_timeScale=\"1\"\nwm_timeScaleWeather=\"1\"\nwm_timeScaleNight=\"4\"\nwm_timeOffset=\"0\"\nwm_forceTime=\"-1\"\nsv_noBannedAccounts=\"0\"\nsv_maxuptime=\"12\"\nsv_motd=\"Welcome to Miscreated!\"\nsv_url=\"\"\nsv_msg_conn=\"0\"\nsv_msg_death=\"0\"\nsv_steamWebAPIKey=\"\"\ng_gameRules_bases=\"1\"\ng_playerHealthRegen=\"0.111\"\ng_playerFoodDecay=\"0.2777\"\ng_playerFoodDecaySprinting=\"0.34722\"\ng_playerWaterDecay=\"0.4861\"\ng_playerWaterDecaySprinting=\"0.607638\"\ng_playerInfiniteStamina=\"0\"\ng_craftingSpeedMultiplier=\"1\"\nasm_disable=\"0\"\nasm_percent=\"33\"\nasm_maxMultiplier=\"1\"\nasm_hordeCooldown=\"900\"\npcs_maxCorpses=\"20\"\npcs_maxCorpseTime=\"1200\"\nsteam_inventory_enable=\"1\"",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

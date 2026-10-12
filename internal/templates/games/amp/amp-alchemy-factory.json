@@ -1,0 +1,51 @@
+{
+  "id": "amp-alchemy-factory",
+  "name": "Alchemy Factory",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 4550060,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"3669570\" wine \"./AlchemyFactory/Binaries/Win64/AlchemyFactoryServer-Win64-Shipping.exe\" -log {{custom_args}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 9877,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 9878,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "custom_args",
+      "label": "Eigene Startparameter",
+      "help": "Zusätzliche Startparameter für die Server-Datei, durch Leerzeichen getrennt.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogTemp: \\[ServerConfig\\] session created OK \\(.*\\)$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "config": [
+    {
+      "title": "ServerConfig.ini",
+      "file": "server//ServerConfig.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[ServerSettings]\nserver_name=Alchemy Factory AMP Server\nserver_public=0\nserver_port=9877\nquery_port=9878\nserver_relay=1\nserver_lan=0\nserver_password=\nadmin_password=\nmax_clients=8\nmax_admins=1\nautosave_mode=1\npause_when_empty=1\nsession_retry_seconds=10\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

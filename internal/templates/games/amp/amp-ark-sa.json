@@ -1,0 +1,365 @@
+{
+  "id": "amp-ark-sa",
+  "name": "ARK: Survival Ascended",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2430930,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"ShooterGame/Saved/Config/WindowsServer\" ; cd \"ShooterGame/Binaries/Win64\" && SteamAppId=\"2399830\" wine \"./{{server_executable}}.exe\" {{map}}?listen?Port={{port}}?RCONEnabled=True?RCONServerGameLogBuffer=600?RCONPort={{port_3}}?{{override_official_difficulty}}{{custom_options}}?ServerAdminPassword={{rcon_password}} -WinLiveMaxPlayers={{max_players}} {{passivemods}}{{mods}}{{pconlymods}}{{colors}} {{exclusivejoin}}{{battl_eye}}{{usestore}}-ServerPlatform={{server_platform}} {{enable_idle_player_kick}}{{no_hang_detection}}{{no_transfer_from_filtering}}{{no_game_analytics}}{{allow_speed_leveling}}{{force_allow_cave_flyers}}{{nodinos}}{{force_respawn_dinos}}{{disable_railgun_pvp}}{{use_structure_stasis_grid}}-culture={{culture}} {{enable_cluster}}{{server_ip}}{{custom_flags}} -servergamelog",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "HTTP-Server-Port",
+      "port": 8888,
+      "proto": "tcp"
+    },
+    {
+      "name": "RCON",
+      "port": 27020,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "70"
+    },
+    {
+      "key": "server_executable",
+      "label": "Server-Datei",
+      "help": "Ob der normale Server oder der ServerAPI-Starter läuft. Hinweis: Nach dem Wechsel auf ServerAPI den Server aktualisieren.",
+      "type": "select",
+      "options": [
+        "ArkAscendedServer",
+        "AsaApiLoader"
+      ],
+      "default": "ArkAscendedServer"
+    },
+    {
+      "key": "map",
+      "label": "Karte",
+      "help": "Karte des Servers. Bei „Eigene“ auch den Namen der eigenen Karte eintragen.",
+      "type": "select",
+      "options": [
+        "TheIsland_WP",
+        "ScorchedEarth_WP",
+        "TheCenter_WP",
+        "Aberration_WP",
+        "Extinction_WP",
+        "Astraeos_WP",
+        "Ragnarok_WP",
+        "Valguero_WP",
+        "LostColony_WP",
+        "Genesis_WP"
+      ],
+      "default": "TheIsland_WP"
+    },
+    {
+      "key": "difficulty_override_level",
+      "label": "Stufe der Schwierigkeit",
+      "help": "Schwierigkeitsstufe, wenn „Offizielle Schwierigkeit überschreiben“ an ist. Erlaubt Werte über dem Standard 4,0. Bei 5,0 erscheinen normale Kreaturen bis Stufe 150. Nicht zu hoch stellen!",
+      "default": "4.0"
+    },
+    {
+      "key": "override_official_difficulty",
+      "label": "Offizielle Schwierigkeit überschreiben",
+      "help": "Wenn an, gilt die Schwierigkeit aus „Stufe der Schwierigkeit“. Das ist der empfohlene Weg, die Schwierigkeit einzustellen.",
+      "type": "bool",
+      "flag": "?OverrideOfficialDifficulty={{difficulty_override_level}}",
+      "default": "false"
+    },
+    {
+      "key": "custom_options",
+      "label": "Eigene Start-Optionen",
+      "help": "Eigene Start-Optionen (beginnen mit ?), mit Fragezeichen und ohne Leerzeichen.",
+      "default": ""
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    },
+    {
+      "key": "passivemodslist",
+      "label": "Liste passiver Mods",
+      "help": "Durch Komma getrennte, geordnete Liste von CurseForge-Projekt-IDs für Mods im passiven Modus: Ihre Funktion ist aus, ihre Daten bleiben erhalten. „Passive Mods nutzen“ muss an sein. Dann muss mindestens eine Mod-ID eingetragen sein, sonst startet der Server nicht.",
+      "default": ""
+    },
+    {
+      "key": "passivemods",
+      "label": "Passive Mods nutzen",
+      "help": "Wenn an, wird -passivemods genutzt: Die genannten Mods laden ihre Daten, ihre Funktion bleibt aber aus (auch wenn sie in der Mod-Liste stehen). Nicht einschalten, wenn keine passiven Mods eingetragen sind, sonst startet der Server nicht.",
+      "type": "bool",
+      "flag": "-passivemods={{passivemodslist}} ",
+      "default": "false"
+    },
+    {
+      "key": "modslist",
+      "label": "Mod-Liste",
+      "help": "Durch Komma getrennte, geordnete Liste von CurseForge-Projekt-IDs für Mods (auch Events), die beim Start installiert und geladen werden. Karten-Mods laden nur, wenn sie auch als eigene Karte eingetragen sind. „Mods nutzen“ muss an sein.",
+      "default": ""
+    },
+    {
+      "key": "mods",
+      "label": "Mods nutzen",
+      "help": "Wenn an, werden Mods beim Start automatisch geladen, aktualisiert und eingebunden. Mods unter „Mod-Liste“ eintragen. Nicht einschalten, wenn keine Mods eingetragen sind, sonst startet der Server nicht.",
+      "type": "bool",
+      "flag": "-mods={{modslist}} ",
+      "default": "false"
+    },
+    {
+      "key": "pconlymods",
+      "label": "Nur Steam-/PC-Mods",
+      "help": "Wenn an, sind Crossplay-Mods auf dem Server aus.",
+      "type": "bool",
+      "flag": "-pconlymods ",
+      "default": "false"
+    },
+    {
+      "key": "colors",
+      "label": "Dino-Event-Farben",
+      "help": "Bei gewählten Event-Farben können Dinos in diesen Farben erscheinen.",
+      "type": "select",
+      "options": [
+        "",
+        "-EasterColors",
+        "-HalloweenColors",
+        "-OlympicColors",
+        "-PrideColors",
+        "-ServerUseEventColors"
+      ],
+      "default": ""
+    },
+    {
+      "key": "exclusivejoin",
+      "label": "Spieler-Whitelist",
+      "help": "Wenn an, können nur Spieler beitreten, deren EOS-ID in der Whitelist steht.",
+      "type": "bool",
+      "flag": "-exclusivejoin ",
+      "default": "false"
+    },
+    {
+      "key": "battl_eye",
+      "label": "BattlEye aus",
+      "help": "Wenn an, ist BattlEye auf dem Server ausgeschaltet.",
+      "type": "bool",
+      "flag": "-NoBattlEye ",
+      "default": "false"
+    },
+    {
+      "key": "converttostore",
+      "label": "In gemeinsame Speicherdaten umwandeln",
+      "help": "Wenn an, werden nicht gespeicherte Daten (Standard bei inoffiziellen und Legacy-Servern) beim nächsten Speichern in gespeicherte Daten umgewandelt (Standard bei offiziellen Servern). Alte Charakterprofile bleiben erhalten. „Gemeinsame Speicherdaten nutzen“ muss an sein.",
+      "type": "bool",
+      "flag": "-converttostore ",
+      "default": "false"
+    },
+    {
+      "key": "backup_transfer_player_datas",
+      "label": "Spielerdaten bei Transfer sichern",
+      "help": "Wenn an, behandelt der Server Charakterdaten wie offizielle Server und legt dauerhafte Sicherungen der Charakterprofile getrennt vom Weltstand an. „Gemeinsame Speicherdaten nutzen“ muss an sein.",
+      "type": "bool",
+      "flag": "-BackupTransferPlayerDatas ",
+      "default": "false"
+    },
+    {
+      "key": "usestore",
+      "label": "Gemeinsame Speicherdaten nutzen",
+      "help": "Wenn an, wird das Charakterprofil (.arkprofile) nicht getrennt vom Kartenstand (.ark) gespeichert, auch keine Sicherung davon. Bei Bedarf (z. B. nach Transfer oder neuem Charakter) wird vorübergehend ein Profil angelegt und bis zum nächsten Speichern behalten. Stammesprofile haben ein eigenes Format (.arktributetribe).",
+      "type": "bool",
+      "flag": "{{converttostore}}-usestore {{backup_transfer_player_datas}}",
+      "default": "false"
+    },
+    {
+      "key": "server_platform",
+      "label": "Plattformen / Crossplay",
+      "help": "Unterstützte Plattformen, getrennt durch + (z. B. XSX+PS5). PC = Steam/PC, XSX = Xbox, WINGDK = Microsoft Store/PC, PS5 = PlayStation 5, ALL = alle. Bei mehr als einer Plattform ist Crossplay an.",
+      "default": "ALL"
+    },
+    {
+      "key": "enable_idle_player_kick",
+      "label": "Untätige Spieler kicken",
+      "help": "Wenn an, werden Charaktere gekickt, die sich eine Weile nicht bewegt oder nichts getan haben.",
+      "type": "bool",
+      "flag": "-EnableIdlePlayerKick ",
+      "default": "false"
+    },
+    {
+      "key": "no_hang_detection",
+      "label": "Hänger-Erkennung aus",
+      "help": "Wenn an, wird der Server nicht beendet, wenn der Start länger als 2700 Sekunden (45 Minuten) dauert. Nützlich bei großen Spielständen oder langsamen Rechnern.",
+      "type": "bool",
+      "flag": "-NoHangDetection ",
+      "default": "false"
+    },
+    {
+      "key": "no_transfer_from_filtering",
+      "label": "Transfers filtern",
+      "help": "Wenn an, können ARK-Daten nicht zwischen Einzelspieler und Servern ohne Cluster-ID übertragen werden. Auch mit Cluster-ID empfohlen.",
+      "type": "bool",
+      "flag": "-NoTransferFromFiltering ",
+      "default": "false"
+    },
+    {
+      "key": "no_game_analytics",
+      "label": "Spielanalyse aus",
+      "help": "Wenn an, sendet der Server keine Analysedaten.",
+      "type": "bool",
+      "flag": "-NoGameAnalytics ",
+      "default": "true"
+    },
+    {
+      "key": "allow_speed_leveling",
+      "label": "Geschwindigkeit leveln erlauben",
+      "help": "Wenn an, können Spieler und nicht fliegende Tiere ihre Geschwindigkeit leveln. Wegen Engine-Grenzen standardmäßig aus. Mit Vorsicht nutzen.",
+      "type": "bool",
+      "flag": "-AllowSpeedLeveling ",
+      "default": "false"
+    },
+    {
+      "key": "force_allow_cave_flyers",
+      "label": "Flugtiere in Höhlen",
+      "help": "Wenn an, dürfen Flugtiere immer in Höhlen (auf eigenen Karten ist das ohnehin erlaubt).",
+      "type": "bool",
+      "flag": "-ForceAllowCaveFlyers ",
+      "default": "false"
+    },
+    {
+      "key": "nodinos",
+      "label": "Keine wilden Kreaturen",
+      "help": "Wenn an, erscheinen keine wilden Kreaturen. Auf bestehenden Servern vorhandene mit dem Admin-Befehl „destroywilddinos“ entfernen.",
+      "type": "bool",
+      "flag": "-nodinos ",
+      "default": "false"
+    },
+    {
+      "key": "force_respawn_dinos",
+      "label": "Wilde Kreaturen beim Start neu",
+      "help": "Wenn an, werden beim Start alle wilden, nicht gezähmten Kreaturen entfernt.",
+      "type": "bool",
+      "flag": "-ForceRespawnDinos ",
+      "default": "false"
+    },
+    {
+      "key": "disable_railgun_pvp",
+      "label": "Tek-Railgun aus",
+      "help": "Wenn an, ist die Tek-Railgun im PvP gesperrt.",
+      "type": "bool",
+      "flag": "-DisableRailgunPVP ",
+      "default": "false"
+    },
+    {
+      "key": "use_structure_stasis_grid",
+      "label": "Stasis-Raster für Bauten",
+      "help": "Wenn an, werden Bauten nur in Rasterfeldern mit Spielern geladen. Hilft bei großen Basen mit vielen Spielern. Nicht für Server mit Mods empfohlen.",
+      "type": "bool",
+      "flag": "-UseStructureStasisGrid ",
+      "default": "false"
+    },
+    {
+      "key": "culture",
+      "label": "Sprache",
+      "help": "Sprache des Servers.",
+      "type": "select",
+      "options": [
+        "ca",
+        "cs",
+        "da",
+        "de",
+        "en",
+        "es",
+        "eu",
+        "fi",
+        "fr",
+        "hu",
+        "it",
+        "ja",
+        "ka",
+        "ko",
+        "nl",
+        "pl",
+        "pt_BR",
+        "ru",
+        "sv",
+        "th",
+        "tr",
+        "zh",
+        "zh-Hans-CN",
+        "zh-TW"
+      ],
+      "default": "en"
+    },
+    {
+      "key": "cluster_dir_override",
+      "label": "Cluster-Ordner",
+      "help": "Pfad zu einem gemeinsamen Ordner für alle Server des Clusters.",
+      "default": ""
+    },
+    {
+      "key": "cluster_id",
+      "label": "Cluster-ID",
+      "help": "ID des Clusters, auf allen Servern des Clusters gleich.",
+      "default": ""
+    },
+    {
+      "key": "enable_cluster",
+      "label": "Cluster",
+      "help": "Wenn an, ist der Server Teil eines Clusters. Dafür Cluster-Ordner und Cluster-ID setzen.",
+      "type": "bool",
+      "flag": "-ClusterDirOverride=\"{{cluster_dir_override}}\" -clusterID={{cluster_id}} ",
+      "default": "false"
+    },
+    {
+      "key": "server_ip",
+      "label": "Auswahl der öffentlichen IP",
+      "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
+      "type": "select",
+      "options": [
+        ""
+      ],
+      "default": ""
+    },
+    {
+      "key": "custom_flags",
+      "label": "Eigene Start-Flags",
+      "help": "Eigene Start-Flags (beginnen mit -), mit Bindestrich und durch Leerzeichen getrennt.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "backup_include": [
+    "server/ShooterGame/Saved"
+  ],
+  "config": [
+    {
+      "title": "Game.ini",
+      "file": "server/ShooterGame/Saved/Config/WindowsServer/Game.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/ShooterGame.ShooterGameMode]\nbDisableGenesisMissions=False\nbIgnoreStructuresPreventionVolumes=True\nbGenesisUseStructuresPreventionVolumes=True\nbShowCreativeMode=False\nbAutoUnlockAllEngrams=False\nMaxTribeLogs=100\nbDisableFriendlyFire=False\nbUseCorpseLocator=False\nbDisableStructurePlacementCollision=False\nbAllowUnlimitedRespecs=False\nbPvEDisableFriendlyFire=False\nbFlyerPlatformAllowUnalignedDinoBasing=False\nbDisableLootCrates=False\nbIncreasePvPRespawnInterval=False\nIncreasePvPRespawnIntervalCheckPeriod=300\nIncreasePvPRespawnIntervalMultiplier=2\nIncreasePvPRespawnIntervalBaseAmount=60\nbAutoPvETimer=False\nbAutoPvEUseSystemTime=False\nAutoPvEStartTimeSeconds=0\nAutoPvEStopTimeSeconds=0\nbPvEAllowTribeWar=True\nbPvEAllowTribeWarCancel=False\nMaxAlliancesPerTribe=10\nMaxNumberOfPlayersInTribe=0\nFastDecayInterval=43200\nbAllowCustomRecipes=False\nCustomRecipeEffectivenessMultiplier=1.00000\nCustomRecipeSkillMultiplier=1.00000\nbAllowPlatformSaddleMultiFloors=False\nUseCorpseLifeSpanMultiplier=1.00000\nGlobalPoweredBatteryDurabilityDecreasePerSecond=3\nOverrideMaxExperiencePointsPlayer=0\nOverrideMaxExperiencePointsDino=0\nPlayerHarvestingDamageMultiplier=1.00000\nCraftingSkillBonusMultiplier=1.00000\nDinoHarvestingDamageMultiplier=3.20000\nDinoTurretDamageMultiplier=1.00000\nWildDinoCharacterFoodDrainMultiplier=1.00000\nWildDinoTorporDrainMultiplier=1.00000\nTamedDinoCharacterFoodDrainMultiplier=1.00000\nTamedDinoTorporDrainMultiplier=1.00000\nPassiveTameIntervalMultiplier=1.00000\nResourceNoReplenishRadiusPlayers=1.00000\nResourceNoReplenishRadiusStructures=1.00000\nGlobalItemDecompositionTimeMultiplier=1.00000\nGlobalCorpseDecompositionTimeMultiplier=1.00000\nCraftXPMultiplier=1.00000\nHarvestXPMultiplier=1.00000\nKillXPMultiplier=1.00000\nSpecialXPMultiplier=1.00000\nPvPZoneStructureDamageMultiplier=6.00000\nbPassiveDefensesDamageRiderlessDinos=False\nbLimitTurretsInRange=True\nLimitTurretsRange=10000\nLimitTurretsNum=100\nbHardLimitTurretsInRange=False\nPreventOfflinePvPConnectionInvincibleInterval=5.00000\nbDisableDinoRiding=False\nbDisableDinoTaming=False\nbUseTameLimitForStructuresOnly=False\nGlobalSpoilingTimeMultiplier=1.00000\nBabyImprintingStatScaleMultiplier=1.00000\nBabyImprintAmountMultiplier=1.00000\nMatingIntervalMultiplier=1.00000\nLayEggIntervalMultiplier=1.00000\nEggHatchSpeedMultiplier=1.00000\nBabyMatureSpeedMultiplier=1.00000\nBabyCuddleIntervalMultiplier=1.00000\nBabyCuddleGracePeriodMultiplier=1.00000\nBabyCuddleLoseImprintQualitySpeedMultiplier=1.00000\nBabyFoodConsumptionSpeedMultiplier=1.00000\nSupplyCrateLootQualityMultiplier=1.00000\nFishingLootQualityMultiplier=1.00000\nCropGrowthSpeedMultiplier=1.00000\nPoopIntervalMultiplier=1.00000\nCropDecaySpeedMultiplier=1.00000\nHairGrowthSpeedMultiplier=1.00000\n",
+      "settings": []
+    },
+    {
+      "title": "GameUserSettings.ini",
+      "file": "server/ShooterGame/Saved/Config/WindowsServer/GameUserSettings.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[ServerSettings]\nBanListURL=\"https://cdn2.arkdedicated.com/asa/BanList.txt\"\nAlwaysNotifyPlayerJoined=False\nAllowCaveBuildingPVE=False\nServerPassword=\nDifficultyOffset=0.200000\nShowMapPlayerLocation=True\nGlobalVoiceChat=False\nProximityChat=False\nNoTributeDownloads=False\nAllowThirdPersonPlayer=False\nServerHardcore=False\nServerPVE=False\nOverrideStructurePlatformPrevention=False\nPreventOfflinePvP=False\nAllowAnyoneBabyImprintCuddle=False\nDisableImprintDinoBuff=False\nPvPDinoDecay=False\nAutoDestroyDecayedDinos=False\nRandomSupplyCratePoints=False\nPreventTribeAlliances=False\nServerCrosshair=True\nServerForceNoHUD=False\nEnablePvPGamma=False\nDisablePvEGamma=False\nDisableDinoDecayPvE=False\nAdminLogging=False\nServerAdminPassword=\nRCONEnabled=True\nDisableWeatherFog=False\nRCONPort=27020\nPreventOfflinePvPInterval=0.0\nMinimumDinoReuploadInterval=0\nTheMaxStructuresInRange=10500\nStartTimeHour=-1\nOxygenSwimSpeedStatMultiplier=1.000000\nStructurePreventResourceRadiusMultiplier=1.000000\nStructureResistanceMultiplier=1.000000\nTribeNameChangeCooldown=15\nPlatformSaddleBuildAreaBoundsMultiplier=1\nAlwaysAllowStructurePickup=False\nStructurePickupTimeAfterPlacement=30.0\nStructurePickupHoldDuration=0.5\nAllowHideDamageSourceFromLogs=True\nRaidDinoCharacterFoodDrainMultiplier=1.000000\nPlayerCharacterWaterDrainMultiplier=1.000000\nPlayerCharacterHealthRecoveryMultiplier=1.000000\nPlayerCharacterStaminaDrainMultiplier=1.000000\nPlayerDamageMultiplier=1.000000\nPlayerResistanceMultiplier=1.000000\nDinoCharacterFoodDrainMultiplier=1.000000\nDinoCharacterHealthRecoveryMultiplier=1.000000\nDinoCharacterStaminaDrainMultiplier=1.000000\nDinoDamageMultiplier=1.000000\nDinoResistanceMultiplier=1.000000\nPvEDinoDecayPeriodMultiplier=1.000000\nKickIdlePlayersPeriod=3600\nPerPlatformMaxStructuresMultiplier=1.000000\nHarvestAmountMultiplier=1.000000\nHarvestHealthMultiplier=1.000000\nResourcesRespawnPeriodMultiplier=1.000000\nTamingSpeedMultiplier=1.000000\nXPMultiplier=1.000000\nAutoSavePeriodMinutes=15.0\nMaxTamedDinos=5000\nMaxPersonalTamedDinos=0\nItemStackSizeMultiplier=1.000000\nRCONServerGameLogBuffer=600\nEnableExtraStructurePreventionVolumes=False\nAllowFlyerCarryPvE=False\nShowFloatingDamageText=False\nImplantSuicideCD=28800\nPreventSpawnAnimations=False\nCrossARKAllowForeignDinoDownloads=False\nPreventDiseases=False\nNonPermanentDiseases=False\nPreventMateBoost=False\nPvEAllowStructuresAtSupplyDrops=False\nAllowMultipleAttachedC4=False\nAllowHitMarkers=True\nDisableStructureDecayPvE=False\nMaxTributeItems=50\nMaxTributeDinos=20\nAllowRaidDinoFeeding=False\nDayCycleSpeedScale=1.000000\nDayTimeSpeedScale=1.000000\nNightTimeSpeedScale=1.000000\nPreventDownloadSurvivors=False\nPreventDownloadItems=False\nPreventDownloadDinos=False\nPreventUploadSurvivors=False\nPreventUploadItems=False\nPreventUploadDinos=False\n\n[MessageOfTheDay]\nMessage=Welcome to ARK!\nDuration=20\n\n[SessionSettings]\nSessionName=AMP Powered ARK: Survival Ascended Server\n\n[/Script/Engine.GameSession]\nMaxPlayers=70",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

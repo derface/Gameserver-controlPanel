@@ -1,0 +1,80 @@
+{
+  "id": "amp-renown",
+  "name": "Renown",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1512690,
+  "start": "mkdir -p \"Renown_Combat/Saved/Config/LinuxServer\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1488310\" ./Renown_Combat/Binaries/Linux/Renown_CombatServer-Linux-Shipping Renown_Combat -Port={{port}} -QueryPort={{port_2}} -BeaconPort={{port_3}} -RCONPort={{port_4}} -RCONPassword=\"{{rcon_password}}\" -ini:Engine:[Script/SteamSockets.SteamSocketsNetDriver]:NetServerMaxTickRate={{net_server_max_tick_rate}} -ini:Engine:[SystemSettings]:Server.FirstPersonOnly={{server_first_person_only}} -ini:Engine:[EpicOnlineServices]:DedicatedServerClientId=xyza78917DzEE5Ey0isciVt66QDm5IzM -ini:Engine:[EpicOnlineServices]:DedicatedServerClientSecret=m/mrnywFCdeA1mW3ZSvv3qcVlQlfwi1a+7Z63Q44EGU",
+  "ports": [
+    {
+      "name": "Spiel-Port",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Beacon",
+      "port": 9999,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 25575,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "net_server_max_tick_rate",
+      "label": "Max. Netzwerk-Tickrate",
+      "help": "Höchste Tickrate des Netzwerk-Treibers.",
+      "type": "number",
+      "default": "30"
+    },
+    {
+      "key": "server_first_person_only",
+      "label": "Nur Ego-Perspektive",
+      "help": "Wenn an, wird nur in der Ego-Perspektive gespielt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogGameState: Match State Changed from WaitingToStart to InProgress$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/Renown_Combat/Saved"
+  ],
+  "config": [
+    {
+      "title": "Game.ini",
+      "file": "server/Renown_Combat/Saved/Config/LinuxServer/Game.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Game/Core/Blueprints/Renown_GameInstance.Renown_GameInstance_C]\nServerName=AMP Powered Renown Server\nMaxPlayers=40\nServerPassword=\nAdminPassword=\nMapRotation=RSurv-AlgaraIsle_p\nPrivateSession=False\nGameSaveName=Save 1\nMaxPing=180\nEnableRCON=True\nRCONPort=25575\nRCONChatMessagesLimit=30\nRCONPassword=\nMOTD=Welome to my server!\nRegion=\n\n[/Script/Engine.GameSession]\nMaxPlayers=40\n\n[/Game/Core/Blueprints/GameModes/Renown_Survival_GameMode.Renown_Survival_GameMode_C]\nResourceGainMultiplier=1\nGoldCoinGainMultiplier=1\nGlobalCraftingMultiplier=1\nGlobalSmeltingMultiplier=1\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

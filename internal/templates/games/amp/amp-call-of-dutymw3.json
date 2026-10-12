@@ -1,0 +1,69 @@
+{
+  "id": "amp-call-of-dutymw3",
+  "name": "Call of Duty: Modern Warfare 3 (2011)",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 42750,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"42690\" wine \"./iw5mp_server.exe\" +set sv_config \"server.cfg\" +set net_queryPort {{port}} +set net_port {{port_2}} +set net_authPort {{port_3}} +set net_masterServerPort {{port_4}} +start_map_rotate +set dedicated \"{{dedicated}}\" +set sv_kickBanTime \"{{sv_kick_ban_time}}\" +set sv_floodProtect \"{{sv_flood_protect}}\"",
+  "ports": [
+    {
+      "name": "Offener Spiel-Port",
+      "port": 27014,
+      "proto": "udp"
+    },
+    {
+      "name": "Sicherer Spiel-Port",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Anmelde-Port",
+      "port": 8766,
+      "proto": "udp"
+    },
+    {
+      "name": "Master-Server-Port",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "dedicated",
+      "label": "Server öffentlich",
+      "help": "Wenn an, ist der Server öffentlich sichtbar, sonst nur im lokalen Netz erreichbar.",
+      "type": "select",
+      "options": [
+        "2",
+        "1"
+      ],
+      "default": "2"
+    },
+    {
+      "key": "sv_kick_ban_time",
+      "label": "Dauer eines Zeitbanns",
+      "help": "Wie lange ein Spieler bei Kick bzw. Zeitbann gesperrt wird.",
+      "type": "number",
+      "default": "300"
+    },
+    {
+      "key": "sv_flood_protect",
+      "label": "Flutschutz",
+      "help": "Wenn an, werden Befehle von Spielern gebremst. Auf öffentlichen Servern ohne Passwort empfohlen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

@@ -1,0 +1,78 @@
+{
+  "id": "amp-conan-exiles",
+  "name": "Conan Exiles (Legacy)",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 443030,
+  "steam_beta": "conan-exiles-legacy",
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"ConanSandbox/Saved/Config/WindowsServer\" ; cd \"ConanSandbox/Binaries/Win64\" && SteamAppId=\"440900\" wine \"./ConanSandboxServer-Win64-Shipping.exe\" {{map}} -stdout -FullStdOutLogOutput -Port={{port}} -QueryPort={{port_3}} -RconPort={{port_4}} -RconEnabled=1 -RconPassword=\"{{rcon_password}}\" -MaxPlayers={{max_players}} -ServerName=\"{{server_name}}\" -ServerPassword=\"{{server_password}}\"",
+  "ports": [
+    {
+      "name": "Port für Spiel und Mods",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Port für Spiel und Mods",
+      "port": 7777,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 25575,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "40"
+    },
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "server_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Beitreten. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "map",
+      "label": "Karte",
+      "help": "Karte, die beim Start geladen wird.",
+      "type": "select",
+      "options": [
+        "/Game/Maps/ConanSandbox/ConanSandbox",
+        "/Game/DLC_EXT/DLC_Siptah/Maps/DLC_Isle_of_Siptah"
+      ],
+      "default": "/Game/Maps/ConanSandbox/ConanSandbox"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^.*LogGameState: Match State Changed from WaitingToStart to InProgress$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

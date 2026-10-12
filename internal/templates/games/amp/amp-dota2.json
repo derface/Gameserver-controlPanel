@@ -1,0 +1,152 @@
+{
+  "id": "amp-dota2",
+  "name": "Dota 2",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 570,
+  "steam_login": true,
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:/data/server/game/bin/linuxsteamrt64:$LD_LIBRARY_PATH\" SteamAppId=\"570\" ./game/bin/linuxsteamrt64/dota2 -dedicated -usercon -serverlogging -nobreakpad -allow_no_lobby_connect -port {{port}} -ip 0.0.0.0 -maxplayers {{max_players}} {{insecure}}{{custom_parameters}} {{custom_con_vars}} +sv_logfile 1 +rcon_password \"{{rcon_password}}\" +hostname \"{{hostname}}\" +sv_tags \"{{sv_tags}}\" +sv_lan \"{{sv_lan}}\" +sv_setsteamaccount \"{{sv_setsteamaccount}}\" +sv_password \"{{sv_password}}\" +map \"{{map}}\" +mapgroup \"{{mapgroup}}\" +host_workshop_map \"{{host_workshop_map}}\" +host_workshop_collection \"{{host_workshop_collection}}\" +sv_pure \"{{sv_pure}}\" +sv_cheats \"{{sv_cheats}}\"",
+  "ports": [
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Port für Spiel und RCON",
+      "port": 27015,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "32"
+    },
+    {
+      "key": "hostname",
+      "label": "Servername",
+      "help": "So heißt der Server in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "sv_tags",
+      "label": "Server-Tags",
+      "help": "Stichworte für die Serverliste, durch Komma getrennt.",
+      "default": ""
+    },
+    {
+      "key": "sv_lan",
+      "label": "LAN-Server",
+      "help": "Wenn an, läuft der Server als LAN-Server: ohne Heartbeat, ohne Anmeldung, nur lokale Adressen.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "sv_setsteamaccount",
+      "label": "Game Server Login Token (GSLT)",
+      "help": "Steam Game Server Login Token, damit der Server in der Serverliste erscheint. Beim Erstellen die App-ID 570 nutzen.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "sv_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Verbinden. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "map",
+      "label": "Startkarte",
+      "help": "Mit welcher Karte der Server startet. Bei „Eigene“ auch die eigene Startkarte eintragen.",
+      "type": "select",
+      "options": [
+        "dota"
+      ],
+      "default": "dota"
+    },
+    {
+      "key": "mapgroup",
+      "label": "Kartengruppe",
+      "help": "Kartengruppe für die Rotation, alternativ eine Workshop-Sammlung mit den Karten.",
+      "default": ""
+    },
+    {
+      "key": "host_workshop_map",
+      "label": "Workshop-Karte",
+      "help": "ID einer Karte aus dem Steam-Workshop, die geladen wird. Ersetzt die Startkarte.",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "host_workshop_collection",
+      "label": "Workshop-Sammlung",
+      "help": "ID einer Sammlung aus dem Steam-Workshop, die geladen wird. Ersetzt die Startkarte.",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "sv_pure",
+      "label": "Pure-Server-Modus",
+      "help": "Ob Spieler nur bestimmte Dateien verwenden dürfen.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_cheats",
+      "label": "Cheats",
+      "help": "Wenn an, sind Cheat-Variablen auf dem Server erlaubt.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "insecure",
+      "label": "Valve-Anti-Cheat aus",
+      "help": "Wenn an, ist Valve-Anti-Cheat (VAC) ausgeschaltet.",
+      "type": "bool",
+      "flag": "-insecure ",
+      "default": "false"
+    },
+    {
+      "key": "custom_parameters",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter (beginnen mit -). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "custom_con_vars",
+      "label": "Zusätzliche Konsolenvariablen",
+      "help": "Zusätzliche Konsolenvariablen (beginnen mit +). Mit Vorsicht benutzen.",
+      "default": ""
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^SV:  Connection to Steam servers successful\\.$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

@@ -1,0 +1,87 @@
+{
+  "id": "amp-deadmatter",
+  "name": "Dead Matter",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2584780,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"DeadMatter/Saved/Config/WindowsServer\" ; cd \"DeadMatter/Binaries/Win64\" && SteamAppId=\"2184150\" wine \"./DeadMatterServer-Win64-Shipping.exe\" DeadMatter -stdout -FullStdOutLogOutput -Port={{port}} -QueryPort={{port_3}} -SteamServerName=\"{{steam_server_name}}\" {{hardcore}}{{heartbeat}}{{enable_vehicles_on_dedicated}}-Wait",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 7778,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 7778,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "steam_server_name",
+      "label": "Lobby-Titel",
+      "help": "Servertitel in der Lobby.",
+      "default": ""
+    },
+    {
+      "key": "hardcore",
+      "label": "Hardcore-Modus",
+      "help": "Wenn an, ist der Hardcore-Modus eingeschaltet.",
+      "type": "bool",
+      "flag": "-hardcore ",
+      "default": "false"
+    },
+    {
+      "key": "heartbeat",
+      "label": "Server-Heartbeat anzeigen",
+      "help": "Wenn an, erscheint der Heartbeat des Servers in der Konsole.",
+      "type": "bool",
+      "flag": "-heartbeat ",
+      "default": "false"
+    },
+    {
+      "key": "enable_vehicles_on_dedicated",
+      "label": "Fahrzeuge",
+      "help": "Wenn an, gibt es Fahrzeuge auf dem Server.",
+      "type": "bool",
+      "flag": "-EnableVehiclesOnDedicated ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[\\d{4}\\.\\d{2}\\.\\d{2}-\\d{2}\\.\\d{2}\\.\\d{2}:\\d{3}\\]\\[.+\\d+\\]LogOnline: STEAM: AUTH: Revoking all tickets\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 2
+  },
+  "backup_include": [
+    "server/DeadMatter/Saved"
+  ],
+  "config": [
+    {
+      "title": "Game.ini",
+      "file": "server/DeadMatter/Saved/Config/WindowsServer/Game.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/DeadMatter.DMGameSession]\nServerName=AMP Powered Server\nMOTD=This server is powered by AMP\nPVP=true\nAdmins=STEAMIDHERE\nSuperAdmins=STEAMIDHERE",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

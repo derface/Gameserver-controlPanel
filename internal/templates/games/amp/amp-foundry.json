@@ -1,0 +1,39 @@
+{
+  "id": "amp-foundry",
+  "name": "FOUNDRY",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2915550,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"Mods\" ; SteamAppId=\"983870\" wine \"./FoundryDedicatedServer.exe\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 3724,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 3724,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^.*Loading \\(\\d+\\/\\d+\\): Done! Dedicated server is now running!$",
+  "query": {
+    "type": "a2s",
+    "port": 2
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

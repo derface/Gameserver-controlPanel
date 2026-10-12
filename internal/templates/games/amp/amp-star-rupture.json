@@ -1,0 +1,83 @@
+{
+  "id": "amp-star-rupture",
+  "name": "StarRupture",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 3809400,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"1631270\" wine \"./StarRupture/Binaries/Win64/StarRuptureServerEOS-Win64-Shipping.exe\" StarRupture -port={{port}} {{multihome}}-stdout -FullStdOutLogOutput -RCWebControlDisable -RCWebInterfaceDisable",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "multihome",
+      "label": "MultiHome (Windows)",
+      "help": "Wenn an, wird „-multihome“ auf die gebundene IP gesetzt. Nur Windows; unter Linux muss die gebundene IP 0.0.0.0 sein.",
+      "type": "bool",
+      "flag": "-multihome=0.0.0.0 ",
+      "default": "false"
+    },
+    {
+      "key": "eos_override_host_ip",
+      "label": "Auswahl der öffentlichen IP",
+      "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird. Experimentell.",
+      "type": "select",
+      "options": [
+        ""
+      ],
+      "default": ""
+    },
+    {
+      "key": "adminpassword",
+      "label": "Hash des Admin-Passworts",
+      "help": "Hash des Admin-Passworts. Den Hash mit dem Hash-Werkzeug des Spiels erzeugen und nur den Hash eintragen, nicht den ganzen JSON-Block. Leer = kein Admin-Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "playerpassword",
+      "label": "Hash des Spieler-Passworts",
+      "help": "Hash des Spieler-Passworts. Den Hash mit dem Hash-Werkzeug des Spiels erzeugen und nur den Hash eintragen, nicht den ganzen JSON-Block. Leer = kein Spieler-Passwort.",
+      "type": "secret",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogGlobalStatus: UEngine::LoadMap Load map complete /Game/.*/Maps/DedicatedServerStart$",
+  "config": [
+    {
+      "title": "DSSettings.txt",
+      "file": "server//DSSettings.txt",
+      "format": "properties",
+      "write_default": true,
+      "default": "{\n  \"SessionName\": \"MySaveGame\",\n  \"SaveGameInterval\": \"300\",\n  \"StartNewGame\": \"false\",\n  \"LoadSavedGame\": \"false\",\n  \"SaveGameName\": \"AutoSave0.sav\"\n}",
+      "settings": []
+    },
+    {
+      "title": "Password.json",
+      "file": "server/Password.json",
+      "format": "json",
+      "write_default": true,
+      "default": "{\"password\":\"{{adminpassword}}\"}",
+      "settings": []
+    },
+    {
+      "title": "PlayerPassword.json",
+      "file": "server/PlayerPassword.json",
+      "format": "json",
+      "write_default": true,
+      "default": "{\"password\":\"{{playerpassword}}\"}",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

@@ -1,0 +1,54 @@
+{
+  "id": "amp-sapiens",
+  "name": "Sapiens",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2886350,
+  "start": "SteamAppId=\"1060230\" ./linuxServer {{provide_logs}} {{advertise}}--server-id \"AMPServer\" {{startup_mode}} --port \"{{port}}\" --http-port \"{{port_2}}\" --savedir \".\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 16161,
+      "proto": "udp"
+    },
+    {
+      "name": "HTTP-Port",
+      "port": 16168,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "provide_logs",
+      "label": "Fehlerberichte senden",
+      "help": "Ob Fehlerberichte (und auf Wunsch der Entwickler ein Weltstand) automatisch an die Sapiens-Entwickler gehen.",
+      "type": "select",
+      "options": [
+        "",
+        "--yes",
+        "--yes-upload-world"
+      ],
+      "default": ""
+    },
+    {
+      "key": "advertise",
+      "label": "Server bewerben",
+      "help": "Wenn an, erscheint der Server in der Serverliste im Spiel.",
+      "type": "bool",
+      "flag": "--advertise ",
+      "default": "false"
+    },
+    {
+      "key": "startup_mode",
+      "label": "Startmodus",
+      "help": "Startmodus des Servers.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^(?:INFO: )?Server is running and ready for connections$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

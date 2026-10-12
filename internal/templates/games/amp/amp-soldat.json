@@ -1,0 +1,47 @@
+{
+  "id": "amp-soldat",
+  "name": "Soldat",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 638500,
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"638490\" ./soldatserver -p {{port}} -b \"0.0.0.0\" -l {{max_players}} -k \"{{game_password}}\" -c soldat.ini -m {{mapslist_file}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 23073,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 23073,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "10"
+    },
+    {
+      "key": "mapslist_file",
+      "label": "Kartenlisten-Datei",
+      "help": "Kartenlisten-Datei, die geladen wird.",
+      "default": "mapslist.txt"
+    },
+    {
+      "key": "game_password",
+      "label": "Serverpasswort",
+      "help": "Passwort, das Spieler zum Beitreten brauchen. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\s*\\[\\*\\] Done$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

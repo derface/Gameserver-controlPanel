@@ -1,0 +1,37 @@
+{
+  "id": "amp-stormworks",
+  "name": "Stormworks",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 573090,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"573090\" wine \"./server64.exe\" +server_dir \"./\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 25564,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^Server\\s+Version\\s+:\\s+v\\d+\\.\\d+\\.\\d+$",
+  "config": [
+    {
+      "title": "server_config.xml",
+      "file": "server//server_config.xml",
+      "format": "properties",
+      "write_default": true,
+      "default": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<server_data \nport=\"25564\" \nname=\"Stormworks - Powered by AMP\" \nseed=\"16657\" \nsave_name=\"autosave_server\" \nmax_players=\"32\" \npassword=\"\" \nday_night_length=\"60\" \nsunrise=\"0.25\" \nsunset=\"0.791\" \ninfinite_resources=\"false\" \nunlock_all_islands=\"false\" \nsettings_menu=\"false\" \nbase_island=\"data/tiles/island12.xml\" \nsettings_menu_lock=\"false\" \ninfinite_batteries=\"false\" \ninfinite_fuel=\"false\" \nengine_overheating=\"true\" \nceasefire=\"false\" \ninfinite_ammo=\"false\" \nno_clip=\"false\" \nmap_teleport=\"false\" \nvehicle_spawn=\"true\" \nphoto_mode=\"true\" \nrespawning=\"true\" \ncleanup_vehicle=\"false\" \nclear_fow=\"true\" \nthird_person=\"true\" \nthird_person_vehicle=\"true\" \nvehicle_damage=\"true\" \nplayer_damage=\"true\" \nnpc_damage=\"true\" \naggressive_animals=\"false\" \nsea_monsters=\"false\" \nlightning=\"true\" \nteleport_vehicle=\"false\" \nfast_travel=\"false\" \nstarting_currency=\"20000\" \ndespawn_on_leave=\"false\" \nmap_show_players=\"true\" \nmap_show_vehicles=\"true\" \nshow_3d_waypoints=\"false\" \nshow_name_plates=\"false\" \noverride_weather=\"false\" \noverride_time=\"false\" \noverride_wind=\"false\" \nphysics_timestep=\"0\" \nwildlife_enabled=\"true\" \nfish_spawn_rate=\"2\" \nunlock_components=\"false\" \ndlc_weapons=\"false\" \ndlc_arid=\"false\">\n\t<admins>\n\t\t<id value=\"\"/>\n\t</admins>\n\t<authorized>\n\t</authorized>\n\t<blacklist>\n    </blacklist>\n\t<whitelist>\n    </whitelist>\n\t<playlists>\n\t\t<path path=\"rom/data/missions/default_ai\"/>\n\t\t<path path=\"rom/data/missions/default_ai_aircraft\"/>\n\t\t<path path=\"rom/data/missions/default_cargo\"/>\n\t\t<path path=\"rom/data/missions/default_dock_bollards\"/>\n\t\t<path path=\"rom/data/missions/default_elevators\"/>\n\t\t<path path=\"rom/data/missions/default_forest_fire_missions\"/>\n\t\t<path path=\"rom/data/missions/default_resource_storage\"/>\n\t\t<path path=\"rom/data/missions/default_mission_locations\"/>\n\t\t<path path=\"rom/data/missions/default_mission_transport_locations\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_arctic\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_building\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_delivery\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_main\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_sawyer\"/>\n\t\t<path path=\"rom/data/missions/default_natural_disasters\"/>\n\t\t<path path=\"rom/data/missions/default_paths\"/>\n\t\t<path path=\"rom/data/missions/default_resource_trading\"/>\n\t\t<path path=\"rom/data/missions/default_tutorial\"/>\n\t\t<path path=\"rom/data/missions/dlc_weapons_ai\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_underwater\"/>\n\t\t<path path=\"rom/data/missions/default_mission_zones_arid\"/>\n\t\t<path path=\"rom/data/missions/default_railroad_signals\"/>\n\t\t<path path=\"rom/data/missions/default_landmarks\"/>\n\t\t<path path=\"rom/data/missions/default_oil_survey\"/>\n\t</playlists>\n</server_data>\n\n",
+      "settings": [],
+      "auto": false
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

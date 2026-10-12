@@ -1,0 +1,186 @@
+{
+  "id": "amp-smalland",
+  "name": "Smalland: Survive the Wilds",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 808040,
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"768200\" ./SMALLAND/Binaries/Linux/SMALLANDServer-Linux-Shipping SMALLAND /Game/Maps/WorldGame/WorldGame_Smalland{{friendlyfire}}{{peacefulmode}}{{keepinventory}}{{nodeterioration}}{{private}}{{tamedcreaturesimmortal}}{{crossplay}}?SERVERNAME=\"{{servername}}\" WORLDNAME=\"{{worldname}}\" PASSWORD=\"{{password}}\" lengthofdayseconds=\"{{lengthofdayseconds}}\" lengthofseasonseconds=\"{{lengthofseasonseconds}}\" creaturehealthmodifier=\"{{creaturehealthmodifier}}\" creaturedamagemodifier=\"{{creaturedamagemodifier}}\" creaturerespawnratemodifier=\"{{creaturerespawnratemodifier}}\" resourcerespawnratemodifier=\"{{resourcerespawnratemodifier}}\" creaturespawnchancemodifier=\"{{creaturespawnchancemodifier}}\" craftingtimemodifier=\"{{craftingtimemodifier}}\" craftingfuelmodifier=\"{{craftingfuelmodifier}}\" stormfrequencymodifier=\"{{stormfrequencymodifier}}\" nourishmentlossmodifier=\"{{nourishmentlossmodifier}}\" falldamagemodifier=\"{{falldamagemodifier}}\"{{custom_options}}?SESSIONPLATFORM=pc -ini:Engine:[EpicOnlineServices]:DeploymentId=50f2b148496e4cbbbdeefbecc2ccd6a3 -ini:Engine:[EpicOnlineServices]:DedicatedServerClientId=xyza78918KT08TkA6emolUay8yhvAAy2 -ini:Engine:[EpicOnlineServices]:DedicatedServerClientSecret=aN2GtVw7aHb6hx66HwohNM+qktFaO3vtrLSbGdTzZWk -Port={{port}} -NOSTEAM -stdout -FullStdOutLogOutput",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "servername",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "worldname",
+      "label": "Weltname",
+      "help": "Name der Welt, entspricht dem Dateinamen des Spielstands.",
+      "default": "World"
+    },
+    {
+      "key": "password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Verbinden. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "lengthofdayseconds",
+      "label": "Länge des Tages",
+      "type": "number",
+      "default": "1800"
+    },
+    {
+      "key": "lengthofseasonseconds",
+      "label": "Länge der Jahreszeiten",
+      "type": "number",
+      "default": "10800"
+    },
+    {
+      "key": "creaturehealthmodifier",
+      "label": "Faktor für Leben von Kreaturen",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "creaturedamagemodifier",
+      "label": "Faktor für Schaden von Kreaturen",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "creaturerespawnratemodifier",
+      "label": "Faktor für Respawn von Kreaturen",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "resourcerespawnratemodifier",
+      "label": "Faktor für Respawn von Rohstoffen",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "creaturespawnchancemodifier",
+      "label": "Faktor für Spawn-Chance von Kreaturen",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "craftingtimemodifier",
+      "label": "Faktor für Herstellungszeit",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "craftingfuelmodifier",
+      "label": "Faktor für Brennstoff beim Herstellen",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "stormfrequencymodifier",
+      "label": "Faktor für Sturmhäufigkeit",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "nourishmentlossmodifier",
+      "label": "Faktor für Hunger",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "falldamagemodifier",
+      "label": "Faktor für Fallschaden",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "friendlyfire",
+      "label": "Friendly Fire",
+      "help": "Wenn an, gibt es Eigenbeschuss – der Server wird zum PvP-Server.",
+      "type": "bool",
+      "flag": "?FRIENDLYFIRE",
+      "default": "false"
+    },
+    {
+      "key": "peacefulmode",
+      "label": "Friedlicher Modus",
+      "help": "Wenn an, ist der friedliche Modus aktiv.",
+      "type": "bool",
+      "flag": "?PEACEFULMODE",
+      "default": "false"
+    },
+    {
+      "key": "keepinventory",
+      "label": "Inventar beim Tod behalten",
+      "help": "Wenn an, behalten Spieler beim Tod ihr Inventar.",
+      "type": "bool",
+      "flag": "?KEEPINVENTORY",
+      "default": "false"
+    },
+    {
+      "key": "nodeterioration",
+      "label": "Kein Wetterverschleiß an Gebäuden",
+      "help": "Wenn an, verfallen Gebäude nicht durch Wetter.",
+      "type": "bool",
+      "flag": "?NODETERIORATION",
+      "default": "false"
+    },
+    {
+      "key": "private",
+      "label": "Privater Server",
+      "help": "Wenn an, ist der Server in der Serverliste versteckt.",
+      "type": "bool",
+      "flag": "?PRIVATE",
+      "default": "false"
+    },
+    {
+      "key": "tamedcreaturesimmortal",
+      "label": "Gezähmte Kreaturen unsterblich",
+      "help": "Wenn an, sterben gezähmte Kreaturen nicht.",
+      "type": "bool",
+      "flag": "?TAMEDCREATURESIMMORTAL",
+      "default": "false"
+    },
+    {
+      "key": "crossplay",
+      "label": "Crossplay",
+      "help": "Wenn an, ist der Server auch für andere Plattformen sichtbar.",
+      "type": "bool",
+      "flag": "?CROSSPLAY",
+      "default": "false"
+    },
+    {
+      "key": "custom_options",
+      "label": "Eigene Start-Optionen",
+      "help": "Eigene Start-Optionen (beginnen mit ?), mit Fragezeichen und ohne Leerzeichen.",
+      "default": ""
+    },
+    {
+      "key": "eos_override_host_ip",
+      "label": "Auswahl der öffentlichen IP",
+      "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
+      "type": "select",
+      "options": [
+        ""
+      ],
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogLoad: Took \\d+.\\d+ seconds to LoadMap\\(\\/Game\\/Maps\\/WorldGame\\/WorldGame_Smalland\\)$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

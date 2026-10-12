@@ -1,0 +1,117 @@
+{
+  "id": "amp-frozen-flame",
+  "name": "Frozen Flame",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1348640,
+  "start": "mkdir -p \"FrozenFlame/Saved/Config/LinuxServer\" ; SteamAppId=\"715400\" ./FrozenFlame/Binaries/Linux/FrozenFlameServer-Linux-Shipping FrozenFlame -stdout -Port={{port}} -QueryPort={{port_3}} -RconPort={{port_4}} -RconPassword={{rcon_password}} -ip={{public_ip}} {{noeac}}{{public_server}}-MetaGameServerName=\"{{server_name}}\" -ini:Engine:[/Script/EngineSettings.GameMapsSettings]:ServerDefaultMap=\"{{server_default_map}}\" -LOCALLOGTIMES",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "RCON",
+      "port": 25575,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "server_name",
+      "label": "Servername",
+      "help": "So heißt der Server öffentlich.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "server_default_map",
+      "label": "Spielmodus",
+      "help": "Spielmodus (Standardkarte).",
+      "type": "select",
+      "options": [
+        "/Game/FrozenFlame/Maps/Heaven/Heaven.Heaven",
+        "/Game/GameModeSurvive/Maps/Survive/Survive.Survive"
+      ],
+      "default": "/Game/FrozenFlame/Maps/Heaven/Heaven.Heaven"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    },
+    {
+      "key": "public_ip",
+      "label": "Auswahl der öffentlichen IP",
+      "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
+      "default": ""
+    },
+    {
+      "key": "noeac",
+      "label": "EasyAntiCheat aus",
+      "help": "Wenn an, startet der Server ohne EasyAntiCheat (EAC). Spieler müssen dann auch ohne starten.",
+      "type": "bool",
+      "flag": "-noeac ",
+      "default": "false"
+    },
+    {
+      "key": "public_server",
+      "label": "Server öffentlich",
+      "help": "Wenn an, ist der Server öffentlich sichtbar (Meta-Server-Adresse und Schlüssel werden gesetzt).",
+      "type": "bool",
+      "flag": "-ini:Engine:[URL]:MetaServerUrl=meta.frozen-flame.xyz -ini:Engine:[URL]:MetaServerSecret=TEuj7URa2horRuENjjpm3d1rqBPtHOz4 ",
+      "default": "true"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogRCon: \\([\\d\\.:]+:\\d+\\): started connection$",
+  "query": {
+    "type": "a2s",
+    "port": 2
+  },
+  "backup_include": [
+    "server/FrozenFlame/Saved"
+  ],
+  "config": [
+    {
+      "title": "Game.ini",
+      "file": "server/FrozenFlame/Saved/Config/LinuxServer/Game.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/Engine.GameSession]\nMaxPlayers=10\n\n[/Script/FrozenFlame.FGameSession]\nServerPassword=\n\n[/Script/FrozenFlame.GameBalance]\nbFreePVP=True\nDurationOfDay=3600\n\nHealthRateAfterRespawn=0.5\nbRestoreHealthOnLevelUp=True\nJumpStaminaCost=6\nSprintStaminaCost=1\n\nArmorDurabilityReducementAfterDeath=25\nDefaultWeaponDurabilityCost=0.5\n\nHalfSlowdownOverweightRatio=1\nFullSlowdownOverweightRatio=1.5\nbIsAllowedToTeleportWithOverweight=False\nbIsAllowedToGlideWithOverweight=False\n\nMinimalLevelToDropItemAfterDeath=0\nbDropEquippedItems=False\nbDropEquipableItems=False\nbDropFoodItems=False\n\nLevelUpFlameRate=1\nMonstersHealthMultiplier=1\nMonstersDamageMultiplier=1\n\nbNoModuleCost=False\nbLimitlessSupport=False\nbInvulnerableModules=False\nbDemolishResourceDropMultiplier=0.5\n\nbIgnoreDifficulty=False\n\nDecayThreshold=0\n\nbOnlyOneSentinelAllowed=True\nbRequireActiveSentinelForBuildingMode=False\nbDisallowToDestroyModulesWithoutOwnership=True\n\nbAllowCreaturesToDamageBuildings=False\nbAllowPlayersToDamageBuildings=True\n\n[/Script/FrozenFlame.DefaultsOverTimeEffect]\nbDisableOverweight=False\n\n[/Game/FrozenFlame/DataTables/Variables/BP_GameBalance_Base.BP_GameBalance_Base_C]\nbApplyRestrictionsInsideEnergyBarriers=True\n",
+      "settings": []
+    },
+    {
+      "title": "GameModeSurvive.ini",
+      "file": "server/FrozenFlame/Saved/Config/LinuxServer/GameModeSurvive.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/FrozenFlame.GameBalance]\nbSkipTutorial=False\n\nHealthRateAfterRespawn=0.5\nbRestoreHealthOnLevelUp=True\n\nArmorDurabilityReducementAfterDeath=25\nDefaultWeaponDurabilityCost=0.5\n\nbDropEquippedItems=False\nbDropEquipableItems=True\nbDropFoodItems=True\n\nbDemolishResourceDropMultiplier=0.5\n\nDecayThreshold=0",
+      "settings": []
+    },
+    {
+      "title": "HeavenNormal.ini",
+      "file": "server/FrozenFlame/Saved/Config/LinuxServer/HeavenNormal.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/FrozenFlame.GameBalance]\nHealthRateAfterRespawn=0.5\nbRestoreHealthOnLevelUp=True\n\nJumpStaminaCost=6\nSprintStaminaCost=1.0\n\nArmorDurabilityReducementAfterDeath=5\nDefaultWeaponDurabilityCost=0.3\n\nHalfSlowdownOverweightRatio=1\nFullSlowdownOverweightRatio=1.5\n\nLevelUpFlameRate=1.0\n\nbDemolishResourceDropMultiplier=0.5\n\nDecayThreshold=0.5",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

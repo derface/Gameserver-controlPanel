@@ -1,0 +1,764 @@
+{
+  "id": "amp-wolfenstein-et",
+  "name": "Wolfenstein: Enemy Territory",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 1873030,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "[ -e \"etmain/AMP_campaigncycle.cfg\" ] || { mkdir -p \"$(dirname \"etmain/AMP_campaigncycle.cfg\")\"; cp -rn \"etmain/campaigncycle.cfg\" \"etmain/AMP_campaigncycle.cfg\" 2>/dev/null; } ; [ -e \"etmain/AMP_objectivecycle.cfg\" ] || { mkdir -p \"$(dirname \"etmain/AMP_objectivecycle.cfg\")\"; cp -rn \"etmain/objectivecycle.cfg\" \"etmain/AMP_objectivecycle.cfg\" 2>/dev/null; } ; [ -e \"etmain/AMP_lmscycle.cfg\" ] || { mkdir -p \"$(dirname \"etmain/AMP_lmscycle.cfg\")\"; cp -rn \"etmain/lmscycle.cfg\" \"etmain/AMP_lmscycle.cfg\" 2>/dev/null; } ; [ -e \"etmain/AMP_stopwatchcycle.cfg\" ] || { mkdir -p \"$(dirname \"etmain/AMP_stopwatchcycle.cfg\")\"; cp -rn \"etmain/stopwatchcycle.cfg\" \"etmain/AMP_stopwatchcycle.cfg\" 2>/dev/null; } ; SteamAppId=\"1873030\" wine \"./etded.exe\" +set fs_homepath \"/data/server/\" +set net_port {{port}} +set net_ip 0.0.0.0 +set rconpassword \"{{rcon_password}}\" +set dedicated \"{{dedicated}}\" +set com_hunkMegs \"{{com_hunk_megs}}\" +set sv_punkbuster \"{{sv_punkbuster}}\" +set logfile \"{{logfile}}\" +set g_logsync \"{{g_logsync}}\" +exec server.cfg",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 27960,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "dedicated",
+      "label": "Internet-Server",
+      "help": "Wenn an, startet der Server als Internet-Server, sonst als LAN-Server.",
+      "type": "select",
+      "options": [
+        "2",
+        "1"
+      ],
+      "default": "2"
+    },
+    {
+      "key": "com_hunk_megs",
+      "label": "Speicher des Servers",
+      "help": "Wie viel Speicher für Spieler und Gegenstände reserviert wird.",
+      "type": "number",
+      "default": "72"
+    },
+    {
+      "key": "sv_punkbuster",
+      "label": "Punkbuster",
+      "help": "Wenn an, ist der Anti-Cheat Punkbuster aktiv.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "logfile",
+      "label": "Log-Modus",
+      "help": "Wie in etmain/etserver.log geloggt wird.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_logsync",
+      "label": "Synchrones Konsolen-Log",
+      "help": "Wenn an, werden Logs sofort statt gepuffert geschrieben.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    },
+    {
+      "key": "user_settings",
+      "label": "Zusätzliche Server-Einstellungen",
+      "help": "Weitere Einstellungen für „etmain/server.cfg“, die sonst nirgends gesetzt werden. Eine pro Zeile.",
+      "default": ""
+    },
+    {
+      "key": "g_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Verbinden. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "sv_privateclients",
+      "label": "Private Plätze",
+      "help": "Wie viele Plätze (vom Spielerlimit) auf einem öffentlichen Server für private Spieler reserviert sind. 0 = aus. Das Passwort für private Plätze muss auch gesetzt sein.",
+      "type": "number",
+      "default": "4"
+    },
+    {
+      "key": "sv_privatepassword",
+      "label": "Passwort für private Plätze",
+      "help": "Passwort für private Spieler. Die Anzahl unter „Private Plätze“ eintragen.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "referee_password",
+      "label": "Schiedsrichter-Passwort",
+      "help": "Passwort für den Schiedsrichter-Status. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "sv_max_rate",
+      "label": "Größte Client-Rate",
+      "help": "Höchste Bandbreite, die ein Spieler eingestellt haben darf. 0 = keine Grenze.",
+      "type": "number",
+      "default": "13000"
+    },
+    {
+      "key": "sv_dl_max_rate",
+      "label": "Max. Download-Rate des Servers",
+      "help": "Wie oft pro Sekunde der Server Positionen von Modellen (Spieler, Waffen usw.) höchstens an Spieler sendet.",
+      "type": "number",
+      "default": "66"
+    },
+    {
+      "key": "sv_allow_download",
+      "label": "Download vom Server und aus dem Web",
+      "help": "Wenn an, dürfen Spieler Inhalte (Karten, Modelle usw.) vom Server oder aus dem Web laden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_www_download",
+      "label": "Download aus dem Web",
+      "help": "Wenn an, dürfen Spieler Inhalte (Karten, Modelle usw.) aus dem Web laden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_www_base_url",
+      "label": "Basis-Adresse für Downloads",
+      "help": "Basis-Adresse für die Download-Umleitung.",
+      "default": ""
+    },
+    {
+      "key": "sv_www_dl_disconnected",
+      "label": "Download ohne Verbindung",
+      "help": "Wenn an, laden Spieler Inhalte herunter, während sie nicht verbunden sind.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "sv_www_fallback_url",
+      "label": "Ersatz-Adresse für Downloads",
+      "help": "Adresse, falls ein HTTP-/FTP-Download beim Spieler fehlschlägt oder abgelehnt wird.",
+      "default": ""
+    },
+    {
+      "key": "sv_hostname",
+      "label": "Servername",
+      "help": "So heißt der Server in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "server_motd0",
+      "label": "Nachricht des Tages (Zeile 1)",
+      "help": "Erste Zeile der Nachricht des Tages beim Beitreten. Farbcodes sind erlaubt.",
+      "default": "^1Welcome to Wolfenstein: Enemy Territory!"
+    },
+    {
+      "key": "server_motd1",
+      "label": "Nachricht des Tages (Zeile 2)",
+      "help": "Zweite Zeile der Nachricht des Tages. Farbcodes sind erlaubt. Bis zu vier weitere Zeilen unter „Weitere Einstellungen“, z. B.: set server_motd2 \"dritte Zeile\"",
+      "default": ""
+    },
+    {
+      "key": "g_heavy_weapon_restriction",
+      "label": "Grenze für schwere Waffen",
+      "help": "Schwere Waffen nur für diesen Anteil des Teams.",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "g_antilag",
+      "label": "Antilag",
+      "help": "Wenn an, ist Antilag aktiv – besser für Spieler mit hohem Ping.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_alt_stopwatch_mode",
+      "label": "Alternativer Stoppuhr-Modus",
+      "help": "Wenn an, ist die Reihenfolge im Stoppuhr-Modus A-B-A-B statt A-B-B-A.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "g_autofireteams",
+      "label": "Automatische Fireteams",
+      "help": "Wenn an, kommen Spieler automatisch in Fireteams.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_complaintlimit",
+      "label": "Grenze für Beschwerden",
+      "help": "Nach so vielen Beschwerden wird ein Spieler gekickt.",
+      "type": "number",
+      "default": "6"
+    },
+    {
+      "key": "g_ipcomplaintlimit",
+      "label": "Grenze für Beschwerden pro IP",
+      "help": "Nach Beschwerden von so vielen verschiedenen Spielern (IPs) wird ein Spieler gekickt.",
+      "type": "number",
+      "default": "3"
+    },
+    {
+      "key": "g_fastres",
+      "label": "Schneller Respawn",
+      "help": "Wenn an, sind Spieler nach der Wiederbelebung sofort aktiv.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "g_friendly_fire",
+      "label": "Friendly Fire",
+      "help": "Wenn an, gibt es Eigenbeschuss – Spieler können Teamkameraden verletzen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_min_game_clients",
+      "label": "Mindestzahl Spieler",
+      "type": "number",
+      "default": ""
+    },
+    {
+      "key": "g_alliedmaxlives",
+      "label": "Max. Leben (Alliierte)",
+      "help": "Wie viele Leben jeder Alliierte hat. 0 = unbegrenzt.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "g_axismaxlives",
+      "label": "Max. Leben (Achse)",
+      "help": "Wie viele Leben jeder Spieler der Achse hat. 0 = unbegrenzt.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "g_teamforcebalance",
+      "label": "Erzwungener Team-Ausgleich",
+      "help": "Wenn an, kommen neue Spieler ins kleinste bzw. verlierende Team. Sonst wählen sie frei.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_no_team_switching",
+      "label": "Teamwechsel aus",
+      "help": "Wenn an, können Spieler das Team nicht wechseln.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "g_voice_chats_allowed",
+      "label": "Erlaubte Sprachnachrichten",
+      "help": "Wie viele Sprachnachrichten ein Spieler in 30 Sekunden senden darf.",
+      "type": "number",
+      "default": "4"
+    },
+    {
+      "key": "g_do_warmup",
+      "label": "Aufwärmphase",
+      "help": "Wenn an, gibt es eine Aufwärmphase.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "g_warmup",
+      "label": "Dauer der Aufwärmphase",
+      "help": "Wie lange die Aufwärmphase für Spieler dauert, wenn sie an ist.",
+      "type": "number",
+      "default": "30"
+    },
+    {
+      "key": "g_spectator_inactivity",
+      "label": "Zeitlimit für untätige Zuschauer",
+      "help": "Nach welcher Zeit untätige Zuschauer gekickt werden. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "sv_flood_protect",
+      "label": "Flutschutz",
+      "help": "Wenn an, ist der Server vor Chat-Flut geschützt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_pure",
+      "label": "Pure-Server",
+      "help": "Wenn an, dürfen Spieler nur unveränderte pak-Dateien nutzen, die auch auf dem Server liegen – Schutz vor Hacks und Cheats.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "sv_minping",
+      "label": "Min. Ping",
+      "help": "Kleinster erlaubter Ping. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "sv_maxping",
+      "label": "Max. Ping",
+      "help": "Größter erlaubter Ping. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "match_latejoin",
+      "label": "Später Beitritt",
+      "help": "Wenn an, dürfen Spieler laufenden Matches beitreten.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "match_mutespecs",
+      "label": "Zuschauer stumm",
+      "help": "Wenn an, sind Zuschauer stummgeschaltet.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "match_readypercent",
+      "label": "Anteil „Bereit“ für Rundenstart",
+      "help": "Wie viel Prozent der Spieler bereit sein müssen, bevor die Runde beginnt.",
+      "type": "number",
+      "default": "100"
+    },
+    {
+      "key": "match_timeoutcount",
+      "label": "Auszeiten pro Team",
+      "help": "Wie oft Spieler (keine Schiedsrichter) pro Team das Match pausieren dürfen.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "match_warmup_damage",
+      "label": "Eigenbeschuss in der Aufwärmphase",
+      "help": "Wenn an, gibt es in der Aufwärmphase Eigenbeschuss.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "team_maxplayers",
+      "label": "Max. Spieler pro Team",
+      "help": "Wie viele Spieler einem Team höchstens beitreten dürfen. 0 = aus.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "team_nocontrols",
+      "label": "Team-Befehle aus",
+      "help": "Wenn an, haben Spieler keine Team-Befehle wie „/readyteam“.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "pmove_fixed",
+      "label": "Feste Physik-Rate",
+      "help": "Wenn an, läuft die Spielphysik mit fester Rate (siehe „Feste Physik-Rate“) – für gleiche Bedingungen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "pmove_msec",
+      "label": "Feste Physik-Rate",
+      "help": "Feste Rate der Spielphysik. „Feste Physik-Rate“ muss an sein.",
+      "type": "number",
+      "default": "8"
+    },
+    {
+      "key": "g_lms_team_force_balance",
+      "label": "LMS: Team-Ausgleich",
+      "help": "Wenn an, werden Teams in Last Man Standing (LMS) ausgeglichen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_lms_roundlimit",
+      "label": "LMS: Rundenlimit",
+      "help": "Wie viele Runden in Last Man Standing (LMS) höchstens gespielt werden, bis ein Team gewinnt oder es unentschieden steht. Sieger ist, wer zuerst (Rundenlimit / 2) + 1 erreicht.",
+      "type": "number",
+      "default": "3"
+    },
+    {
+      "key": "g_lms_matchlimit",
+      "label": "LMS: Match-Limit",
+      "help": "Wie viele Matches in Last Man Standing (LMS) vor dem Kartenwechsel gespielt werden.",
+      "type": "number",
+      "default": "2"
+    },
+    {
+      "key": "g_lms_lock_teams",
+      "label": "LMS: Teams sperren",
+      "help": "Wenn an, werden in Last Man Standing (LMS) beide Teams nach der Aufwärmphase gesperrt.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "g_lms_follow_team_only",
+      "label": "LMS: Nur Team zuschauen",
+      "help": "Wenn an, dürfen Spieler in Last Man Standing (LMS) nur ihrem Team zuschauen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_allow_vote",
+      "label": "Abstimmungen erlauben",
+      "help": "Wenn an, dürfen Spieler über Änderungen abstimmen, die die anderen Einstellungen hier oder die weiteren Einstellungen erlauben.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_limit",
+      "label": "Max. Abstimmungen pro Karte",
+      "help": "Wie viele Abstimmungen pro Karte höchstens erlaubt sind.",
+      "type": "number",
+      "default": "5"
+    },
+    {
+      "key": "vote_percent",
+      "label": "Zustimmung für Abstimmungen",
+      "help": "Wie viel Prozent aller Spieler mit „Ja“ stimmen müssen, damit eine Abstimmung durchgeht.",
+      "type": "number",
+      "default": "50"
+    },
+    {
+      "key": "vote_allow_comp",
+      "label": "Abstimmung: Comp-Einstellungen",
+      "help": "Wenn an, darf über das Laden der „comp“-Einstellungen abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_gametype",
+      "label": "Abstimmung: Spielart",
+      "help": "Wenn an, darf über die Spielart abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_kick",
+      "label": "Abstimmung: Kick",
+      "help": "Wenn an, darf über einen Kick abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_map",
+      "label": "Abstimmung: Karte",
+      "help": "Wenn an, darf über einen Kartenwechsel abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_matchreset",
+      "label": "Abstimmung: Match neu starten",
+      "help": "Wenn an, darf über einen Neustart des Matches abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_mutespecs",
+      "label": "Abstimmung: Zuschauer stumm",
+      "help": "Wenn an, darf darüber abgestimmt werden, Zuschauer stummzuschalten.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_nextmap",
+      "label": "Abstimmung: Nächste Karte",
+      "help": "Wenn an, darf über einen Sprung zur nächsten Karte der Rotation abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_pub",
+      "label": "Abstimmung: Pub-Einstellungen",
+      "help": "Wenn an, darf über das Laden der „pub“-Einstellungen abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_referee",
+      "label": "Abstimmung: Schiedsrichter",
+      "help": "Wenn an, darf über einen Schiedsrichter abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_shuffleteams",
+      "label": "Abstimmung: Teams mischen",
+      "help": "Wenn an, darf über das Mischen der Teams abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_swapteams",
+      "label": "Abstimmung: Teams tauschen",
+      "help": "Wenn an, darf über das Tauschen der Teams abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_friendlyfire",
+      "label": "Abstimmung: Eigenbeschuss",
+      "help": "Wenn an, darf über Eigenbeschuss abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_timelimit",
+      "label": "Abstimmung: Zeitlimit",
+      "help": "Wenn an, darf über das Zeitlimit der Karte abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "vote_allow_warmupdamage",
+      "label": "Abstimmung: Schaden in der Aufwärmphase",
+      "help": "Wenn an, darf über Schaden in der Aufwärmphase abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_antilag",
+      "label": "Abstimmung: Antilag",
+      "help": "Wenn an, darf über Antilag abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_balancedteams",
+      "label": "Abstimmung: Ausgeglichene Teams",
+      "help": "Wenn an, darf über ausgeglichene Teams abgestimmt werden.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "vote_allow_muting",
+      "label": "Abstimmung: Stummschalten",
+      "help": "Wenn an, darf darüber abgestimmt werden, einzelne Spieler stummzuschalten.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "g_log",
+      "label": "Name der Log-Datei",
+      "default": "etserver.log"
+    },
+    {
+      "key": "map_rotation",
+      "label": "Kartenrotation",
+      "help": "Modus der Kartenrotation. Das passende Skript in der jeweiligen „AMP_“-cycle.cfg in etmain einrichten.",
+      "type": "select",
+      "options": [
+        "AMP_campaigncycle.cfg",
+        "AMP_objectivecycle.cfg",
+        "AMP_lmscycle.cfg",
+        "AMP_stopwatchcycle.cfg"
+      ],
+      "default": "AMP_campaigncycle.cfg"
+    },
+    {
+      "key": "com_watchdog",
+      "label": "Watchdog-Abstand",
+      "help": "Wie oft der Watchdog prüft, ob das Spiel mit ERR_DROP abgestürzt ist oder ohne Karte läuft.",
+      "type": "number",
+      "default": "60"
+    },
+    {
+      "key": "com_watchdog_cmd",
+      "label": "Watchdog-Befehl",
+      "help": "Konsolenvariable, die beim Auslösen des Watchdogs ausgeführt wird. Leer = beenden (Standard).",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "config": [
+    {
+      "title": "server.cfg",
+      "file": "server/etmain/server.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "// This file is controlled by AMP\n// Configure any additional required settings in AMP's UI\n\n{{user_settings}}\n\nset dedicated \"{{dedicated}}\"\nset net_ip \"\"\nset net_port \"\"\nset sv_maxclients \"\"\nset g_password \"{{g_password}}\"\nset sv_privateclients \"{{sv_privateclients}}\"\nset sv_privatepassword \"{{sv_privatepassword}}\"\nset rconpassword \"\"\nset refereePassword \"{{referee_password}}\"\nset sv_maxRate \"{{sv_max_rate}}\"\nset sv_dl_maxRate \"{{sv_dl_max_rate}}\"\nset sv_allowDownload \"{{sv_allow_download}}\"\nset sv_wwwDownload \"{{sv_www_download}}\"\nset sv_wwwBaseURL \"{{sv_www_base_url}}\"\nset sv_wwwDlDisconnected \"{{sv_www_dl_disconnected}}\"\nset sv_wwwFallbackURL \"{{sv_www_fallback_url}}\"\nset sv_hostname \"{{sv_hostname}}\"\nset server_motd0 \"{{server_motd0}}\"\nset server_motd1 \"{{server_motd1}}\"\nset g_heavyWeaponRestriction \"{{g_heavy_weapon_restriction}}\"\nset g_antilag \"{{g_antilag}}\"\nset g_altStopwatchMode \"{{g_alt_stopwatch_mode}}\"\nset g_autofireteams \"{{g_autofireteams}}\"\nset g_complaintlimit \"{{g_complaintlimit}}\"\nset g_ipcomplaintlimit \"{{g_ipcomplaintlimit}}\"\nset g_fastres \"{{g_fastres}}\"\nset g_friendlyFire \"{{g_friendly_fire}}\"\nset g_minGameClients \"{{g_min_game_clients}}\"\nset g_alliedmaxlives \"{{g_alliedmaxlives}}\"\nset g_axismaxlives \"{{g_axismaxlives}}\"\nset g_teamforcebalance \"{{g_teamforcebalance}}\"\nset g_noTeamSwitching \"{{g_no_team_switching}}\"\nset g_voiceChatsAllowed \"{{g_voice_chats_allowed}}\"\nset g_doWarmup \"{{g_do_warmup}}\"\nset g_warmup \"{{g_warmup}}\"\nset g_spectatorInactivity \"{{g_spectator_inactivity}}\"\nset sv_floodProtect \"{{sv_flood_protect}}\"\nset sv_pure \"{{sv_pure}}\"\nset sv_minping \"{{sv_minping}}\"\nset sv_maxping \"{{sv_maxping}}\"\nset match_latejoin \"{{match_latejoin}}\"\nset match_minplayers \"\"\nset match_mutespecs \"{{match_mutespecs}}\"\nset match_readypercent \"{{match_readypercent}}\"\nset match_timeoutcount \"{{match_timeoutcount}}\"\nset match_warmupDamage \"{{match_warmup_damage}}\"\nset team_maxplayers \"{{team_maxplayers}}\"\nset team_nocontrols \"{{team_nocontrols}}\"\nset pmove_fixed \"{{pmove_fixed}}\"\nset pmove_msec \"{{pmove_msec}}\"\nset g_lms_teamForceBalance \"{{g_lms_team_force_balance}}\"\nset g_lms_roundlimit \"{{g_lms_roundlimit}}\"\nset g_lms_matchlimit \"{{g_lms_matchlimit}}\"\nset g_lms_lockTeams \"{{g_lms_lock_teams}}\nset g_lms_followTeamOnly \"{{g_lms_follow_team_only}}\"\nset g_allowVote \"{{g_allow_vote}}\"\nset vote_limit \"{{vote_limit}}\"\nset vote_percent \"{{vote_percent}}\"\nset vote_allow_comp \"{{vote_allow_comp}}\"\nset vote_allow_gametype \"{{vote_allow_gametype}}\"\nset vote_allow_kick \"{{vote_allow_kick}}\"\nset vote_allow_map \"{{vote_allow_map}}\"\nset vote_allow_matchreset \"{{vote_allow_matchreset}}\"\nset vote_allow_mutespecs \"{{vote_allow_mutespecs}}\"\nset vote_allow_nextmap \"{{vote_allow_nextmap}}\"\nset vote_allow_pub \"{{vote_allow_pub}}\"\nset vote_allow_referee \"{{vote_allow_referee}}\"\nset vote_allow_shuffleteams \"{{vote_allow_shuffleteams}}\"\nset vote_allow_swapteams \"{{vote_allow_swapteams}}\"\nset vote_allow_friendlyfire \"{{vote_allow_friendlyfire}}\"\nset vote_allow_timelimit \"{{vote_allow_timelimit}}\"\nset vote_allow_warmupdamage \"{{vote_allow_warmupdamage}}\"\nset vote_allow_antilag \"{{vote_allow_antilag}}\"\nset vote_allow_balancedteams \"{{vote_allow_balancedteams}}\"\nset vote_allow_muting \"{{vote_allow_muting}}\"\nset g_log \"{{g_log}}\"\nset g_logsync \"{{g_logsync}}\"\nset logfile \"{{logfile}}\"\nexec {{map_rotation}}\nset com_watchdog \"{{com_watchdog}}\"\nset com_watchdog_cmd \"{{com_watchdog_cmd}}\"\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

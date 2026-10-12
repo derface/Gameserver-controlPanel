@@ -1,0 +1,40 @@
+{
+  "id": "amp-lotr-moria",
+  "name": "The Lord of the Rings: Return to Moria",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 3349480,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "SteamAppId=\"2933130\" wine \"./Moria/Binaries/Win64/MoriaServer-Win64-Shipping.exe\" Moria -log",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\].*Started hosting the game\\. Invite code:.*$",
+  "config": [
+    {
+      "title": "MoriaServerConfig.ini",
+      "file": "server//MoriaServerConfig.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[Main]\nOptionalPassword=\n\n[World]\nName=\"AMP Powered LOTR: Return to Moria Dedicated Server\"\nOptionalWorldFilename=\n\n[World.Create]\nType=campaign\nSeed=random\n\nDifficulty.Preset=normal\nDifficulty.Custom.CombatDifficulty=default\nDifficulty.Custom.EnemyAggression=high\nDifficulty.Custom.SurvivalDifficulty=default\nDifficulty.Custom.MiningDrops=default\nDifficulty.Custom.WorldDrops=default\nDifficulty.Custom.HordeFrequency=default\nDifficulty.Custom.SiegeFrequency=default\nDifficulty.Custom.PatrolFrequency=default\n\nOptionalDLC.Array=\"DurinsFolk\"\nUpgradeOptionalDLC.Array=\"\"\n\n[Host]\nListenAddress=\nListenPort=7777\nAdvertiseAddress=auto\nAdvertisePort=-1\nInitialConnectionRetryTime=60\nAfterDisconnectionRetryTime=600\n\n[Console]\nEnabled=false\n\n[Performance]\nServerFPS=60\nLoadedAreaLimit=12\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

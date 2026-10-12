@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-//go:embed games/*.json games/community/*.json
+//go:embed games/*.json games/community/*.json games/amp/*.json
 var builtin embed.FS
 
 type Port struct {
@@ -85,6 +85,10 @@ type ConfigFile struct {
 	// (enshrouded_groups: group passwords set and different).
 	Check string `json:"check,omitempty"`
 	Note  string `json:"note,omitempty"`
+	// WriteDefault writes Default (with {{placeholders}} filled in) before
+	// the server starts, if the file does not exist yet. For games that need
+	// a config file to start at all.
+	WriteDefault bool `json:"write_default,omitempty"`
 	// Auto adds every other value found in the file as a card (default on;
 	// "auto": false turns it off). Hide lists keys never shown ("*" matches
 	// any part, e.g. "userGroups.*.name"); AutoGroup is the tab for values
@@ -269,7 +273,7 @@ type Set struct {
 // Load reads the built-in templates plus any *.json in extraDir (may be empty).
 func Load(extraDir string) (*Set, error) {
 	s := &Set{byID: map[string]Template{}}
-	for _, dir := range []string{"games", "games/community"} {
+	for _, dir := range []string{"games", "games/community", "games/amp"} {
 		entries, err := builtin.ReadDir(dir)
 		if err != nil {
 			return nil, err

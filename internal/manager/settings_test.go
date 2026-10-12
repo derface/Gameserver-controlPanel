@@ -224,3 +224,25 @@ func TestScaleAndNumbers(t *testing.T) {
 		t.Fatal("listEqual")
 	}
 }
+
+func TestWriteDefaults(t *testing.T) {
+	m, st := settingsMgr(t)
+	sv := store.Server{ID: "w", Name: "W", Template: "x", Vars: map[string]string{"hostname": "Mein Server"},
+		Ports: []store.PortMap{{Host: 27100, Proto: "udp"}}}
+	_ = st.SaveServer(sv)
+	tpl := templates.Template{ID: "x", Kind: "steam", Vars: []templates.Var{{Key: "hostname"}},
+		Config: []templates.ConfigFile{{File: "server/cfg/server.cfg", Format: "cvar", WriteDefault: true,
+			Default: []byte(`"hostname \"{{hostname}}\"\nport {{port}}\n"`)}}}
+	m.writeDefaults(sv, tpl)
+	p := filepath.Join(m.ServerDir("w"), "server/cfg/server.cfg")
+	b, err := os.ReadFile(p)
+	if err != nil || string(b) != "hostname \"Mein Server\"\nport 27100\n" {
+		t.Fatalf("%q %v", b, err)
+	}
+	// an existing file is left alone
+	_ = os.WriteFile(p, []byte("eigene"), 0o644)
+	m.writeDefaults(sv, tpl)
+	if b, _ := os.ReadFile(p); string(b) != "eigene" {
+		t.Fatal("überschrieben")
+	}
+}

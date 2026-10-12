@@ -1,0 +1,204 @@
+{
+  "id": "amp-tmodloader",
+  "name": "tModLoader (Legacy)",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 1281930,
+  "steam_login": true,
+  "start": "LD_LIBRARY_PATH=\"./linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1281930\" ./tModLoaderServer -server -seed {{seed}} -autocreate {{world_size}} -worldname {{world_name}} -world {{world}} -disableannouncementbox {{disable_announcement_box}} -announcementboxrange {{announcement_box_range}} -players {{max_players}} -port {{port}} -config tmodloaderserverconfig.txt",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "8"
+    },
+    {
+      "key": "seed",
+      "label": "Welt-Seed",
+      "help": "Startwert für eine neue Welt.",
+      "default": "PoweredByAMP"
+    },
+    {
+      "key": "world_size",
+      "label": "Weltgröße",
+      "help": "Größe der Welt",
+      "type": "select",
+      "options": [
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "3"
+    },
+    {
+      "key": "world_name",
+      "label": "Name der neuen Welt",
+      "help": "Name der neuen Welt, falls eine erzeugt wird. Damit sie bei späteren Starts geladen wird, muss der Weltname in den Terraria-Einstellungen gleich sein.",
+      "default": "world"
+    },
+    {
+      "key": "world",
+      "label": "Weltname",
+      "help": "Welt, die beim Start geladen wird.",
+      "default": "ModLoader/Worlds/world.wld"
+    },
+    {
+      "key": "disable_announcement_box",
+      "label": "Ansagebox aus",
+      "help": "Ob die Ansagebox bei einem Signal Textansagen macht.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    },
+    {
+      "key": "announcement_box_range",
+      "label": "Reichweite der Ansagebox",
+      "help": "Reichweite der Ansagebox in Pixeln, -1 = für den ganzen Server.",
+      "type": "number",
+      "default": "-1"
+    },
+    {
+      "key": "difficulty",
+      "label": "Schwierigkeit",
+      "help": "Schwierigkeit einer neu erzeugten Welt.",
+      "type": "select",
+      "options": [
+        "0",
+        "1"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "password",
+      "label": "Passwort",
+      "help": "Passwort, das Spieler zum Beitreten eingeben.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "motd",
+      "label": "Nachricht des Tages",
+      "help": "Motto bzw. Nachricht des Tages.",
+      "default": "Welcome!"
+    },
+    {
+      "key": "world_path",
+      "label": "Welten-Pfad",
+      "help": "Relativer Pfad, in dem Welten gespeichert werden.",
+      "default": "ModLoader/Worlds"
+    },
+    {
+      "key": "mod_path",
+      "label": "Mod-Pfad",
+      "help": "Ordner, aus dem tModLoader Mods liest.",
+      "default": "ModLoader/Mods"
+    },
+    {
+      "key": "mod_pack",
+      "label": "Modpack",
+      "help": "Welches Modpack geladen wird (installiert keine Mods!).",
+      "default": ""
+    },
+    {
+      "key": "backups",
+      "label": "Anzahl Sicherungen",
+      "help": "Wie viele Welt-Backups aufgehoben werden.",
+      "type": "number",
+      "default": "2"
+    },
+    {
+      "key": "ban_list",
+      "label": "Bannliste",
+      "help": "Wo die Bannliste gespeichert wird.",
+      "default": "banlist.txt"
+    },
+    {
+      "key": "secure",
+      "label": "Cheat-Schutz",
+      "help": "Zusätzlicher Cheat-Schutz. Kann zu ungewollten automatischen Kicks führen.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "0"
+    },
+    {
+      "key": "language",
+      "label": "Sprache",
+      "help": "Sprache des Servers.",
+      "type": "select",
+      "options": [
+        "en-US",
+        "de-DE",
+        "it-IT",
+        "fr-FR",
+        "es-ES",
+        "ru-RU",
+        "zh-Hans",
+        "pt-PT",
+        "pt-BR",
+        "pl-PL"
+      ],
+      "default": "en-US"
+    },
+    {
+      "key": "priority",
+      "label": "Priorität",
+      "help": "Priorität des Prozesses.",
+      "type": "select",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "slowliquids",
+      "label": "Langsamere Flüssigkeiten",
+      "help": "Weniger Flüssigkeiten bewegen sich gleichzeitig. Kann Ruckler verringern, Flüssigkeiten kommen dann aber später zur Ruhe.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^(?:Listening on port|Escuchando en puerto|Aguardando na porta|Nasłuchiwanie na porcie) (\\d+)$",
+  "config": [
+    {
+      "title": "tmodloaderserverconfig.txt",
+      "file": "server/tmodloaderserverconfig.txt",
+      "format": "properties",
+      "write_default": true,
+      "default": "#serverconfig.txt\n\n#This file is automatically generated by AMP. All uncommented settings are controlled by AMP.\n#Any changes to uncommented settings will be lost when starting or updating the application\n#Please use the AMP control panel to change these\n#If you wish to configure other settings (those that are commented), you can do so manually\n#But any future updates may overwrite these changes\n\n#the following is a list of available command line parameters:\n\n#-config <config file>\t\t\t\t            Specifies the configuration file to use.\n#-port <port number>\t\t\t\t              Specifies the port to listen on.\n#-players <number> / -maxplayers <number>\tSets the max number of players\n#-pass <password> / -password <password>\t\tSets the server password\n#-world <world file>\t\t\t\t\tLoad a world and automatically start the server.\n#-autocreate <#>\t\t\t\t\tCreates a world if none is found in the path specified by -world. World size is specified by: 1(small), 2(medium), and 3(large).\n#-banlist <path>\t\t\t\t\tSpecifies the location of the banlist. Defaults to \"banlist.txt\" in the working directory.\n#-worldname <world name>             \t\t\tSets the name of the world when using -autocreate.\n#-secure\t\t\t\t\t\tAdds addition cheat protection to the server.\n#-noupnp\t\t\t\t\t\tDisables automatic port forwarding\n#-steam\t\t\t\t\t\t\tEnables Steam Support\n#-lobby <friends> or <private>\t\t\t\tAllows friends to join the server or sets it to private if Steam is enabled\n#-ip <ip address>\t\t\t\t\tSets the IP address for the server to listen on\n#-forcepriority <priority>\t\t\t\tSets the process priority for this task. If this is used the \"priority\" setting below will be ignored.\n#-disableannouncementbox\t\t\t\tDisables the text announcements Announcement Box makes when pulsed from wire.\n#-announcementboxrange <number>\t\t\t\tSets the announcement box text messaging range in pixels, -1 for serverwide announcements.\n#-seed <seed>\t\t\t\t\t\tSpecifies the world seed when using -autocreate\n\n#remove the # in front of commands to enable them.\n\n#Load a world and automatically start the server.\nworld={{world}}\n\n#Creates a new world if none is found. World size is specified by: 1(small), 2(medium), and 3(large).\nautocreate=\n\n#Sets the world seed when using autocreate\nseed={{seed}}\n\n#Sets the name of the world when using autocreate\nworldname=\n\n#Sets the difficulty of the world when using autocreate 0(classic), 1(expert), 2(master), 3(journey)\ndifficulty={{difficulty}}\n\n#Sets the max number of players allowed on a server.  Value must be between 1 and 255\nmaxplayers={{max_players}}\n\n#Set the server password\npassword={{password}}\n\n#Set the message of the day\nmotd={{motd}}\n\n#Sets the folder where world files will be stored\nworldpath={{world_path}}\n\n#Path for mods\nmodpath={{mod_path}}\nmodpack={{mod_pack}}\n\n#Sets the number of rolling world backups to keep\nworldrollbackstokeep={{backups}}\n\n#The location of the banlist. Defaults to \"banlist.txt\" in the working directory.\nbanlist={{ban_list}}\n\n#Adds addition cheat protection.\nsecure={{secure}}\n\n#Sets the server language from its language code. \n#English = en-US, German = de-DE, Italian = it-IT, French = fr-FR, Spanish = es-ES, Russian = ru-RU, Chinese = zh-Hans, Portuguese = pt-BR, Polish = pl-PL,\nlanguage={{language}}\n\n#Automatically forward ports with uPNP\n#upnp=1\n\n#Reduces enemy skipping but increases bandwidth usage. The lower the number the less skipping will happen, but more data is sent. 0 is off.\nnpcstream=\n\n#Default system priority 0:Realtime, 1:High, 2:AboveNormal, 3:Normal, 4:BelowNormal, 5:Idle\npriority={{priority}}\n\n#Reduces maximum liquids moving at the same time. If enabled may reduce lags but liquids may take longer to settle.\nslowliquids={{slowliquids}}",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

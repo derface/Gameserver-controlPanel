@@ -1,0 +1,43 @@
+{
+  "id": "amp-wreckfest",
+  "name": "Wreckfest",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 361580,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"saved\" ; mkdir -p \"mods\" ; [ -f \"steam_appid.txt\" ] || { mkdir -p \"$(dirname \"steam_appid.txt\")\"; printf %s \"228380\" > \"steam_appid.txt\"; } ; [ -e \"server_config.cfg\" ] || { mkdir -p \"$(dirname \"server_config.cfg\")\"; cp -rn \"initial_server_config.cfg\" \"server_config.cfg\" 2>/dev/null; } ; SteamAppId=\"228380\" wine \"./Wreckfest_x64.exe\" -s server_config=server_config.cfg --save-dir=/data/server/saved -server_set game_port={{port}} steam_port={{port_2}} query_port={{port_4}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 33540,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam",
+      "port": 27015,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam",
+      "port": 27015,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^[\\d:]+ Server connected\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 3
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

@@ -1,0 +1,55 @@
+{
+  "id": "amp-nightingale",
+  "name": "Nightingale",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 3796810,
+  "start": "[ -e \"NWX/Config/ServerSettings.ini\" ] || { mkdir -p \"$(dirname \"NWX/Config/ServerSettings.ini\")\"; cp -rn \"NWX/Config/ExampleServerSettings.ini\" \"NWX/Config/ServerSettings.ini\" 2>/dev/null; } ; LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1928980\" ./NWX/Binaries/Linux/NWXServer-Linux-Shipping NWX -port={{port}} -statusPort={{port_2}} -multihome=0.0.0.0 -ini:Engine:[HTTPServer.Listeners]:+ListenerOverrides=(Port={{port_2}},BindAddress=0.0.0.0) -ini:Game:[/Script/Engine.GameSession]:MaxPlayers={{max_players}} -ini:ServerSettings:[/Script/NWX.NWXServerSettings]:StartingDifficulty={{starting_difficulty}} {{enable_cheats}}-stdout -FullStdOutLogOutput",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Status-Port",
+      "port": 7778,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "max_players",
+      "label": "Maximale Spieler",
+      "type": "number",
+      "default": "6"
+    },
+    {
+      "key": "starting_difficulty",
+      "label": "Schwierigkeit der ersten Karte",
+      "help": "Schwierigkeit der allerersten Karte, falls kein importierter Charakter eine vorgibt.",
+      "type": "select",
+      "options": [
+        "easy",
+        "medium",
+        "hard",
+        "extreme"
+      ],
+      "default": "easy"
+    },
+    {
+      "key": "enable_cheats",
+      "label": "Cheats",
+      "help": "Wenn an, sind Cheats auf dem Server erlaubt.",
+      "type": "bool",
+      "flag": "-EnableCheats ",
+      "default": "false"
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogNWXGameMode: GameModeAwaiter became ready\\.$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

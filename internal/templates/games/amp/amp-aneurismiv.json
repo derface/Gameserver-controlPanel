@@ -1,0 +1,78 @@
+{
+  "id": "amp-aneurismiv",
+  "name": "ANEURISM IV",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2832030,
+  "start": "mkdir -p \"unity3d/Vellocet/ANEURISM IV\" ; [ -f \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\" ] || { mkdir -p \"$(dirname \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\")\"; printf %s \"\" > \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\"; } ; [ -f \"steam_appid.txt\" ] || { mkdir -p \"$(dirname \"steam_appid.txt\")\"; printf %s \"2773280\" > \"steam_appid.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"2773280\" XDG_CONFIG_HOME=\"/data/server/\" ./aniv_server.x86_64 {{custom_args}} -gameport {{port}} -steamport {{port_2}} -queryport {{port_3}} -map {{map}} -password {{password}} -tickrate {{tickrate}} -timestamps",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Steam",
+      "port": 7778,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 7779,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "map",
+      "label": "Startkarte",
+      "help": "Karte, die beim Start geladen wird.",
+      "type": "select",
+      "options": [
+        "aneurismiv",
+        "misery"
+      ],
+      "default": "aneurismiv"
+    },
+    {
+      "key": "password",
+      "label": "Serverpasswort",
+      "help": "Passwort, das Spieler zum Beitreten brauchen. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "tickrate",
+      "label": "Tickrate",
+      "help": "Tickrate des Servers.",
+      "type": "number",
+      "default": "60"
+    },
+    {
+      "key": "custom_args",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter, die sonst nirgends gesetzt werden. Mit Vorsicht nutzen.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^[\\d-]+T[\\d:\\.]+Z\\|.*\\|Steam server connected\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 2
+  },
+  "config": [
+    {
+      "title": "aniv.cfg",
+      "file": "server/unity3d/Vellocet/ANEURISM IV/aniv.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "serverName \"AMP Powered ANEURISM IV Server\"\nregion \"\"\nenableReports \"0\"\nrebootTime \"none\"\nlootRate \"3\"\nuseGameBans \"1\"\nadvertiseServer \"1\"\nenableGlobalChat \"0\"\nmaintenanceTime \"null\"\nremoteRanksURL \"\"",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

@@ -1,0 +1,35 @@
+{
+  "id": "amp-assetto-corsa",
+  "name": "Assetto Corsa",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 302550,
+  "steam_login": true,
+  "platform": "windows",
+  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"244210\" DOTNET_ROOT=\"/data/server/dotnet\" ./acServer",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 9600,
+      "proto": "udp"
+    },
+    {
+      "name": "Spiel",
+      "port": 9600,
+      "proto": "tcp"
+    },
+    {
+      "name": "HTTP-Port",
+      "port": 9601,
+      "proto": "tcp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^(Server started|\\[[\\d:]+ INF\\] Starting update loop with an update rate of \\d+hz)$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

@@ -1,0 +1,41 @@
+{
+  "id": "amp-astroneer",
+  "name": "Astroneer",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 728470,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"Astro/Saved/Config/WindowsServer\" ; cd \"Astro/Binaries/Win64\" && SteamAppId=\"361420\" wine \"./AstroServer-Win64-Shipping.exe\" Port={{port}} ConsolePort={{port_2}} -log",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Konsolen-Port",
+      "port": 1234,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "backup_include": [
+    "server/Astro/Saved"
+  ],
+  "config": [
+    {
+      "title": "AstroServerSettings.ini",
+      "file": "server/Astro/Saved/Config/WindowsServer/AstroServerSettings.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/Astro.AstroServerSettings]\nbLoadAutoSave=True\nMaxServerFramerate=30.000000\nMaxServerIdleFramerate=3.000000\nbWaitForPlayersBeforeShutdown=False\nConsolePassword=\nPublicIP=\nServerName=Astroneer Server - Powered by AMP\nServerGuid=\nOwnerName=\nOwnerGuid=0\nPlayerActivityTimeout=0\nServerPassword=\nbDisableServerTravel=False\nDenyUnlistedPlayers=False\nVerbosePlayerProperties=False\nAutoSaveGameInterval=900\nBackupSaveGamesInterval=7200\nActiveSaveFileDescriptiveName=SAVE_1\nShareCode=\nServerAdvertisedName=\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

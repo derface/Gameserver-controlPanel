@@ -1,0 +1,43 @@
+{
+  "id": "amp-nebulous-fleet-command",
+  "name": "NEBULOUS: Fleet Command",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 2353090,
+  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"887570\" ./NebulousDedicatedServer -nographics -batchmode -serverConfig ./AMPServerConfig.xml -logFile -",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "tcp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27016,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^.*- Log - Dedicated server startup completed$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "config": [
+    {
+      "title": "AMPServerConfig.xml",
+      "file": "server//AMPServerConfig.xml",
+      "format": "properties",
+      "write_default": true,
+      "default": "<?xml version=\"1.0\"?>\n<SkirmishDedicatedServerConfig xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n\t\n    <!-- \n    ***************************\n\tSettings in this section are controlled by AMP.\n    ***************************\n\t-->\n    \n    <ServerName>AMP Powered NEBULOUS: Fleet Command Server</ServerName>\n\t<Password></Password>\n\t<MaxPlayers>10</MaxPlayers>\n\t<GamePort>7777</GamePort>\n\t<QueryPort>27016</QueryPort>\n\t<TeamSizeToStart>2</TeamSizeToStart>\n\t<MOTD>-- Welcome to N:FC! --\n        Play by the rules!\n\t</MOTD>\n\t<AllowMapVoting>true</AllowMapVoting>\n\t<TimeLimit>0</TimeLimit>\n    <RequireUniformTeams>true</RequireUniformTeams>\n\t<Scenario>Control</Scenario>\n\t<MapRotation>Sequential</MapRotation>\n    <AllowModdedFleets>false</AllowModdedFleets>\n\t\n    <!-- \n    ***************************\n\tSet relevant settings in this section manually.\n    Don't forget to remove the comment markers before and after settings that you wish to enable!\n    ***************************\n    -->\n    \n    <!-- \n\tListed 64-bit Steam IDs will be registered as admins and can execute ! commands \n\ton the server without requiring a vote. They will also have the Host badge next to\n    their name in the lobby.\n    -->\n    <Admins>\n\t\t<!-- <unsignedLong>0</unsignedLong> -->\n\t</Admins>\n  \n    <!-- \n\tChange settings for the scenario here, otherwise defaults will be used.\n\tEach setting is selected using a Key, which is the name of the setting as it appears\n\tin the lobby settings list.\n\tThe Value field is an integer index into the list of options, starting at 0.\n\tThe example below sets the Control victory points to 1500, because it is the third option in the list.\n\t-->\n\t<!--\n    <ScenarioSettings>\n\t\t<Setting>\n\t\t\t<Key>Victory Points</Key>\n\t\t\t<Value>2</Value>\n\t\t</Setting>\n\t</ScenarioSettings>\n    -->\n\n    <!-- List all maps in the map rotation here. Add by name or key. -->\n    <Maps>\n\t\t<string>Pillars</string>\n\t</Maps>\n    \n    <!--\n\tEnable mods for your server here.\n\tProvide the Steam ID of the mod, which can be found in its workshop URL.\n\tAny mod found in this list will be permitted for use in a player fleet, but only if AllowModdedFleets\n\tis set to true.\n\tIf you intend to use modded maps in your rotation, they must be included here as well.\n\t-->\n\t<!--\n    <Mods>\n\t\t<unsignedLong>0</unsignedLong>\n\t\t<unsignedLong>0</unsignedLong>\n\t</Mods>\n    -->\n    \n    <!-- \n\tBots listed here will be created each time the server returns to the lobby.\n\tOnly the Team field is required.  Everything else can be left blank and colors, fleet, and badge will\n\tbe chosen randomly for each bot.\n\t-->\n\t<!--\n    <Bots>\n\t\t<Bot>\n\t\t\t<Team>TeamB</Team>\n\t\t\t<Colors>\n\t\t\t\t<BaseColor>\n\t\t\t\t\t<r>1</r>\n\t\t\t\t\t<g>1</g>\n\t\t\t\t\t<b>1</b>\n\t\t\t\t\t<a>1</a>\n\t\t\t\t</BaseColor>\n\t\t\t\t<StripeColor>\n\t\t\t\t\t<r>1</r>\n\t\t\t\t\t<g>1</g>\n\t\t\t\t\t<b>1</b>\n\t\t\t\t\t<a>1</a>\n\t\t\t\t</StripeColor>\n\t\t\t\t<Prefix>OSPN</Prefix>\n\t\t\t</Colors>\n\t\t\t<Badge>OSP_Roundel</Badge>\n\t\t\t<Fleet>Starter Fleets - Alliance/TF Oak.fleet</Fleet>\n\t\t</Bot>\n\t</Bots>\n    -->\n\n</SkirmishDedicatedServerConfig>",
+      "settings": [],
+      "auto": false
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+}

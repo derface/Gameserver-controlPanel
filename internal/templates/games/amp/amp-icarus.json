@@ -1,0 +1,80 @@
+{
+  "id": "amp-icarus",
+  "name": "Icarus",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 2089300,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"Icarus/Saved/Config/WindowsServer\" ; SteamAppId=\"1149460\" wine \"./Icarus/Binaries/Win64/IcarusServer-Win64-Shipping.exe\" Icarus -ini:Engine:[OnlineSubsystemSteam]:AsyncTaskTimeout={{async_task_timeout}} -Port={{port}} -QueryPort={{port_2}} {{startup_mode}} -SteamServerName=\"{{session_name}}\" -JoinPassword=\"{{join_password}}\" -AdminPassword=\"{{admin_password}}\" -log=Icarus.log",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 17777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 27015,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "session_name",
+      "label": "Sitzungsname",
+      "default": "Mein Server"
+    },
+    {
+      "key": "join_password",
+      "label": "Serverpasswort",
+      "default": ""
+    },
+    {
+      "key": "admin_password",
+      "label": "RCON-Passwort",
+      "default": ""
+    },
+    {
+      "key": "async_task_timeout",
+      "label": "Zeitlimit für Async-Aufgaben",
+      "help": "Wert „AsyncTaskTimeout“ in Engine.ini. Kann bei Verbindungsproblemen helfen (nur Linux).",
+      "type": "number",
+      "default": "60"
+    },
+    {
+      "key": "startup_mode",
+      "label": "Startmodus",
+      "help": "Wie der Server startet. Bei „Bestehende Prospect laden“ muss der Speichername gesetzt sein und die Datei existieren. Bei „Neue Prospect anlegen“ muss die Prospect-Art gesetzt sein; ohne Speichername wird bei normalen Prospects ein zufälliger erzeugt.",
+      "type": "select",
+      "options": [
+        "",
+        "-ResumeProspect"
+      ],
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogInit: Display: Game Engine Initialized\\.$",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "backup_include": [
+    "server/Icarus/Saved"
+  ],
+  "config": [
+    {
+      "title": "ServerSettings.ini",
+      "file": "server/Icarus/Saved/Config/WindowsServer/ServerSettings.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[/Script/Icarus.DedicatedServerSettings]\nSessionName=AMP Powered Icarus Server\nJoinPassword=\nMaxPlayers=8\nAdminPassword=Password123\nShutdownIfNotJoinedFor=300\nShutdownIfEmptyFor=300\nAllowNonAdminsToLaunchProspects=True\nAllowNonAdminsToDeleteProspects=False\nLoadProspect=\nCreateProspect=\nResumeProspect=False\nLastProspectName=\nFiberFoliageRespawn=True\nLargeStonesRespawn=True\nGameSaveFrequency=10.000000\nSaveGameOnExit=True\n",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}

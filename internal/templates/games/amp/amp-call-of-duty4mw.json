@@ -1,0 +1,72 @@
+{
+  "id": "amp-call-of-duty4mw",
+  "name": "Call of Duty 4: Modern Warfare",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 7940,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"usermaps\" ; SteamAppId=\"7940\" wine \"./iw3mp.exe\" +set sv_punkbuster 0 +exec \"server.cfg\" +set net_port {{port}} +set authPort {{port_2}} +set masterPort {{port_3}} {{map_mode}} +set dedicated \"{{dedicated}}\" +set fs_game \"{{fs_game}}\"",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 28960,
+      "proto": "udp"
+    },
+    {
+      "name": "Anmelde-Port",
+      "port": 20800,
+      "proto": "udp"
+    },
+    {
+      "name": "Master-Port",
+      "port": 20810,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "dedicated",
+      "label": "Server öffentlich",
+      "help": "Wenn an, ist der Server öffentlich sichtbar, sonst nur im lokalen Netz erreichbar.",
+      "type": "select",
+      "options": [
+        "2",
+        "1"
+      ],
+      "default": "2"
+    },
+    {
+      "key": "fs_game",
+      "label": "Mod laden",
+      "help": "Mod, die beim Start geladen wird, als Pfad im Mods-Ordner, z. B. „Mods/ModWarfare“.",
+      "default": ""
+    },
+    {
+      "key": "map_mode",
+      "label": "Kartenmodus",
+      "help": "Ob Kartenrotation an ist (dann auch die Rotationsliste setzen) oder eine bestimmte Startkarte geladen wird (dann Spielart und Startkarte setzen).",
+      "type": "select",
+      "options": [
+        "+map_rotate"
+      ],
+      "default": "+map_rotate"
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "config": [
+    {
+      "title": "server.cfg",
+      "file": "server/main/server.cfg",
+      "format": "cvar",
+      "write_default": true,
+      "default": "// AMP partly controls server.cfg\n\n// The first section below includes the settings that are set either via the AMP UI\n// or are controlled by AMP itself (in particular, ports)\n// Settings in the second section can be changed or added to as needed\n\n// *******\n// AMP CONTROLLED SETTINGS\n// *******\n\nset net_port \"28960\"\nset net_ip \"\"\nset dedicated \"2\"\nsets sv_hostname \"^1AMP Powered Call of Duty 4: Modern Warfare Server\"\nset scr_motd \"^4Welcome to COD4!\"\nset g_password \"\"\nset rcon_password \"\"\nset sv_mapRotation \"gametype dm map mp_backlot gametype dom map mp_bloc gametype koth map mp_bog gametype sab map mp_cargoship gametype sd map mp_citystreets gametype war map mp_convoy gametype dm map mp_countdown gametype dom map mp_crash gametype koth map mp_crossfire gametype sab map mp_farm gametype sd map mp_overgrown gametype war map mp_pipeline gametype dm map mp_shipment gametype dom map mp_showdown gametype koth map mp_strike gametype sab map mp_vacant\"\nset g_gametype \"dm\"\nset sv_maxclients \"32\"\nset sv_privateclients \"6\"\nset sv_privatePassword \"\"\nset sv_voice \"1\"\nset sv_voiceQuality \"3\"\nset voice_deadChat \"0\"\nset sv_minPing \"0\"\nset sv_maxping \"0\"\nset sv_maxRate \"25000\" \nset sv_timeout \"40\"\nset g_inactivity \"120\"\nset g_inactivityspectator \"180\"\nset sv_kickBanTime \"300\"\nset sv_zombietime \"2\"\nset sv_floodProtect \"1\"\nset sv_reconnectlimit \"3\"\nset logfile \"1\"\nset g_logsync \"2\"\nset g_log \"games_mp.log\"\nset sv_punkbuster \"0\"\n\n\n// *******\n// OTHER SETTINGS\n// *******\n\n// General\nsets _Admin \"admin\"\nsets _Email \"\"\nsets _Website \"\"\nsets _Location \"\"\nsets _Irc \"\"\nsets _Mod \"\"\nsets _ModVer \"\"\nsets _ModUpdate \"\"\nsets _Maps \"\"\n\n// Logging\nset sv_log_damage \"1\"\n\n// Master servers\nset sv_master1 \"cod2master.activision.com\" \nset sv_master2 \"cod2update.activision.com\"\nset sv_master3 \"clanservers.net\" \nset sv_gamespy \"0\" \n\n// Client download settings. Used for mods and custom maps. 0=off, 1=on \nset sv_allowdownload \"1\"\nseta sv_wwwDownload \"1\"\n//seta sv_wwwBaseURL \"http://www.your_website.com/base_folder\"\nseta sv_wwwDlDisconnected \"0\"\n\n// FPS\n//set sv_fps \"20\"\n\n// Anti Cheat settings\nset sv_disableClientConsole \"0\"\nset cl_autocmd \"0\"\nset sv_cheats \"0\"\nset sv_pure \"1\"\nset g_banIPs \"\"\nset g_no_script_spam \"1\"\n\n// In-game voice communication system\nset voice_global \"0\"\nset voice_localEcho \"0\"\nset winvoice_mic_mute \"1\"\nset sv_allowAnonymous \"0\"\nset g_antilag \"0\"\nset g_compassShowEnemies \"0\"\n\n// Deathmatch / Free For All settings\nset scr_dm_scorelimit 150\nset scr_dm_timelimit 10\nset scr_dm_roundlimit 1\nset scr_dm_numlives 0\nset scr_dm_playerrespawndelay 0\nset scr_dm_waverespawndelay 0\n\n// Domination settings\nset scr_dom_scorelimit 200\nset scr_dom_timelimit 0\nset scr_dom_roundlimit 1\nset scr_dom_numlives 0\nset scr_dom_playerrespawndelay 0\nset scr_dom_waverespawndelay 0\n\n// Team Deathmatch settings\nset scr_war_scorelimit 750\nset scr_war_timelimit 10\nset scr_war_roundlimit 1\nset scr_war_numlives 0\nset scr_war_playerrespawndelay 0\nset scr_war_waverespawndelay 0\n\n// Sabotage settings\nset scr_sab_scorelimit 1\nset scr_sab_timelimit 20\nset scr_sab_roundlimit 0\nset scr_sab_roundswitch 1\nset scr_sab_numlives 0\nset scr_sab_bombtimer 30\nset scr_sab_planttime 2.5\nset scr_sab_defusetime 5\nset scr_sab_hotpotato 0\nset scr_sab_playerrespawndelay 7.5\nset scr_sab_waverespawndelay 0\n\n// Search And Destroy Classic settings\nset scr_sd_scorelimit 4\nset scr_sd_timelimit 2.5\nset scr_sd_roundlimit 0\nset scr_sd_roundswitch 3\nset scr_sd_numlives 1\nset scr_sd_bombtimer 45\nset scr_sd_planttime 5\nset scr_sd_defusetime 5\nset scr_sd_multibomb 0\nset scr_sd_playerrespawndelay 0\nset scr_sd_waverespawndelay 0\n\n// King Of The Hill / Headquarters settings\nset scr_koth_scorelimit 250\nset scr_koth_timelimit 15\nset scr_koth_roundlimit 1\nset scr_koth_roundswitch 1\nset scr_koth_numlives 0\nset scr_koth_playerrespawndelay 0\nset scr_koth_waverespawndelay 0\nset koth_autodestroytime 60\nset koth_spawntime 0\nset koth_kothmode 0\nset koth_capturetime 20\nset koth_destroytime 10\nset koth_delayPlayer 0\nset koth_spawnDelay 60",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

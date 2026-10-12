@@ -1,0 +1,45 @@
+{
+  "id": "amp-mxbikes",
+  "name": "MX Bikes",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 655500,
+  "steam_login": true,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"results\" ; mkdir -p \"replays\" ; [ -f \"whitelist.txt\" ] || { mkdir -p \"$(dirname \"whitelist.txt\")\"; printf %s \"\" > \"whitelist.txt\"; } ; [ -f \"blacklist.txt\" ] || { mkdir -p \"$(dirname \"blacklist.txt\")\"; printf %s \"\" > \"blacklist.txt\"; } ; SteamAppId=\"655500\" wine \"./mxbikes.exe\" -dedicated {{port}} -set params dedicated.ini",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 54210,
+      "proto": "udp"
+    },
+    {
+      "name": "Live-Port",
+      "port": 54211,
+      "proto": "udp"
+    },
+    {
+      "name": "Fernverwaltungs-Port",
+      "port": 54212,
+      "proto": "udp"
+    }
+  ],
+  "fixed_ports": true,
+  "vars": [],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "config": [
+    {
+      "title": "dedicated.ini",
+      "file": "server//dedicated.ini",
+      "format": "ini",
+      "write_default": true,
+      "default": "[connection]\nname = AMP Powered MX Bikes Server\nmaxclient = 20\npassword = \nadmin_password = \nbandwidth = 2\nmax_ping = 0\nwhitelist = whitelist.txt\nblacklist = blacklist.txt\npolls_disable = 0\nlocation = \nMOTD = Welcome to my server!\nchat_disable = 0\n\n[export]\nresults = \ndirectory = results\nunits = 0\nprefix = \nincremental = 0\ncontacts = 0\n\n[replay]\nsave = 0\ndirectory = replays\nprefix = \n\n[event]\nname = \ntrack = \ntrack_layout = \ntrack_paint = \ntracks_shuffle = 0\ncategory = \nallowed_bikes = \n\n[rating]\nclass = A\n\n[weather]\nrealistic = 1\nconditions = 0\ntemperature = 20\nwind_direction = 0\nwind_speed = 1\ntrack_conditions = 0\n\n[hardcore]\nforce_cockpit = 0\nno_aids = 0\nlimited_tyre_sets = 0\nforce_particles = 0\nforce_vieweffects = 0\nforce_leanhelp = 0\n\n[reset]\ntype = 0\ntime = 100\n\n[race]\nopen_practice = 0\nformat = 0\nquick_race = 0\npractice_length = 20\nprequalify_length = 20\nqualifypractice_length = 3\nwarmup_length = 20\nsighting_lap = 0\nrace_length_format = 0\nrace_length = 100\nrace_minutes = 5\nrace_extralaps = 2\nrace_laps = 5\nrestart_delay = 300\npause = 0\npause_session = practice\npause_directory = saves\nresume = \nsave = 0\nsave_session = practice\nsave_directory = saves\nraceover_length = 180\n\n[live]\nenable = 0\nport = 54211\npassword = \nfile = race_data.txt\ntrack_position = 0\ncontacts = 0\n\n[remote_admin]\nenable = 0\nport = 54212\npassword = \n\n[collisions]\ndisable = 1\nmax_ping = 0\n\n[deformation]\nscale = 0\nauto_reset = 0\n\n[dynamicsurface]\ndisable = 0\npersistent = 0\n\n[polls]\ndisable_during_races = 0\n\n[log]\nfile = logs.txt",
+      "settings": []
+    }
+  ],
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+}

@@ -461,3 +461,34 @@ func listEqual(a, b string) bool {
 	}
 	return norm(a) == norm(b)
 }
+
+// writeDefaults creates the starting config files a game needs before its
+// first start (template config with write_default). Existing files are
+// never touched.
+func (m *Manager) writeDefaults(sv store.Server, tpl templates.Template) {
+	var ports []int
+	for _, p := range sv.Ports {
+		ports = append(ports, p.Host)
+	}
+	root := m.configRoot(sv, tpl)
+	uid := containerUID
+	if tpl.DataUID > 0 {
+		uid = tpl.DataUID
+	}
+	for _, c := range tpl.Config {
+		if !c.WriteDefault {
+			continue
+		}
+		rel := configRel(sv, c)
+		if abs, err := root.Resolve(rel); err == nil {
+			if _, err := os.Stat(abs); err == nil {
+				continue
+			}
+		}
+		d := c.DefaultContent()
+		if d == nil {
+			continue
+		}
+		_ = writeConfig(root, m.ServerDir(sv.ID), uid, rel, []byte(tpl.Render(string(d), sv.Vars, ports)))
+	}
+}

@@ -1,0 +1,30 @@
+{
+  "id": "amp-runescape-dragonwilds",
+  "name": "RuneScape: Dragonwilds",
+  "category": "Steam",
+  "kind": "steam",
+  "steam_app_id": 4019830,
+  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1374490\" ./RSDragonwilds/Binaries/Linux/RSDragonwildsServer-Linux-Shipping RSDragonwilds -Port={{port}} -ini:DedicatedServer:[/Script/Dominion.DedicatedServerSettings]:AdminPassword={{admin_password}} -stdout -FullStdOutLogOutput",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "admin_password",
+      "label": "Admin-Passwort",
+      "help": "Admin-Passwort für den Reiter „Serververwaltung“ im Spiel. Standard ist ein sicheres Zufallspasswort.",
+      "type": "secret",
+      "default": ""
+    }
+  ],
+  "memory_mb": 4096,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "ready": "^\\[[\\d\\.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogDomMatcherSession: UPDATE SESSION - complete$",
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+}

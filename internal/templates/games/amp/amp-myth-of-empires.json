@@ -1,0 +1,430 @@
+{
+  "id": "amp-myth-of-empires",
+  "name": "Myth of Empires",
+  "category": "Steam (Windows, Wine)",
+  "kind": "steam",
+  "steam_app_id": 1794810,
+  "platform": "windows",
+  "runtime": "wine",
+  "start": "mkdir -p \"MOE/Binaries/Win64/Mods\" ; SteamAppId=\"1371580\" wine \"./MOE/Binaries/Win64/MOEServer.exe\" MOE {{map}} -game -server -DataLocalFile -NotCheckServerSteamAuth -stdout -FullStdOutLogOutput log={{server_list_id}}.log -LOCALLOGTIMES -PrivateServer -Port={{port}} -QueryPort={{port_2}} -ShutDownServicePort={{port_3}} -bStartShutDownServiceInPrivateServer=true -MultiHome=0.0.0.0 -ShutDownServiceIP=0.0.0.0 -OutAddress={{out_address}} -SessionName=\"{{session_name}}\" -SteamServerName=\"{{session_name}}\" -ShutDownServiceKey=\"{{rcon_password}}\" -pakdir=\"/data/server/MOE/{{server_list_id}}Mods\" {{use_ace}}{{force_steam_net}}-ServerId=\"{{server_id}}\" -ClusterId=\"{{cluster_id}}\" -Description=\"{{description}}\" -NoticeSelfEnable=\"{{notice_self_enable}}\" -NoticeSelfEnterServer=\"{{notice_self_enter_server}}\" -PrivateServerPassword=\"{{private_server_password}}\" -bUseServerAdmin=\"{{b_use_server_admin}}\" -ServerAdminAccounts=\"{{server_admin_accounts}}\" -EnableVACBan=\"{{enable_vac_ban}}\" -SteamModList=\"{{steam_mod_list}}\" -MapDifficultyRate=\"{{map_difficulty_rate}}\" -GameServerPVPType=\"{{game_server_pvp_type}}\" -bCanChat=\"{{b_can_chat}}\" -bCanVoiceChat=\"{{b_can_voice_chat}}\" -NoticeAllEnable=\"{{notice_all_enable}}\" -NoticeEnterServer=\"{{notice_enter_server}}\" -NoticeLeaveServer=\"{{notice_leave_server}}\" -SaveGameIntervalMinute=\"{{save_game_interval_minute}}\" -bUseDurable=\"{{b_use_durable}}\" -bRiderUseShooterMovingCheck=\"{{b_rider_use_shooter_moving_check}}\" -NpcSpawnMultiplier=\"{{npc_spawn_multiplier}}\" -InitCapitalCopper=\"{{init_capital_copper}}\" -bDeadCorpseCreateBag=\"{{b_dead_corpse_create_bag}}\" -bOpenWillDead=\"{{b_open_will_dead}}\" -bAllCanRescue=\"{{b_all_can_rescue}}\" -bCanDropItem=\"{{b_can_drop_item}}\" -bShowFleshPhysicialMaterialEffect=\"{{b_show_flesh_physicial_material_effect}}\" -AITurretTraceProjectileRatio=\"{{ai_turret_trace_projectile_ratio}}\" -MaxActiveCharacterCountConfig=\"{{max_active_character_count_config}}\" -MaxActiveStructureCountConfig=\"{{max_active_structure_count_config}}\" -NormalReduceDurableMultiplier=\"{{normal_reduce_durable_multiplier}}\" -SleepPlayerCharacterDestroyDays=\"{{sleep_player_character_destroy_days}}\" -bEnableServerLevel=\"{{b_enable_server_level}}\" -ServerLevelAddMul=\"{{server_level_add_mul}}\" -FoodBuffValueMulti=\"{{food_buff_value_multi}}\" -MedicineBuffValueMulti=\"{{medicine_buff_value_multi}}\" -ItemCDMulti=\"{{item_cd_multi}}\" -FoodMedicineWineBuffTimeMulti=\"{{food_medicine_wine_buff_time_multi}}\" -ButterflyDropMul=\"{{butterfly_drop_mul}}\" -UnLockSkillPriceMul=\"{{un_lock_skill_price_mul}}\" -FubenCoolDownMultiplier=\"{{fuben_cool_down_multiplier}}\" -KillNpcConflictValueMul=\"{{kill_npc_conflict_value_mul}}\" {{custom_args}}",
+  "ports": [
+    {
+      "name": "Spiel",
+      "port": 7777,
+      "proto": "udp"
+    },
+    {
+      "name": "Abfrage",
+      "port": 7778,
+      "proto": "udp"
+    },
+    {
+      "name": "Fernverwaltungs-Port",
+      "port": 7779,
+      "proto": "tcp"
+    }
+  ],
+  "vars": [
+    {
+      "key": "server_id",
+      "label": "Server-ID",
+      "help": "ID des Servers.",
+      "default": "100"
+    },
+    {
+      "key": "cluster_id",
+      "label": "Cluster-ID",
+      "help": "Cluster-ID des Servers.",
+      "default": "1"
+    },
+    {
+      "key": "description",
+      "label": "Serverbeschreibung",
+      "help": "Kurze Beschreibung, die beim Anklicken in der Serverliste erscheint.",
+      "default": "A cool MOE server"
+    },
+    {
+      "key": "notice_self_enable",
+      "label": "Willkommensnachricht",
+      "help": "Wenn an, sehen Spieler beim Beitreten die Willkommensnachricht.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "notice_self_enter_server",
+      "label": "Willkommensnachricht",
+      "help": "Willkommensnachricht (MOTD) beim Beitreten.",
+      "default": "Welcome to my Myth of Empires server!"
+    },
+    {
+      "key": "private_server_password",
+      "label": "Serverpasswort",
+      "help": "Passwort zum Beitreten. Standard: kein Passwort.",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "key": "b_use_server_admin",
+      "label": "Server-Admins",
+      "help": "Wenn an, gibt es Server-Admins. Die Admins unter „Server-Admins“ eintragen.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "server_admin_accounts",
+      "label": "Server-Admins",
+      "help": "Steam64-IDs der Admins, durch Semikolon getrennt.",
+      "default": ""
+    },
+    {
+      "key": "enable_vac_ban",
+      "label": "VAC-Bann",
+      "help": "Wenn an, ist VAC-Bann aktiv.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "steam_mod_list",
+      "label": "Steam-Mods laden",
+      "help": "Liste der Steam-Mod-Ordner, getrennt durch +. NUR EINE ZEILE! Beispiel: Mods/3181632026+Mods/3202759474. Sonst Pfade relativ zu „MOE/Binaries/Win64“ oder vollständige Pfade.",
+      "default": ""
+    },
+    {
+      "key": "map_difficulty_rate",
+      "label": "Schwierigkeitsgrad",
+      "help": "Schwierigkeit, abhängig von Stärke und Leben der NPCs und Tiere.",
+      "type": "number",
+      "default": "1"
+    },
+    {
+      "key": "game_server_pvp_type",
+      "label": "PvE an / PvP aus",
+      "help": "Wenn an, läuft der Server im PvE-Modus, sonst PvP.",
+      "type": "select",
+      "options": [
+        "1",
+        "0"
+      ],
+      "default": "1"
+    },
+    {
+      "key": "b_can_chat",
+      "label": "Textchat",
+      "help": "Wenn an, gibt es Textchat.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "b_can_voice_chat",
+      "label": "Sprachchat",
+      "help": "Wenn an, gibt es Sprachchat.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "notice_all_enable",
+      "label": "Beitritts-/Austrittsnachrichten",
+      "help": "Wenn an, wird gemeldet, wenn Spieler beitreten oder gehen.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "notice_enter_server",
+      "label": "Beitrittsnachricht",
+      "help": "Nachricht, wenn ein Spieler beitritt. „Beitritts-/Austrittsnachrichten“ muss an sein.",
+      "default": " has joined the server"
+    },
+    {
+      "key": "notice_leave_server",
+      "label": "Austrittsnachricht",
+      "help": "Nachricht, wenn ein Spieler geht. „Beitritts-/Austrittsnachrichten“ muss an sein.",
+      "default": " has left the server"
+    },
+    {
+      "key": "save_game_interval_minute",
+      "label": "Abstand für automatisches Speichern",
+      "help": "Wie oft der Server automatisch speichert.",
+      "type": "number",
+      "default": "10"
+    },
+    {
+      "key": "b_use_durable",
+      "label": "Haltbarkeit",
+      "help": "Wenn an, nutzen sich Gegenstände ab.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "b_rider_use_shooter_moving_check",
+      "label": "Größere Sicht beim Bogenschießen zu Pferd",
+      "help": "Wenn an, ist die Sicht beim Bogenschießen zu Pferd größer.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "npc_spawn_multiplier",
+      "label": "Faktor für NPC-Spawns",
+      "help": "Faktor für das Erscheinen von NPCs.",
+      "default": "1.00"
+    },
+    {
+      "key": "init_capital_copper",
+      "label": "Start-Kupfermünzen",
+      "help": "Kupfermünzen für neue Spieler.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "b_dead_corpse_create_bag",
+      "label": "Beute beim Tod fallen lassen",
+      "help": "Wenn an, fällt beim Tod Beute auf den Boden.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "b_open_will_dead",
+      "label": "Verwundet-Zustand",
+      "help": "Wenn an, gibt es den Zustand „verwundet“.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "b_all_can_rescue",
+      "label": "Alle dürfen jeden retten",
+      "help": "Wenn an, kann jeder Spieler jeden retten.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "b_can_drop_item",
+      "label": "Gegenstände ablegen",
+      "help": "Wenn an, können Gegenstände aus dem Inventar abgelegt werden.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "b_show_flesh_physicial_material_effect",
+      "label": "Blut-Effekt",
+      "help": "Wenn an, wird der Bildschirm bei Verwundung rot.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "ai_turret_trace_projectile_ratio",
+      "label": "Trefferchance von Geschütztürmen",
+      "help": "Wie wahrscheinlich ein Geschützturm einen Gegner trifft.",
+      "default": "-1.00"
+    },
+    {
+      "key": "max_active_character_count_config",
+      "label": "Grenze für Figuren",
+      "help": "Höchstzahl an NPCs, Tieren und Spielern.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "max_active_structure_count_config",
+      "label": "Grenze für Gebäude",
+      "help": "Höchstzahl an Gebäuden.",
+      "type": "number",
+      "default": "0"
+    },
+    {
+      "key": "normal_reduce_durable_multiplier",
+      "label": "Faktor für Abnutzung",
+      "help": "Wie schnell Ausrüstung, Werkzeuge und Waffen abnutzen.",
+      "default": "1.00"
+    },
+    {
+      "key": "sleep_player_character_destroy_days",
+      "label": "Entfernen inaktiver Spieler",
+      "help": "Nach welcher Zeit die Figur eines inaktiven Spielers entfernt wird.",
+      "type": "number",
+      "default": "7"
+    },
+    {
+      "key": "b_enable_server_level",
+      "label": "Server-Stufen",
+      "help": "Wenn an, gibt es das System der Server-Stufen.",
+      "type": "select",
+      "options": [
+        "true",
+        "false"
+      ],
+      "default": "true"
+    },
+    {
+      "key": "server_level_add_mul",
+      "label": "Faktor für Server-Aufstieg",
+      "help": "Faktor für den Aufstieg der Server-Stufe.",
+      "default": "1.00"
+    },
+    {
+      "key": "food_buff_value_multi",
+      "label": "Faktor für Sättigung durch Essen",
+      "help": "Wie stark Essen satt macht.",
+      "default": "1.00"
+    },
+    {
+      "key": "medicine_buff_value_multi",
+      "label": "Faktor für Heilung durch Medizin",
+      "help": "Wie stark Medizin Leben wiederherstellt.",
+      "default": "1.00"
+    },
+    {
+      "key": "item_cd_multi",
+      "label": "Faktor für Abklingzeit von Essen und Medizin",
+      "help": "Faktor für die Abklingzeit von Essen und Medizin.",
+      "default": "1.00"
+    },
+    {
+      "key": "food_medicine_wine_buff_time_multi",
+      "label": "Faktor für Buff-Dauer von Essen, Medizin und Wein",
+      "help": "Wie lange Buffs von Essen, Medizin und Wein halten.",
+      "default": "1.00"
+    },
+    {
+      "key": "butterfly_drop_mul",
+      "label": "Faktor für Schmetterlings-Beute",
+      "help": "Faktor für die Beute von Schmetterlingen.",
+      "default": "1.00"
+    },
+    {
+      "key": "un_lock_skill_price_mul",
+      "label": "Faktor für Kupferkosten von Fertigkeits-Durchbrüchen",
+      "help": "Faktor für den Preis beim Freischalten von Fertigkeiten.",
+      "default": "1.00"
+    },
+    {
+      "key": "fuben_cool_down_multiplier",
+      "label": "Faktor für Abklingzeit von Schatzkarten-Instanzen",
+      "help": "Faktor für die Abklingzeit von Schatzkarten-Instanzen.",
+      "default": "1.00"
+    },
+    {
+      "key": "kill_npc_conflict_value_mul",
+      "label": "Faktor für Gilden-Feindschaft",
+      "help": "Wie schnell die Feindschaft zwischen Gilden steigt.",
+      "default": "1.00"
+    },
+    {
+      "key": "map",
+      "label": "Startkarte",
+      "help": "Karte beim Start.",
+      "type": "select",
+      "options": [
+        "LargeTerrain_Central_Main",
+        "LargeTerrain_Central2_Main",
+        "LargeTerrain_Desert_Main"
+      ],
+      "default": "LargeTerrain_Central_Main"
+    },
+    {
+      "key": "server_list_id",
+      "label": "ID in der Serverliste",
+      "default": ""
+    },
+    {
+      "key": "out_address",
+      "label": "Ausgehende IP-Adresse",
+      "help": "Wert „OutAddress“. Meist „Öffentliche IP“. Bei reinen LAN-Servern evtl. die gebundene IP nutzen, dann aber eine echte IP und nicht 0.0.0.0.",
+      "default": ""
+    },
+    {
+      "key": "session_name",
+      "label": "Servername",
+      "help": "Name in der Serverliste.",
+      "default": "Mein Server"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON-Passwort",
+      "type": "secret",
+      "default": "",
+      "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
+    },
+    {
+      "key": "use_ace",
+      "label": "Anti-Cheat-Engine",
+      "help": "Wenn an, ist die Anti-Cheat-Engine aktiv.",
+      "type": "bool",
+      "flag": "-UseACE ",
+      "default": "true"
+    },
+    {
+      "key": "force_steam_net",
+      "label": "Steam-P2P",
+      "help": "Wenn an, ist Steam-P2P aktiv.",
+      "type": "bool",
+      "flag": "-ForceSteamNet ",
+      "default": "false"
+    },
+    {
+      "key": "custom_args",
+      "label": "Zusätzliche Startparameter",
+      "help": "Zusätzliche Startparameter, die sonst nirgends gesetzt werden. Alternativ mit PrivateServerTool.exe beim Spieler passende Parameter erzeugen. Mit Vorsicht nutzen.",
+      "default": ""
+    }
+  ],
+  "memory_mb": 6144,
+  "min_memory_mb": 2048,
+  "console": "stdin",
+  "query": {
+    "type": "a2s",
+    "port": 1
+  },
+  "status": "experimentell",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+}
