@@ -749,7 +749,7 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 	if tpl.Ready != "" {
 		ready, _ = regexp.Compile(tpl.Ready)
 	}
-	installing, started, failed, isReady, noSpace, noLogin := false, tpl.Kind != "steam", false, false, false, false
+	installing, started, failed, isReady, noSpace, noLogin, wine := false, tpl.Kind != "steam", false, false, false, false, false
 	progress := 0.0
 	sc := bufio.NewScanner(io.LimitReader(rc, 64<<20))
 	sc.Buffer(make([]byte, 64<<10), 1<<20)
@@ -764,8 +764,10 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 			failed, noLogin = true, true
 		case installing && strings.Contains(line, "state is 0x202"):
 			noSpace = true // SteamCMD: not enough disk space
+		case strings.Contains(line, "[panel] Wine"):
+			installing, wine = false, true // setting up Wine after the download
 		case strings.Contains(line, "[panel] Start:"):
-			installing, started = false, true
+			installing, started, wine = false, true, false
 		case installing:
 			if mm := steamProgress.FindStringSubmatch(line); mm != nil {
 				progress, _ = strconv.ParseFloat(mm[1], 64)
@@ -788,6 +790,9 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 		l.Progress = progress / 100
 		l.Msg = "SteamCMD lädt die Serverdateien"
 		return "installing"
+	case wine:
+		l.Msg = "Wine wird geprüft bzw. eingerichtet (beim ersten Mal 1 bis 3 Minuten)"
+		return "starting"
 	case !started:
 		return "starting"
 	case ready == nil || isReady:

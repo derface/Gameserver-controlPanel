@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:10"
+const SteamImage = "gamepanel/steam-runtime:11"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -111,7 +111,9 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
   # one is moved aside, never deleted, because some games keep save games
   # in it.
   WV="$(wine --version 2>/dev/null)"
-  wine_ok() { timeout 180 wine cmd /c ver 2>&1 | grep -q "Microsoft Windows"; }
+  # no display and no Mono/Gecko: otherwise Wine may wait forever for a
+  # click in an install dialog on the invisible screen
+  wine_ok() { env -u DISPLAY WINEDLLOVERRIDES="mscoree,mshtml=" timeout 180 wine cmd /c ver 2>&1 | grep -q "Microsoft Windows"; }
   if [ -f "$WINEPREFIX/system.reg" ] && [ "$(cat "$WINEPREFIX/.gp-ok" 2>/dev/null)" != "$WV" ]; then
     echo "[panel] Wine-Umgebung wird geprüft (${WV})"
     if wine_ok; then
@@ -125,8 +127,8 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
   fi
   if [ ! -f "$WINEPREFIX/system.reg" ]; then
     echo "[panel] Wine wird eingerichtet (einmalig, 1 bis 3 Minuten)"
-    wineboot --init 2>&1 | grep -iv 'fixme\|^$' | tail -n 15
-    wineserver -w 2>/dev/null || true
+    env -u DISPLAY WINEDLLOVERRIDES="mscoree,mshtml=" timeout 600 wineboot --init 2>&1 | grep -iv 'fixme\|^$' | tail -n 15
+    timeout 120 wineserver -w 2>/dev/null || wineserver -k 2>/dev/null || true
     if wine_ok; then
       echo "$WV" > "$WINEPREFIX/.gp-ok"
       echo "[panel] Wine ist eingerichtet (${WV})"
