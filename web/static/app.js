@@ -193,9 +193,12 @@
     fitBase(); if (!S.sel) L.tr = L.base;
   }
   function fitBase() {
+    // frame the tallest rack plus its name tag, centred in the view
+    const top = (L.maxH || 3) + .75;
+    L.target.y = top / 2 - .2;
     const span = Math.max(L.span, 6), fov = L.cam ? L.cam.fov * Math.PI / 180 : .55, aspect = L.w / Math.max(1, L.h);
-    const byW = (span / 2 + 1) / (Math.tan(fov / 2) * aspect), byH = 3.2 / Math.tan(fov / 2);
-    L.base = Math.max(byW, byH) * .92;
+    const byW = (span / 2 + 1.7) / (Math.tan(fov / 2) * aspect), byH = (top / 2 + .9) / Math.tan(fov / 2);
+    L.base = Math.max(byW, byH);
   }
   const rackUnits = s => clamp(Math.round(5 + (s.memory_mb || 4096) / 1024), 6, 16);
   function layout(n) {
@@ -206,7 +209,8 @@
     if (!L.renderer) return;
     const lay = layout(S.servers.length);
     const span = lay.cols * (RW + GAP);
-    if (span !== L.span) { L.span = span; fitBase(); if (!S.sel) L.tr = L.base; }
+    const maxH = Math.max(0, ...S.servers.map(s => rackUnits(s) * UNIT + .34));
+    if (span !== L.span || maxH !== L.maxH) { L.span = span; L.maxH = maxH; fitBase(); if (!S.sel) L.tr = L.base; }
     L.target.z = -(lay.rows - 1) * 1.5;
     const ids = new Set(S.servers.map(s => s.id));
     L.blocks.forEach((b, id) => { if (!ids.has(id)) { L.world.remove(b.g); L.scene.remove(b.pool); b.lab.remove(); L.blocks.delete(id); } });
@@ -250,7 +254,7 @@
     return b;
   }
   function updateLabel(b) {
-    const html = `<span class="dot" style="background:var(${stInfo(b.s).t})"></span>${esc(b.s.name)}`;
+    const html = `<span class="dot" style="background:var(${stInfo(b.s).t})"></span><span class="nm">${esc(b.s.name)}</span>`;
     if (b.lab._h !== html) { b.lab.innerHTML = html; b.lab._h = html; }
   }
   function applySceneColors() {
