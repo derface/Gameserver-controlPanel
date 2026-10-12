@@ -3,6 +3,7 @@
 package templates
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -34,15 +35,34 @@ type Var struct {
 	Needed  bool     `json:"required,omitempty"`
 }
 
+// DefaultContent returns the starting content of the file, or nil.
+func (c ConfigFile) DefaultContent() []byte {
+	if len(c.Default) == 0 {
+		return nil
+	}
+	var str string
+	if json.Unmarshal(c.Default, &str) == nil {
+		return []byte(str)
+	}
+	var buf bytes.Buffer
+	if json.Indent(&buf, c.Default, "", "    ") != nil {
+		return nil
+	}
+	return append(buf.Bytes(), '\n')
+}
+
 // ConfigFile is one game configuration file with the settings the panel
 // shows as a form (see package gameconfig for the formats).
 type ConfigFile struct {
-	Title    string    `json:"title"`
-	File     string    `json:"file"`                // below the server folder, may contain {{var}}
-	Format   string    `json:"format"`              // properties | ini | json | cvar | xmlprop | palworld
-	InitFrom string    `json:"init_from,omitempty"` // copy this file first if File is missing or empty
-	Note     string    `json:"note,omitempty"`
-	Settings []Setting `json:"settings"`
+	Title    string `json:"title"`
+	File     string `json:"file"`                // below the server folder, may contain {{var}}
+	Format   string `json:"format"`              // properties | ini | json | cvar | xmlprop | palworld
+	InitFrom string `json:"init_from,omitempty"` // copy this file first if File is missing or empty
+	// Default is the content to start from while the game has not written the
+	// file yet: a JSON object for json files, otherwise a string.
+	Default  json.RawMessage `json:"default,omitempty"`
+	Note     string          `json:"note,omitempty"`
+	Settings []Setting       `json:"settings"`
 }
 
 type Setting struct {

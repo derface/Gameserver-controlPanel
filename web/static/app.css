@@ -585,3 +585,5 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .core-top h2{font-size:17px;font-weight:650}
 @media (max-width:560px){#svActs{flex-wrap:nowrap}#svActs>.more{flex:0 0 auto}#svActs .more .menu{right:auto;left:0}}
 @media (max-width:900px){.side-search kbd{display:none}}
+.st-wait{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:12px 14px;border-radius:var(--r-md);background:var(--panel-2);margin:4px 0 0}
+.st-wait .spin{flex-shrink:0;margin-top:3px}

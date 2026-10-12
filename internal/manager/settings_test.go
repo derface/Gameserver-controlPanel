@@ -94,11 +94,22 @@ func TestSettingsJSONAndPaths(t *testing.T) {
 	m, st := settingsMgr(t)
 	_ = st.SaveServer(store.Server{ID: "e", Name: "E", Template: "enshrouded", Vars: map[string]string{}})
 	v, _ := m.Settings("e")
-	if v.Files[0].Exists || v.Files[0].Editable {
-		t.Fatal("fehlende JSON-Datei als bearbeitbar gemeldet")
+	// Enshrouded brings a starting file: editable before the first start
+	if !v.Files[0].Editable || !find(v, 0, "userGroups.3.password").Present || find(v, 0, "name").Value != "Enshrouded Server" {
+		t.Fatalf("Startinhalt fehlt: %+v", v.Files[0])
 	}
-	if _, err := m.ApplySettings(context.Background(), "e", nil, map[int]map[string]string{0: {"name": "x"}}); err == nil {
-		t.Fatal("fehlende JSON-Datei beschrieben")
+	if _, err := m.ApplySettings(context.Background(), "e", nil, map[int]map[string]string{0: {"name": "Vorab", "userGroups.1.password": "freund"}}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(m.ServerDir("e"), "server/enshrouded_server.json"))
+	if err != nil || !strings.Contains(string(b), `"name": "Vorab"`) || !strings.Contains(string(b), `"password": "freund"`) || !strings.Contains(string(b), `"queryPort": 15637`) {
+		t.Fatalf("vorab geschriebene Datei: %v\n%s", err, b)
+	}
+	// without a starting file a missing JSON file stays locked
+	tpl, _ := m.Templates().Get("enshrouded")
+	tpl.Config[0].Default = nil
+	if d, ok, _ := m.readConfig(store.Server{ID: "leer", Vars: map[string]string{}}, tpl, tpl.Config[0]); ok || d != nil {
+		t.Fatal("fehlende JSON-Datei ohne Startinhalt als vorhanden gemeldet")
 	}
 	writeFile(t, filepath.Join(m.ServerDir("e"), "server/enshrouded_server.json"), `{
 	"name": "Enshrouded Server",
@@ -113,7 +124,7 @@ func TestSettingsJSONAndPaths(t *testing.T) {
 	if _, err := m.ApplySettings(context.Background(), "e", nil, map[int]map[string]string{0: {"slotCount": "8", "gameSettingsPreset": "Hard", "userGroups.1.password": "neu"}}); err != nil {
 		t.Fatal(err)
 	}
-	b, _ := os.ReadFile(filepath.Join(m.ServerDir("e"), "server/enshrouded_server.json"))
+	b, _ = os.ReadFile(filepath.Join(m.ServerDir("e"), "server/enshrouded_server.json"))
 	for _, w := range []string{"\t\"slotCount\": 8,", `"gameSettingsPreset": "Hard"`, `"password": "neu"`} {
 		if !strings.Contains(string(b), w) {
 			t.Fatalf("%q fehlt:\n%s", w, b)

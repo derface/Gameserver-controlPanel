@@ -97,6 +97,11 @@ func (m *Manager) readConfig(sv store.Server, tpl templates.Template, c template
 			return d, true, nil
 		}
 	}
+	if !exists && len(c.Default) > 0 {
+		if d := c.DefaultContent(); d != nil {
+			return d, true, nil
+		}
+	}
 	return data, exists, nil
 }
 

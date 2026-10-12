@@ -344,6 +344,8 @@
     const m = $('#svMsg'); m.hidden = !s.message; m.textContent = s.message || ''; m.classList.toggle('bad', s.status === 'error');
     const tpl = S.tplById[s.template];
     $('#tabMods').hidden = !(tpl && tpl.mods);
+    // settings that wait for the first start reload once the status moves on
+    if (MG.tab === 'settings' && GS.data && GS.status !== s.status && GS.data.files.some(f => !f.editable) && !document.activeElement.closest('#stForm')) loadSettings();
     set($('#svInfo'), `<h2>Details</h2><dl class="kv one">
         <div><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}</dd></div>
         <div><dt>Ports</dt><dd>${esc(portList(s)) || '–'}</dd></div>
@@ -1274,6 +1276,7 @@
     let d;
     try { d = await api('GET', `/api/servers/${id}/settings`); } catch (e) { toast(e.message, 'bad'); return; }
     if (MG.id !== id) return;
+    const sv = byId(id); GS.status = sv ? sv.status : '';
     GS.data = d; renderSettings();
   }
   function renderSettings() {
@@ -1288,15 +1291,22 @@
       h += `<fieldset class="st-sec"><legend>${esc(f.title)}</legend><p class="st-file">${esc(f.file)}</p>`;
       if (f.note) h += `<p class="small muted st-info">${esc(f.note)}</p>`;
       if (f.error) h += `<p class="err">${esc(f.error)}</p>`;
-      if (!f.editable && !f.error) h += '<p class="small muted st-info">Diese Datei legt das Spiel beim ersten Start an. Starte den Server einmal, danach kannst du die Werte hier ändern.</p>';
+      if (!f.editable && !f.error) {
+        const sv = byId(MG.id), st = sv ? sv.status : '';
+        h += `<p class="st-wait">${st === 'installing' || st === 'preparing' ? '<span class="spin" aria-hidden="true"></span> Das Spiel wird gerade installiert. Diese Datei gibt es erst nach der Installation oder dem ersten Start – sobald sie da ist, erscheinen die Einstellungen hier von selbst.'
+          : st === 'starting' ? '<span class="spin" aria-hidden="true"></span> Der Server startet zum ersten Mal und legt die Datei gerade an. Die Einstellungen erscheinen hier gleich von selbst.'
+          : st === 'running' ? 'Das Spiel hat die Datei noch nicht angelegt. Manche Spiele tun das erst nach dem ersten Speichern oder Beenden – stoppe den Server einmal, dann erscheinen die Einstellungen.'
+          : 'Diese Datei legt das Spiel beim ersten Start an. Starte den Server einmal, danach kannst du die Werte hier ändern.'}</p>`;
+      }
       else if (f.editable) h += `<div class="vars">${shown.map(s => cfgField(i, s)).join('')}</div>`;
-      if (f.editable && shown.length < f.settings.length) h += `<p class="small muted">${f.settings.length - shown.length} weitere Einstellungen gibt es in dieser Spielversion nicht.</p>`;
+      if (f.editable && shown.length < f.settings.length) { const n = f.settings.length - shown.length; h += `<p class="small muted">${n === 1 ? 'Eine weitere Einstellung gibt' : n + ' weitere Einstellungen gibt'} es in dieser Spielversion nicht.</p>`; }
       h += '</fieldset>';
     });
     if (!d.vars.length && !d.files.length) h = '<p class="muted">Für dieses Spiel gibt es noch kein Einstellungs-Formular. Die Konfigurationsdateien kannst du unter „Dateien“ bearbeiten.</p>';
     $('#stBody').innerHTML = h;
     $('#stSave').hidden = !d.vars.length && !d.files.some(f => f.editable);
     $('#stNote').textContent = d.running ? 'Der Server läuft. Zum Speichern wird er kurz gestoppt und wieder gestartet, die Spieler werden dabei getrennt.' : '';
+    $('.st-foot').hidden = $('#stSave').hidden;
     GS.orig = collectSettings();
   }
   function collectSettings() {

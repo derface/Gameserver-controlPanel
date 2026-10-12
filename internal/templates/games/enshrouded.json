@@ -45,13 +45,13 @@
   ],
   "status": "beta",
   "disk_gb": 4,
-  "notes": "Läuft über Wine. Name, Passwort und Spielerzahl stehen nach dem ersten Start in enshrouded_server.json im Serverordner, erst bearbeiten, wenn der Server gestoppt ist. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten.",
+  "notes": "Läuft über Wine. Name, Passwörter und Spielerzahl stellst du unter „Einstellungen“ ein. Taucht der Server im Spiel nicht auf: Steam → Anzeigen → Spielserver → Favoriten → Server hinzufügen mit IP:15637. Für Spieler von außen 15636 und 15637 (UDP und TCP) im Router weiterleiten.",
   "config": [
     {
       "title": "Enshrouded (enshrouded_server.json)",
       "file": "server/enshrouded_server.json",
       "format": "json",
-      "note": "Passwörter gelten für die Gruppen Admin, Freund, Gast und Besucher. Wer welches Passwort eingibt, landet in der Gruppe.",
+      "note": "Passwörter gelten für die Gruppen Admin, Freund, Gast und Besucher. Wer welches Passwort eingibt, landet in der Gruppe. Du kannst die Werte schon vor dem ersten Start setzen; das Spiel ergänzt beim Start alles Übrige.",
       "settings": [
         {
           "key": "name",
@@ -112,13 +112,57 @@
           "key": "enableTextChat",
           "label": "Textchat",
           "type": "bool"
-        },
-        {
-          "key": "password",
-          "label": "Passwort",
-          "type": "secret"
         }
-      ]
+      ],
+      "default": {
+        "name": "Enshrouded Server",
+        "saveDirectory": "./savegame",
+        "logDirectory": "./logs",
+        "ip": "0.0.0.0",
+        "queryPort": 15637,
+        "slotCount": 16,
+        "gameSettingsPreset": "Default",
+        "enableVoiceChat": false,
+        "enableTextChat": false,
+        "userGroups": [
+          {
+            "name": "Admin",
+            "password": "",
+            "canKickBan": true,
+            "canAccessInventories": true,
+            "canEditBase": true,
+            "canExtendBase": true,
+            "reservedSlots": 0
+          },
+          {
+            "name": "Friend",
+            "password": "",
+            "canKickBan": false,
+            "canAccessInventories": true,
+            "canEditBase": true,
+            "canExtendBase": true,
+            "reservedSlots": 0
+          },
+          {
+            "name": "Guest",
+            "password": "",
+            "canKickBan": false,
+            "canAccessInventories": false,
+            "canEditBase": true,
+            "canExtendBase": false,
+            "reservedSlots": 0
+          },
+          {
+            "name": "Visitor",
+            "password": "",
+            "canKickBan": false,
+            "canAccessInventories": false,
+            "canEditBase": false,
+            "canExtendBase": false,
+            "reservedSlots": 0
+          }
+        ]
+      }
     }
   ]
 }
