@@ -85,6 +85,13 @@ type ConfigFile struct {
 	// (enshrouded_groups: group passwords set and different).
 	Check string `json:"check,omitempty"`
 	Note  string `json:"note,omitempty"`
+	// Auto adds every other value found in the file as a card (default on;
+	// "auto": false turns it off). Hide lists keys never shown ("*" matches
+	// any part, e.g. "userGroups.*.name"); AutoGroup is the tab for values
+	// without a better one.
+	Auto      *bool    `json:"auto,omitempty"`
+	Hide      []string `json:"hide,omitempty"`
+	AutoGroup string   `json:"auto_group,omitempty"`
 	// NoteGroup shows the note only on that tab of the settings page.
 	NoteGroup string    `json:"note_group,omitempty"`
 	Settings  []Setting `json:"settings"`

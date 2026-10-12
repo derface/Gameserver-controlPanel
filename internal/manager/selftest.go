@@ -40,23 +40,27 @@ var (
 )
 
 type TestResult struct {
-	Template string    `json:"template"`
-	Name     string    `json:"name"`
-	Source   string    `json:"source"` // stabil | beta | experimentell (template status at test time)
-	Result   string    `json:"result"` // ok | unsicher | fehler | übersprungen
-	Download bool      `json:"download"`
-	Start    bool      `json:"start"`
-	Ready    bool      `json:"ready"`
-	Query    bool      `json:"query"`
-	HasReady bool      `json:"has_ready"`
-	HasQuery bool      `json:"has_query"`
-	Players  string    `json:"players,omitempty"`
-	Note     string    `json:"note,omitempty"`
-	Error    string    `json:"error,omitempty"`
-	Log      []string  `json:"log,omitempty"`
-	DiskMB   int64     `json:"disk_mb"`
-	Seconds  int       `json:"seconds"`
-	Finished time.Time `json:"finished"`
+	Template string `json:"template"`
+	Name     string `json:"name"`
+	Source   string `json:"source"` // stabil | beta | experimentell (template status at test time)
+	Result   string `json:"result"` // ok | unsicher | fehler | übersprungen
+	Download bool   `json:"download"`
+	Start    bool   `json:"start"`
+	Ready    bool   `json:"ready"`
+	Query    bool   `json:"query"`
+	HasReady bool   `json:"has_ready"`
+	HasQuery bool   `json:"has_query"`
+	Players  string `json:"players,omitempty"`
+	// settings page: ok | fehler | keine ("" = not tested)
+	Settings      string    `json:"settings,omitempty"`
+	SettingsCount int       `json:"settings_count,omitempty"`
+	SettingsNote  string    `json:"settings_note,omitempty"`
+	Note          string    `json:"note,omitempty"`
+	Error         string    `json:"error,omitempty"`
+	Log           []string  `json:"log,omitempty"`
+	DiskMB        int64     `json:"disk_mb"`
+	Seconds       int       `json:"seconds"`
+	Finished      time.Time `json:"finished"`
 }
 
 type TestRun struct {
@@ -503,6 +507,7 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 			res.Result = "ok"
 		}
 		res.Log = m.testLog(sv.ID, 12)
+		m.settingsTest(ctx, sv.ID, tpl, startWait, &res)
 		return res
 	}
 }
@@ -597,7 +602,7 @@ func (m *Manager) TestReport() string {
 	}
 	fmt.Fprintf(&b, "\n\nok: %d · unsicher: %d · fehler: %d · übersprungen: %d · offen: %d\n\n",
 		count["ok"], count["unsicher"], count["fehler"], count["übersprungen"], len(r.Queue))
-	b.WriteString("| Spiel | Vorlage | Ergebnis | Download | Start | Bereit | Abfrage | Größe | Dauer |\n|---|---|---|---|---|---|---|---|---|\n")
+	b.WriteString("| Spiel | Vorlage | Ergebnis | Download | Start | Bereit | Abfrage | Einstellungen | Größe | Dauer |\n|---|---|---|---|---|---|---|---|---|---|\n")
 	mark := func(ok, has bool) string {
 		switch {
 		case !has:
@@ -615,11 +620,15 @@ func (m *Manager) TestReport() string {
 		if x.Players != "" {
 			q += " " + x.Players
 		}
-		fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %.1f GB | %d min |\n", x.Name, x.Template, x.Result,
-			mark(x.Download, true), mark(x.Start, true), mark(x.Ready, x.HasReady), q, float64(x.DiskMB)/1024, (x.Seconds+59)/60)
+		st := map[string]string{"ok": "✓", "fehler": "✗", "keine": "–", "": ""}[x.Settings]
+		if x.SettingsCount > 0 {
+			st += fmt.Sprintf(" %d", x.SettingsCount)
+		}
+		fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s | %.1f GB | %d min |\n", x.Name, x.Template, x.Result,
+			mark(x.Download, true), mark(x.Start, true), mark(x.Ready, x.HasReady), q, st, float64(x.DiskMB)/1024, (x.Seconds+59)/60)
 	}
 	for _, x := range res {
-		if x.Result == "ok" {
+		if x.Result == "ok" && x.Settings != "fehler" {
 			continue
 		}
 		fmt.Fprintf(&b, "\n## %s (%s): %s\n\n", x.Name, x.Template, x.Result)
@@ -628,6 +637,9 @@ func (m *Manager) TestReport() string {
 		}
 		if x.Note != "" {
 			fmt.Fprintf(&b, "%s\n\n", x.Note)
+		}
+		if x.Settings == "fehler" {
+			fmt.Fprintf(&b, "Einstellungen: %s\n\n", x.SettingsNote)
 		}
 		if len(x.Log) > 0 {
 			b.WriteString("```\n" + strings.Join(x.Log, "\n") + "\n```\n")

@@ -643,6 +643,7 @@ func (m *Manager) Delete(ctx context.Context, id string, wipe bool) error {
 			_ = os.RemoveAll(dir)
 		}
 		_ = os.RemoveAll(m.backupDir(id))
+		_ = os.RemoveAll(m.settingsBackupDir(id))
 	}
 	m.mu.Lock()
 	delete(m.jobs, id)

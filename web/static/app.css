@@ -657,3 +657,7 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .tgl:checked{background:var(--accent)}
 .tgl:checked::after{transform:translateX(18px);background:var(--on-accent);opacity:1}
 .tgl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.undo-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.undo-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.undo-list li div{display:flex;flex-direction:column;gap:2px;min-width:0}
+#dlgUndo[open]{display:flex;flex-direction:column;gap:14px}

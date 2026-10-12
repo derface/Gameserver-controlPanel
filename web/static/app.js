@@ -1154,13 +1154,15 @@
     const order = { fehler: 0, unsicher: 1, 'übersprungen': 2, ok: 3 };
     const rows = (r.results || []).slice().sort((a, b) => order[a.result] - order[b.result] || a.name.localeCompare(b.name, 'de'));
     $('#tsRows').innerHTML = rows.length ? rows.map(x => {
-      const det = x.error || x.note || (x.log && x.log.length);
+      const det = x.error || x.note || x.settings_note || (x.log && x.log.length);
+      const stg = !x.settings ? '<span class="muted">–</span>' : x.settings === 'keine' ? '<span class="muted" title="' + esc(x.settings_note || '') + '">keine</span>'
+        : (x.settings === 'ok' ? '<span class="ts-yes">✓</span>' : '<span class="ts-no">✗</span>') + (x.settings_count ? ' <span class="mono small muted">' + x.settings_count + '</span>' : '');
       const main = `<tr class="${det ? 'has-d' : ''}" data-t="${esc(x.template)}"><td>${esc(x.name)}</td><td><span class="ts-res ${esc(x.result)}">${esc(x.result)}</span></td>
-        <td>${mk(x.download, true)}</td><td>${mk(x.start, true)}</td><td>${mk(x.ready, x.has_ready)}</td><td>${mk(x.query, x.has_query)}${x.players ? ' <span class="mono small muted">' + esc(x.players) + '</span>' : ''}</td>
+        <td>${mk(x.download, true)}</td><td>${mk(x.start, true)}</td><td>${mk(x.ready, x.has_ready)}</td><td>${mk(x.query, x.has_query)}${x.players ? ' <span class="mono small muted">' + esc(x.players) + '</span>' : ''}</td><td>${stg}</td>
         <td class="num">${x.disk_mb ? gb(x.disk_mb) + ' GB' : '–'}</td><td class="num">${fmtDur(x.seconds)}</td></tr>`;
-      const d = det && TS.open[x.template] ? `<tr class="ts-detail"><td colspan="8">${x.error ? '<b>' + esc(x.error) + '</b><br>' : ''}${x.note ? esc(x.note) : ''}${x.log && x.log.length ? '<pre>' + esc(x.log.join('\n')) + '</pre>' : ''}</td></tr>` : '';
+      const d = det && TS.open[x.template] ? `<tr class="ts-detail"><td colspan="9">${x.error ? '<b>' + esc(x.error) + '</b><br>' : ''}${x.note ? esc(x.note) : ''}${x.settings_note ? (x.note ? '<br>' : '') + 'Einstellungen: ' + esc(x.settings_note) : ''}${x.log && x.log.length ? '<pre>' + esc(x.log.join('\n')) + '</pre>' : ''}</td></tr>` : '';
       return main + d;
-    }).join('') : '<tr class="empty"><td colspan="8">Noch keine Ergebnisse.</td></tr>';
+    }).join('') : '<tr class="empty"><td colspan="9">Noch keine Ergebnisse.</td></tr>';
   }
   $('#tsRows').addEventListener('click', e => {
     const tr = e.target.closest('tr.has-d'); if (!tr) return;
@@ -1461,6 +1463,27 @@
       $('#stWhenFix').onclick = () => { const el = shared.el; if (el.type === 'checkbox') el.checked = shared.v === 'true'; else el.value = shared.v; updateWhen(); };
     }
   }
+  $('#stUndo').onclick = async () => {
+    const d = $('#dlgUndo'), ul = $('#undoList');
+    ul.innerHTML = '<li class="muted">Lädt …</li>'; d.showModal();
+    try {
+      const list = await api('GET', `/api/servers/${MG.id}/settings/backups`);
+      ul.innerHTML = list.length ? list.map(b => `<li><div><b>${esc(new Date(b.when).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}</b>
+          <span class="small muted">Stand vor: ${esc((b.changed || []).slice(0, 6).join(', '))}${(b.changed || []).length > 6 ? ' …' : ''}</span></div>
+          <button type="button" class="btn-line" data-undo="${esc(b.id)}">Zurückholen</button></li>`).join('')
+        : '<li class="muted">Noch keine Stände. Sie entstehen beim ersten Speichern.</li>';
+    } catch (err) { ul.innerHTML = `<li class="err">${esc(err.message)}</li>`; }
+  };
+  $('#undoList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-undo]'); if (!b) return;
+    const sv = byId(MG.id);
+    if (!await confirmBox('Stand zurückholen?', 'Die Konfigurationsdateien werden auf diesen Stand gesetzt.' + (sv && isOn(sv) ? ' Der Server wird dafür kurz gestoppt und wieder gestartet.' : ''), 'Zurückholen')) return;
+    b.disabled = true; b.textContent = 'Holt zurück …';
+    try {
+      const r = await api('POST', `/api/servers/${MG.id}/settings/restore`, { id: b.dataset.undo });
+      $('#dlgUndo').close(); GS.data = r.settings; renderSettings(); toast('Stand zurückgeholt', 'ok'); loadServers();
+    } catch (err) { toast(err.message, 'bad'); b.disabled = false; b.textContent = 'Zurückholen'; }
+  });
   $('#stBody').addEventListener('click', e => {
     const b = e.target.closest('[data-st-g]'); if (!b) return;
     GS.group = b.dataset.stG; const f = $('#stFind'); if (f) f.value = ''; showStGroup();

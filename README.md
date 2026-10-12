@@ -73,7 +73,16 @@ Beschreibungen, Wertebereiche und Gruppen der Spiel-Einstellungen stammen teils 
 
 ### Einstellungs-Seite
 
-Jede Einstellung einer Vorlage kann haben: `group` (Reiter, z. B. „Server“, „Spieler“), `help` (Beschreibung), `unit` (steht im Feld, z. B. „Spieler“), `min`/`max`, `scale` (Umrechnung: Wert in der Datei = angezeigter Wert × scale, z. B. Minuten ↔ Nanosekunden) und `when` („schlüssel=wert“: wirkt nur dann, sonst ausgegraut mit Hinweis). Typ `list` ist eine kommagetrennte Liste in JSON. Fehlende JSON-Werte legt das Panel beim Speichern mit dem richtigen Typ an. `note_group` zeigt den Hinweis einer Datei nur in einem Reiter.
+Das Panel liest die Config-Dateien eines Spiels und macht aus **jedem** Wert eine Kachel (Reiter, Suche, Schalter/Zahl/Auswahl). Woher die Beschriftung kommt, in dieser Reihenfolge:
+
+1. Einstellungen der Vorlage (`config[].settings`, von Hand gepflegt, deutsch),
+2. AMPTemplates-Daten (`internal/templates/amp/meta.json`, erzeugt mit `tools/gen_amp_meta.py`; deutsche Texte in `amp/de.json`),
+3. sonst aus dem Schlüssel geraten (`bEnablePvP` → „Enable PvP“, Art aus dem Wert).
+
+Ports, IP-Adressen und Pfade blendet das Panel aus (die verwaltet es selbst). Kennt AMP weitere Config-Dateien eines Spiels und hat das Spiel sie angelegt, erscheinen auch die. Vor jedem Speichern hebt das Panel die alten Dateien auf (`<data>/settings-backup/<id>`, letzte 5), „Frühere Stände“ holt sie zurück. Der Selbsttest prüft nach dem Start jedes Spiels: Kacheln da, Datei bleibt beim Zurückschreiben gleich, nach geändertem Servernamen startet das Spiel noch und behält den Namen.
+
+Felder einer Vorlagen-Einstellung:
+`group` (Reiter, z. B. „Server“, „Spieler“), `help` (Beschreibung), `unit` (steht im Feld, z. B. „Spieler“), `min`/`max`, `scale` (Umrechnung: Wert in der Datei = angezeigter Wert × scale, z. B. Minuten ↔ Nanosekunden) und `when` („schlüssel=wert“: wirkt nur dann, sonst ausgegraut mit Hinweis). Typ `list` ist eine kommagetrennte Liste in JSON. Fehlende JSON-Werte legt das Panel beim Speichern mit dem richtigen Typ an. `note_group` zeigt den Hinweis einer Datei nur in einem Reiter. Pro Datei: `auto: false` schaltet die automatischen Kacheln ab, `hide` blendet Schlüssel aus (`*` als Platzhalter, z. B. `userGroups.*.name`), `auto_group` legt den Reiter für automatische Kacheln fest.
 
 Vorlagen-Felder seit 0.6: `steam_mod` (GoldSrc-Mod über App 90), `steam_base_app` + `steam_base_dir` (zusätzliche App, die vorher installiert wird), `steam_preplatform` (Erstinstallation einmal mit anderer Plattform, z. B. L4D2), Status `defekt`. Seit 0.4: `packages` (zusätzliche Debian-Pakete, eigene Image-Schicht je Paketkombination), `runtime: "wine"` + `platform: "windows"` (Windows-Server über Wine), `log_file` (Spiel schreibt in eine Datei, die Konsole liest mit), `data_path` / `data_uid` / `cmd` für Container-Images.
 

@@ -219,6 +219,46 @@
           "group": "Zugang"
         },
         {
+          "key": "userGroups.0.reservedSlots",
+          "label": "Admin: reservierte Plätze",
+          "type": "number",
+          "min": 0,
+          "max": 16,
+          "unit": "Plätze",
+          "help": "So viele Plätze bleiben für Spieler der Gruppe „Admin“ frei, auch wenn der Server sonst voll ist.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.1.reservedSlots",
+          "label": "Freund: reservierte Plätze",
+          "type": "number",
+          "min": 0,
+          "max": 16,
+          "unit": "Plätze",
+          "help": "So viele Plätze bleiben für Spieler der Gruppe „Freund“ frei, auch wenn der Server sonst voll ist.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.2.reservedSlots",
+          "label": "Gast: reservierte Plätze",
+          "type": "number",
+          "min": 0,
+          "max": 16,
+          "unit": "Plätze",
+          "help": "So viele Plätze bleiben für Spieler der Gruppe „Gast“ frei, auch wenn der Server sonst voll ist.",
+          "group": "Zugang"
+        },
+        {
+          "key": "userGroups.3.reservedSlots",
+          "label": "Besucher: reservierte Plätze",
+          "type": "number",
+          "min": 0,
+          "max": 16,
+          "unit": "Plätze",
+          "help": "So viele Plätze bleiben für Spieler der Gruppe „Besucher“ frei, auch wenn der Server sonst voll ist.",
+          "group": "Zugang"
+        },
+        {
           "key": "gameSettingsPreset",
           "label": "Spielregeln",
           "type": "select",
@@ -775,7 +815,12 @@
         ]
       },
       "check": "enshrouded_groups",
-      "note_group": "Zugang"
+      "note_group": "Zugang",
+      "hide": [
+        "userGroups.*.name",
+        "userGroups.0.can*",
+        "bannedAccounts"
+      ]
     }
   ]
 }

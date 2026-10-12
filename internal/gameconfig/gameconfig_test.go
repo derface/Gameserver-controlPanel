@@ -67,7 +67,7 @@ func TestCvar(t *testing.T) {
 		t.Fatal(v)
 	}
 	out := set(t, "cvar", in, "hostname", "Neuer Name", "sv_password", "geheim")
-	if !strings.Contains(out, "hostname \"Neuer Name\"\n") || !strings.HasSuffix(out, "sv_password \"geheim\"\n") || !strings.Contains(out, "mp_timelimit 30") {
+	if !strings.Contains(out, "hostname \"Neuer Name\" // Kommentar\n") || !strings.HasSuffix(out, "sv_password \"geheim\"\n") || !strings.Contains(out, "mp_timelimit 30") {
 		t.Fatalf("got %q", out)
 	}
 	if _, err := Set("cvar", []byte(in), map[string]string{"hostname": `a"; quit`}, []string{"hostname"}); err == nil {

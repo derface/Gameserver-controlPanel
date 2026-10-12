@@ -201,6 +201,7 @@ var actions = map[string]string{
 	"PUT /api/https":                                "HTTPS geändert",
 	"PUT /api/router":                               "Automatische Portfreigabe",
 	"PUT /api/servers/{id}/router":                  "Portfreigabe des Servers geändert",
+	"POST /api/servers/{id}/settings/restore":       "Einstellungen zurückgeholt",
 	"POST /api/https/renew":                         "Zertifikat angefordert",
 	"POST /api/servers/{id}/{action}#start":         "Server gestartet",
 	"POST /api/servers/{id}/{action}#stop":          "Server gestoppt",

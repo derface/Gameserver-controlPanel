@@ -62,7 +62,9 @@ func Get(format string, data []byte, key string) (string, bool, error) {
 		return v, ok, nil
 	case "json":
 		var doc any
-		if err := json.Unmarshal(data, &doc); err != nil {
+		dec := json.NewDecoder(bytes.NewReader(data))
+		dec.UseNumber() // keep numbers as written ("1.0" stays "1.0")
+		if err := dec.Decode(&doc); err != nil {
 			return "", false, fmt.Errorf("JSON ungültig: %w", err)
 		}
 		v, ok := jsonGet(doc, key)
@@ -74,8 +76,8 @@ func Get(format string, data []byte, key string) (string, bool, error) {
 			return x, true, nil
 		case bool:
 			return strconv.FormatBool(x), true, nil
-		case float64:
-			return strconv.FormatFloat(x, 'f', -1, 64), true, nil
+		case json.Number:
+			return x.String(), true, nil
 		case nil:
 			return "", true, nil
 		case []any: // a list of words, e.g. server tags
@@ -176,14 +178,29 @@ func findProp(data []byte, key string) (int, string, bool) {
 func setProp(data []byte, key, val string) []byte {
 	ls := lines(data)
 	if i, _, ok := findProp(data, key); ok {
-		cr := strings.HasSuffix(ls[i], "\r")
-		ls[i] = key + "=" + val
-		if cr {
-			ls[i] += "\r"
-		}
+		ls[i] = replaceValue(ls[i], val)
 		return []byte(strings.Join(ls, "\n"))
 	}
 	return appendLine(data, key+"="+val)
+}
+
+// replaceValue swaps the value of a "key = value" line and keeps the
+// indentation, the spacing around "=" and a Windows line end.
+func replaceValue(line, val string) string {
+	cr := strings.HasSuffix(line, "\r")
+	line = strings.TrimSuffix(line, "\r")
+	eq := strings.Index(line, "=")
+	rest := line[eq+1:]
+	lead := rest[:len(rest)-len(strings.TrimLeft(rest, " \t"))]
+	trail := rest[len(strings.TrimRight(rest, " \t")):]
+	if strings.TrimSpace(rest) == "" {
+		trail = ""
+	}
+	out := line[:eq+1] + lead + val + trail
+	if cr {
+		out += "\r"
+	}
+	return out
 }
 
 func appendLine(data []byte, line string) []byte {
@@ -229,11 +246,7 @@ func setIni(data []byte, full, val string) ([]byte, error) {
 	}
 	ls := lines(data)
 	if i, _, ok := findIni(data, sec, key); ok {
-		cr := strings.HasSuffix(ls[i], "\r")
-		ls[i] = key + "=" + val
-		if cr {
-			ls[i] += "\r"
-		}
+		ls[i] = replaceValue(ls[i], val)
 		return []byte(strings.Join(ls, "\n")), nil
 	}
 	// insert after the section header, or add the section
@@ -249,8 +262,18 @@ func setIni(data []byte, full, val string) ([]byte, error) {
 // ---------- cvar ----------
 
 func findCvar(data []byte, key string) (int, string, bool) {
+	i, a, b, _ := cvarSpan(data, key)
+	if i < 0 {
+		return -1, "", false
+	}
+	return i, lines(data)[i][a:b], true
+}
+
+// cvarSpan finds `key value` or `key "value"` and returns the line and the
+// byte range of the value inside it (without quotes).
+func cvarSpan(data []byte, key string) (line, start, end int, quoted bool) {
 	for i, l := range lines(data) {
-		t := strings.TrimSpace(strings.TrimSuffix(l, "\r"))
+		t := strings.TrimLeft(l, " \t")
 		if t == "" || strings.HasPrefix(t, "//") {
 			continue
 		}
@@ -258,32 +281,38 @@ func findCvar(data []byte, key string) (int, string, bool) {
 		if len(f) == 0 || f[0] != key {
 			continue
 		}
-		rest := strings.TrimSpace(t[len(f[0]):])
-		if j := strings.Index(rest, "//"); j >= 0 && !strings.HasPrefix(rest, `"`) {
-			rest = strings.TrimSpace(rest[:j])
-		}
-		if strings.HasPrefix(rest, `"`) {
-			if j := strings.Index(rest[1:], `"`); j >= 0 {
-				return i, rest[1 : j+1], true
+		off := len(l) - len(t) + len(f[0])
+		rest := l[off:]
+		lead := len(rest) - len(strings.TrimLeft(rest, " \t"))
+		p := off + lead
+		if strings.HasPrefix(l[p:], `"`) {
+			if j := strings.Index(l[p+1:], `"`); j >= 0 {
+				return i, p + 1, p + 1 + j, true
 			}
-			return i, rest[1:], true
+			return i, p + 1, len(strings.TrimRight(l, "\r")), true
 		}
-		return i, strings.Fields(rest + " x")[0], true
+		e := p
+		for e < len(l) && l[e] != ' ' && l[e] != '\t' && l[e] != '\r' && l[e] != ';' && !strings.HasPrefix(l[e:], "//") {
+			e++
+		}
+		return i, p, e, false
 	}
-	return -1, "", false
+	return -1, 0, 0, false
 }
 
 func setCvar(data []byte, key, val string) []byte {
-	line := key + ` "` + val + `"`
-	if i, _, ok := findCvar(data, key); ok {
-		ls := lines(data)
-		if strings.HasSuffix(ls[i], "\r") {
-			line += "\r"
-		}
-		ls[i] = line
-		return []byte(strings.Join(ls, "\n"))
+	i, a, b, quoted := cvarSpan(data, key)
+	if i < 0 {
+		return appendLine(data, key+` "`+val+`"`)
 	}
-	return appendLine(data, line)
+	ls := lines(data)
+	l := ls[i]
+	if !quoted && (val == "" || strings.ContainsAny(val, " \t;/")) {
+		ls[i] = l[:a] + `"` + val + `"` + l[b:]
+	} else {
+		ls[i] = l[:a] + val + l[b:]
+	}
+	return []byte(strings.Join(ls, "\n"))
 }
 
 // ---------- xml property ----------
@@ -561,8 +590,9 @@ func setArma(data []byte, key, val string) ([]byte, error) {
 	}
 	ls := lines(data)
 	cr := strings.HasSuffix(ls[i], "\r")
-	m := armaLine.FindStringSubmatch(strings.TrimSuffix(ls[i], "\r"))
-	ls[i] = m[1] + m[2] + " = " + nv + ";" + m[4]
+	l := strings.TrimSuffix(ls[i], "\r")
+	m := armaLine.FindStringSubmatchIndex(l)
+	ls[i] = l[:m[6]] + nv + l[m[7]:]
 	if cr {
 		ls[i] += "\r"
 	}

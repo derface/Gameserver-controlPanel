@@ -170,6 +170,7 @@
       <div id="stBody"></div>
       <div class="st-foot">
         <p class="small muted" id="stNote"></p>
+        <button type="button" class="btn-line" id="stUndo">Frühere Stände</button>
         <button type="submit" class="btn-accent" id="stSave">Speichern</button>
       </div>
     </form>
@@ -378,7 +379,7 @@
   <div class="ts-sum" id="tsSum"></div>
   <div class="tbl-wrap">
     <table class="tbl">
-      <thead><tr><th>Spiel</th><th>Ergebnis</th><th>Download</th><th>Start</th><th>Bereit</th><th>Abfrage</th><th class="num">Größe</th><th class="num">Dauer</th></tr></thead>
+      <thead><tr><th>Spiel</th><th>Ergebnis</th><th>Download</th><th>Start</th><th>Bereit</th><th>Abfrage</th><th>Einstellungen</th><th class="num">Größe</th><th class="num">Dauer</th></tr></thead>
       <tbody id="tsRows"></tbody>
     </table>
   </div>
@@ -563,6 +564,12 @@
     <div id="rcBody" aria-live="polite"></div>
     <div class="dlg-actions"><button type="button" class="btn-line" id="rcAgain">Noch einmal prüfen</button><button type="submit" class="btn-accent">Schließen</button></div>
   </form>
+</dialog>
+
+<dialog id="dlgUndo" class="dlg">
+  <div class="dlg-head"><h2>Frühere Stände</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <p class="small muted">Vor jedem Speichern hebt das Panel die Konfigurationsdateien auf, die letzten fünf Stände. Zurückholen überschreibt die aktuellen Dateien; auch das lässt sich wieder rückgängig machen.</p>
+  <ul class="undo-list" id="undoList"></ul>
 </dialog>
 
 <dialog id="dlgEdit" class="dlg">

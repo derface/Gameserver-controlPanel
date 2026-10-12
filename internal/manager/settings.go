@@ -152,9 +152,9 @@ func (m *Manager) Settings(id string) (SettingsView, error) {
 		}
 		v.Vars = append(v.Vars, VarValue{Var: tv, Value: val})
 	}
-	for _, c := range tpl.Config {
+	for _, cf := range m.configFiles(sv, tpl) {
+		c, data, exists, err := cf.c, cf.data, cf.exists, cf.err
 		fv := FileView{Title: c.Title, File: configRel(sv, c), Note: c.Note, NoteGroup: c.NoteGroup, Settings: []SettingValue{}}
-		data, exists, err := m.readConfig(sv, tpl, c)
 		fv.Exists = exists
 		fv.Editable = exists || gameconfig.CanCreate(c.Format)
 		if err != nil {
@@ -281,12 +281,12 @@ func (m *Manager) ApplySettings(ctx context.Context, id string, vars map[string]
 		data []byte
 	}
 	var writes []write
-	for i, c := range tpl.Config {
+	for i, cf := range m.configFiles(sv, tpl) {
 		in := vals[i]
 		if len(in) == 0 {
 			continue
 		}
-		data, exists, err := m.readConfig(sv, tpl, c)
+		c, data, exists, err := cf.c, cf.data, cf.exists, cf.err
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", c.Title, err)
 		}
@@ -336,6 +336,18 @@ func (m *Manager) ApplySettings(ctx context.Context, id string, vars map[string]
 	if len(writes) > 0 && up {
 		if err := m.Stop(ctx, id); err != nil {
 			return nil, fmt.Errorf("Server ließ sich nicht stoppen: %w", err)
+		}
+	}
+	if len(writes) > 0 {
+		var rels []string
+		for _, w := range writes {
+			rels = append(rels, w.rel)
+		}
+		if err := m.keepSettings(id, rels, changed); err != nil {
+			if up {
+				_ = m.Start(ctx, id)
+			}
+			return nil, fmt.Errorf("Sicherheitskopie ging nicht: %w", err)
 		}
 	}
 	root := m.configRoot(sv, tpl)

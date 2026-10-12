@@ -34,6 +34,8 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/remote/test", a.need(auth.Admin, a.remoteTest))
 	mux.HandleFunc("GET /api/servers/{id}/settings", a.need(auth.Operator, a.settingsGet))
 	mux.HandleFunc("PUT /api/servers/{id}/settings", a.need(auth.Operator, a.settingsPut))
+	mux.HandleFunc("GET /api/servers/{id}/settings/backups", a.need(auth.Operator, a.settingsBackups))
+	mux.HandleFunc("POST /api/servers/{id}/settings/restore", a.need(auth.Operator, a.settingsRestore))
 	mux.HandleFunc("GET /api/servers/{id}/tasks", a.need(auth.Viewer, a.tasksGet))
 	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.need(auth.Operator, a.tasksPut))
 	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.need(auth.Operator, a.taskRun))
@@ -543,6 +545,36 @@ func (a *API) settingsPut(w http.ResponseWriter, r *http.Request) {
 	}
 	v, _ := a.Mgr.Settings(id)
 	writeJSON(w, 200, map[string]any{"changed": changed, "settings": v})
+}
+
+func (a *API) settingsBackups(w http.ResponseWriter, r *http.Request) {
+	list, err := a.Mgr.SettingsBackups(r.PathValue("id"))
+	if err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 200, list)
+}
+
+func (a *API) settingsRestore(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		ID string `json:"id"`
+	}
+	if err := decode(r, &req); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	id := r.PathValue("id")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	if err := a.Mgr.RestoreSettings(ctx, id, req.ID); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	Note(r, req.ID)
+	a.Mgr.Event(id, "info", "Einstellungen zurückgeholt von "+a.Auth.User(r))
+	v, _ := a.Mgr.Settings(id)
+	writeJSON(w, 200, map[string]any{"settings": v})
 }
 
 // ---------- Steam account ----------
