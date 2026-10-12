@@ -512,13 +512,7 @@ func (m *Manager) queryOnce(sv store.Server, tpl templates.Template) (query.Resu
 		return query.Result{}, errors.New("keine Abfrage")
 	}
 	port := sv.Ports[tpl.Query.Port].Host
-	switch tpl.Query.Type {
-	case "a2s":
-		return query.A2S("127.0.0.1", port)
-	case "minecraft":
-		return query.Minecraft("127.0.0.1", port)
-	}
-	return query.Result{}, errors.New("unbekannte Abfrageart")
+	return query.Ask(tpl.Query.Type, "127.0.0.1", port)
 }
 
 var ansiRe = regexp.MustCompile(`\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[()][A-Z0-9]|\r`)

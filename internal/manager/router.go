@@ -136,6 +136,9 @@ func (m *Manager) SyncRouter(ctx context.Context) RouterState {
 				continue
 			}
 			for _, p := range sv.Ports {
+				if privatePort(p.Name) {
+					continue // RCON, Telnet, web admin: never open to the internet
+				}
 				want[portKey{p.Host, strings.ToUpper(p.Proto)}] = sv
 			}
 		}

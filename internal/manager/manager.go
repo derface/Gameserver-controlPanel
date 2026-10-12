@@ -832,16 +832,7 @@ func (m *Manager) queryPlayers(sv store.Server, tpl templates.Template, l *live)
 	}
 	l.queriedAt = time.Now()
 	port := sv.Ports[tpl.Query.Port].Host
-	var r query.Result
-	var err error
-	switch tpl.Query.Type {
-	case "a2s":
-		r, err = query.A2S("127.0.0.1", port)
-	case "minecraft":
-		r, err = query.Minecraft("127.0.0.1", port)
-	default:
-		return
-	}
+	r, err := query.Ask(tpl.Query.Type, "127.0.0.1", port)
 	if err != nil {
 		l.Players, l.MaxPl = -1, 0
 		return

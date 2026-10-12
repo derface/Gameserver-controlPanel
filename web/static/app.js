@@ -356,7 +356,7 @@
         <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
         <div><dt>ID</dt><dd class="mono">${esc(s.id)}</dd></div>
         ${routerRow(s)}
-      </dl>${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
+      </dl>${can('operator') && port ? `<button type="button" class="btn-line" data-reach>Von außen erreichbar? Prüfen</button>` : ''}${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
   }
   $('#svActs').addEventListener('click', e => {
     const b = e.target.closest('[data-sv]'); if (!b) return;
@@ -1052,6 +1052,35 @@
     const list = r.map(p => p.proto + ' ' + p.port).join(', ');
     if (!bad.length) return `<div><dt>Von außen</dt><dd><span class="on-ok">Ports offen</span><br><span class="small muted">${esc(list)}</span></dd></div>`;
     return `<div><dt>Von außen</dt><dd><span class="bad-txt">${bad.length} von ${r.length} Ports nicht offen</span><br><span class="small">${esc(bad[0].error || '')}</span></dd></div>`;
+  }
+  /* ---------------- Erreichbarkeit von außen ---------------- */
+  const RC = { id: null, busy: false };
+  const rcIcon = { ok: '✓', warn: '!', fail: '✕', skip: '–' };
+  $('#svInfo').addEventListener('click', e => { if (e.target.closest('[data-reach]')) checkReach(R.id); });
+  $('#rcAgain').onclick = () => checkReach(RC.id);
+  async function checkReach(id) {
+    if (!id || RC.busy) return;
+    RC.id = id; RC.busy = true;
+    const d = $('#dlgReach'); if (!d.open) d.showModal();
+    $('#rcAgain').disabled = true;
+    $('#rcBody').innerHTML = '<p class="rc-wait"><span class="spin" aria-hidden="true"></span> Prüfe den Weg vom Internet zum Server … (bis zu 30 Sekunden)</p>';
+    try { renderReach(await api('POST', `/api/servers/${encodeURIComponent(id)}/reach`)); }
+    catch (err) { $('#rcBody').innerHTML = `<p class="err">${esc(err.message)}</p>`; }
+    finally { RC.busy = false; $('#rcAgain').disabled = false; }
+  }
+  function renderReach(r) {
+    const head = { ok: 'Erreichbar', likely: 'Wahrscheinlich erreichbar', fail: 'Nicht erreichbar' }[r.verdict] || '';
+    const row = (st, title, text) => `<li class="rc-${st}"><span class="rc-ic" aria-hidden="true">${rcIcon[st] || '–'}</span><div><b>${esc(title)}</b><span>${esc(text)}</span></div></li>`;
+    const ports = r.ports.map(p => `<tr class="${p.internal ? 'rc-int' : ''}"><th scope="row"><span class="mono">${p.port} ${esc(p.proto)}</span>${p.name ? `<br><span class="small muted">${esc(p.name)}</span>` : ''}</th>
+      <td class="rc-${p.router}" data-l="Router"><span class="rc-ic" aria-hidden="true">${rcIcon[p.router]}</span> ${esc(p.router_text)}</td>
+      <td class="rc-${p.outside}" data-l="Von außen"><span class="rc-ic" aria-hidden="true">${rcIcon[p.outside]}</span> ${esc(p.outside_text)}</td></tr>`).join('');
+    $('#rcBody').innerHTML = `<div class="rc-verdict rc-${r.verdict === 'likely' ? 'warn' : r.verdict}">
+        <span class="rc-ic big" aria-hidden="true">${rcIcon[r.verdict === 'likely' ? 'ok' : r.verdict]}</span>
+        <div><b>${esc(head)}</b><span>${esc(r.summary)}</span>
+        ${r.verdict !== 'fail' && r.address ? `<button type="button" class="addr" data-copy="${esc(r.address)}" title="Adresse kopieren">${esc(r.address)}</button>` : ''}</div></div>
+      <ul class="rc-steps">${r.steps.map(x => row(x.state, x.title, x.detail)).join('')}</ul>
+      ${ports ? `<div class="rc-scroll"><table class="rc-ports"><thead><tr><th scope="col">Port</th><th scope="col">Router</th><th scope="col">Von außen</th></tr></thead><tbody>${ports}</tbody></table></div>` : ''}
+      <p class="small muted">Geprüft ${new Date(r.checked).toLocaleTimeString('de-DE')}${r.services && r.services.length ? ' · Für den Test von außen wurden ' + esc(r.services.join(' und ')) + ' gefragt (sie sehen nur deine öffentliche IP und den Port).' : ''}</p>`;
   }
   async function setServerRouter(s, open) {
     try { await api('PUT', `/api/servers/${encodeURIComponent(s.id)}/router`, { open }); toast(open ? 'Ports werden im Router geöffnet' : 'Ports werden nicht mehr im Router geöffnet', 'ok'); await loadServers(); }

@@ -177,6 +177,19 @@ Unter **Einstellungen → Router & Ports** einschalten. Solange ein Server läuf
 - Entfernt werden nur Freigaben, die das Panel selbst angelegt hat (gemerkt in `panel.json`). Von Hand angelegte Freigaben zu diesem Rechner werden erkannt und nie angefasst; Ports, die an ein anderes Gerät gehen, meldet das Panel als Konflikt.
 - Einzelne Server lassen sich auf ihrer Seite im Menü „⋯“ ausnehmen.
 - Abgeglichen wird bei Start/Stopp und alle 2 Minuten, also auch nach einem Router-Neustart. Router, die keine dauerhaften Freigaben erlauben, bekommen eine Stunde und werden erneuert.
+- Verwaltungszugänge (RCON, Telnet, Web-Admin, TeamSpeak-ServerQuery …) werden nie freigegeben.
+
+## Von außen erreichbar?
+
+Auf der Server-Seite unter *Details* → **Von außen erreichbar? Prüfen**. Das Panel prüft Schritt für Schritt und sagt, wo es hakt:
+
+1. Läuft der Server?
+2. Hat der Anschluss eine eigene öffentliche IPv4? (Router-WAN-Adresse gegen die Adresse, die das Internet sieht; erkennt DS-Lite/CGNAT und doppelte Router)
+3. Zeigt die Spieler-Adresse (z. B. `play.example.com`) im öffentlichen DNS auf diese IP? Gefragt werden 1.1.1.1/9.9.9.9/8.8.8.8, nicht der lokale DNS (AdGuard, Fritzbox).
+4. Je Port: Ist er im Router an diesen Rechner freigegeben (per UPnP gelesen)?
+5. Je TCP-Port: echte Verbindung aus dem Ausland über check-host.net. Minecraft Bedrock: Ping von außen über mcsrvstat.us. Reine UDP-Spiele lassen sich ohne Spiel-Client nicht neutral von außen testen; dann zählt, ob das Spiel über die öffentliche IP antwortet.
+
+Die Prüfung läuft nur auf Knopfdruck. Die Dienste (api.ipify.org, check-host.net, mcsrvstat.us) sehen dabei nur die öffentliche IP und den Port.
 
 ## Lizenzen
 
@@ -219,6 +232,7 @@ internal/auth     Konten, Rollen, Sitzungen, Zwei-Faktor (TOTP)
 internal/audit    Protokoll (audit.log)
 internal/https    HTTP und HTTPS auf einem Port, Zertifikate
 internal/upnp     Portfreigaben im Router (UPnP-IGD)
+internal/reach    Prüfung von außen (öffentliche IP, DNS, check-host.net, mcsrvstat.us)
 internal/manager  Server anlegen/starten/stoppen, Live-Status, Ports
 internal/docker   Docker-Engine-API über den Unix-Socket
 internal/templates Vorlagen (games/*.json)

@@ -62,6 +62,7 @@
     "send-command"
   ],
   "ready": "Server started",
+  "query": {"type": "bedrock", "port": 0},
   "status": "stabil",
   "disk_gb": 2,
   "notes": "Für Handy, Konsole und Windows-Edition.",

@@ -15,6 +15,20 @@ func (a *API) routesRouter(mux *http.ServeMux) {
 	mux.HandleFunc("PUT /api/router", a.need(auth.Admin, a.routerPut))
 	mux.HandleFunc("POST /api/router/check", a.need(auth.Admin, a.routerCheck))
 	mux.HandleFunc("PUT /api/servers/{id}/router", a.need(auth.Admin, a.serverRouterPut))
+	mux.HandleFunc("POST /api/servers/{id}/reach", a.need(auth.Operator, a.serverReach))
+}
+
+// serverReach checks whether players can reach the server from the internet.
+func (a *API) serverReach(w http.ResponseWriter, r *http.Request) {
+	noAudit(r)
+	ctx, cancel := context.WithTimeout(r.Context(), 45*time.Second)
+	defer cancel()
+	rep, err := a.Mgr.CheckReach(ctx, r.PathValue("id"))
+	if err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 200, rep)
 }
 
 func (a *API) routerGet(w http.ResponseWriter, r *http.Request) {

@@ -19,7 +19,8 @@ type Router struct {
 	Maps     map[string]upnp.Mapping // "UDP/15636"
 	Deny     bool                    // answer 606 like a Fritzbox without permission
 	srv      *httptest.Server
-	Lease0No bool // refuse lease 0
+	Lease0No bool   // refuse lease 0
+	WAN      string // external address, default 203.0.113.7
 }
 
 // New starts a fake router.
@@ -63,7 +64,11 @@ func New() *Router {
 		defer f.mu.Unlock()
 		switch action {
 		case "GetExternalIPAddress":
-			ok(w, action, "NewExternalIPAddress", "203.0.113.7")
+			wan := f.WAN // handler already holds f.mu
+			if wan == "" {
+				wan = "203.0.113.7"
+			}
+			ok(w, action, "NewExternalIPAddress", wan)
 		case "GetSpecificPortMappingEntry":
 			m, found := f.Maps[key]
 			if !found {

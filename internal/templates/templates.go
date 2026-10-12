@@ -225,7 +225,7 @@ func (t Template) Excludes() []string {
 }
 
 // Query describes how to ask a running server for its player count.
-// Type is "a2s" (Steam) or "minecraft"; Port is the index into Ports.
+// Type is "a2s" (Steam), "minecraft" (Java) or "bedrock"; Port is the index into Ports.
 type Query struct {
 	Type string `json:"type"`
 	Port int    `json:"port"`
