@@ -470,6 +470,14 @@
     <p class="err" id="tlsErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="tlsRenew" hidden>Zertifikat jetzt holen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
+  <form id="pxForm" class="set-block admin-only" data-sec="https" autocomplete="off">
+    <h2>Über einen Reverse Proxy</h2>
+    <p class="muted small">Läuft das Panel hinter Traefik, nginx oder Caddy (z. B. unter https://panel.meine-domain.de), trag hier die Adresse des Proxys ein. Dann sieht das Panel die echte Adresse der Besucher (für Protokoll, Sitzungen und die Sperre nach falschen Passwörtern) und leitet nicht noch einmal auf HTTPS um.</p>
+    <p id="pxStatus" class="small"></p>
+    <label class="field"><span>Adressen der Proxys</span><input id="pxList" placeholder="z. B. 192.168.178.50 oder 10.10.10.0/24" spellcheck="false"><small>Nur Rechner eintragen, die du selbst betreibst: Wer hier steht, darf dem Panel jede Besucher-Adresse vorgeben.</small></label>
+    <p class="err" id="pxErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="pxUse" hidden></button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
   <form id="aiForm" class="set-block admin-only" data-sec="ki">
     <h2>Allgemein</h2>
     <label class="field"><span>Adresse für Spieler (optional)</span><input id="sHost" placeholder="z. B. play.meine-domain.de"><small>Wird bei jedem Server als Verbindungsadresse angezeigt. Leer = Adresse, unter der du das Panel aufrufst.</small></label>

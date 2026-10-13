@@ -184,6 +184,26 @@ Sitzungen werden nur als SHA-256 des Cookies gespeichert. Wer `panel.json` in di
 - *Let's Encrypt*: braucht eine Domain, die auf deine öffentliche IP zeigt, und im Router Port 80 → 80 und 443 → 8420 dieses Rechners. Erneuert sich selbst. Klappt die Prüfung nicht, liefert das Panel solange das selbst signierte Zertifikat aus, statt unerreichbar zu werden.
 - *Eigenes Zertifikat*: PEM mit Kette plus Schlüssel einfügen.
 
+**Hinter einem Reverse Proxy** (Traefik, nginx, Caddy): Unter Einstellungen → HTTPS → „Über einen Reverse Proxy“ die Adresse des Proxys eintragen (IP oder Netz). Nur von dort glaubt das Panel `X-Forwarded-For` (echte Besucher-IP für Protokoll, Sitzungen und die Sperre nach falschen Passwörtern) und `X-Forwarded-Proto` (keine zweite Umleitung auf HTTPS, Cookies mit `Secure`). Kommen Proxy-Angaben von einer Adresse, die nicht eingetragen ist, schlägt das Panel sie dort zum Übernehmen vor. Den Proxy am besten per HTTPS ans Panel anbinden (das Panel spricht auf seinem Port immer auch TLS, notfalls mit dem selbst signierten Zertifikat), Beispiel Traefik:
+
+```yaml
+http:
+  routers:
+    gamepanel:
+      entryPoints: [websecure]
+      rule: "Host(`panel.example.com`)"
+      service: gamepanel
+      tls: {certResolver: letsencrypt}
+  services:
+    gamepanel:
+      loadBalancer:
+        servers: [{url: "https://192.168.1.20:8420"}]
+        serversTransport: gamepanel-tls
+  serversTransports:
+    gamepanel-tls:
+      insecureSkipVerify: true
+```
+
 Ausgesperrt? Vom Rechner selbst (`http://localhost:8420`, z. B. per `ssh -L 8420:localhost:8420 admin@192.168.178.54`) wird nie umgeleitet. Oder `Environment=GP_NO_TLS=1` in `/etc/systemd/system/gamepanel.service` eintragen, `systemctl daemon-reload && systemctl restart gamepanel`.
 
 ## Automatische Portfreigabe (UPnP)

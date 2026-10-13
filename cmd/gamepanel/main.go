@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/derface/Gameserver-controlPanel/internal/proxy"
 	"io/fs"
 
 	"github.com/derface/Gameserver-controlPanel/internal/mods"
@@ -71,7 +72,10 @@ func main() {
 	tlsm.Off, tlsm.HTTPAddr = *noTLS, *acmeHTTP
 	var tc store.TLSConfig
 	var publicHost string
-	st.Read(func(d *store.Data) { tc, publicHost = d.Settings.TLS, d.Settings.PublicHost })
+	st.Read(func(d *store.Data) {
+		tc, publicHost = d.Settings.TLS, d.Settings.PublicHost
+		proxy.Set(d.Settings.TrustedProxies)
+	})
 	if err := tlsm.Apply(tc, publicHost); err != nil {
 		log.Printf("[HTTPS] %v", err)
 	}

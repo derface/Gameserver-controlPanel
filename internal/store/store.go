@@ -117,6 +117,9 @@ type Settings struct {
 	AIAutoDiagnose bool `json:"ai_auto_diagnose"`
 	// SteamAPIKey (optional) makes the Workshop search use the Steam Web API.
 	SteamAPIKey string `json:"steam_api_key,omitempty"`
+	// TrustedProxies are reverse proxies (IPs or networks) whose
+	// X-Forwarded-For/-Proto the panel believes.
+	TrustedProxies []string `json:"trusted_proxies,omitempty"`
 }
 
 // RouterMap is a port forwarding the panel created in the router.

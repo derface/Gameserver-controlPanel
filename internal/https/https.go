@@ -16,6 +16,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/derface/Gameserver-controlPanel/internal/proxy"
 	"log"
 	"math/big"
 	"net"
@@ -469,7 +470,7 @@ func (m *Manager) Serve(ctx context.Context, ln net.Listener, h http.Handler) er
 // on, except from the machine itself (a way back in via SSH tunnel).
 func (m *Manager) plain(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if m.Redirect() && !(localExempt && loopback(r.RemoteAddr)) {
+		if m.Redirect() && !(localExempt && loopback(r.RemoteAddr)) && !proxy.HTTPS(r) {
 			code := http.StatusMovedPermanently
 			if r.Method != http.MethodGet && r.Method != http.MethodHead {
 				code = http.StatusPermanentRedirect

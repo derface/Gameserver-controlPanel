@@ -206,6 +206,7 @@ var actions = map[string]string{
 	"POST /api/me/2fa/recovery":                     "Neue Wiederherstellungscodes",
 	"POST /api/me/logout-all":                       "Auf allen anderen Geräten abgemeldet",
 	"PUT /api/https":                                "HTTPS geändert",
+	"PUT /api/proxy":                                "Reverse-Proxy geändert",
 	"PUT /api/router":                               "Automatische Portfreigabe",
 	"PUT /api/servers/{id}/router":                  "Portfreigabe des Servers geändert",
 	"POST /api/servers/{id}/settings/restore":       "Einstellungen zurückgeholt",
@@ -251,6 +252,8 @@ func (a *API) routesSecurity(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/https", a.need(auth.Admin, a.httpsGet))
 	mux.HandleFunc("PUT /api/https", a.need(auth.Admin, a.httpsPut))
 	mux.HandleFunc("POST /api/https/renew", a.need(auth.Admin, a.httpsRenew))
+	mux.HandleFunc("GET /api/proxy", a.need(auth.Admin, a.proxyGet))
+	mux.HandleFunc("PUT /api/proxy", a.need(auth.Admin, a.proxyPut))
 }
 
 // logAuth writes login events, which happen before there is a session.

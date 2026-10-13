@@ -9,7 +9,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"errors"
-	"net"
+	"github.com/derface/Gameserver-controlPanel/internal/proxy"
 	"net/http"
 	"regexp"
 	"slices"
@@ -174,13 +174,9 @@ func (a *Auth) Setup(name, password string) error {
 	})
 }
 
-func ClientIP(r *http.Request) string {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
-	}
-	return host
-}
+// ClientIP is the browser's address (behind a trusted reverse proxy the
+// forwarded one).
+func ClientIP(r *http.Request) string { return proxy.ClientIP(r) }
 
 func (a *Auth) throttled(ip string) bool {
 	a.mu.Lock()
@@ -414,7 +410,7 @@ func SetCookie(w http.ResponseWriter, r *http.Request, tok string, maxAge int) {
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
+		Secure:   proxy.HTTPS(r),
 		SameSite: http.SameSiteStrictMode,
 	})
 }

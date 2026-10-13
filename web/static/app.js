@@ -790,7 +790,7 @@
     $('#verLine').textContent = 'Version ' + S.version;
     clearTimeout(stmTimer);
     if (sec === 'konto') return loadMe();
-    if (sec === 'https') return loadTLS();
+    if (sec === 'https') { loadProxy(); return loadTLS(); }
     if (sec === 'router') return loadRouter(false);
     if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; api('GET', '/api/settings').then(r => { $('#stmApiKey').value = r.settings.steam_api_key || ''; }).catch(() => {}); return loadSteam(); }
     if (sec === 'lizenz') { showErr($('#licErr')); $('#licKey').value = ''; return renderLicense(); }
@@ -1100,6 +1100,25 @@
     $('#tlsCert').value = ''; $('#tlsKey').value = ''; tlsFields(); showErr($('#tlsErr'));
     $('#tlsPort').textContent = location.port || (location.protocol === 'https:' ? '443' : '80');
   }
+  async function loadProxy() {
+    let r;
+    try { r = await api('GET', '/api/proxy'); } catch (e) { return; }
+    renderProxy(r); $('#pxList').value = r.trusted.join(', ');
+  }
+  function renderProxy(r) {
+    const p = [];
+    if (r.via_proxy) p.push(`<span class="on-ok">Du bist gerade über den Proxy hier.</span> Das Panel sieht dich als <span class="mono">${esc(r.client)}</span>.`);
+    else if (r.trusted.length) p.push(`Du bist gerade direkt verbunden (<span class="mono">${esc(r.client)}</span>).`);
+    if (r.seen) p.push(`Von <span class="mono">${esc(r.seen)}</span> kamen Anfragen mit Proxy-Angaben. Ist das dein Reverse Proxy, trag die Adresse ein.`);
+    $('#pxStatus').innerHTML = p.join('<br>');
+    const b = $('#pxUse'); b.hidden = !r.seen; b.dataset.ip = r.seen || ''; b.textContent = r.seen ? r.seen + ' übernehmen' : '';
+  }
+  $('#pxUse').addEventListener('click', () => { const v = $('#pxList').value.trim(), ip = $('#pxUse').dataset.ip; $('#pxList').value = v ? v + ', ' + ip : ip; });
+  $('#pxForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#pxErr'));
+    try { const r = await api('PUT', '/api/proxy', { trusted: [$('#pxList').value] }); renderProxy(r); $('#pxList').value = r.trusted.join(', '); toast('Gespeichert', 'ok'); }
+    catch (err) { showErr($('#pxErr'), err.message); }
+  });
   function renderTLS(r) {
     const st = r.status, parts = [];
     parts.push(r.secure ? '<span class="on-ok">Diese Verbindung ist verschlüsselt.</span>' : '<b>Diese Verbindung ist unverschlüsselt.</b>');
