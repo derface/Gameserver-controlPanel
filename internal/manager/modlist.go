@@ -93,6 +93,32 @@ func readKV(p string) map[string]string {
 	return out
 }
 
+// workshopDirs finds every steamapps/workshop/content folder below the
+// server folder (games put it next to the server or below their home).
+func workshopDirs(dir string) []string {
+	var out []string
+	base := strings.Count(filepath.Clean(dir), string(os.PathSeparator))
+	_ = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || !d.IsDir() {
+			return nil
+		}
+		if strings.Count(p, string(os.PathSeparator))-base > 6 {
+			return fs.SkipDir
+		}
+		switch d.Name() {
+		case ".wine", "Saves", "saves", "Logs", "logs", "jre64", "jre", "java", "media", "natives", "linux64", "linux32":
+			return fs.SkipDir
+		case "content":
+			if filepath.Base(filepath.Dir(p)) == "workshop" {
+				out = append(out, p)
+				return fs.SkipDir
+			}
+		}
+		return nil
+	})
+	return out
+}
+
 // pzMods reads the mod.info files below a folder (one per mod and build).
 func pzMods(root string) []ModEntry {
 	byID := map[string]ModEntry{}
@@ -223,15 +249,15 @@ func (m *Manager) ModList(ctx context.Context, id string) (ModInventory, error) 
 	var wsIDs []string
 	wsEntries := map[string]int{} // workshop id -> index of a generic entry
 	pzByID := map[string]bool{}
-	for _, root := range []string{dir, filepath.Join(dir, "server"), filepath.Join(dir, "home"), filepath.Join(dir, "home", "Steam")} {
-		apps, _ := os.ReadDir(filepath.Join(root, "steamapps", "workshop", "content"))
+	for _, content := range workshopDirs(dir) {
+		apps, _ := os.ReadDir(content)
 		for _, app := range apps {
-			items, _ := os.ReadDir(filepath.Join(root, "steamapps", "workshop", "content", app.Name()))
+			items, _ := os.ReadDir(filepath.Join(content, app.Name()))
 			for _, it := range items {
-				if !it.IsDir() {
+				if !it.IsDir() || !reWsDigits.MatchString(it.Name()) {
 					continue
 				}
-				p := filepath.Join(root, "steamapps", "workshop", "content", app.Name(), it.Name())
+				p := filepath.Join(content, app.Name(), it.Name())
 				size, mt := dirSize(p)
 				wsIDs = append(wsIDs, it.Name())
 				if mods := pzMods(p); len(mods) > 0 {

@@ -106,6 +106,9 @@ fi
 # Satisfactory). /data/home liegt im Serverordner und bleibt erhalten.
 mkdir -p /data/home
 export HOME=/data/home
+# Java takes its home from /etc/passwd, not from $HOME; without this,
+# Project Zomboid kept world and settings inside the container.
+export JAVA_TOOL_OPTIONS="-Duser.home=/data/home ${JAVA_TOOL_OPTIONS:-}"
 mkdir -p ~/.steam/sdk64 ~/.steam/sdk32
 cp -f /opt/steamcmd/linux64/steamclient.so ~/.steam/sdk64/ 2>/dev/null || true
 cp -f /opt/steamcmd/linux32/steamclient.so ~/.steam/sdk32/ 2>/dev/null || true

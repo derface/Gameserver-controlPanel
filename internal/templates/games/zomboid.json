@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 380870,
-  "start": "sed -i -E 's/\"-Xmx[0-9]+[kKmMgG]?\"/\"-Xmx{{heap_mb}}m\"/; s/\"-Xms[0-9]+[kKmMgG]?\"/\"-Xms1024m\"/' ProjectZomboid64.json 2>/dev/null; ./start-server.sh -servername {{server_name}} -adminpassword \"{{admin_password}}\" -port {{port}} -udpport {{port_2}}",
+  "start": "sed -i -E 's/\"-Xmx[0-9]+[kKmMgG]?\"/\"-Xmx{{heap_mb}}m\"/; s/\"-Xms[0-9]+[kKmMgG]?\"/\"-Xms1024m\"/' ProjectZomboid64.json 2>/dev/null; ./start-server.sh -cachedir=/data/home/Zomboid -servername {{server_name}} -adminpassword \"{{admin_password}}\" -port {{port}} -udpport {{port_2}}",
   "ports": [
     {
       "name": "Spiel",

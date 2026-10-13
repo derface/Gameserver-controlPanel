@@ -65,6 +65,16 @@ func (m *Manager) keepSettings(id string, rels []string, changed []string) error
 	if err != nil {
 		return err
 	}
+	// two saves within the same millisecond must not overwrite each other
+	for n := 1; ; n++ {
+		if _, err := os.Stat(filepath.Join(dir, rec.ID+".json")); err != nil {
+			break
+		}
+		rec.ID = time.Now().UTC().Format("20060102-150405.000") + fmt.Sprintf("-%d", n)
+		if b, err = json.Marshal(rec); err != nil {
+			return err
+		}
+	}
 	if err := os.WriteFile(filepath.Join(dir, rec.ID+".json"), b, 0o600); err != nil {
 		return err
 	}

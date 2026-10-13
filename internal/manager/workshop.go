@@ -304,15 +304,16 @@ func (m *Manager) WorkshopSearch(ctx context.Context, id, q string, page int, b4
 
 // localModIDs reads the mod IDs of a downloaded Workshop item.
 func (m *Manager) localModIDs(id, wid string) []string {
-	dir := m.ServerDir(id)
-	for _, root := range []string{filepath.Join(dir, "server"), dir, filepath.Join(dir, "home"), filepath.Join(dir, "home", "Steam")} {
-		p := filepath.Join(root, "steamapps", "workshop", "content", "108600", wid)
-		if _, err := os.Stat(p); err == nil {
-			var out []string
-			for _, e := range pzMods(p) {
-				out = append(out, e.ID)
+	for _, content := range workshopDirs(m.ServerDir(id)) {
+		for _, app := range []string{"108600", "380870"} {
+			p := filepath.Join(content, app, wid)
+			if _, err := os.Stat(p); err == nil {
+				var out []string
+				for _, e := range pzMods(p) {
+					out = append(out, e.ID)
+				}
+				return out
 			}
-			return out
 		}
 	}
 	return nil
