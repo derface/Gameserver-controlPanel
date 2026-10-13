@@ -470,6 +470,14 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 		if tpl.SteamLogin {
 			cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, m.SteamAuthDir()+":/home/steam/Steam")
 		}
+		wsUser := ""
+		if !tpl.SteamLogin && m.steamUser() != "" && fileExists(m.wsListFile(sv.ID)) {
+			// Workshop items some games only hand out to owners: second try
+			// with the panel's Steam account (its own home, so the server's
+			// anonymous SteamCMD state stays as it is)
+			wsUser = m.steamUser()
+			cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, m.SteamAuthDir()+":/gp-steam-acct")
+		}
 		cfg.Env = []string{
 			"GP_APP_ID=" + strconv.Itoa(appID),
 			"GP_START=" + start,
@@ -481,6 +489,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			"GP_BASE_APP=" + baseApp(tpl),
 			"GP_BASE_DIR=" + tpl.SteamBaseIn,
 			"GP_STEAM_USER=" + m.loginFor(tpl),
+			"GP_WS_USER=" + wsUser,
 			"GP_LOGFILE=" + tpl.LogFile,
 			"TZ=Europe/Berlin",
 		}

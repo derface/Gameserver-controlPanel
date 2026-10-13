@@ -491,4 +491,5 @@ func (m *Manager) writeDefaults(sv store.Server, tpl templates.Template) {
 		}
 		_ = writeConfig(root, m.ServerDir(sv.ID), uid, rel, []byte(tpl.Render(string(d), sv.Vars, ports)))
 	}
+	_ = m.writeWorkshopHook(sv, tpl)
 }

@@ -231,6 +231,17 @@ Im Reiter „Mods“ steht bei Vorlagen mit `workshop` (`{"app": 108600, "build4
 - **Installieren:** Die Workshop-ID kommt nach `WorkshopItems=`, die Mod-IDs aus der Beschreibung („Mod ID: …“) nach `Mods=`, Kartenordner („Map Folder: …“) vor die Standardkarte in `Map=`. Den Download erledigt der Server beim nächsten Start.
 - **Entfernen:** Nimmt die Mod aus beiden Listen. Die Dateien bleiben.
 
+### Steam Workshop für alle Steam-Spiele
+
+Ab 0.24 gibt es die Workshop-Suche bei jedem Steam-Spiel, dessen Workshop Steam meldet. Das Panel sucht dafür die App des Spiels (nicht die des Dedicated Servers): erst `SteamAppId=` im Startbefehl, dann die Store-Suche nach dem Namen, und prüft in `store.steampowered.com/api/appdetails` die Kategorie 30 („Steam Workshop“). Das Ergebnis liegt 30 Tage in `<data>/steam-apps.json`; war Steam nicht erreichbar, wird nichts gemerkt.
+
+- **Herunterladen:** Die ID kommt in `<server>/.gp-workshop` (`app <id>` und eine ID je Zeile). Vor dem Start lädt gp-run die Liste mit `workshop_download_item` (bei Installation, Update oder wenn die Liste neuer ist als der letzte Lauf) und schreibt je ID `ok` oder `fehler <Meldung>` nach `.gp-workshop-status`. Die Mod-Übersicht zeigt das an („Steam-Konto nötig“ bei Access Denied).
+- **Einbinden:** Für einige Spiele ist hinterlegt, wie sie Mods laden (`internal/templates/recipes.go`): Arma 3 und DayZ (`@ws<ID>`, Schlüssel nach `keys/`, `-mod=`), Starbound (`.pak` nach `mods/`), Garry's Mod (`.gma` nach `garrysmod/addons`, `resource.AddWorkshop`), Conan Exiles (`ConanSandbox/Mods/modlist.txt`). Das Skript liegt als `.gp-workshop-after.sh` im Server-Ordner und läuft vor jedem Start. Dann heißt der Knopf „Installieren“.
+- **Ohne Rezept:** Die Mod wird nur heruntergeladen. In der Mod-Übersicht steht „KI fragen“: Die KI bekommt Spiel, Startbefehl, Titel, Beschreibung und die Dateiliste der Mod und antwortet mit Schritten.
+- **Aus/Entfernen:** Der Schalter bzw. „Entfernen“ nimmt die ID aus der Liste; die Dateien bleiben.
+
+Eigene Vorlagen können das über `"workshop": {"app": 107410, "after": "<bash>", "note": "…"}` selbst festlegen.
+
 ## KI-Diagnose
 
 Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber, Editionen mit KI). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.

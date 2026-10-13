@@ -154,6 +154,44 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
     fi
   fi
 fi
+# Steam Workshop: the panel keeps the list in /data/.gp-workshop
+# ("app <id>" and one item per line). Downloads run at installs, updates and
+# whenever the list changed; the game-specific hook links the mods in.
+if [ -f /data/.gp-workshop ]; then
+  WS_APP=$(sed -n 's/^app \([0-9]*\).*/\1/p' /data/.gp-workshop | head -n 1)
+  WS_IDS=$(grep -E '^[0-9]+$' /data/.gp-workshop | tr '\n' ' ')
+  if [ -n "${WS_APP}" ] && [ -n "${WS_IDS}" ] && { [ -n "${NEED}" ] || [ ! -f /data/.gp-workshop-status ] || [ /data/.gp-workshop -nt /data/.gp-workshop-status ]; }; then
+    echo "[panel] SteamCMD: Workshop-Inhalte für App ${WS_APP} werden geladen: ${WS_IDS}"
+    ARGS=""
+    for id in ${WS_IDS}; do ARGS="${ARGS} +workshop_download_item ${WS_APP} ${id}"; done
+    steam ${PLATFORM} +force_install_dir /data/server +login "${LOGIN}" ${ARGS} || true
+    RETRY=""
+    for id in ${WS_IDS}; do [ -d "/data/server/steamapps/workshop/content/${WS_APP}/${id}" ] || RETRY="${RETRY} +workshop_download_item ${WS_APP} ${id}"; done
+    if [ -n "${RETRY}" ] && [ "${LOGIN}" = "anonymous" ] && [ -n "${GP_WS_USER}" ]; then
+      echo "[panel] Workshop: zweiter Versuch mit dem Steam-Konto des Panels"
+      mkdir -p /tmp/wsacct && ln -sfn /gp-steam-acct /tmp/wsacct/Steam
+      HOME=/tmp/wsacct /opt/steamcmd/steamcmd.sh ${PLATFORM} +force_install_dir /data/server +login "${GP_WS_USER}" ${RETRY} +quit 2>&1 | tee -a /tmp/gp-steamcmd.log || true
+      if grep -qiE "cached credentials|login failure|two-factor|steam guard" /tmp/gp-steamcmd.log; then WS_LOGINFAIL=1; fi
+    fi
+    : > /data/.gp-workshop-status.tmp
+    for id in ${WS_IDS}; do
+      if [ -d "/data/server/steamapps/workshop/content/${WS_APP}/${id}" ]; then
+        echo "${id} ok" >> /data/.gp-workshop-status.tmp
+      else
+        why=$(grep -iE "${id}" /tmp/gp-steamcmd.log | grep -iE "error|fail|denied|timeout" | tail -n 1 | tr -d '\r' | cut -c1-200)
+        if [ -n "${WS_LOGINFAIL}" ]; then why="Steam-Anmeldung des Panels fehlt oder ist abgelaufen (Einstellungen → Steam-Konto). ${why}"; fi
+        echo "${id} fehler ${why:-nicht geladen}" >> /data/.gp-workshop-status.tmp
+        echo "[panel] Workshop ${id}: ${why:-nicht geladen}"
+      fi
+    done
+    mv -f /data/.gp-workshop-status.tmp /data/.gp-workshop-status
+  fi
+  export GP_WS_APP="${WS_APP}" GP_WS_IDS="${WS_IDS}" GP_WS_DIR="/data/server/steamapps/workshop/content/${WS_APP}"
+  if [ -f /data/.gp-workshop-after.sh ]; then
+    (cd /data/server && bash /data/.gp-workshop-after.sh) || echo "[panel] Einbindung der Workshop-Mods meldet einen Fehler"
+  fi
+fi
+export GP_WS_MODS="$(cat /data/.gp-ws-mods 2>/dev/null)"
 echo "[panel] Start: ${GP_START}"
 if [ -n "${GP_LOGFILE}" ]; then
   # Das Spiel schreibt in eine Datei statt in die Konsole: mitlesen.

@@ -42,6 +42,7 @@ type ModEntry struct {
 	State      string    `json:"state"` // geladen | fehler | aktiv | inaktiv | fehlt | installiert | nicht_geladen
 	Note       string    `json:"note,omitempty"`
 	UpdateHint bool      `json:"update_hint,omitempty"`
+	Advice     bool      `json:"advice,omitempty"` // downloaded, but the panel does not know how the game loads it
 }
 
 type ModInventory struct {
@@ -399,6 +400,43 @@ func (m *Manager) ModList(ctx context.Context, id string) (ModInventory, error) 
 			}
 		}
 	}
+	// the panel's own Workshop list (SteamCMD downloads)
+	if wsMode(tpl) == "steamcmd" {
+		if _, list := m.readWsList(id); list != nil || fileExists(m.wsListFile(id)) {
+			st := m.wsStatus(id)
+			recipe := tpl.Workshop != nil && tpl.Workshop.After != ""
+			inList := map[string]bool{}
+			for _, w := range list {
+				inList[w] = true
+			}
+			for w, i := range wsEntries {
+				e := &inv.Mods[i]
+				e.Key, e.Enabled = "ws:"+w, boolp(inList[w])
+				if inList[w] {
+					e.State = "" // modStates decides: geladen, fehler or aktiv
+				}
+				if inList[w] && !recipe {
+					e.Advice = true
+					e.Note = "Heruntergeladen. Wie das Spiel die Mod lädt, ist im Panel nicht hinterlegt – „KI fragen“ macht einen Vorschlag."
+				}
+				if msg, ok := st[w]; ok && strings.HasPrefix(msg, "fehler") && inList[w] {
+					e.Note = "Letzte Aktualisierung fehlgeschlagen: " + wsErrText(msg)
+				}
+			}
+			for _, w := range list {
+				if _, ok := wsEntries[w]; ok {
+					continue
+				}
+				wsIDs = append(wsIDs, w)
+				e := ModEntry{Key: "ws:" + w, Name: w, ID: w, Workshop: w, Source: "Steam Workshop", Enabled: boolp(true), State: "nicht_geladen",
+					Note: "Vorgemerkt. Das Panel lädt die Mod beim nächsten Start über SteamCMD herunter."}
+				if msg, ok := st[w]; ok && strings.HasPrefix(msg, "fehler") {
+					e.State, e.Note = "fehler", "Download fehlgeschlagen: "+wsErrText(msg)
+				}
+				add(e)
+			}
+		}
+	}
 	// IDs in start values (e.g. CurseForge or Workshop IDs for ARK)
 	for _, v := range tpl.Vars {
 		val := strings.TrimSpace(sv.Vars[v.Key])
@@ -521,7 +559,7 @@ func (m *Manager) modStates(ctx context.Context, sv store.Server, inv *ModInvent
 	}
 	for i := range inv.Mods {
 		e := &inv.Mods[i]
-		if e.State == "fehlt" || e.State == "nicht_geladen" {
+		if e.State == "fehlt" || e.State == "nicht_geladen" || (e.State == "fehler" && e.Path == "") {
 			continue
 		}
 		if e.Enabled != nil && !*e.Enabled {
@@ -639,6 +677,11 @@ func (m *Manager) ToggleMod(ctx context.Context, id, key string, on bool) (strin
 			return "", err
 		}
 		return "Mod-Liste gespeichert. Läuft der Server, wird er dafür neu gestartet.", nil
+	case "ws":
+		if !reWsDigits.MatchString(rest) {
+			return "", errors.New("Ungültige Workshop-ID")
+		}
+		return m.steamcmdInstall(ctx, id, rest, on)
 	case "bep":
 		base := filepath.Join("server", "BepInEx", "plugins")
 		if _, err := os.Stat(filepath.Join(dir, base)); err != nil {
@@ -715,4 +758,24 @@ func (m *Manager) ToggleMod(ctx context.Context, id, key string, on bool) (strin
 		return "", errors.New("Diese Mod lässt sich hier nicht schalten")
 	}
 	return "Gespeichert. Wirkt beim nächsten Start des Servers.", nil
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
+}
+
+// wsErrText turns a status line ("fehler <steamcmd output>") into a hint.
+func wsErrText(status string) string {
+	msg := strings.TrimSpace(strings.TrimPrefix(status, "fehler"))
+	low := strings.ToLower(msg)
+	switch {
+	case strings.Contains(low, "access denied") || strings.Contains(low, "no subscription") || strings.Contains(low, "not subscribed"):
+		return "Steam gibt die Mod nur an ein Konto heraus, das das Spiel besitzt. Unter Einstellungen → Steam-Konto anmelden; beim nächsten Start versucht das Panel es dann mit dem Konto. (" + msg + ")"
+	case strings.Contains(low, "timeout"):
+		return "Zeitüberschreitung bei Steam; beim nächsten Start wird es erneut versucht. (" + msg + ")"
+	case msg == "" || msg == "nicht geladen":
+		return "SteamCMD hat die Mod nicht geliefert. Die Konsole des letzten Starts zeigt mehr."
+	}
+	return msg
 }

@@ -261,25 +261,36 @@ func (m *Manager) WorkshopSearch(ctx context.Context, id, q string, page int, b4
 	if err != nil {
 		return WorkshopPage{}, err
 	}
-	if tpl.Workshop == nil {
-		return WorkshopPage{}, errors.New("Für dieses Spiel gibt es keine Workshop-Installation im Panel")
+	info, err := m.WorkshopInfoFor(ctx, id)
+	if err != nil {
+		return WorkshopPage{}, err
 	}
-	_, items, _, _, isB42, lerr := m.zomboidLists(id)
-	if lerr != nil {
-		isB42 = true // new servers run the current build
+	if !info.Available {
+		return WorkshopPage{}, errors.New(info.Reason)
+	}
+	var items []string
+	isB42 := false
+	if info.Mode == "zomboid" {
+		var lerr error
+		_, items, _, _, isB42, lerr = m.zomboidLists(id)
+		if lerr != nil {
+			isB42 = true // new servers run the current build
+		}
+	} else {
+		_, items = m.readWsList(id)
 	}
 	if b42 != nil {
 		isB42 = *b42
 	}
 	var tags []string
-	if isB42 && tpl.Workshop.Build42Tag != "" {
+	if isB42 && tpl.Workshop != nil && tpl.Workshop.Build42Tag != "" {
 		tags = append(tags, tpl.Workshop.Build42Tag)
 	}
 	if page < 1 {
 		page = 1
 	}
 	key := m.aiSettings().SteamAPIKey
-	ids, more, src, err := workshopSearchIDs(ctx, tpl.Workshop.App, strings.TrimSpace(q), page, tags, key)
+	ids, more, src, err := workshopSearchIDs(ctx, info.App, strings.TrimSpace(q), page, tags, key)
 	if err != nil {
 		return WorkshopPage{}, err
 	}
@@ -328,8 +339,8 @@ func (m *Manager) WorkshopInstall(ctx context.Context, id, wid string, modIDs []
 	if err != nil {
 		return "", err
 	}
-	if tpl.Workshop == nil {
-		return "", errors.New("Für dieses Spiel gibt es keine Workshop-Installation im Panel")
+	if wsMode(tpl) != "zomboid" {
+		return m.steamcmdInstall(ctx, id, wid, true)
 	}
 	_, items, mods, maps, b42, err := m.zomboidLists(id)
 	if err != nil {
@@ -392,6 +403,11 @@ func (m *Manager) WorkshopInstall(ctx context.Context, id, wid string, modIDs []
 func (m *Manager) WorkshopRemove(ctx context.Context, id, wid string) (string, error) {
 	if !reWsDigits.MatchString(wid) {
 		return "", errors.New("Ungültige Workshop-ID")
+	}
+	if _, tpl, err := m.get(id); err != nil {
+		return "", err
+	} else if wsMode(tpl) != "zomboid" {
+		return m.steamcmdInstall(ctx, id, wid, false)
 	}
 	_, items, mods, _, _, err := m.zomboidLists(id)
 	if err != nil {

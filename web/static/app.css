@@ -710,3 +710,4 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .ws-b42{margin:6px 0 10px}
 .ws-key{display:flex;gap:8px;margin-top:8px}.ws-key input{flex:1;min-width:0}
 .ml-t .linkbtn{align-self:flex-start;margin-top:2px}
+.ws-ki ol{margin:4px 0 0 18px;padding:0}.ws-ki p{margin:4px 0}

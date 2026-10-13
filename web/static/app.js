@@ -1482,9 +1482,8 @@
       const mr = !!(tpl && tpl.mods);
       ['mdTitle', 'mdInfo', 'mdInstalled', 'mdSearchForm', 'mdResults'].forEach(x => { $('#' + x).hidden = !mr; });
       if (!mr) { $('#mdBar').hidden = true; $('#mdMore').hidden = true; }
-      $('#wsBox').hidden = !(tpl && tpl.workshop);
-      loadModList(); if (mr) loadMods();
-      if (tpl && tpl.workshop && !WS.loaded[MG.id]) { WS.loaded[MG.id] = true; WS.b42 = null; searchWorkshop('', 1); }
+      $('#wsBox').hidden = !(WS.info[MG.id] && WS.info[MG.id].available);
+      loadModList(); if (mr) loadMods(); loadWorkshopInfo();
     }
     else if (tab === 'backups') loadBackups();
     else if (tab === 'files') loadFiles(MG.path);
@@ -1703,14 +1702,34 @@
       const note = m.note ? (m.state === 'fehler' ? `<code class="mono dg-ev">${esc(m.note)}</code>` : `<p class="small">${esc(m.note)}</p>`) : '';
       const upd = m.update_hint ? '<p class="small ml-upd">Im Workshop gibt es eine neuere Version. Der Server holt sie beim nächsten Start.</p>' : '';
       const sw = m.key && m.enabled != null && can('operator') ? `<input type="checkbox" role="switch" class="tgl" aria-label="${esc(m.name)} an oder aus" data-ml="${esc(m.key)}" ${m.enabled ? 'checked' : ''}>` : '';
-      const tplw = S.tplById[(byId(MG.id) || {}).template];
-      const rm = m.workshop && tplw && tplw.workshop && can('operator') ? `<button type="button" class="linkbtn small" data-ws-rm="${esc(m.workshop)}" data-name="${esc(m.name)}">Entfernen</button>` : '';
-      return `<div class="ml-item"><span class="ml-st ml-${cls}">${esc(lab)}</span><div class="ml-t"><b>${name}</b><span class="small muted">${sub}</span>${note}${upd}${rm}</div>${sw}</div>`;
+      const wi = WS.info[MG.id];
+      const rm = m.workshop && wi && wi.available && can('operator') && (wi.mode === 'zomboid' || m.enabled) ? `<button type="button" class="linkbtn small" data-ws-rm="${esc(m.workshop)}" data-name="${esc(m.name)}">Entfernen</button>` : '';
+      const ki = m.advice && m.workshop && WS.ai && can('operator') ? `<button type="button" class="linkbtn small" data-ws-ki="${esc(m.workshop)}">KI fragen</button><div class="ws-ki" id="wsKi-${esc(m.workshop)}"></div>` : '';
+      return `<div class="ml-item"><span class="ml-st ml-${cls}">${esc(lab)}</span><div class="ml-t"><b>${name}</b><span class="small muted">${sub}</span>${note}${upd}${rm} ${ki}</div>${sw}</div>`;
     }).join('');
   }
   $('#mlReload').addEventListener('click', loadModList);
   /* ---------------- Steam Workshop ---------------- */
-  const WS = { loaded: {}, q: '', page: 1, items: [], b42: null, busy: false };
+  const WS = { loaded: {}, info: {}, ai: false, q: '', page: 1, items: [], b42: null, busy: false };
+  const wsGeneric = () => { const i = WS.info[MG.id]; return !!(i && i.mode !== 'zomboid'); };
+  async function loadWorkshopInfo() {
+    const id = MG.id;
+    if (!WS.info[id]) {
+      try { const r = await api('GET', `/api/servers/${id}/workshop/info`); WS.info[id] = r.info; WS.ai = !!r.ai; }
+      catch { return; }
+      if (MG.id !== id) return;
+      loadModList();
+    }
+    const i = WS.info[id];
+    $('#wsBox').hidden = !i.available;
+    if (!i.available) return;
+    $('#wsB42').parentElement.hidden = !i.build42_filter;
+    $('#wsQ').placeholder = 'Im Workshop von ' + (i.game || 'diesem Spiel') + ' suchen …';
+    $('#wsInfo').textContent = i.mode === 'zomboid'
+      ? 'Installieren trägt die Mod in die Server-INI ein, der Server lädt sie beim nächsten Start selbst herunter. Läuft er, wird er dafür neu gestartet.'
+      : (i.note || '') + (i.login === 'anonym' ? ' Manche Spiele geben Workshop-Inhalte nur an ein Steam-Konto heraus, das das Spiel besitzt. Ist unter Einstellungen → Steam-Konto eines angemeldet, versucht das Panel es damit, wenn Steam den anonymen Download ablehnt.' : ' Lehnt Steam den anonymen Download ab, versucht das Panel es mit dem angemeldeten Steam-Konto.');
+    if (!WS.loaded[id]) { WS.loaded[id] = true; WS.b42 = null; searchWorkshop('', 1); }
+  }
   async function searchWorkshop(q, page) {
     const id = MG.id; if (WS.busy) return;
     WS.busy = true; $('#wsMore').hidden = true;
@@ -1729,9 +1748,10 @@
   function renderWorkshop() {
     $('#wsResults').innerHTML = WS.items.length ? WS.items.map(it => {
       const img = it.preview ? `<img src="${esc(it.preview)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="md-ph" aria-hidden="true"></span>';
-      const ids = it.mod_ids && it.mod_ids.length ? 'Mod-ID ' + it.mod_ids.join(', ') : 'Mod-ID nicht in der Beschreibung';
+      const ids = wsGeneric() ? (it.size ? fmtSize(it.size) : '') : it.mod_ids && it.mod_ids.length ? 'Mod-ID ' + it.mod_ids.join(', ') : 'Mod-ID nicht in der Beschreibung';
       const sub = `<span class="mono muted">${fmtNum(it.subs)} Abos · ${esc(ids)}${it.maps && it.maps.length ? ' · Karte ' + esc(it.maps.join(', ')) : ''}</span>`;
-      const btn = it.installed ? '<span class="mono muted">eingetragen</span>' : `<button type="button" class="btn-line" data-ws-add="${esc(it.id)}">Installieren</button>`;
+      const gi = WS.info[MG.id] || {}, verb = gi.mode === 'zomboid' || gi.recipe ? 'Installieren' : 'Herunterladen';
+      const btn = it.installed ? `<span class="mono muted">${wsGeneric() ? 'vorgemerkt' : 'eingetragen'}</span>` : `<button type="button" class="btn-line" data-ws-add="${esc(it.id)}">${verb}</button>`;
       return `<div class="md-item"><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(it.id)}" target="_blank" rel="noopener">${img}</a><div class="md-t"><b title="${esc(it.title)}">${esc(it.title)}</b>${sub}<p>${esc(it.description)}</p></div>${btn}</div>`;
     }).join('') : '<p class="muted">Nichts gefunden.</p>';
   }
@@ -1741,15 +1761,30 @@
   $('#wsResults').addEventListener('click', async e => {
     const b = e.target.closest('[data-ws-add]'); if (!b) return;
     const it = WS.items.find(x => x.id === b.dataset.wsAdd), s = byId(MG.id);
-    if (s && isOn(s) && !await confirmBox('Mod installieren?', `„${it.title}“ wird eingetragen. Dafür startet der Server neu, Spieler werden kurz getrennt. Beim Start lädt er die Mod herunter.`, 'Installieren')) return;
+    if (!wsGeneric() && s && isOn(s) && !await confirmBox('Mod installieren?', `„${it.title}“ wird eingetragen. Dafür startet der Server neu, Spieler werden kurz getrennt. Beim Start lädt er die Mod herunter.`, 'Installieren')) return;
     b.disabled = true; b.textContent = 'Trage ein …';
     try { const r = await api('POST', `/api/servers/${MG.id}/workshop/install`, { id: it.id }); it.installed = true; renderWorkshop(); toast(r.message, 'ok'); loadModList(); }
-    catch (err) { toast(err.message, 'bad'); b.disabled = false; b.textContent = 'Installieren'; }
+    catch (err) { toast(err.message, 'bad'); b.disabled = false; b.textContent = wsGeneric() && !(WS.info[MG.id] || {}).recipe ? 'Herunterladen' : 'Installieren'; }
   });
   $('#mlList').addEventListener('click', async e => {
+    const k = e.target.closest('[data-ws-ki]');
+    if (k) {
+      const box = document.getElementById('wsKi-' + k.dataset.wsKi);
+      k.disabled = true; box.innerHTML = '<p class="rc-wait small"><span class="spin" aria-hidden="true"></span> Die KI sieht sich die Dateien der Mod an …</p>';
+      try {
+        const r = await api('POST', `/api/servers/${MG.id}/workshop/advice`, { id: k.dataset.wsKi });
+        box.innerHTML = `<p class="small">${esc(r.summary || '')}${r.sure ? '' : ' <span class="muted">(Die KI ist sich nicht sicher.)</span>'}</p>` +
+          (r.steps && r.steps.length ? `<ol class="small">${r.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '');
+      } catch (err) { box.innerHTML = `<p class="err small">${esc(err.message)}</p>`; }
+      k.disabled = false;
+      return;
+    }
     const b = e.target.closest('[data-ws-rm]'); if (!b) return;
     const s = byId(MG.id);
-    if (!await confirmBox('Mod entfernen?', `„${b.dataset.name}“ wird aus WorkshopItems und der Mod-Liste genommen.${s && isOn(s) ? ' Der Server startet dafür neu.' : ''} Spielstände mit Gegenständen aus der Mod können danach Fehler zeigen.`, 'Entfernen')) return;
+    const txt = wsGeneric()
+      ? `„${b.dataset.name}“ wird ab dem nächsten Start nicht mehr geladen. Die Dateien bleiben liegen.`
+      : `„${b.dataset.name}“ wird aus WorkshopItems und der Mod-Liste genommen.${s && isOn(s) ? ' Der Server startet dafür neu.' : ''} Spielstände mit Gegenständen aus der Mod können danach Fehler zeigen.`;
+    if (!await confirmBox('Mod entfernen?', txt, 'Entfernen')) return;
     b.disabled = true;
     try { const r = await api('POST', `/api/servers/${MG.id}/workshop/remove`, { id: b.dataset.wsRm }); toast(r.message, 'ok'); loadModList(); const it = WS.items.find(x => x.id === b.dataset.wsRm); if (it) { it.installed = false; renderWorkshop(); } }
     catch (err) { toast(err.message, 'bad'); b.disabled = false; }

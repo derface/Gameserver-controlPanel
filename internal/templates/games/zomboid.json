@@ -42,7 +42,9 @@
   },
   "workshop": {
     "app": 108600,
-    "build42_tag": "Build 42"
+    "build42_tag": "Build 42",
+    "mode": "zomboid",
+    "note": "Zomboid lädt die Mods beim Start selbst herunter. Das Panel trägt sie unter WorkshopItems und Mods in die Server-INI ein."
   },
   "memory_mb": 6144,
   "min_memory_mb": 3072,

@@ -30,6 +30,16 @@ type Port struct {
 type WorkshopCfg struct {
 	App        int    `json:"app"`                   // Steam app of the game (not the server)
 	Build42Tag string `json:"build42_tag,omitempty"` // optional tag filter for current game versions
+	// Mode "zomboid": the server downloads items itself from its ini lists.
+	// Empty: the panel downloads with SteamCMD before the start.
+	Mode string `json:"mode,omitempty"`
+	// After is a shell snippet run in /data/server after the download with
+	// GP_WS_APP, GP_WS_IDS and GP_WS_DIR set; it may write the value for
+	// $GP_WS_MODS (used in the start line) to /data/.gp-ws-mods.
+	After string `json:"after,omitempty"`
+	Note  string `json:"note,omitempty"` // how the game loads the mods, shown in the panel
+	// StartReplace edits the start line, e.g. to add $GP_WS_MODS.
+	StartReplace [][2]string `json:"start_replace,omitempty"`
 }
 
 // AMPImport describes how data from a CubeCoders AMP instance lands in a
@@ -339,6 +349,13 @@ func (s *Set) add(b []byte, src string) error {
 	var t Template
 	if err := json.Unmarshal(b, &t); err != nil {
 		return fmt.Errorf("%s: %w", src, err)
+	}
+	if r, ok := workshopRecipes[t.ID]; ok && t.Workshop == nil {
+		r := r
+		for _, rp := range r.StartReplace {
+			t.Start = strings.Replace(t.Start, rp[0], rp[1], 1)
+		}
+		t.Workshop = &r
 	}
 	if t.ID == "" || t.Name == "" || (t.Kind != "steam" && t.Kind != "image") {
 		return fmt.Errorf("%s: id, name und kind (steam|image) sind Pflicht", src)

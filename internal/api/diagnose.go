@@ -81,7 +81,41 @@ func (a *API) routesWorkshop(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/servers/{id}/workshop", a.need(auth.Operator, a.wsSearch))
 	mux.HandleFunc("POST /api/servers/{id}/workshop/install", a.need(auth.Operator, a.wsInstall))
 	mux.HandleFunc("POST /api/servers/{id}/workshop/remove", a.need(auth.Operator, a.wsRemove))
+	mux.HandleFunc("GET /api/servers/{id}/workshop/info", a.need(auth.Viewer, a.wsInfo))
+	mux.HandleFunc("POST /api/servers/{id}/workshop/advice", a.need(auth.Operator, a.wsAdvice))
 	mux.HandleFunc("PUT /api/settings/steam-api-key", a.need(auth.Admin, a.wsKey))
+}
+
+func (a *API) wsInfo(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	in, err := a.Mgr.WorkshopInfoFor(ctx, r.PathValue("id"))
+	if err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"info": in, "ai": a.License().Edition.AI})
+}
+
+func (a *API) wsAdvice(w http.ResponseWriter, r *http.Request) {
+	if !a.aiAllowed(w) {
+		return
+	}
+	var in struct {
+		ID string `json:"id"`
+	}
+	if err := decode(r, &in); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Minute)
+	defer cancel()
+	adv, err := a.Mgr.WorkshopAdvice(ctx, r.PathValue("id"), in.ID)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, adv)
 }
 
 func (a *API) wsSearch(w http.ResponseWriter, r *http.Request) {
