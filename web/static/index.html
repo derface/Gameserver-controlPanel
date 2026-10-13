@@ -180,6 +180,18 @@
     <div class="ml-head"><h2>Installiert und geladen</h2><button type="button" class="btn-line" id="mlReload">Neu einlesen</button></div>
     <p class="small muted" id="mlInfo"></p>
     <div id="mlList" class="ml-list"></div>
+    <div id="wsBox" hidden>
+      <h2 class="ml-sub">Steam Workshop</h2>
+      <p class="small muted" id="wsInfo">Installieren trägt die Mod in die Server-INI ein, der Server lädt sie beim nächsten Start selbst herunter. Läuft er, wird er dafür neu gestartet.</p>
+      <form class="md-search" id="wsForm" role="search">
+        <label class="sr" for="wsQ">Im Steam Workshop suchen</label>
+        <input id="wsQ" type="search" placeholder="Im Workshop suchen, z. B. Raven Creek, Brita, Autos …" autocomplete="off">
+        <button type="submit" class="btn-line">Suchen</button>
+      </form>
+      <label class="check small ws-b42"><input type="checkbox" id="wsB42"> Nur Mods für Build 42</label>
+      <div id="wsResults" class="md-list"></div>
+      <button type="button" class="btn-line" id="wsMore" hidden>Mehr laden</button>
+    </div>
     <h2 class="ml-sub" id="mdTitle">Mods von Modrinth</h2>
     <p class="small muted" id="mdInfo"></p>
     <div id="mdInstalled" class="md-list"></div>
@@ -502,6 +514,10 @@
       <label class="field" id="stmCodeWrap" hidden><span id="stmCodeLabel">Steam-Guard-Code</span><input id="stmCode" maxlength="8" autocomplete="one-time-code" spellcheck="false"></label>
     </div>
     <p class="err" id="stmErr" role="alert" hidden></p>
+    <details class="howto"><summary>Steam-Web-API-Schlüssel für die Workshop-Suche (optional)</summary>
+      <p class="small muted">Ohne Schlüssel sucht das Panel über die öffentliche Workshop-Seite. Mit Schlüssel ist die Suche genauer und schneller. Einen Schlüssel bekommst du kostenlos unter <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">steamcommunity.com/dev/apikey</a> (als Domain einfach den Namen deines Panels eintragen).</p>
+      <div class="ws-key"><input id="stmApiKey" autocomplete="off" spellcheck="false" placeholder="32 Zeichen" aria-label="Steam-Web-API-Schlüssel"><button type="button" class="btn-line" id="stmApiSave">Speichern</button></div>
+    </details>
     <details class="howto" id="stmLogWrap" hidden><summary>Was SteamCMD gesagt hat</summary><pre class="stm-log" id="stmLog"></pre></details>
     <div class="dlg-actions"><button type="button" class="btn-line" id="stmLogout" hidden>Abmelden</button><button type="submit" class="btn-accent" id="stmGo">Anmelden</button></div>
   </form>

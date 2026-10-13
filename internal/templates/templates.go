@@ -25,6 +25,13 @@ type Port struct {
 	Proto string `json:"proto"`
 }
 
+// WorkshopCfg enables searching and installing Steam Workshop items for
+// games whose server downloads them itself.
+type WorkshopCfg struct {
+	App        int    `json:"app"`                   // Steam app of the game (not the server)
+	Build42Tag string `json:"build42_tag,omitempty"` // optional tag filter for current game versions
+}
+
 // AMPImport describes how data from a CubeCoders AMP instance lands in a
 // server of this template.
 type AMPImport struct {
@@ -219,6 +226,7 @@ type Template struct {
 	FixedPorts  bool              `json:"fixed_ports,omitempty"`
 	Vars        []Var             `json:"vars"`
 	AMPImport   *AMPImport        `json:"amp_import,omitempty"`
+	Workshop    *WorkshopCfg      `json:"workshop,omitempty"`
 	MemoryMB    int               `json:"memory_mb"`
 	MinMemoryMB int               `json:"min_memory_mb"`
 	JavaMemEnv  string            `json:"java_memory_env,omitempty"`

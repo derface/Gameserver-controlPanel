@@ -792,7 +792,7 @@
     if (sec === 'konto') return loadMe();
     if (sec === 'https') return loadTLS();
     if (sec === 'router') return loadRouter(false);
-    if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; return loadSteam(); }
+    if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; api('GET', '/api/settings').then(r => { $('#stmApiKey').value = r.settings.steam_api_key || ''; }).catch(() => {}); return loadSteam(); }
     if (sec === 'lizenz') { showErr($('#licErr')); $('#licKey').value = ''; return renderLicense(); }
     if (sec === 'backups') {
       try {
@@ -1482,7 +1482,9 @@
       const mr = !!(tpl && tpl.mods);
       ['mdTitle', 'mdInfo', 'mdInstalled', 'mdSearchForm', 'mdResults'].forEach(x => { $('#' + x).hidden = !mr; });
       if (!mr) { $('#mdBar').hidden = true; $('#mdMore').hidden = true; }
+      $('#wsBox').hidden = !(tpl && tpl.workshop);
       loadModList(); if (mr) loadMods();
+      if (tpl && tpl.workshop && !WS.loaded[MG.id]) { WS.loaded[MG.id] = true; WS.b42 = null; searchWorkshop('', 1); }
     }
     else if (tab === 'backups') loadBackups();
     else if (tab === 'files') loadFiles(MG.path);
@@ -1701,10 +1703,61 @@
       const note = m.note ? (m.state === 'fehler' ? `<code class="mono dg-ev">${esc(m.note)}</code>` : `<p class="small">${esc(m.note)}</p>`) : '';
       const upd = m.update_hint ? '<p class="small ml-upd">Im Workshop gibt es eine neuere Version. Der Server holt sie beim nächsten Start.</p>' : '';
       const sw = m.key && m.enabled != null && can('operator') ? `<input type="checkbox" role="switch" class="tgl" aria-label="${esc(m.name)} an oder aus" data-ml="${esc(m.key)}" ${m.enabled ? 'checked' : ''}>` : '';
-      return `<div class="ml-item"><span class="ml-st ml-${cls}">${esc(lab)}</span><div class="ml-t"><b>${name}</b><span class="small muted">${sub}</span>${note}${upd}</div>${sw}</div>`;
+      const tplw = S.tplById[(byId(MG.id) || {}).template];
+      const rm = m.workshop && tplw && tplw.workshop && can('operator') ? `<button type="button" class="linkbtn small" data-ws-rm="${esc(m.workshop)}" data-name="${esc(m.name)}">Entfernen</button>` : '';
+      return `<div class="ml-item"><span class="ml-st ml-${cls}">${esc(lab)}</span><div class="ml-t"><b>${name}</b><span class="small muted">${sub}</span>${note}${upd}${rm}</div>${sw}</div>`;
     }).join('');
   }
   $('#mlReload').addEventListener('click', loadModList);
+  /* ---------------- Steam Workshop ---------------- */
+  const WS = { loaded: {}, q: '', page: 1, items: [], b42: null, busy: false };
+  async function searchWorkshop(q, page) {
+    const id = MG.id; if (WS.busy) return;
+    WS.busy = true; $('#wsMore').hidden = true;
+    if (page === 1) $('#wsResults').innerHTML = '<p class="rc-wait"><span class="spin" aria-hidden="true"></span> Frage Steam …</p>';
+    try {
+      const b = WS.b42 == null ? '' : '&b42=' + (WS.b42 ? 1 : 0);
+      const r = await api('GET', `/api/servers/${id}/workshop?q=${encodeURIComponent(q)}&page=${page}${b}`);
+      if (MG.id !== id) return;
+      WS.q = q; WS.page = page; WS.items = page === 1 ? r.items : WS.items.concat(r.items);
+      if (WS.b42 == null) WS.b42 = r.build42;
+      $('#wsB42').checked = !!WS.b42;
+      renderWorkshop(); $('#wsMore').hidden = !r.more;
+    } catch (e) { $('#wsResults').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+    finally { WS.busy = false; }
+  }
+  function renderWorkshop() {
+    $('#wsResults').innerHTML = WS.items.length ? WS.items.map(it => {
+      const img = it.preview ? `<img src="${esc(it.preview)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="md-ph" aria-hidden="true"></span>';
+      const ids = it.mod_ids && it.mod_ids.length ? 'Mod-ID ' + it.mod_ids.join(', ') : 'Mod-ID nicht in der Beschreibung';
+      const sub = `<span class="mono muted">${fmtNum(it.subs)} Abos · ${esc(ids)}${it.maps && it.maps.length ? ' · Karte ' + esc(it.maps.join(', ')) : ''}</span>`;
+      const btn = it.installed ? '<span class="mono muted">eingetragen</span>' : `<button type="button" class="btn-line" data-ws-add="${esc(it.id)}">Installieren</button>`;
+      return `<div class="md-item"><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(it.id)}" target="_blank" rel="noopener">${img}</a><div class="md-t"><b title="${esc(it.title)}">${esc(it.title)}</b>${sub}<p>${esc(it.description)}</p></div>${btn}</div>`;
+    }).join('') : '<p class="muted">Nichts gefunden.</p>';
+  }
+  $('#wsForm').addEventListener('submit', e => { e.preventDefault(); searchWorkshop($('#wsQ').value.trim(), 1); });
+  $('#wsB42').addEventListener('change', () => { WS.b42 = $('#wsB42').checked; searchWorkshop(WS.q, 1); });
+  $('#wsMore').addEventListener('click', () => searchWorkshop(WS.q, WS.page + 1));
+  $('#wsResults').addEventListener('click', async e => {
+    const b = e.target.closest('[data-ws-add]'); if (!b) return;
+    const it = WS.items.find(x => x.id === b.dataset.wsAdd), s = byId(MG.id);
+    if (s && isOn(s) && !await confirmBox('Mod installieren?', `„${it.title}“ wird eingetragen. Dafür startet der Server neu, Spieler werden kurz getrennt. Beim Start lädt er die Mod herunter.`, 'Installieren')) return;
+    b.disabled = true; b.textContent = 'Trage ein …';
+    try { const r = await api('POST', `/api/servers/${MG.id}/workshop/install`, { id: it.id }); it.installed = true; renderWorkshop(); toast(r.message, 'ok'); loadModList(); }
+    catch (err) { toast(err.message, 'bad'); b.disabled = false; b.textContent = 'Installieren'; }
+  });
+  $('#mlList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-ws-rm]'); if (!b) return;
+    const s = byId(MG.id);
+    if (!await confirmBox('Mod entfernen?', `„${b.dataset.name}“ wird aus WorkshopItems und der Mod-Liste genommen.${s && isOn(s) ? ' Der Server startet dafür neu.' : ''} Spielstände mit Gegenständen aus der Mod können danach Fehler zeigen.`, 'Entfernen')) return;
+    b.disabled = true;
+    try { const r = await api('POST', `/api/servers/${MG.id}/workshop/remove`, { id: b.dataset.wsRm }); toast(r.message, 'ok'); loadModList(); const it = WS.items.find(x => x.id === b.dataset.wsRm); if (it) { it.installed = false; renderWorkshop(); } }
+    catch (err) { toast(err.message, 'bad'); b.disabled = false; }
+  });
+  $('#stmApiSave').addEventListener('click', async () => {
+    try { const r = await api('PUT', '/api/settings/steam-api-key', { key: $('#stmApiKey').value }); $('#stmApiKey').value = r.key; toast(r.key ? 'Schlüssel gespeichert' : 'Schlüssel entfernt', 'ok'); }
+    catch (err) { toast(err.message, 'bad'); }
+  });
   $('#mlList').addEventListener('change', async e => {
     const c = e.target.closest('[data-ml]'); if (!c) return;
     const key = c.dataset.ml, on = c.checked, s = byId(MG.id);

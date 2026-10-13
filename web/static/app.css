@@ -707,3 +707,6 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .ml-upd{color:var(--accent)}
 .ml-item .tgl{flex-shrink:0;margin-top:2px}
 @media (max-width:560px){.ml-item{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"st . sw" "t t t";row-gap:6px}.ml-st{grid-area:st;width:auto}.ml-t{grid-area:t}.ml-item .tgl{grid-area:sw}}
+.ws-b42{margin:6px 0 10px}
+.ws-key{display:flex;gap:8px;margin-top:8px}.ws-key input{flex:1;min-width:0}
+.ml-t .linkbtn{align-self:flex-start;margin-top:2px}

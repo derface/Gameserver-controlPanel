@@ -40,6 +40,10 @@
       "server_name": "^Zomboid/Server/([A-Za-z0-9_-]+)\\.ini$"
     }
   },
+  "workshop": {
+    "app": 108600,
+    "build42_tag": "Build 42"
+  },
   "memory_mb": 6144,
   "min_memory_mb": 3072,
   "console": "stdin",

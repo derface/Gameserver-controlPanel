@@ -95,6 +95,7 @@ func (a *API) Handler() http.Handler {
 	a.routesAMPImport(mux)
 	a.routesDiagnose(mux)
 	a.routesModList(mux)
+	a.routesWorkshop(mux)
 
 	mux.HandleFunc("GET /api/settings", a.need(auth.Admin, a.getSettings))
 	mux.HandleFunc("PUT /api/settings", a.need(auth.Admin, a.putSettings))
@@ -126,7 +127,7 @@ func secureHeaders(h http.Handler) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("Referrer-Policy", "same-origin")
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.modrinth.com; connect-src 'self'")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.modrinth.com https://steamuserimages-a.akamaihd.net https://images.steamusercontent.com https://*.steamstatic.com; connect-src 'self'")
 		h.ServeHTTP(w, r)
 	})
 }
@@ -500,6 +501,7 @@ func (a *API) getSettings(w http.ResponseWriter, r *http.Request) {
 	a.Store.Read(func(d *store.Data) { s = d.Settings })
 	s.AnthropicKey = mask(s.AnthropicKey)
 	s.OpenAIKey = mask(s.OpenAIKey)
+	s.SteamAPIKey = mask(s.SteamAPIKey)
 	writeJSON(w, 200, map[string]any{"settings": s, "default_model": ai.DefaultModel(s.AIProvider)})
 }
 
@@ -528,6 +530,7 @@ func (a *API) putSettings(w http.ResponseWriter, r *http.Request) {
 		if in.OpenAIKey != "" && !strings.Contains(in.OpenAIKey, "••") {
 			s.OpenAIKey = strings.TrimSpace(in.OpenAIKey)
 		}
+
 		return nil
 	})
 	if err != nil {

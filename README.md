@@ -223,6 +223,14 @@ Dazu gleicht das Panel die Liste des Spiels ab (Zomboid `Mods=` und `WorkshopIte
 
 Ein- und Ausschalten: Bei Zomboid geht das über die Mod-Liste in der Server-INI, gespeichert wie die übrigen Einstellungen (ein laufender Server wird gestoppt und neu gestartet). BepInEx-, Pak- und UE4SS-Mods werden durch Umbenennen (`.off`) bzw. über `mods.txt` geschaltet und wirken ab dem nächsten Start. Dateien werden nie gelöscht.
 
+### Steam Workshop (Project Zomboid)
+
+Im Reiter „Mods“ steht bei Vorlagen mit `workshop` (`{"app": 108600, "build42_tag": "Build 42"}`) eine Workshop-Suche:
+- **Suche:** Mit einem Steam-Web-API-Schlüssel (Einstellungen → Steam-Konto, optional) läuft sie über `IPublishedFileService/QueryFiles`, sonst über die öffentliche Workshop-Seite. Titel, Bild, Abos und Beschreibung kommen aus `GetPublishedFileDetails`.
+- **Filter:** „Nur Build 42“ filtert nach dem Tag und ist eingeschaltet, wenn die Mod-Liste im Build-42-Format (`\ModID`) ist.
+- **Installieren:** Die Workshop-ID kommt nach `WorkshopItems=`, die Mod-IDs aus der Beschreibung („Mod ID: …“) nach `Mods=`, Kartenordner („Map Folder: …“) vor die Standardkarte in `Map=`. Den Download erledigt der Server beim nächsten Start.
+- **Entfernen:** Nimmt die Mod aus beiden Listen. Die Dateien bleiben.
+
 ## KI-Diagnose
 
 Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber, Editionen mit KI). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.

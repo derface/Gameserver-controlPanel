@@ -115,6 +115,8 @@ type Settings struct {
 	// AIAutoDiagnose lets the AI look at a server by itself after a crash,
 	// a hang or sustained full RAM/CPU.
 	AIAutoDiagnose bool `json:"ai_auto_diagnose"`
+	// SteamAPIKey (optional) makes the Workshop search use the Steam Web API.
+	SteamAPIKey string `json:"steam_api_key,omitempty"`
 }
 
 // RouterMap is a port forwarding the panel created in the router.
