@@ -737,3 +737,5 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .tk-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .tk-tag{font-size:11px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--line) 55%,transparent);color:var(--muted);white-space:nowrap}
 .tk-upd-btns{gap:8px;flex-wrap:wrap}
+
+.tbl.chg{margin:10px 0}.tbl.chg td,.tbl.chg th{padding:7px 10px}

@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -564,7 +565,7 @@ func (a *API) aiContext() ai.Context {
 	c := ai.Context{TotalMemMB: int(h.MemTotalMB)}
 	reserved := 0
 	for _, s := range a.Mgr.List() {
-		c.Servers = append(c.Servers, fmt.Sprintf("%s (%s, %s)", s.Name, s.TemplateName, s.Status))
+		c.Servers = append(c.Servers, fmt.Sprintf("id=%s: %s (%s, %s, %d MB RAM)", s.ID, s.Name, s.TemplateName, s.Status, s.MemoryMB))
 		reserved += s.MemoryMB
 	}
 	c.FreeMemMB = int(h.MemTotalMB) - reserved - 1024
@@ -587,7 +588,9 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var in struct {
-		Prompt string `json:"prompt"`
+		Prompt  string   `json:"prompt"`
+		History []string `json:"history"`
+		Server  string   `json:"server"` // optional: the server the chat is about
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, 400, err)
@@ -595,14 +598,52 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 	}
 	var s store.Settings
 	a.Store.Read(func(d *store.Data) { s = d.Settings })
-	ctx, cancel := context.WithTimeout(r.Context(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 120*time.Second)
 	defer cancel()
-	p, err := ai.MakePlan(ctx, s, a.Mgr.Templates(), a.aiContext(), in.Prompt)
+	c := a.aiContext()
+	if len(in.History) > 12 {
+		in.History = in.History[len(in.History)-12:]
+	}
+	c.History = in.History
+	focus := in.Server
+	if focus == "" {
+		focus = a.focusServer(in.Prompt, in.History)
+	}
+	if focus != "" {
+		if cat, err := a.Mgr.SettingsCatalog(focus); err == nil {
+			c.Focus = cat
+		}
+	}
+	p, err := ai.MakePlan(ctx, s, a.Mgr.Templates(), c, in.Prompt)
 	if err != nil {
 		fail(w, 400, err)
 		return
 	}
 	resp := map[string]any{"plan": p}
+	if p.Action == "change" {
+		sv, ok := a.Store.Server(p.Server)
+		if !ok {
+			fail(w, 400, errors.New("Die KI meinte einen Server, den es nicht gibt. Bitte den Namen nennen"))
+			return
+		}
+		changes, notes, err := a.Mgr.CheckChanges(p.Server, p.Vars, p.Files)
+		if err != nil {
+			fail(w, 400, err)
+			return
+		}
+		if p.MemoryMB > 0 && p.MemoryMB != sv.MemoryMB {
+			if tpl, ok := a.Mgr.Templates().Get(sv.Template); ok && p.MemoryMB < tpl.MinMemoryMB {
+				p.MemoryMB = tpl.MinMemoryMB
+			}
+			changes = append(changes, manager.SettingChange{Where: "memory", Key: "memory_mb", Label: "Arbeitsspeicher (MB)", Old: strconv.Itoa(sv.MemoryMB), New: strconv.Itoa(p.MemoryMB)})
+		}
+		if changes == nil {
+			changes = []manager.SettingChange{}
+		}
+		resp["changes"], resp["notes"], resp["server"] = changes, notes, a.Mgr.Info(sv)
+		writeJSON(w, 200, resp)
+		return
+	}
 	if p.Question == "" {
 		if tpl, ok := a.Mgr.Templates().Get(p.Template); ok {
 			resp["template"] = tpl
@@ -625,4 +666,38 @@ func (a *API) aiTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]bool{"ok": true})
+}
+
+// focusServer guesses which existing server a chat is about: a server name
+// or game name in the newest message first, then in the history.
+func (a *API) focusServer(prompt string, history []string) string {
+	list := a.Mgr.List()
+	texts := []string{prompt}
+	for i := len(history) - 1; i >= 0; i-- {
+		texts = append(texts, history[i])
+	}
+	norm := func(x string) string { return strings.ToLower(strings.Join(strings.Fields(x), " ")) }
+	for _, t := range texts {
+		t = norm(t)
+		for _, sv := range list {
+			if n := norm(sv.Name); len(n) >= 3 && strings.Contains(t, n) {
+				return sv.ID
+			}
+		}
+		var hit []string
+		for _, sv := range list {
+			game := norm(strings.TrimSuffix(strings.TrimSuffix(sv.TemplateName, " (Legacy)"), " (Linux Wine)"))
+			first := strings.Fields(game)
+			if game != "" && (strings.Contains(t, game) || (len(first) > 0 && len(first[0]) >= 5 && strings.Contains(t, first[0]))) {
+				hit = append(hit, sv.ID)
+			}
+		}
+		if len(hit) == 1 {
+			return hit[0]
+		}
+		if len(hit) > 1 {
+			return ""
+		}
+	}
+	return ""
 }

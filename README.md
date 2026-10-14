@@ -268,6 +268,10 @@ Ab 0.24 gibt es die Workshop-Suche bei jedem Steam-Spiel, dessen Workshop Steam 
 
 Eigene Vorlagen können das über `"workshop": {"app": 107410, "after": "<bash>", "note": "…"}` selbst festlegen.
 
+## KI-Assistent: vorhandene Server ändern
+
+Der KI-Assistent plant nicht nur neue Server, er ändert auch vorhandene („den Enshrouded-Server als Mid/Highrate“, „mehr Loot“, „schwerer“). Er bekommt dafür den bisherigen Gesprächsverlauf (letzte 12 Nachrichten) und, wenn eine Nachricht einen Server oder ein Spiel nennt, dessen Einstellungen als Liste: Schlüssel, Beschriftung, aktueller Wert, Typ und Bereich, Bedingungen wie „wirkt nur wenn gameSettingsPreset=Custom“. Geheime Werte gehen nicht mit. Die Antwort (`action: change`) prüft das Panel mit denselben Regeln wie das Einstellungsformular: Unbekannte Schlüssel und ungültige Auswahlen fallen weg, Zahlen außerhalb des Spielbereichs werden begrenzt (mit Hinweis). Angezeigt wird eine Tabelle „Bisher → Neu“; erst „Übernehmen“ schreibt die Werte (ein laufender Server startet dafür neu).
+
 ## KI-Diagnose
 
 Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber, Editionen mit KI). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.

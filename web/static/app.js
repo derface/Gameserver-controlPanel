@@ -1352,7 +1352,7 @@
   $('#edChip').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#edChip').click(); } };
 
   /* ---------------- KI ---------------- */
-  const KI = { core: null, busy: false, plan: null, tpl: null, track: null, order: 0 };
+  const KI = { core: null, busy: false, plan: null, tpl: null, track: null, order: 0, hist: [] };
   function setCore(st) {
     const labels = { idle: 'Bereit', listening: 'Hört zu', thinking: 'Denkt nach', executing: 'Führt aus', done: 'Fertig' };
     $('#coreState').textContent = labels[st]; $('#ki').dataset.state = st;
@@ -1363,7 +1363,8 @@
     d.className = 'msg' + (who === 'Du' ? ' du' : '') + (cls ? ' ' + cls : '');
     d.innerHTML = '<span class="mono muted who"></span><p></p>';
     d.firstChild.textContent = who; d.lastChild.textContent = text;
-    chat.appendChild(d); while (chat.children.length > 4) chat.firstChild.remove();
+    chat.appendChild(d); while (chat.children.length > 6) chat.firstChild.remove();
+    if (cls !== 'bad' && !(who === 'KI' && !KI.hist.length)) { KI.hist.push(who + ': ' + text); if (KI.hist.length > 12) KI.hist.shift(); }
   }
   function renderKI() {
     const body = $('#coreBody'); let lock = $('.locked', body);
@@ -1377,15 +1378,19 @@
       lock.innerHTML = `<span>${esc(msg)}</span><button class="btn-line" type="button">Einstellungen öffnen</button>`;
       lock.querySelector('button').onclick = () => openSettings(l && !l.edition.ai ? 'lizenz' : 'ki');
     } else if (lock) lock.remove();
-    if (!msg && !$('#chat').children.length) addMsg('KI', 'Sag mir, was für einen Server du willst. Ich erstelle einen Plan, und du gibst ihn frei.');
+    if (!msg && !$('#chat').children.length) addMsg('KI', 'Sag mir, was für einen Server du willst oder was ich an einem vorhandenen ändern soll. Ich mache einen Vorschlag, und du gibst ihn frei.');
+    const first = (S.servers || [])[0], chip = $('#chipChange');
+    if (first && !chip) $('#chips').insertAdjacentHTML('afterbegin', `<button type="button" id="chipChange">${esc(first.name)}: mehr Spieler und schneller leveln</button>`);
   }
   async function ask(text) {
     text = text.trim(); if (!text || KI.busy) return;
     KI.busy = true; $('#askInput').value = ''; $('#plan').hidden = true;
+    const history = KI.hist.slice();
     addMsg('Du', text); setCore('thinking');
     try {
-      const r = await api('POST', '/api/ai/plan', { prompt: text });
+      const r = await api('POST', '/api/ai/plan', { prompt: text, history });
       if (r.plan.question) { addMsg('KI', r.plan.question); }
+      else if (r.plan.action === 'change') { addMsg('KI', r.plan.reply || 'Das würde ich ändern.'); showChange(r.plan, r.changes || [], r.notes || [], r.server); }
       else { addMsg('KI', r.plan.reply || 'Hier ist mein Vorschlag.'); showPlan(r.plan, r.template, r.warning); }
     } catch (e) { addMsg('KI', e.message, 'bad'); }
     finally { KI.busy = false; setCore('idle'); }
@@ -1404,6 +1409,41 @@
       <div class="plan-actions"><button class="btn-line" type="button" id="editPlan">Ändern</button><button class="btn-accent" type="button" id="runPlan">${warning ? 'Im Formular ergänzen' : 'Ausführen'}</button></div>`;
     $('#editPlan').onclick = () => openCreate(plan);
     $('#runPlan').onclick = () => warning ? openCreate(plan) : runPlan();
+  }
+  function showChange(plan, changes, notes, sv) {
+    KI.plan = plan; KI.change = { changes, sv }; KI.track = null;
+    const p = $('#plan'); p.hidden = false; KI.order++;
+    const fmtV = v => v === '' || v == null ? '–' : v;
+    const running = sv && (sv.status === 'running' || sv.status === 'starting');
+    p.innerHTML = `<div class="plan-head"><span class="mono muted">Änderung Nr. ${String(KI.order).padStart(4, '0')}</span><span class="stamp" id="stamp">Wartet auf Freigabe</span></div>
+      <h3>${esc(sv ? sv.name : plan.server)}</h3>
+      ${changes.length ? `<table class="tbl chg"><thead><tr><th>Einstellung</th><th>Bisher</th><th>Neu</th></tr></thead><tbody>${changes.map(c =>
+        `<tr><td>${esc(c.label)}</td><td class="mono muted">${esc(fmtV(c.old))}</td><td class="mono"><b>${esc(fmtV(c.new))}</b></td></tr>`).join('')}</tbody></table>`
+        : '<p class="muted">Die Werte stehen schon so da, es gibt nichts zu ändern.</p>'}
+      ${notes.length ? `<p class="small muted">${notes.map(esc).join('<br>')}</p>` : ''}
+      ${changes.length && running ? '<p class="small">Der Server läuft und wird dafür neu gestartet. Spieler werden kurz getrennt.</p>' : ''}
+      <div class="plan-actions"><a class="btn-line" href="#/server/${encodeURIComponent(plan.server)}/settings">Einstellungen öffnen</a>${changes.length ? '<button class="btn-accent" type="button" id="runChange">Übernehmen</button>' : ''}</div>`;
+    if (changes.length) $('#runChange').onclick = runChange;
+  }
+  async function runChange() {
+    const { changes, sv } = KI.change || {}; if (!changes || KI.busy) return;
+    const id = KI.plan.server, vars = {}, files = {};
+    let mem = 0;
+    for (const c of changes) {
+      if (c.where === 'vars') vars[c.key] = c.new;
+      else if (c.where === 'memory') mem = +c.new;
+      else (files[c.where] = files[c.where] || {})[c.key] = c.new;
+    }
+    KI.busy = true; $('#runChange').disabled = true; $('#stamp').textContent = 'Wird übernommen'; setCore('executing');
+    try {
+      if (Object.keys(vars).length || Object.keys(files).length) await api('PUT', `/api/servers/${id}/settings`, { vars, files });
+      if (mem) await api('PATCH', `/api/servers/${id}`, { memory_mb: mem });
+      $('#stamp').textContent = 'Erledigt'; $('#stamp').classList.add('ok'); setCore('done'); $('#runChange').textContent = 'Übernommen';
+      toast('Einstellungen von ' + (sv ? sv.name : 'dem Server') + ' geändert', 'ok'); loadServers();
+      setTimeout(() => { if (!KI.busy) setCore('idle'); }, 2200);
+    } catch (e) {
+      addMsg('KI', e.message, 'bad'); $('#stamp').textContent = 'Fehler'; $('#stamp').classList.add('bad'); $('#runChange').disabled = false; setCore('idle');
+    } finally { KI.busy = false; }
   }
   async function runPlan() {
     const plan = KI.plan; if (!plan || KI.busy) return;

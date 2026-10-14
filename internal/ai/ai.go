@@ -20,19 +20,26 @@ import (
 )
 
 type Plan struct {
-	Template string            `json:"template"`
-	Name     string            `json:"name"`
-	Vars     map[string]string `json:"vars"`
-	MemoryMB int               `json:"memory_mb"`
-	Reply    string            `json:"reply"`
-	Steps    []string          `json:"steps"`
-	Question string            `json:"question,omitempty"` // set when the AI needs more info
+	Action   string                       `json:"action,omitempty"` // "" or create | change (an existing server)
+	Server   string                       `json:"server,omitempty"` // id, for change
+	Files    map[string]map[string]string `json:"files,omitempty"`
+	Template string                       `json:"template"`
+	Name     string                       `json:"name"`
+	Vars     map[string]string            `json:"vars"`
+	MemoryMB int                          `json:"memory_mb"`
+	Reply    string                       `json:"reply"`
+	Steps    []string                     `json:"steps"`
+	Question string                       `json:"question,omitempty"` // set when the AI needs more info
 }
 
 type Context struct {
 	FreeMemMB  int
 	TotalMemMB int
-	Servers    []string // "Name (Spiel, Status)"
+	Servers    []string // "id=…: Name (Spiel, Status)"
+	// Focus holds the settings of the server the user talks about, if any.
+	Focus string
+	// History is the conversation so far ("Du: …" / "KI: …").
+	History []string
 }
 
 func DefaultModel(provider string) string {
@@ -49,13 +56,26 @@ func DefaultModel(provider string) string {
 
 func systemPrompt(tpls []templates.Template, c Context) string {
 	var b strings.Builder
-	b.WriteString(`Du bist der KI-Assistent eines Gameserver-Panels. Du planst neue Gameserver.
-Antworte AUSSCHLIESSLICH mit einem JSON-Objekt, ohne Text davor oder danach, in diesem Format:
-{"template":"<id>","name":"<kurzer Servername>","vars":{"<key>":"<wert>"},"memory_mb":<zahl>,
+	b.WriteString(`Du bist der KI-Assistent eines Gameserver-Panels. Du planst neue Gameserver und änderst vorhandene.
+Antworte AUSSCHLIESSLICH mit einem JSON-Objekt, ohne Text davor oder danach. Es gibt drei Antworten:
+
+A) Vorhandenen Server ändern, wenn der Nutzer von einem vorhandenen Server spricht (z. B. "den Enshrouded-Server als Highrate", "mehr Loot", "schwerer", "mehr Spieler"):
+{"action":"change","server":"<id>","vars":{"<key>":"<wert>"},"files":{"<datei-nr>":{"<key>":"<wert>"}},"memory_mb":<zahl oder 0>,
+ "reply":"<2-4 Sätze auf Deutsch: was du änderst und welche Wirkung das hat>"}
+- Nutze nur Schlüssel aus "Einstellungen des Servers" unten, mit Werten im angegebenen Typ und Bereich, als Text, Zahlen mit Punkt.
+- Steht bei einer Einstellung "wirkt nur wenn X=Y", setze X auf Y mit (z. B. die Voreinstellung auf "Custom"), sonst wirkt die Änderung nicht.
+- Begriffe aus der Spieler-Szene übersetzt du selbst in Werte: "Highrate"/"x5" = deutlich schnelleres Leveln, mehr Erfahrung, mehr Ressourcen und Loot, schnelleres Wachsen und Herstellen; "Midrate" etwa x2 bis x3; "Mid/Highrate" dazwischen. Frag nicht nach, wenn der Wunsch so verständlich ist. Nenne im reply die wichtigsten neuen Werte.
+- memory_mb nur angeben, wenn der Nutzer mehr oder weniger RAM will, sonst 0.
+- Fehlen unten die Einstellungen des gemeinten Servers, frage nach, welcher Server gemeint ist, und nenne die Namen.
+
+B) Neuen Server planen:
+{"action":"create","template":"<id>","name":"<kurzer Servername>","vars":{"<key>":"<wert>"},"memory_mb":<zahl>,
  "reply":"<2-3 Sätze auf Deutsch: was du vorschlägst und warum>","steps":["<Schritt>", "..."]}
-Wenn die Anfrage unklar ist oder kein Spiel passt, antworte mit
-{"question":"<eine kurze Rückfrage auf Deutsch>"}.
-Regeln:
+
+C) Rückfrage, wenn die Anfrage unklar ist oder kein Spiel passt:
+{"question":"<eine kurze Rückfrage auf Deutsch>"}
+
+Regeln für B:
 - Nutze nur Vorlagen-IDs und Variablen aus der Liste unten. Lass Variablen weg, deren Standardwert passt.
 - Für Steam-Spiele ohne eigene Vorlage nimm "steam-custom" nur, wenn du App-ID, Startbefehl und Ports sicher kennst. Sonst stelle eine Rückfrage.
 - memory_mb: realistisch für Spiel und Spielerzahl, mindestens das Minimum der Vorlage, höchstens den freien RAM.
@@ -63,10 +83,14 @@ Regeln:
 - Für Minecraft-Mods nutze die Variable "mods" mit Modrinth-Namen (z. B. create,ferrite-core,modernfix) und passenden Loader als "type".
 - Bevorzuge Vorlagen mit Status "stabil". Bei "beta" oder "experimentell" erwähne im reply, dass das Spiel im Panel noch nicht erprobt ist.
 - steps: 4 bis 6 kurze deutsche Schritte, die das Panel ausführt (Container anlegen, Dateien laden, Einstellungen, Start).
+Beziehe dich auf das bisherige Gespräch, wenn die neue Nachricht daran anknüpft.
 `)
 	fmt.Fprintf(&b, "\nRechner: %d MB RAM gesamt, davon %d MB frei.\n", c.TotalMemMB, c.FreeMemMB)
 	if len(c.Servers) > 0 {
 		b.WriteString("Vorhandene Server: " + strings.Join(c.Servers, "; ") + "\n")
+	}
+	if c.Focus != "" {
+		b.WriteString("\nEinstellungen des Servers, um den es geht:\n" + c.Focus + "\n")
 	}
 	b.WriteString("\nVorlagen:\n")
 	for _, t := range tpls {
@@ -228,7 +252,15 @@ func MakePlan(ctx context.Context, s store.Settings, tpls *templates.Set, c Cont
 	if len(prompt) > 2000 {
 		prompt = prompt[:2000]
 	}
-	txt, err := complete(ctx, s, systemPrompt(tpls.All(), c), prompt)
+	user := prompt
+	if len(c.History) > 0 {
+		h := strings.Join(c.History, "\n")
+		if len(h) > 3000 {
+			h = h[len(h)-3000:]
+		}
+		user = "Bisheriges Gespräch:\n" + h + "\n\nNeue Nachricht: " + prompt
+	}
+	txt, err := completeN(ctx, s, systemPrompt(tpls.All(), c), user, 1800)
 	if err != nil {
 		return p, err
 	}
@@ -242,6 +274,13 @@ func MakePlan(ctx context.Context, s store.Settings, tpls *templates.Set, c Cont
 	if p.Question != "" {
 		return p, nil
 	}
+	if p.Action == "change" {
+		if p.Server == "" {
+			return p, errors.New("Die KI hat nicht gesagt, welcher Server geändert werden soll. Bitte den Namen nennen")
+		}
+		return p, nil
+	}
+	p.Action = "create"
 	tpl, ok := tpls.Get(p.Template)
 	if !ok {
 		return p, fmt.Errorf("Die KI schlug die unbekannte Vorlage „%s“ vor. Bitte erneut versuchen", p.Template)
