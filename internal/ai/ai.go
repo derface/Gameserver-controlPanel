@@ -103,7 +103,8 @@ Antworte AUSSCHLIESSLICH mit einem JSON-Objekt, ohne Text davor oder danach. Es 
 A) Vorhandenen Server ändern, wenn der Nutzer von einem vorhandenen Server spricht (z. B. "den Enshrouded-Server als Highrate", "mehr Loot", "schwerer", "mehr Spieler"):
 {"action":"change","server":"<id>","vars":{"<key>":"<wert>"},"files":{"<datei-nr>":{"<key>":"<wert>"}},"memory_mb":<zahl oder 0>,
  "reply":"<2-4 Sätze auf Deutsch: was du änderst und welche Wirkung das hat>"}
-- Nutze nur Schlüssel aus "Einstellungen des Servers" unten, mit Werten im angegebenen Typ und Bereich, als Text, Zahlen mit Punkt.
+- Nutze nur Schlüssel aus "Einstellungen des Servers" unten, mit Werten im angegebenen Typ und Bereich, als Text, Zahlen mit Punkt. Bleib innerhalb der Bereiche; geht ein Wunsch darüber hinaus, nimm den Höchstwert und sag das im reply.
+- Formuliere das reply als Vorschlag ("Ich würde …"), nicht als erledigt: Der Nutzer muss die Änderung erst übernehmen.
 - Steht bei einer Einstellung "wirkt nur wenn X=Y", setze X auf Y mit (z. B. die Voreinstellung auf "Custom"), sonst wirkt die Änderung nicht.
 - Begriffe aus der Spieler-Szene übersetzt du selbst in Werte: "Highrate"/"x5" = deutlich schnelleres Leveln, mehr Erfahrung, mehr Ressourcen und Loot, schnelleres Wachsen und Herstellen; "Midrate" etwa x2 bis x3; "Mid/Highrate" dazwischen. Frag nicht nach, wenn der Wunsch so verständlich ist. Nenne im reply die wichtigsten neuen Werte.
 - memory_mb nur angeben, wenn der Nutzer mehr oder weniger RAM will, sonst 0.
