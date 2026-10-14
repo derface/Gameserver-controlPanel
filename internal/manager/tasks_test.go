@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -160,5 +161,57 @@ func TestWarnText(t *testing.T) {
 	}
 	if unsafeMsg.ReplaceAllString(`a"b;c$d`, "") != "abcd" {
 		t.Fatal("Nachricht nicht bereinigt")
+	}
+}
+
+func TestTaskConditionsValidate(t *testing.T) {
+	tpls, _ := templates.Load("")
+	vh, _ := tpls.Get("valheim")
+	mc, _ := tpls.Get("minecraft-java")
+	tk := store.Task{Action: "restart", At: "04:00", WhenEmpty: true, OnlyIfUpdate: true, BackupFirst: true}
+	if err := ValidateTask(&tk, vh); err != nil || tk.MaxWaitMin != 120 {
+		t.Fatalf("%v %+v", err, tk)
+	}
+	tk = store.Task{Action: "backup", At: "04:00", WhenEmpty: true, OnlyIfUpdate: true, BackupFirst: true}
+	if err := ValidateTask(&tk, vh); err != nil || tk.WhenEmpty || tk.OnlyIfUpdate || tk.BackupFirst {
+		t.Fatalf("Bedingungen bei Backup nicht entfernt: %v %+v", err, tk)
+	}
+	tk = store.Task{Action: "update", At: "04:00", OnlyIfUpdate: true}
+	if ValidateTask(&tk, mc) == nil && mc.Kind != "steam" {
+		t.Fatal("Update-Prüfung bei Nicht-Steam-Spiel angenommen")
+	}
+	tk = store.Task{Action: "restart", At: "04:00", WhenEmpty: true, MaxWaitMin: 7}
+	if ValidateTask(&tk, vh) == nil {
+		t.Fatal("ungültige Wartezeit angenommen")
+	}
+}
+
+func TestTaskWaitsUntilEmpty(t *testing.T) {
+	dir := t.TempDir()
+	st, _ := store.Open(dir)
+	tpls, _ := templates.Load("")
+	m := New(st, docker.New("/nonexistent.sock"), tpls, dir)
+	old := taskPoll
+	taskPoll = 20 * time.Millisecond
+	defer func() { taskPoll = old }()
+	tk := store.Task{ID: "t1", Action: "stop", At: "04:00", Enabled: true, WhenEmpty: true, MaxWaitMin: 30}
+	_ = st.SaveServer(store.Server{ID: "s1", Name: "x", Template: "valheim", Tasks: []store.Task{tk}})
+	m.mu.Lock()
+	m.live["s1"] = &live{Phase: "running", Players: 2}
+	m.mu.Unlock()
+	go func() {
+		time.Sleep(120 * time.Millisecond)
+		m.mu.Lock()
+		m.live["s1"].Players = 0
+		m.mu.Unlock()
+	}()
+	start := time.Now()
+	m.runConditional(t.Context(), "s1", tk, time.Now())
+	if time.Since(start) < 100*time.Millisecond {
+		t.Fatal("hat nicht gewartet")
+	}
+	sv, _ := st.Server("s1")
+	if !strings.Contains(sv.Tasks[0].LastResult, "Server leer") {
+		t.Fatalf("Ergebnis: %q", sv.Tasks[0].LastResult)
 	}
 }

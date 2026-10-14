@@ -725,3 +725,15 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .ws-key{display:flex;gap:8px;margin-top:8px}.ws-key input{flex:1;min-width:0}
 .ml-t .linkbtn{align-self:flex-start;margin-top:2px}
 .ws-ki ol{margin:4px 0 0 18px;padding:0}.ws-ki p{margin:4px 0}
+
+.tk-cond{display:flex;flex-wrap:wrap;gap:6px 18px;flex-basis:100%;order:9}
+.tk-cond .check{margin:0;display:flex;align-items:center;gap:6px}
+.tk-cond select{width:auto;padding:4px 8px;min-height:0}
+.tk-form>button[type=submit]{order:10}
+.tk-sugg{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 10px}
+.tk-sugg-list{display:flex;flex-wrap:wrap;gap:8px}
+.tk-sugg-list button{border:1px dashed var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.tk-sugg-list button:hover{border-color:var(--accent);color:var(--accent)}
+.tk-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tk-tag{font-size:11px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,var(--line) 55%,transparent);color:var(--muted);white-space:nowrap}
+.tk-upd-btns{gap:8px;flex-wrap:wrap}

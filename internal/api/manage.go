@@ -39,6 +39,7 @@ func (a *API) routesManage(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/servers/{id}/tasks", a.need(auth.Viewer, a.tasksGet))
 	mux.HandleFunc("PUT /api/servers/{id}/tasks", a.need(auth.Operator, a.tasksPut))
 	mux.HandleFunc("POST /api/servers/{id}/tasks/{tid}/run", a.need(auth.Operator, a.taskRun))
+	mux.HandleFunc("GET /api/servers/{id}/update/check", a.need(auth.Operator, a.updateCheck))
 	mux.HandleFunc("PUT /api/servers/{id}/watch", a.need(auth.Operator, a.watchPut))
 	mux.HandleFunc("GET /api/steam", a.need(auth.Admin, a.steamGet))
 	mux.HandleFunc("POST /api/steam/login", a.need(auth.Admin, a.steamLogin))
@@ -606,4 +607,15 @@ func (a *API) steamLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, a.Mgr.Steam())
+}
+
+func (a *API) updateCheck(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Minute)
+	defer cancel()
+	st, err := a.Mgr.CheckUpdate(ctx, r.PathValue("id"))
+	if err != nil {
+		fail(w, 404, err)
+		return
+	}
+	writeJSON(w, 200, st)
 }

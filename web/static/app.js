@@ -1895,7 +1895,7 @@
   });
 
   // Aufgaben, Wächter, Verlauf
-  const TK = { data: null, timer: null };
+  const TK = { data: null, timer: null, checked: false };
   const DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   $('#tkDays').innerHTML = [1, 2, 3, 4, 5, 6, 0].map(d => `<label><input type="checkbox" value="${d}">${DAYS[d]}</label>`).join('');
   const fmtWhen = d => {
@@ -1913,6 +1913,7 @@
     let d;
     try { d = await api('GET', `/api/servers/${id}/tasks`); } catch (e) { toast(e.message, 'bad'); return; }
     if (MG.id !== id || MG.tab !== tab || R.page !== 'server') return;
+    if (TK.forId !== id) { TK.checked = false; TK.forId = id; }
     TK.data = d;
     if (tab === 'tasks') renderTasks(); else renderEvents();
     TK.timer = setTimeout(loadTasks, 10000);
@@ -1933,9 +1934,13 @@
     $('#tkUpdWrap').hidden = !d.can_update;
     $('#tkUpdText').textContent = s && s.category && s.category.startsWith('Steam') ? 'SteamCMD lädt die neueste Version. Ein laufender Server startet dafür neu, ein gestoppter aktualisiert beim nächsten Start.' : 'Lädt die neueste Version des Spiels. Ein laufender Server startet dafür neu.';
     $('#tkAction').querySelector('[value=update]').disabled = !d.can_update;
+    $('#tkCheck').hidden = !d.can_check_update;
+    $('#tkVer').hidden = !d.can_check_update || !d.installed_build;
+    if (d.installed_build && !TK.checked) $('#tkVer').textContent = 'Installiert: Build ' + d.installed_build;
     const tasks = d.tasks || [];
+    renderSuggestions(tasks);
     $('#tkRows').innerHTML = tasks.length ? tasks.map((t, i) => {
-      const what = esc(t.label) + (t.command ? ` <span class="tk-cmdtxt">${esc(t.command)}</span>` : '') + (t.warn_min ? ` <span class="muted small">· Warnung ${t.warn_min} Min.</span>` : '');
+      const what = esc(t.label) + (t.command ? ` <span class="tk-cmdtxt">${esc(t.command)}</span>` : '') + tkTags(t);
       const res = t.last_result ? `<span class="tk-res small ${/^Fehler/.test(t.last_result) ? 'bad' : 'muted'}" title="${esc(t.last_result)}">${esc(t.last_result)}</span>` : '';
       return `<tr data-i="${i}"><td><input type="checkbox" class="tk-on" ${t.enabled ? 'checked' : ''} aria-label="Aufgabe aktiv"></td><td>${esc(schedText(t))}</td><td>${what}</td>
         <td class="mono small">${t.enabled ? esc(fmtWhen(t.next_run)) : 'aus'}</td><td><span class="mono small">${esc(fmtWhen(t.last_run))}</span>${res}</td>
@@ -1943,11 +1948,61 @@
     }).join('') : '<tr class="empty"><td colspan="6">Noch keine Aufgaben. Zum Beispiel: täglich um 4 Uhr neu starten, vorher die Spieler warnen.</td></tr>';
     tkFormFields();
   }
+  const waitText = m => m >= 60 ? (m / 60) + ' Std.' : m + ' Min.';
+  function tkTags(t) {
+    const d = TK.data || {}, tags = [];
+    if (t.action === 'restart' && d.can_check_update && d.update_on_run) tags.push(t.only_if_update ? 'nur bei neuem Update' : 'mit Update-Prüfung');
+    else if (t.only_if_update) tags.push('nur bei neuem Update');
+    if (t.backup_first) tags.push('vorher Backup');
+    if (t.when_empty) tags.push('nur wenn leer (max. ' + waitText(t.max_wait_min || 120) + ')');
+    if (t.warn_min) tags.push('Warnung ' + t.warn_min + ' Min.');
+    return tags.length ? `<div class="tk-tags">${tags.map(x => `<span class="tk-tag">${esc(x)}</span>`).join('')}</div>` : '';
+  }
+  // ready-made tasks that fit this game; hidden once a similar one exists
+  function suggestions() {
+    const d = TK.data || {}, q = d.can_query, b = d.can_backup, out = [];
+    if (d.can_update) out.push({ key: 'nightly', text: 'Nachts neu starten' + (d.can_check_update && d.update_on_run ? ' mit Update' : '') + (q ? ', nur wenn leer' : '') + (b ? ', vorher Backup' : ''),
+      task: { action: 'restart', at: '04:00', enabled: true, when_empty: !!q, max_wait_min: q ? 120 : 0, backup_first: !!b, warn_min: d.can_broadcast ? 5 : 0 },
+      has: t => t.action === 'restart' && !t.every_hours });
+    if (d.can_check_update) out.push({ key: 'upd', text: 'Updates einspielen, sobald es welche gibt' + (q ? ' (wenn niemand spielt)' : ''),
+      task: { action: 'update', every_hours: 1, enabled: true, only_if_update: true, when_empty: !!q, max_wait_min: q ? 240 : 0, backup_first: !!b, warn_min: d.can_broadcast ? 5 : 0 },
+      has: t => t.action === 'update' && t.only_if_update });
+    if (b) out.push({ key: 'bk', text: 'Alle 6 Stunden sichern', task: { action: 'backup', every_hours: 6, enabled: true }, has: t => t.action === 'backup' });
+    return out;
+  }
+  function renderSuggestions(tasks) {
+    const list = can('operator') ? suggestions().filter(x => !tasks.some(x.has)) : [];
+    $('#tkSugg').hidden = !list.length;
+    $('#tkSuggList').innerHTML = list.map(x => `<button type="button" data-sugg="${x.key}">+ ${esc(x.text)}</button>`).join('');
+  }
+  $('#tkSuggList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-sugg]'); if (!b) return;
+    const x = suggestions().find(y => y.key === b.dataset.sugg); if (!x) return;
+    b.disabled = true;
+    if (!await saveTasks(plainTasks().concat([x.task]), 'Aufgabe angelegt')) b.disabled = false;
+  });
+  $('#tkCheck').addEventListener('click', async () => {
+    const b = $('#tkCheck'), id = MG.id; b.disabled = true; b.textContent = 'Frage Steam …';
+    try {
+      const r = await api('GET', `/api/servers/${id}/update/check`);
+      if (MG.id !== id) return;
+      TK.checked = true;
+      $('#tkVer').hidden = false;
+      $('#tkVer').innerHTML = r.error ? `<span class="muted">${esc(r.error)}</span>` + (r.installed ? ` · Installiert: Build ${esc(r.installed)}` : '')
+        : r.available ? `<b class="on-ok">Neue Version verfügbar:</b> Build ${esc(r.latest)} (installiert ${esc(r.installed)})`
+        : `Aktuell: Build ${esc(r.installed)} ist die neueste Version.`;
+    } catch (err) { toast(err.message, 'bad'); }
+    b.disabled = false; b.textContent = 'Auf Updates prüfen';
+  });
   function tkFormFields() {
     const a = $('#tkAction').value, k = $('#tkKind').value, d = TK.data || {};
     $('#tkCmdWrap').hidden = a !== 'command';
     $('#tkAtWrap').hidden = k === 'every'; $('#tkEveryWrap').hidden = k !== 'every'; $('#tkDays').hidden = k !== 'days';
     const warnable = ['restart', 'update', 'stop'].includes(a);
+    $('#tkEmptyWrap').hidden = !warnable || !d.can_query;
+    $('#tkIfUpdWrap').hidden = !['restart', 'update'].includes(a) || !d.can_check_update;
+    $('#tkBackupWrap').hidden = !warnable || !d.can_backup;
+    $('#tkCond').hidden = $('#tkEmptyWrap').hidden && $('#tkIfUpdWrap').hidden && $('#tkBackupWrap').hidden;
     $('#tkWarnWrap').hidden = !warnable || !d.can_broadcast;
     $('#tkNote').textContent = warnable && !d.can_broadcast ? 'Dieses Spiel kann vom Panel aus keine Nachricht an die Spieler schicken, deshalb gibt es keine Vorwarnung.' : (a === 'backup' && S.license && !S.license.edition.auto_backup ? 'Geplante Backups gehören nicht zu deiner Edition.' : '');
   }
@@ -1956,11 +2011,15 @@
     try { TK.data = await api('PUT', `/api/servers/${MG.id}/tasks`, { tasks }); renderTasks(); if (okMsg) toast(okMsg, 'ok'); return true; }
     catch (e) { toast(e.message, 'bad'); loadTasks(); return false; }
   }
-  const plainTasks = () => (TK.data.tasks || []).map(t => ({ id: t.id, action: t.action, command: t.command, at: t.at, days: t.days, every_hours: t.every_hours, warn_min: t.warn_min, enabled: t.enabled }));
+  const plainTasks = () => (TK.data.tasks || []).map(t => ({ id: t.id, action: t.action, command: t.command, at: t.at, days: t.days, every_hours: t.every_hours, warn_min: t.warn_min, enabled: t.enabled,
+    when_empty: t.when_empty, max_wait_min: t.max_wait_min, only_if_update: t.only_if_update, backup_first: t.backup_first }));
   $('#tkForm').addEventListener('submit', async e => {
     e.preventDefault();
     const k = $('#tkKind').value, a = $('#tkAction').value;
-    const t = { action: a, command: $('#tkCmd').value, enabled: true, warn_min: $('#tkWarnWrap').hidden ? 0 : +$('#tkWarn').value };
+    const t = { action: a, command: $('#tkCmd').value, enabled: true, warn_min: $('#tkWarnWrap').hidden ? 0 : +$('#tkWarn').value,
+      when_empty: !$('#tkEmptyWrap').hidden && $('#tkEmpty').checked, only_if_update: !$('#tkIfUpdWrap').hidden && $('#tkIfUpd').checked,
+      backup_first: !$('#tkBackupWrap').hidden && $('#tkBackup').checked };
+    if (t.when_empty) t.max_wait_min = +$('#tkMaxWait').value;
     if (k === 'every') t.every_hours = +$('#tkEvery').value; else t.at = $('#tkAt').value;
     if (k === 'days') {
       t.days = $$('#tkDays input:checked').map(x => +x.value);

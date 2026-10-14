@@ -83,6 +83,11 @@ type Task struct {
 	LastRun    time.Time `json:"last_run,omitempty"`
 	LastResult string    `json:"last_result,omitempty"`
 	Created    time.Time `json:"created"`
+	// conditions (restart, update, stop)
+	WhenEmpty    bool `json:"when_empty,omitempty"`     // wait until no player is online …
+	MaxWaitMin   int  `json:"max_wait_min,omitempty"`   // … at most this long, then run anyway
+	OnlyIfUpdate bool `json:"only_if_update,omitempty"` // skip when Steam has no newer build
+	BackupFirst  bool `json:"backup_first,omitempty"`   // make a backup before the action
 }
 
 // Watch configures the crash and hang watchdog.

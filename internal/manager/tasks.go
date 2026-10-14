@@ -84,8 +84,30 @@ func ValidateTask(t *store.Task, tpl templates.Template) error {
 	default:
 		return errors.New("Vorwarnung: 0, 1, 5, 10, 15 oder 30 Minuten")
 	}
-	if t.Action != "restart" && t.Action != "update" && t.Action != "stop" {
+	disruptive := t.Action == "restart" || t.Action == "update" || t.Action == "stop"
+	if !disruptive {
 		t.WarnMin = 0
+		t.WhenEmpty, t.BackupFirst = false, false
+	}
+	if t.Action != "restart" && t.Action != "update" {
+		t.OnlyIfUpdate = false
+	}
+	if t.OnlyIfUpdate && tpl.Kind != "steam" {
+		return errors.New("Die Update-Prüfung gibt es nur für Steam-Spiele")
+	}
+	if t.WhenEmpty && (tpl.Query == nil || tpl.Query.Type == "") {
+		return errors.New("Dieses Spiel meldet keine Spielerzahl, „nur wenn niemand spielt“ geht hier nicht")
+	}
+	if !t.WhenEmpty {
+		t.MaxWaitMin = 0
+	} else {
+		switch t.MaxWaitMin {
+		case 30, 60, 120, 240, 480:
+		case 0:
+			t.MaxWaitMin = 120
+		default:
+			return errors.New("Höchstens warten: 30, 60, 120, 240 oder 480 Minuten")
+		}
 	}
 	if t.Action == "update" && tpl.Kind != "steam" && tpl.Image == "" {
 		return errors.New("Dieses Spiel lässt sich nicht automatisch aktualisieren")
@@ -169,16 +191,26 @@ func (m *Manager) checkTasks(ctx context.Context, now time.Time) {
 			if sched.IsZero() {
 				continue
 			}
+			key := sv.ID + "/" + t.ID
+			m.mu.RLock()
+			running := m.pendingTasks[key]
+			m.mu.RUnlock()
+			if running {
+				continue // still waiting (players online) or warning
+			}
 			if now.Sub(sched) > missedAfter {
 				// the panel was off: skip, but remember so it is not retried
 				m.finishTask(sv.ID, t.ID, sched, "verpasst (Panel war aus)")
 				m.Event(sv.ID, "warn", fmt.Sprintf("Aufgabe „%s“ um %s verpasst, das Panel lief nicht", TaskLabel(t.Action), sched.Format("02.01. 15:04")))
 				continue
 			}
-			if now.Before(sched.Add(-time.Duration(t.WarnMin) * time.Minute)) {
+			trigger := sched.Add(-time.Duration(t.WarnMin) * time.Minute)
+			if conditional(t) {
+				trigger = sched // conditions are checked first, the warning follows
+			}
+			if now.Before(trigger) {
 				continue
 			}
-			key := sv.ID + "/" + t.ID
 			m.mu.Lock()
 			if m.pendingTasks == nil {
 				m.pendingTasks = map[string]bool{}
@@ -201,8 +233,112 @@ func (m *Manager) checkTasks(ctx context.Context, now time.Time) {
 	}
 }
 
+// conditional tasks check "only if update" and "only when empty" at their
+// time and warn the players afterwards.
+func conditional(t store.Task) bool { return t.WhenEmpty || t.OnlyIfUpdate }
+
+// players returns the player count, -1 when unknown.
+func (m *Manager) players(id string) int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if l := m.live[id]; l != nil && l.Phase == "running" {
+		return l.Players
+	}
+	return -1
+}
+
+// taskStill reports whether the task still exists unchanged and enabled.
+func (m *Manager) taskStill(id string, t store.Task) bool {
+	cur, ok := m.st.Server(id)
+	if !ok {
+		return false
+	}
+	for _, x := range cur.Tasks {
+		if x.ID == t.ID && x.Enabled && x.Action == t.Action && x.Command == t.Command {
+			return true
+		}
+	}
+	return false
+}
+
+// taskPoll is how often a waiting task looks at the player count.
+var taskPoll = 30 * time.Second
+
+// runConditional handles a task with conditions at its scheduled time.
+func (m *Manager) runConditional(ctx context.Context, id string, t store.Task, sched time.Time) {
+	if !sleepUntil(ctx, sched) || !m.taskStill(id, t) {
+		return
+	}
+	var notes []string
+	if t.OnlyIfUpdate {
+		st, err := m.CheckUpdate(ctx, id)
+		switch {
+		case err != nil:
+			notes = append(notes, "Update-Prüfung fehlgeschlagen ("+err.Error()+"), trotzdem ausgeführt")
+		case st.Error != "":
+			notes = append(notes, "Update-Prüfung: "+st.Error+", trotzdem ausgeführt")
+		case !st.Available:
+			m.finishTask(id, t.ID, sched, "übersprungen: kein Update (Build "+st.Installed+")")
+			return
+		default:
+			notes = append(notes, "Update "+st.Installed+" → "+st.Latest)
+			m.Event(id, "info", fmt.Sprintf("Neue Version bei Steam (Build %s, installiert %s)", st.Latest, st.Installed))
+		}
+	}
+	if t.WhenEmpty && m.isUp(id) {
+		deadline := sched.Add(time.Duration(t.MaxWaitMin) * time.Minute)
+		told := false
+		for {
+			n := m.players(id)
+			if n <= 0 || !time.Now().Before(deadline) {
+				break
+			}
+			if !told {
+				m.Event(id, "info", fmt.Sprintf("Aufgabe „%s“ wartet, bis niemand mehr spielt (%d online, höchstens bis %s)", TaskLabel(t.Action), n, deadline.Format("15:04")))
+				told = true
+			}
+			if !sleepUntil(ctx, time.Now().Add(taskPoll)) || !m.taskStill(id, t) {
+				return
+			}
+		}
+		waited := time.Since(sched).Round(time.Minute)
+		if n := m.players(id); n > 0 {
+			notes = append(notes, fmt.Sprintf("nach %s Warten trotz %d Spieler", humanDur(waited), n))
+		} else if told {
+			notes = append(notes, fmt.Sprintf("nach %s Warten, Server leer", humanDur(waited)))
+		}
+	}
+	if t.WarnMin > 0 && m.isUp(id) && m.players(id) != 0 {
+		start := time.Now()
+		for _, left := range []int{30, 15, 10, 5, 1} {
+			if left > t.WarnMin {
+				continue
+			}
+			if !sleepUntil(ctx, start.Add(time.Duration(t.WarnMin-left)*time.Minute)) {
+				return
+			}
+			m.Broadcast(id, warnText(t.Action, left))
+		}
+		if !sleepUntil(ctx, start.Add(time.Duration(t.WarnMin)*time.Minute)) {
+			return
+		}
+	}
+	if !m.taskStill(id, t) {
+		return
+	}
+	res := m.RunTaskNow(ctx, id, t)
+	if len(notes) > 0 {
+		res = strings.Join(notes, " · ") + " · " + res
+	}
+	m.finishTask(id, t.ID, sched, res)
+}
+
 // warnAndRun tells the players what is coming, then runs the task at sched.
 func (m *Manager) warnAndRun(ctx context.Context, id string, t store.Task, sched time.Time) {
+	if conditional(t) {
+		m.runConditional(ctx, id, t, sched)
+		return
+	}
 	if t.WarnMin > 0 && m.isUp(id) {
 		for _, left := range []int{30, 15, 10, 5, 1} {
 			if left > t.WarnMin {
@@ -277,6 +413,17 @@ func (m *Manager) RunTaskNow(ctx context.Context, id string, t store.Task) strin
 		out string
 		err error
 	)
+	pre := ""
+	if t.BackupFirst && (t.Action == "restart" || t.Action == "update" || t.Action == "stop") {
+		if !m.AutoBackups() {
+			pre = "ohne Backup (nicht in deiner Edition) · "
+		} else if b, berr := m.CreateBackup(actx, id, KindAuto); berr != nil {
+			m.Event(id, "error", "Aufgabe "+label+" abgebrochen: Backup vorher fehlgeschlagen: "+berr.Error())
+			return "Fehler: Backup vorher fehlgeschlagen, " + label + " abgebrochen: " + berr.Error()
+		} else {
+			pre = "Backup " + b.Name + " · "
+		}
+	}
 	switch t.Action {
 	case "restart":
 		m.expect(id)
@@ -315,8 +462,9 @@ func (m *Manager) RunTaskNow(ctx context.Context, id string, t store.Task) strin
 	if out == "" {
 		out = "ok"
 	}
-	if len(out) > 200 {
-		out = out[:200] + " …"
+	out = pre + out
+	if len(out) > 300 {
+		out = out[:300] + " …"
 	}
 	return out
 }
@@ -385,6 +533,10 @@ type TaskView struct {
 	CanBroadcast bool        `json:"can_broadcast"`
 	CanQuery     bool        `json:"can_query"`
 	CanUpdate    bool        `json:"can_update"`
+	CanBackup    bool        `json:"can_backup"`       // edition allows automatic backups
+	CanCheck     bool        `json:"can_check_update"` // Steam: compare builds
+	Installed    string      `json:"installed_build,omitempty"`
+	UpdateOnRun  bool        `json:"update_on_run"`
 	Events       []Event     `json:"events"`
 }
 
@@ -400,7 +552,11 @@ func (m *Manager) Tasks(id string) (TaskView, error) {
 		return TaskView{}, err
 	}
 	v := TaskView{Watch: sv.Watch, CanBroadcast: tpl.Broadcast != "", CanQuery: tpl.Query != nil && tpl.Query.Type != "",
-		CanUpdate: tpl.Kind == "steam" || tpl.Image != "", Events: m.Events(id), Tasks: []TaskInfo{}}
+		CanUpdate: tpl.Kind == "steam" || tpl.Image != "", Events: m.Events(id), Tasks: []TaskInfo{},
+		CanBackup: m.AutoBackups(), CanCheck: tpl.Kind == "steam", UpdateOnRun: sv.UpdateOnRun}
+	if tpl.Kind == "steam" {
+		v.Installed = m.installedBuild(id, tpl)
+	}
 	for _, t := range sv.Tasks {
 		v.Tasks = append(v.Tasks, TaskInfo{Task: t, Label: TaskLabel(t.Action), NextRun: NextRun(t)})
 	}

@@ -270,10 +270,12 @@
       <div class="tk-upd" id="tkUpdWrap">
         <h3>Update</h3>
         <p class="small muted" id="tkUpdText">Lädt die neueste Version des Spiels. Ein laufender Server startet dafür neu.</p>
-        <button type="button" class="btn-line" id="tkUpdate">Jetzt aktualisieren</button>
+        <p class="small" id="tkVer" hidden></p>
+        <div class="row tk-upd-btns"><button type="button" class="btn-line" id="tkCheck" hidden>Auf Updates prüfen</button><button type="button" class="btn-line" id="tkUpdate">Jetzt aktualisieren</button></div>
       </div>
     </div>
     <h3>Geplante Aufgaben</h3>
+    <div class="tk-sugg" id="tkSugg" hidden><span class="small muted">Vorschläge:</span><div id="tkSuggList" class="tk-sugg-list"></div></div>
     <div class="tbl-wrap">
       <table class="tbl">
         <thead><tr><th>Aktiv</th><th>Wann</th><th>Aktion</th><th>Nächster Lauf</th><th>Zuletzt</th><th><span class="sr">Aktionen</span></th></tr></thead>
@@ -292,6 +294,12 @@
       <fieldset class="tk-days" id="tkDays" hidden><legend class="sr">Wochentage</legend></fieldset>
       <label class="field" id="tkWarnWrap"><span>Spieler vorwarnen</span>
         <select id="tkWarn"><option value="0">Nein</option><option value="1">1 Min. vorher</option><option value="5" selected>5 Min. vorher</option><option value="10">10 Min. vorher</option><option value="15">15 Min. vorher</option><option value="30">30 Min. vorher</option></select></label>
+      <div class="tk-cond" id="tkCond">
+        <label class="check" id="tkEmptyWrap"><input type="checkbox" id="tkEmpty"> Nur wenn niemand spielt, sonst warten, höchstens
+          <select id="tkMaxWait" aria-label="Höchstens warten"><option value="30">30 Min.</option><option value="60">1 Std.</option><option value="120" selected>2 Std.</option><option value="240">4 Std.</option><option value="480">8 Std.</option></select></label>
+        <label class="check" id="tkIfUpdWrap"><input type="checkbox" id="tkIfUpd"> Nur wenn es ein Update gibt</label>
+        <label class="check" id="tkBackupWrap"><input type="checkbox" id="tkBackup"> Vorher Backup</label>
+      </div>
       <button type="submit" class="btn-accent">Hinzufügen</button>
     </form>
     <p class="small muted" id="tkNote"></p>
