@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bytewise Panel</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='2' width='12' height='12' rx='3' fill='%23FF5A1F'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icon-32.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="app.css">
@@ -15,7 +16,8 @@
 <section id="auth" class="auth" hidden>
   <canvas id="authBg" aria-hidden="true"></canvas>
   <form id="authForm" class="auth-card" autocomplete="on">
-    <div class="brand big"><i></i>Bytewise Panel</div>
+    <img class="auth-logo" src="img/logo-full.png" alt="Bytewise Panel" width="960" height="346">
+    <div class="brand big"><img class="brand-mark" src="img/logo-mark.png" alt="" width="28" height="28"><span class="brand-name">Bytewise <span>Panel</span></span></div>
     <h1 id="authTitle">Anmelden</h1>
     <p id="authLead" class="muted">Melde dich mit deinem Konto an.</p>
     <div id="authCreds">
@@ -34,7 +36,7 @@
 <div id="app" class="app" hidden>
 <aside class="side" id="side" aria-label="Navigation">
   <div class="side-top">
-    <a class="brand" href="#/"><i></i>Bytewise Panel</a>
+    <a class="brand" href="#/" aria-label="Bytewise Panel – Übersicht"><img class="brand-mark" src="img/logo-mark.png" alt="" width="28" height="28"><span class="brand-name">Bytewise <span>Panel</span></span></a>
     <button class="icon-btn side-close" id="sideClose" type="button" aria-label="Menü schließen">✕</button>
   </div>
   <button class="side-search" id="openPal" type="button"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg><span>Suchen</span><kbd>Strg K</kbd></button>
@@ -66,7 +68,7 @@
 <div class="main">
   <header class="mbar">
     <button class="icon-btn" id="sideOpen" type="button" aria-label="Menü öffnen"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-    <a class="brand" href="#/"><i></i>Bytewise Panel</a>
+    <a class="brand" href="#/" aria-label="Bytewise Panel – Übersicht"><img class="brand-mark" src="img/logo-mark.png" alt="" width="28" height="28"><span class="brand-name">Bytewise <span>Panel</span></span></a>
     <button class="icon-btn" id="openPal2" type="button" aria-label="Suchen"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg></button>
   </header>
   <div class="banner" id="dockerBanner" hidden></div>
