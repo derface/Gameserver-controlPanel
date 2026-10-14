@@ -307,7 +307,7 @@ Eine JSON-Datei nach `/var/lib/gamepanel/templates/` legen und das Panel neu sta
 ```
 - `kind: steam` – nutzt die gemeinsame Steam-Laufzeit, installiert per SteamCMD nach `/data/server`.
 - `kind: image` – beliebiges Docker-Image (`image`, `env`), z. B. die Minecraft-Vorlagen.
-- Platzhalter: `{{port}}` (erster Port), `{{port_2}}` …, sowie jede Variable. Variablentypen: `text`, `number`, `secret`, `select` (+`options`), `bool` (+`flag`), `slug`, `command`.
+- Platzhalter: `{{port}}` (erster Port), `{{port_2}}` …, sowie jede Variable. Variablentypen: `text`, `number`, `secret`, `select` (+`options`), `bool` (+`flag`), `slug`, `command`. Auswahlwerte und `flag` dürfen selbst Platzhalter enthalten (z. B. `--new "{{world_name}}"`), sie werden einmal mit eingesetzt; von Nutzern eingetragene Werte nie. `if_set` (z. B. `-password %s`) setzt das Argument nur, wenn der Wert nicht leer ist. Jede Startzeile muss mit Standardwerten und mit jeder Auswahl gültiges Bash ergeben (Test `TestStartLinesAreValidBash`).
 - `console`: `stdin` (Befehle gehen an die Server-Eingabe) oder `exec` mit `exec_prefix` (z. B. `rcon-cli`).
 - `ready`: Regulärer Ausdruck im Log, ab dem der Server als „läuft“ gilt.
 

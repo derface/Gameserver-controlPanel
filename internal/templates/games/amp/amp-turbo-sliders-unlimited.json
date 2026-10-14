@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 1815810,
-  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1478340\" ./TSUs.x86_64 {{custom_server_args}} -port {{port}} -queryPort {{port_2}} -ip 0.0.0.0 {{visibility}} {{relay}}-name \"{{name}}\" -info \"{{info}}\"",
+  "start": "LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1478340\" ./TSUs.x86_64 {{custom_server_args}} -port {{port}} -queryPort {{port_2}} -ip 0.0.0.0 {{visibility}} {{relay}}-name \"{{name}}\" {{info}}",
   "ports": [
     {
       "name": "Spiel",
@@ -28,7 +28,8 @@
       "key": "info",
       "label": "Server-Info",
       "help": "Info-Text des Servers. Zusammen mit dem Namen höchstens 63 Zeichen.",
-      "default": ""
+      "default": "",
+      "if_set": "-info \"%s\""
     },
     {
       "key": "custom_server_args",

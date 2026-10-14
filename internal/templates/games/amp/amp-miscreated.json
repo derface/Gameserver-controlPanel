@@ -6,7 +6,7 @@
   "steam_app_id": 302200,
   "platform": "windows",
   "runtime": "wine",
-  "start": "SteamAppId=\"299740\" wine \"./Bin64_dedicated/MiscreatedServer.exe\" -sv_port {{port}} -sv_bind 0.0.0.0 -mis_gameserverid {{mis_gameserverid}} {{http_startserver}}{{mis_whitelist}}+sv_servername \"{{sv_servername}}\" +map \"{{map}}\"",
+  "start": "SteamAppId=\"299740\" wine \"./Bin64_dedicated/MiscreatedServer.exe\" -sv_port {{port}} -sv_bind 0.0.0.0 -mis_gameserverid {{mis_gameserverid}} {{http_startserver}}{{mis_whitelist}}{{sv_servername}} +map \"{{map}}\"",
   "ports": [
     {
       "name": "Spiel",
@@ -19,7 +19,14 @@
       "key": "sv_servername",
       "label": "Servername",
       "help": "Name in der Serverliste.",
-      "default": "Mein Server"
+      "default": "Mein Server",
+      "if_set": "+sv_servername \"%s\""
+    },
+    {
+      "key": "custommap",
+      "label": "Name der eigenen Karte",
+      "help": "Name der eigenen Karte, wenn „Eigene“ gewählt ist. Der Kartenordner muss in GameSDK/Levels liegen.",
+      "default": ""
     },
     {
       "key": "map",
@@ -28,12 +35,14 @@
       "type": "select",
       "options": [
         "islands",
-        "canyonlands"
+        "canyonlands",
+        "{{custommap}}"
       ],
       "default": "islands",
       "labels": [
         "Inseln (Standard)",
-        "Canyonlands"
+        "Canyonlands",
+        "--Custom--"
       ]
     },
     {

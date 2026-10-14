@@ -382,6 +382,8 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 		dlDeadline    = t0.Add(150 * time.Minute)
 		startDeadline time.Time
 		readyAt       time.Time
+		noReady       bool
+		memPeak       float64
 		firstStart    string
 	)
 	startWait := testStartWait
@@ -410,6 +412,9 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 		var started string
 		if l := m.live[sv.ID]; l != nil {
 			started = l.State.StartedAt
+			if l.Stats.MemLimit > 0 {
+				memPeak = max(memPeak, float64(l.Stats.MemUsed)/float64(l.Stats.MemLimit))
+			}
 		}
 		m.mu.RUnlock()
 		now := time.Now()
@@ -440,7 +445,11 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 			if firstStart == "" {
 				firstStart = started
 			} else if started != firstStart {
-				return fail("Server ist abgestürzt und wurde von Docker neu gestartet")
+				msg := "Server ist abgestürzt und wurde von Docker neu gestartet"
+				if memPeak > 0.9 {
+					msg += fmt.Sprintf(" – der Arbeitsspeicher war zu %.0f %% voll, vermutlich zu wenig RAM (%d MB zugewiesen)", memPeak*100, cur.MemoryMB)
+				}
+				return fail(msg)
 			}
 		}
 		switch in.Status {
@@ -459,13 +468,16 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 				startDeadline = now.Add(startWait)
 			}
 			m.testStep("Startet")
-			if now.After(startDeadline) {
-				if tpl.Ready != "" {
-					return fail(fmt.Sprintf("Keine Bereit-Meldung nach %s (gesucht: %s)", humanDur(startWait), tpl.Ready))
-				}
+			if !now.After(startDeadline) {
+				continue
+			}
+			if tpl.Ready == "" || !m.gameStarted(sv.ID) {
 				return fail("Server kommt nicht hoch")
 			}
-			continue
+			// The process runs without crashing, only the expected line
+			// did not come (patterns from AMP sometimes wait for AMP's own
+			// RCON connection). Check the query before calling it broken.
+			noReady = true
 		case "running":
 		default:
 			continue
@@ -475,7 +487,7 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 			return fail(msg)
 		}
 		res.Download, res.Start = true, true
-		res.Ready = tpl.Ready != ""
+		res.Ready = tpl.Ready != "" && !noReady
 		if readyAt.IsZero() {
 			readyAt = now
 		}
@@ -499,6 +511,10 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 			continue
 		}
 		switch {
+		case noReady && res.Query:
+			res.Result, res.Note = "ok", fmt.Sprintf("Die Bereit-Meldung kam nicht (gesucht: %s), der Server antwortet aber auf die Spielerabfrage.", tpl.Ready)
+		case noReady:
+			res.Result, res.Note = "unsicher", fmt.Sprintf("Läuft seit %s ohne Absturz, die Bereit-Meldung kam aber nicht (gesucht: %s).", humanDur(startWait), tpl.Ready)
 		case res.HasQuery && !res.Query:
 			res.Result, res.Note = "unsicher", "Läuft, antwortet aber nicht auf die Spielerabfrage. Abfrage-Port oder Abfrageart prüfen."
 		case !res.HasReady && !res.HasQuery:
@@ -708,4 +724,15 @@ func lastRun(lines []string, n int) []string {
 		lines = lines[len(lines)-n:]
 	}
 	return lines
+}
+
+// gameStarted says whether the current run got past SteamCMD and Wine to
+// the game itself.
+func (m *Manager) gameStarted(id string) bool {
+	for _, l := range lastRun(m.testLog(id, 3000), 3000) {
+		if strings.Contains(l, "[panel] Start:") {
+			return true
+		}
+	}
+	return false
 }

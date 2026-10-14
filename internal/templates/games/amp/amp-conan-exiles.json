@@ -7,7 +7,7 @@
   "steam_beta": "conan-exiles-legacy",
   "platform": "windows",
   "runtime": "wine",
-  "start": "mkdir -p \"ConanSandbox/Saved/Config/WindowsServer\" ; cd \"ConanSandbox/Binaries/Win64\" && SteamAppId=\"440900\" wine \"./ConanSandboxServer-Win64-Shipping.exe\" {{map}} -stdout -FullStdOutLogOutput -Port={{port}} -QueryPort={{port_3}} -RconPort={{port_4}} -RconEnabled=1 -RconPassword=\"{{rcon_password}}\" -MaxPlayers={{max_players}} -ServerName=\"{{server_name}}\" -ServerPassword=\"{{server_password}}\"",
+  "start": "mkdir -p \"ConanSandbox/Saved/Config/WindowsServer\" ; cd \"ConanSandbox/Binaries/Win64\" && SteamAppId=\"440900\" wine \"./ConanSandboxServer-Win64-Shipping.exe\" {{map}} -stdout -FullStdOutLogOutput -Port={{port}} -QueryPort={{port_3}} -RconPort={{port_4}} -RconEnabled=1 -RconPassword=\"{{rcon_password}}\" -MaxPlayers={{max_players}} -ServerName=\"{{server_name}}\" {{server_password}}",
   "ports": [
     {
       "name": "Port für Spiel und Mods",
@@ -48,6 +48,13 @@
       "label": "Serverpasswort",
       "help": "Passwort zum Beitreten. Standard: kein Passwort.",
       "type": "secret",
+      "default": "",
+      "if_set": "-ServerPassword=\"%s\""
+    },
+    {
+      "key": "custom_map",
+      "label": "Eigene Karte",
+      "help": "Eigene Karte eintragen. Dazu bei „Karte“ „Eigene“ wählen.",
       "default": ""
     },
     {
@@ -56,11 +63,13 @@
       "help": "Karte, die beim Start geladen wird.",
       "type": "select",
       "options": [
+        "{{custom_map}}",
         "/Game/Maps/ConanSandbox/ConanSandbox",
         "/Game/DLC_EXT/DLC_Siptah/Maps/DLC_Isle_of_Siptah"
       ],
       "default": "/Game/Maps/ConanSandbox/ConanSandbox",
       "labels": [
+        "Eigene",
         "Exiled Lands (Standard)",
         "Isle of Siptah"
       ]

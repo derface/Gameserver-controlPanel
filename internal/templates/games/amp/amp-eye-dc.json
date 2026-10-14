@@ -49,6 +49,12 @@
       ]
     },
     {
+      "key": "custom_map",
+      "label": "Eigene Startkarte",
+      "help": "Eigene Startkarte, wenn oben „Eigene“ gewählt ist.",
+      "default": ""
+    },
+    {
       "key": "map",
       "label": "Startkarte",
       "help": "Mit welcher Karte der Server startet. Bei „Eigene“ auch die eigene Startkarte eintragen.",
@@ -100,7 +106,8 @@
         "tm_xeno",
         "warp2",
         "warp",
-        "zxdivine_cybermancy"
+        "zxdivine_cybermancy",
+        "{{custom_map}}"
       ],
       "default": "br_street",
       "labels": [
@@ -150,7 +157,8 @@
         "tm_xeno",
         "warp2",
         "warp",
-        "zxdivine_cybermancy"
+        "zxdivine_cybermancy",
+        "--Custom--"
       ]
     },
     {

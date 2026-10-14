@@ -42,6 +42,12 @@
       "default": "32"
     },
     {
+      "key": "custom_map",
+      "label": "Name der eigenen Karte",
+      "help": "Eigene Karte. Unter „Karte“ muss „Eigene“ gewählt sein.",
+      "default": ""
+    },
+    {
       "key": "server_map",
       "label": "Startkarte",
       "help": "Karte beim Start. Für andere Karten „Eigene“ wählen und den eigenen Kartennamen eintragen.",
@@ -83,7 +89,8 @@
         "VNSK-Riverbed",
         "VNSK-Temple",
         "VNSP-HelicopterRange",
-        "VNSP-ShootingRange"
+        "VNSP-ShootingRange",
+        "{{custom_map}}"
       ],
       "default": "VNSU-SongBe",
       "labels": [
@@ -123,7 +130,8 @@
         "Skirmish - Riverbed",
         "Skirmish - Temple",
         "Training - Helicopter Range",
-        "Training - Shooting Range"
+        "Training - Shooting Range",
+        "--Custom--"
       ]
     },
     {

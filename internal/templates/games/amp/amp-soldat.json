@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 638500,
-  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"638490\" ./soldatserver -p {{port}} -b \"0.0.0.0\" -l {{max_players}} -k \"{{game_password}}\" -c soldat.ini -m {{mapslist_file}}",
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"638490\" ./soldatserver -p {{port}} -b \"0.0.0.0\" -l {{max_players}} -k \"{{game_password}}\" -c soldat.ini {{mapslist_file}}",
   "ports": [
     {
       "name": "Spiel",
@@ -28,7 +28,8 @@
       "key": "mapslist_file",
       "label": "Kartenlisten-Datei",
       "help": "Kartenlisten-Datei, die geladen wird.",
-      "default": "mapslist.txt"
+      "default": "mapslist.txt",
+      "if_set": "-m %s"
     },
     {
       "key": "game_password",

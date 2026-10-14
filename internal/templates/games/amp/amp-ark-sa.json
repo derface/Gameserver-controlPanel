@@ -6,7 +6,7 @@
   "steam_app_id": 2430930,
   "platform": "windows",
   "runtime": "wine",
-  "start": "mkdir -p \"ShooterGame/Saved/Config/WindowsServer\" ; cd \"ShooterGame/Binaries/Win64\" && SteamAppId=\"2399830\" wine \"./{{server_executable}}.exe\" {{map}}?listen?Port={{port}}?RCONEnabled=True?RCONServerGameLogBuffer=600?RCONPort={{port_3}}?{{override_official_difficulty}}{{custom_options}}?ServerAdminPassword={{rcon_password}} -WinLiveMaxPlayers={{max_players}} {{passivemods}}{{mods}}{{pconlymods}}{{colors}} {{exclusivejoin}}{{battl_eye}}{{usestore}}-ServerPlatform={{server_platform}} {{enable_idle_player_kick}}{{no_hang_detection}}{{no_transfer_from_filtering}}{{no_game_analytics}}{{allow_speed_leveling}}{{force_allow_cave_flyers}}{{nodinos}}{{force_respawn_dinos}}{{disable_railgun_pvp}}{{use_structure_stasis_grid}}-culture={{culture}} {{enable_cluster}}{{server_ip}}{{custom_flags}} -servergamelog",
+  "start": "mkdir -p \"ShooterGame/Saved/Config/WindowsServer\" ; cd \"ShooterGame/Binaries/Win64\" && SteamAppId=\"2399830\" wine \"./{{server_executable}}.exe\" {{map}}?listen?Port={{port}}?RCONEnabled=True?RCONServerGameLogBuffer=600?RCONPort={{port_3}}?{{override_official_difficulty}}{{custom_options}}?ServerAdminPassword={{rcon_password}} -WinLiveMaxPlayers={{max_players}} {{passivemods}}{{mods}}{{pconlymods}}{{colors}} {{exclusivejoin}}{{battl_eye}}{{usestore}}-ServerPlatform={{server_platform}} {{enable_idle_player_kick}}{{no_hang_detection}}{{no_transfer_from_filtering}}{{no_game_analytics}}{{allow_speed_leveling}}{{force_allow_cave_flyers}}{{nodinos}}{{force_respawn_dinos}}{{disable_railgun_pvp}}{{use_structure_stasis_grid}}-culture={{culture}} {{enable_cluster}}{{server_ip}} {{custom_flags}} -servergamelog",
   "ports": [
     {
       "name": "Spiel",
@@ -48,6 +48,12 @@
       ]
     },
     {
+      "key": "custom_map",
+      "label": "Name der eigenen Karte",
+      "help": "Eigene Karte für den Server. Unter „Karte“ muss „Eigene“ gewählt sein und die CurseForge-Projekt-ID der Karte in der Mod-Liste stehen.",
+      "default": ""
+    },
+    {
       "key": "map",
       "label": "Karte",
       "help": "Karte des Servers. Bei „Eigene“ auch den Namen der eigenen Karte eintragen.",
@@ -62,7 +68,8 @@
         "Ragnarok_WP",
         "Valguero_WP",
         "LostColony_WP",
-        "Genesis_WP"
+        "Genesis_WP",
+        "{{custom_map}}"
       ],
       "default": "TheIsland_WP",
       "labels": [
@@ -75,7 +82,8 @@
         "Ragnarok",
         "Valguero",
         "Lost Colony",
-        "Genesis"
+        "Genesis",
+        "--Custom--"
       ]
     },
     {
@@ -370,16 +378,24 @@
       "default": "false"
     },
     {
+      "key": "manual_server_ip",
+      "label": "Öffentliche IP des Servers",
+      "help": "Öffentliche IP, die der Server anzeigt, wenn bei der Auswahl „Manuell“ gewählt ist. Nützlich bei mehreren öffentlichen IPs oder hinter einem Proxy.",
+      "default": ""
+    },
+    {
       "key": "server_ip",
       "label": "Auswahl der öffentlichen IP",
       "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
       "type": "select",
       "options": [
-        ""
+        "",
+        "-ServerIP={{manual_server_ip}}"
       ],
       "default": "",
       "labels": [
-        "Automatisch (Standard)"
+        "Automatisch (Standard)",
+        "Von Hand"
       ]
     },
     {

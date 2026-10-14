@@ -5,7 +5,7 @@
   "kind": "steam",
   "steam_app_id": 655780,
   "steam_login": true,
-  "start": "mkdir -p \"ServerConfig\" ; [ -f \"ServerConfig/ban.txt\" ] || { mkdir -p \"$(dirname \"ServerConfig/ban.txt\")\"; printf %s \"\" > \"ServerConfig/ban.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"655780\" /usr/bin/mono ./P5SServer.exe -port {{port}} -http -localPath -name \"{{name}}\" -fn \"{{fn}}\" {{public}}",
+  "start": "mkdir -p \"ServerConfig\" ; [ -f \"ServerConfig/ban.txt\" ] || { mkdir -p \"$(dirname \"ServerConfig/ban.txt\")\"; printf %s \"\" > \"ServerConfig/ban.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"655780\" /usr/bin/mono ./P5SServer.exe -port {{port}} -http -localPath {{name}} {{fn}} {{public}}",
   "ports": [
     {
       "name": "Spiel",
@@ -18,13 +18,15 @@
       "key": "name",
       "label": "Servername",
       "help": "Name in der Serverliste im Spiel.",
-      "default": "Mein Server"
+      "default": "Mein Server",
+      "if_set": "-name \"%s\""
     },
     {
       "key": "fn",
       "label": "Name des Weltstands",
       "help": "Name des Weltstands, der geladen bzw. angelegt wird. Gibt es ihn noch nicht, muss ein Admin ihn nach dem Verbinden im Spiel anlegen.",
-      "default": "World.dat"
+      "default": "World.dat",
+      "if_set": "-fn \"%s\""
     },
     {
       "key": "public",

@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 2832030,
-  "start": "mkdir -p \"unity3d/Vellocet/ANEURISM IV\" ; [ -f \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\" ] || { mkdir -p \"$(dirname \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\")\"; printf %s \"\" > \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\"; } ; [ -f \"steam_appid.txt\" ] || { mkdir -p \"$(dirname \"steam_appid.txt\")\"; printf %s \"2773280\" > \"steam_appid.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"2773280\" XDG_CONFIG_HOME=\"/data/server/\" ./aniv_server.x86_64 {{custom_args}} -gameport {{port}} -steamport {{port_2}} -queryport {{port_3}} -map {{map}} -password {{password}} -tickrate {{tickrate}} -timestamps",
+  "start": "mkdir -p \"unity3d/Vellocet/ANEURISM IV\" ; [ -f \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\" ] || { mkdir -p \"$(dirname \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\")\"; printf %s \"\" > \"unity3d/Vellocet/ANEURISM IV/whitelist.cfg\"; } ; [ -f \"steam_appid.txt\" ] || { mkdir -p \"$(dirname \"steam_appid.txt\")\"; printf %s \"2773280\" > \"steam_appid.txt\"; } ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"2773280\" XDG_CONFIG_HOME=\"/data/server/\" ./aniv_server.x86_64 {{custom_args}} -gameport {{port}} -steamport {{port_2}} -queryport {{port_3}} -map {{map}} {{password}} -tickrate {{tickrate}} -timestamps",
   "ports": [
     {
       "name": "Spiel",
@@ -43,7 +43,8 @@
       "label": "Serverpasswort",
       "help": "Passwort, das Spieler zum Beitreten brauchen. Standard: kein Passwort.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "-password %s"
     },
     {
       "key": "tickrate",

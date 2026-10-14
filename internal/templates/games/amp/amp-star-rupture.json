@@ -24,16 +24,24 @@
       "default": "false"
     },
     {
+      "key": "manual_public_ip",
+      "label": "Öffentliche IP des Servers",
+      "help": "Öffentliche IP, die der Server anzeigt, wenn „Manuell“ gewählt ist. Nützlich bei mehreren öffentlichen IPs oder hinter Proxy bzw. VPN.",
+      "default": ""
+    },
+    {
       "key": "eos_override_host_ip",
       "label": "Auswahl der öffentlichen IP",
       "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird. Experimentell.",
       "type": "select",
       "options": [
-        ""
+        "",
+        "{{manual_public_ip}}"
       ],
       "default": "",
       "labels": [
-        "Server wählt automatisch (Standard)"
+        "Server wählt automatisch (Standard)",
+        "Manual selection"
       ]
     },
     {

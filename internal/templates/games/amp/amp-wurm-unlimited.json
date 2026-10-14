@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 402370,
-  "start": "LD_LIBRARY_PATH=\"./linux64:$LD_LIBRARY_PATH\" SteamAppId=\"366220\" ./WurmServerLauncher{{mod_launcher}} ip=\"0.0.0.0\" externalport=\"{{port}}\" queryport=\"{{port_2}}\" servername=\"{{servername}}\" serverpassword=\"{{serverpassword}}\" adminpwd=\"{{adminpwd}}\" start=\"{{start}}\" epicsettings=\"{{epicsettings}}\" pvp=\"{{pvp}}\" loginserver=\"{{loginserver}}\" homeserver=\"{{homeserver}}\" homekingdom=\"{{homekingdom}}\" rmiport=\"{{rmiport}}\" rmiregport=\"{{rmiregport}}\"",
+  "start": "LD_LIBRARY_PATH=\"./linux64:$LD_LIBRARY_PATH\" SteamAppId=\"366220\" ./WurmServerLauncher{{mod_launcher}} ip=\"0.0.0.0\" externalport=\"{{port}}\" queryport=\"{{port_2}}\" servername=\"{{servername}}\" {{serverpassword}} adminpwd=\"{{adminpwd}}\" start=\"{{start}}\" epicsettings=\"{{epicsettings}}\" pvp=\"{{pvp}}\" loginserver=\"{{loginserver}}\" homeserver=\"{{homeserver}}\" {{homekingdom}} {{rmiport}} {{rmiregport}}",
   "ports": [
     {
       "name": "Client",
@@ -29,7 +29,8 @@
       "label": "Serverpasswort",
       "help": "Passwort zum Verbinden mit dem Server.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "serverpassword=\"%s\""
     },
     {
       "key": "adminpwd",
@@ -39,18 +40,26 @@
       "default": ""
     },
     {
+      "key": "custom_game_mode",
+      "label": "Eigener Spielmodus",
+      "help": "Eigener Unterordner für den Spielmodus, wenn „Eigener“ gewählt ist.",
+      "default": ""
+    },
+    {
       "key": "start",
       "label": "Spielmodus",
       "help": "Startet den Server mit Konfiguration und Weltdaten aus diesem Unterordner. Bei „Eigene“ auch den eigenen Spielmodus eintragen.",
       "type": "select",
       "options": [
         "dist/Adventure",
-        "dist/Creative"
+        "dist/Creative",
+        "{{custom_game_mode}}"
       ],
       "default": "dist/Adventure",
       "labels": [
         "Abenteuer",
-        "Kreativ"
+        "Kreativ",
+        "--Custom--"
       ]
     },
     {
@@ -118,21 +127,24 @@
       "label": "ID des Heimat-Königreichs",
       "help": "Königreich, zu dem der Server gehört.",
       "type": "number",
-      "default": ""
+      "default": "",
+      "if_set": "homekingdom=\"%s\""
     },
     {
       "key": "rmiport",
       "label": "RMI-Port",
       "help": "Für die Verbindung zwischen Servern.",
       "type": "number",
-      "default": ""
+      "default": "",
+      "if_set": "rmiport=\"%s\""
     },
     {
       "key": "rmiregport",
       "label": "RMI-REG-Port",
       "help": "Für die Verbindung zwischen Servern.",
       "type": "number",
-      "default": ""
+      "default": "",
+      "if_set": "rmiregport=\"%s\""
     },
     {
       "key": "mod_launcher",

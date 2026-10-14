@@ -6,7 +6,7 @@
   "steam_app_id": 882430,
   "platform": "windows",
   "runtime": "wine",
-  "start": "SteamAppId=\"719890\" wine \"./WindowsServer/BeastsOfBermuda/Binaries/Win64/BeastsOfBermudaServer.exe\" BeastsOfBermuda -Port={{port}} -QueryPort={{port_2}} -MultiHome=0.0.0.0 -SessionName {{session_name}} -MapName {{map_name}} -GameMode {{game_mode}} -ServerPassword {{server_password}} -AdminPassword {{admin_password}} -stdout -FullStdOutLogOutput",
+  "start": "SteamAppId=\"719890\" wine \"./WindowsServer/BeastsOfBermuda/Binaries/Win64/BeastsOfBermudaServer.exe\" BeastsOfBermuda -Port={{port}} -QueryPort={{port_2}} -MultiHome=0.0.0.0 -SessionName {{session_name}} -MapName {{map_name}} -GameMode {{game_mode}} {{server_password}} {{admin_password}} -stdout -FullStdOutLogOutput",
   "ports": [
     {
       "name": "Spiel",
@@ -27,10 +27,68 @@
       "default": "AMP_Powered_Beasts_of_Bermuda_Server"
     },
     {
+      "key": "map_name_override",
+      "label": "Kartenname",
+      "help": "Karte, die beim Start geladen wird.",
+      "type": "select",
+      "options": [
+        "Ancestral_Plains",
+        "Ancestral_Plains_Canvas",
+        "Bloodbath",
+        "Bloodbath_Canvas",
+        "DM_Caldera",
+        "DM_Caldera_Canvas",
+        "Forest_Island",
+        "Forest_Island_Canvas",
+        "Islatitania",
+        "Rival_Shores",
+        "Rival_Shores_Canvas",
+        "Scorched_Valley",
+        "Temporal_Drift",
+        "Test_Performance",
+        "BB_Test_Map",
+        "Volcano_Bay"
+      ],
+      "default": "Forest_Island",
+      "labels": [
+        "Ancestral Plains",
+        "Ancestral Plains Canvas",
+        "Bloodbath (Unoptimized)",
+        "Bloodbath Canvas (Unoptimized)",
+        "Caldera",
+        "Caldera Canvas",
+        "Forest Island (default)",
+        "Forest Island Canvas",
+        "Islatitania",
+        "Rival Shores",
+        "Rival Shores Canvas",
+        "Scorched Valley",
+        "Temporal Drift",
+        "Test Performance",
+        "Test Map (Debug)",
+        "Volcano Bay"
+      ]
+    },
+    {
+      "key": "custom_map_name",
+      "label": "Eigener Anzeigename der Karte",
+      "help": "Eigener Kartenname in der Serverliste, wenn bei „Anzeige des Kartennamens“ der eigene Name gewählt ist.",
+      "default": ""
+    },
+    {
       "key": "map_name",
       "label": "Anzeige des Kartennamens",
       "help": "Ob die echte Karte oder ein eigener Anzeigename in der Serverliste steht. Die geladene Karte ändert sich dadurch nicht.",
-      "default": ""
+      "type": "select",
+      "options": [
+        "{{map_name_override}}",
+        "{{custom_map_name}}"
+      ],
+      "default": "{{map_name_override}}",
+      "labels": [
+        "Use Map Name (default)",
+        "Use Custom Display Map Name"
+      ]
     },
     {
       "key": "game_mode",
@@ -42,14 +100,16 @@
       "label": "Serverpasswort",
       "help": "Passwort zum Beitreten.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "-ServerPassword %s"
     },
     {
       "key": "admin_password",
       "label": "Admin-Passwort",
       "help": "Admin-Passwort. Standard ist ein starkes Zufallspasswort.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "-AdminPassword %s"
     }
   ],
   "memory_mb": 6144,

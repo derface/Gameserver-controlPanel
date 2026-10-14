@@ -60,16 +60,24 @@
       ]
     },
     {
+      "key": "manual_connection_address",
+      "label": "Manuelle Verbindungsadresse",
+      "help": "Verbindungsadresse, die der Server anzeigt, wenn „Manuelle Adresse“ gewählt ist.",
+      "default": ""
+    },
+    {
       "key": "override_connection_address",
       "label": "Auswahl der Verbindungsadresse",
       "help": "Welche Verbindungsadresse der Server anzeigt: „Server-IP“ = IP des Servers, „Automatische öffentliche IP“ = automatisch ermittelt, „Manuelle Adresse“ = die eingetragene Adresse.",
       "type": "select",
       "options": [
-        "-OverrideConnectionAddress"
+        "-OverrideConnectionAddress",
+        "-OverrideConnectionAddress={{manual_connection_address}}"
       ],
       "default": "-OverrideConnectionAddress",
       "labels": [
-        "Server-IP (Standard)"
+        "Server-IP (Standard)",
+        "Manual address"
       ]
     },
     {

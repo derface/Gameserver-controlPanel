@@ -44,10 +44,39 @@
       "default": "false"
     },
     {
+      "key": "world_name",
+      "label": "Weltname",
+      "help": "Name der Welt, die je nach Startmodus angelegt oder geladen wird. Ist auch der Name in der Serverliste, außer „advertiseName“ in config.lua der Welt sagt etwas anderes.",
+      "default": "World"
+    },
+    {
+      "key": "world_seed",
+      "label": "Welt-Seed",
+      "help": "Startwert für eine neue Welt. Leer = zufällig.",
+      "default": ""
+    },
+    {
+      "key": "world_id",
+      "label": "Welt-ID",
+      "help": "ID der Welt, die je nach Startmodus geladen wird. Die ID steht im Ordner der Welten unter „sapiens/players/…/worlds“.",
+      "default": ""
+    },
+    {
       "key": "startup_mode",
       "label": "Startmodus",
       "help": "Startmodus des Servers.",
-      "default": ""
+      "type": "select",
+      "options": [
+        "--new \"{{world_name}}\" --seed \"{{world_seed}}\"",
+        "--load \"{{world_name}}\"",
+        "--load \"{{world_id}}\""
+      ],
+      "default": "--new \"{{world_name}}\" --seed \"{{world_seed}}\"",
+      "labels": [
+        "Create new world with World Name and Seed (default)",
+        "Load existing world by World Name",
+        "Load existing world by World ID"
+      ]
     }
   ],
   "memory_mb": 4096,

@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 2227360,
-  "start": "mkdir -p \"PlainsOfPain\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"2218970\" ./PlainsOfPain.x86_64 -nographics -batchmode -ignorecompilererrors -port {{port}} -queryPort {{port_2}} -userdir ./PlainsOfPain -namespace \"main\" -serverName \"{{server_name}}\" {{cc}}-worldId {{world_id}} -seed {{seed}} -worldSize {{world_size}} -mapId {{map_id}} -password {{password}} -maxPlayers {{max_players}} -difficulty {{difficulty}} -ttr 0",
+  "start": "mkdir -p \"PlainsOfPain\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"2218970\" ./PlainsOfPain.x86_64 -nographics -batchmode -ignorecompilererrors -port {{port}} -queryPort {{port_2}} -userdir ./PlainsOfPain -namespace \"main\" -serverName \"{{server_name}}\" {{cc}}-worldId {{world_id}} -seed {{seed}} -worldSize {{world_size}} -mapId {{map_id}} {{password}} -maxPlayers {{max_players}} -difficulty {{difficulty}} -ttr 0",
   "ports": [
     {
       "name": "Spiel",
@@ -81,7 +81,8 @@
       "label": "Serverpasswort",
       "help": "Passwort, das Spieler zum Beitreten brauchen. Standard: kein Passwort.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "-password %s"
     },
     {
       "key": "max_players",

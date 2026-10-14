@@ -1,6 +1,8 @@
 package templates
 
 import (
+	"maps"
+	"os/exec"
 	"strings"
 	"testing"
 )
@@ -90,5 +92,49 @@ func TestGeneratedTemplatesRender(t *testing.T) {
 	}
 	if n < 50 {
 		t.Fatalf("nur %d AMP-Vorlagen", n)
+	}
+}
+
+// Every start line must be valid bash with the default values and with each
+// choice of a select (the panel runs it with bash -c).
+func TestStartLinesAreValidBash(t *testing.T) {
+	if _, err := exec.LookPath("bash"); err != nil {
+		t.Skip("bash fehlt")
+	}
+	set, err := Load("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tpl := range set.All() {
+		if tpl.Start == "" {
+			continue
+		}
+		vars, err := tpl.ResolveVars(map[string]string{})
+		if err != nil {
+			continue
+		}
+		ports := make([]int, len(tpl.Ports))
+		for i, p := range tpl.Ports {
+			ports[i] = p.Port
+		}
+		try := func(what string, vs map[string]string) {
+			line := tpl.Render(tpl.Start, vs, ports)
+			if out, err := exec.Command("bash", "-n", "-c", line).CombinedOutput(); err != nil {
+				t.Errorf("%s (%s): %s\n%.300s", tpl.ID, what, strings.TrimSpace(string(out)), line)
+			}
+		}
+		try("Standardwerte", vars)
+		for _, v := range tpl.Vars {
+			for _, o := range v.Options {
+				vs := maps.Clone(vars)
+				vs[v.Key] = o
+				try(v.Key+"="+o, vs)
+			}
+			if v.Type == "bool" {
+				vs := maps.Clone(vars)
+				vs[v.Key] = "true"
+				try(v.Key+"=true", vs)
+			}
+		}
 	}
 }

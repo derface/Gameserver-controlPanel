@@ -5,7 +5,7 @@
   "kind": "steam",
   "steam_app_id": 570,
   "steam_login": true,
-  "start": "LD_LIBRARY_PATH=\"/data/linux64:/data/server/game/bin/linuxsteamrt64:$LD_LIBRARY_PATH\" SteamAppId=\"570\" ./game/bin/linuxsteamrt64/dota2 -dedicated -usercon -serverlogging -nobreakpad -allow_no_lobby_connect -port {{port}} -ip 0.0.0.0 -maxplayers {{max_players}} {{insecure}}{{custom_parameters}} {{custom_con_vars}} +sv_logfile 1 +rcon_password \"{{rcon_password}}\" +hostname \"{{hostname}}\" +sv_tags \"{{sv_tags}}\" +sv_lan \"{{sv_lan}}\" +sv_setsteamaccount \"{{sv_setsteamaccount}}\" +sv_password \"{{sv_password}}\" +map \"{{map}}\" +mapgroup \"{{mapgroup}}\" +host_workshop_map \"{{host_workshop_map}}\" +host_workshop_collection \"{{host_workshop_collection}}\" +sv_pure \"{{sv_pure}}\" +sv_cheats \"{{sv_cheats}}\"",
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:/data/server/game/bin/linuxsteamrt64:$LD_LIBRARY_PATH\" SteamAppId=\"570\" ./game/bin/linuxsteamrt64/dota2 -dedicated -usercon -serverlogging -nobreakpad -allow_no_lobby_connect -port {{port}} -ip 0.0.0.0 -maxplayers {{max_players}} {{insecure}}{{custom_parameters}} {{custom_con_vars}} +sv_logfile 1 +rcon_password \"{{rcon_password}}\" +hostname \"{{hostname}}\" {{sv_tags}} +sv_lan \"{{sv_lan}}\" {{sv_setsteamaccount}} +sv_password \"{{sv_password}}\" +map \"{{map}}\" {{mapgroup}} {{host_workshop_map}} {{host_workshop_collection}} +sv_pure \"{{sv_pure}}\" +sv_cheats \"{{sv_cheats}}\"",
   "ports": [
     {
       "name": "Port für Spiel und RCON",
@@ -35,7 +35,8 @@
       "key": "sv_tags",
       "label": "Server-Tags",
       "help": "Stichworte für die Serverliste, durch Komma getrennt.",
-      "default": ""
+      "default": "",
+      "if_set": "+sv_tags \"%s\""
     },
     {
       "key": "sv_lan",
@@ -57,7 +58,8 @@
       "label": "Game Server Login Token (GSLT)",
       "help": "Steam Game Server Login Token, damit der Server in der Serverliste erscheint. Beim Erstellen die App-ID 570 nutzen.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "+sv_setsteamaccount \"%s\""
     },
     {
       "key": "sv_password",
@@ -67,37 +69,48 @@
       "default": ""
     },
     {
+      "key": "custom_map",
+      "label": "Eigene Startkarte",
+      "help": "Eigene Startkarte, wenn oben „Eigene“ gewählt ist.",
+      "default": ""
+    },
+    {
       "key": "map",
       "label": "Startkarte",
       "help": "Mit welcher Karte der Server startet. Bei „Eigene“ auch die eigene Startkarte eintragen.",
       "type": "select",
       "options": [
-        "dota"
+        "dota",
+        "{{custom_map}}"
       ],
       "default": "dota",
       "labels": [
-        "Dota"
+        "Dota",
+        "--Custom--"
       ]
     },
     {
       "key": "mapgroup",
       "label": "Kartengruppe",
       "help": "Kartengruppe für die Rotation, alternativ eine Workshop-Sammlung mit den Karten.",
-      "default": ""
+      "default": "",
+      "if_set": "+mapgroup \"%s\""
     },
     {
       "key": "host_workshop_map",
       "label": "Workshop-Karte",
       "help": "ID einer Karte aus dem Steam-Workshop, die geladen wird. Ersetzt die Startkarte.",
       "type": "number",
-      "default": ""
+      "default": "",
+      "if_set": "+host_workshop_map \"%s\""
     },
     {
       "key": "host_workshop_collection",
       "label": "Workshop-Sammlung",
       "help": "ID einer Sammlung aus dem Steam-Workshop, die geladen wird. Ersetzt die Startkarte.",
       "type": "number",
-      "default": ""
+      "default": "",
+      "if_set": "+host_workshop_collection \"%s\""
     },
     {
       "key": "sv_pure",

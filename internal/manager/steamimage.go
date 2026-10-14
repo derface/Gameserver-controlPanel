@@ -48,7 +48,9 @@ if [ -n "${GP_STEAM_USER}" ]; then LOGIN="${GP_STEAM_USER}"; fi
 steam() {
   /opt/steamcmd/steamcmd.sh "$@" +quit 2>&1 | tee /tmp/gp-steamcmd.log
   rc=${PIPESTATUS[0]}
-  if [ -n "${GP_STEAM_USER}" ] && grep -qiE "cached credentials|login failure|password|two-factor|steam guard" /tmp/gp-steamcmd.log; then
+  # "Logging in using cached credentials ... OK" is the normal case; only
+  # real refusals or a password prompt mean the login has to be renewed
+  if [ -n "${GP_STEAM_USER}" ] && grep -qiE "cached credentials not found|login failure|invalid password|two-factor code|steam ?guard code|account logon denied|not been authenticated|^password:" /tmp/gp-steamcmd.log; then
     echo "[panel] Steam-Anmeldung fehlt oder ist abgelaufen. Bitte im Panel unter Einstellungen → Steam-Konto neu anmelden."
     # do not exit: Docker would restart us and Steam blocks repeated logins
     exec sleep infinity
@@ -118,9 +120,16 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
   # own virtual screen without access control: xvfb-run's Xauthority does
   # not always reach Wine in the container ("no driver could be loaded")
   if [ -z "${DISPLAY}" ] && command -v Xvfb >/dev/null; then
-    Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp -ac >/dev/null 2>&1 &
+    # after a crash Docker restarts the same container: the old lock file
+    # names a PID that now belongs to another process, and Xvfb refuses
+    # to start ("no driver could be loaded" in Wine)
+    rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
+    Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp -ac >/tmp/xvfb.log 2>&1 &
     export DISPLAY=:99
-    sleep 1
+    for i in $(seq 1 100); do [ -S /tmp/.X11-unix/X99 ] && break; sleep 0.1; done
+    if [ ! -S /tmp/.X11-unix/X99 ]; then
+      echo "[panel] Der virtuelle Bildschirm (Xvfb) startet nicht:"; tail -n 5 /tmp/xvfb.log
+    fi
   fi
   # A prefix whose setup was interrupted (container stopped during
   # wineboot) can look complete and still fail with "could not load
@@ -153,6 +162,11 @@ if [ "${GP_PLATFORM}" = "windows" ]; then
       echo "[panel] Wine konnte nicht eingerichtet werden (Meldungen oben, ${WV})"
     fi
   fi
+  # The checks above ran without a screen. Their wineserver lingers for a
+  # few seconds and would hand the game a desktop without display driver
+  # ("Application tried to create a window, but no driver could be loaded").
+  wineserver -k 2>/dev/null || true
+  timeout 20 wineserver -w 2>/dev/null || true
 fi
 # Steam Workshop: the panel keeps the list in /data/.gp-workshop
 # ("app <id>" and one item per line). Downloads run at installs, updates and
@@ -171,7 +185,7 @@ if [ -f /data/.gp-workshop ]; then
       echo "[panel] Workshop: zweiter Versuch mit dem Steam-Konto des Panels"
       mkdir -p /tmp/wsacct && ln -sfn /gp-steam-acct /tmp/wsacct/Steam
       HOME=/tmp/wsacct /opt/steamcmd/steamcmd.sh ${PLATFORM} +force_install_dir /data/server +login "${GP_WS_USER}" ${RETRY} +quit 2>&1 | tee -a /tmp/gp-steamcmd.log || true
-      if grep -qiE "cached credentials|login failure|two-factor|steam guard" /tmp/gp-steamcmd.log; then WS_LOGINFAIL=1; fi
+      if grep -qiE "cached credentials not found|login failure|invalid password|two-factor code|steam ?guard code|account logon denied|not been authenticated" /tmp/gp-steamcmd.log; then WS_LOGINFAIL=1; fi
     fi
     : > /data/.gp-workshop-status.tmp
     for id in ${WS_IDS}; do
@@ -214,6 +228,7 @@ const wineLayer = `RUN mkdir -pm755 /etc/apt/keyrings \
  && curl -fsSL https://dl.winehq.org/wine-builds/debian/dists/bookworm/winehq-bookworm.sources -o /etc/apt/sources.list.d/winehq-bookworm.sources \
  && apt-get update && apt-get install -y --install-recommends winehq-stable \
  && apt-get install -y --no-install-recommends xvfb xauth cabextract winbind \
+      libgl1 libglx-mesa0 libgl1-mesa-dri libegl1 libvulkan1 mesa-vulkan-drivers libgnutls30 \
  && rm -rf /var/lib/apt/lists/*
 `
 
@@ -226,7 +241,12 @@ func SteamImageFor(tpl templates.Template) string {
 	}
 	pk := append([]string(nil), tpl.Packages...)
 	sort.Strings(pk)
-	h := sha256.Sum256([]byte(tpl.Runtime + "|" + strings.Join(pk, ",")))
+	// the layer text is part of the name: a changed layer is built anew
+	layer := ""
+	if tpl.Runtime == "wine" {
+		layer = wineLayer
+	}
+	h := sha256.Sum256([]byte(tpl.Runtime + "|" + strings.Join(pk, ",") + "|" + layer))
 	return SteamImage + "-" + hex.EncodeToString(h[:])[:10]
 }
 

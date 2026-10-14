@@ -800,6 +800,9 @@ func (m *Manager) refresh(id string) {
 	m.mu.Unlock()
 }
 
+// readyGrace is how long a running game may go without its ready line.
+var readyGrace = 30 * time.Minute
+
 // phaseFromLogs scans the log of the current run line by line. It only
 // runs until the ready line was seen once per run, so the cost is small.
 func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templates.Template, state docker.State, l *live) string {
@@ -821,7 +824,18 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 	sc := bufio.NewScanner(io.LimitReader(rc, 64<<20))
 	sc.Buffer(make([]byte, 64<<10), 1<<20)
 	for sc.Scan() {
-		line := sc.Text()
+		// Windows programs end lines with \r\n and progress output uses a
+		// bare \r: check each part on its own, without colour codes
+		raw := sc.Text()
+		if started && ready != nil && !isReady {
+			for _, part := range strings.Split(strings.ReplaceAll(raw, "\r", "\n"), "\n") {
+				if ready.MatchString(strings.TrimSpace(ansiRe.ReplaceAllString(part, ""))) {
+					isReady = true
+					break
+				}
+			}
+		}
+		line := raw
 		switch {
 		case strings.Contains(line, "[panel] SteamCMD"):
 			installing, started, progress = true, false, 0
@@ -839,8 +853,6 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 			if mm := steamProgress.FindStringSubmatch(line); mm != nil {
 				progress, _ = strconv.ParseFloat(mm[1], 64)
 			}
-		case started && ready != nil && !isReady:
-			isReady = ready.MatchString(line)
 		}
 	}
 	switch {
@@ -864,6 +876,14 @@ func (m *Manager) phaseFromLogs(ctx context.Context, sv store.Server, tpl templa
 		return "starting"
 	case ready == nil || isReady:
 		l.readyFor = state.StartedAt
+		return "running"
+	}
+	// The game may print its ready line differently than the template
+	// expects. After a while without a crash it counts as running, so the
+	// server does not show "starting" forever.
+	if t, err := time.Parse(time.RFC3339Nano, state.StartedAt); err == nil && time.Since(t) > readyGrace {
+		l.readyFor = state.StartedAt
+		l.Msg = "Läuft. Die übliche Bereit-Meldung kam nicht; ob Spieler verbinden können, zeigt die Spielerabfrage."
 		return "running"
 	}
 	return "starting"

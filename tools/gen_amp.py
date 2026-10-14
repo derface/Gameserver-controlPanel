@@ -37,6 +37,10 @@ AMP_IMPORT = {
     "icarus": {"vars": {"startup_mode": "-ResumeProspect"}},
 }
 
+# Spiele, die ohne ihre INI beim Start interaktiv nachfragen: AMP schreibt
+# die Datei aus den Einstellungen, das Panel legt sie vor dem ersten Start an
+INI_FROM_SETTINGS = {"archean"}
+
 # Testergebnisse späterer Selbsttests: Vorlage bleibt drin, Status passt sich an
 PASSED = set()
 BROKEN = {}
@@ -117,6 +121,41 @@ def steam_stage(stages, settings):
         if default.lower() == str(u.get("UpdateSourceConditionValue", "")).lower():
             return u
     return steam[0]
+
+
+def shell_safe(cmd):
+    """AMP starts programs without a shell; the panel runs them with bash.
+    Quote words with shell syntax characters and close a quote AMP forgot."""
+    out, i, n = [], 0, len(cmd)
+    while i < n:
+        if cmd[i] == " ":
+            out.append(" ")
+            i += 1
+            continue
+        j, q, word = i, None, ""
+        while j < n and (q or cmd[j] != " "):
+            c = cmd[j]
+            if q:
+                if c == q:
+                    q = None
+            elif c in "\"'":
+                q = c
+            word += c
+            j += 1
+        if q:  # unbalanced quote, e.g. Desynced's -GameSettings="{...}
+            word += q
+        bare = re.sub(r"\"[^\"]*\"|'[^']*'|\{\{[a-z0-9_]+\}\}", "", word)
+        if re.search(r"[()<>|&;]", bare) and '"' not in word:
+            word = '"%s"' % word
+        out.append(word)
+        i = j
+    return "".join(out)
+
+
+def bash_ok(line):
+    import subprocess
+    r = subprocess.run(["bash", "-n", "-c", line], capture_output=True, text=True)
+    return r.returncode == 0, r.stderr.strip()
 
 
 def build(base):
@@ -206,7 +245,16 @@ def build(base):
         ev = s.get("EnumValues") or {}
         default = str(s.get("DefaultValue", "") if s.get("DefaultValue") is not None else "")
         if "{{" in default:
-            default = ""
+            # choices may refer to other settings (Sapiens: --new "{{WorldName}}");
+            # the panel expands placeholders in template-defined choices
+            if t == "enum":
+                before = set(unknown)
+                default = convert(default, True)
+                if unknown - before:
+                    unknown.intersection_update(before)
+                    default = ""
+            else:
+                default = ""
         if re.search(r"\bAMP\b|CubeCoders", default):
             default = "Mein Server" if re.search(r"name|host|title", key) else ""
         if not default and re.fullmatch(r"(server_|session_|host)?name|hostname|server_title", key):
@@ -226,7 +274,18 @@ def build(base):
                 tv, fv = tv.strip(), fv.strip()
                 v.update({"type": "select", "options": [tv, fv], "labels": ["An", "Aus"], "default": tv if dflt else fv})
         elif t == "enum" and isinstance(ev, dict) and ev:
-            raw = [str(k) for k in ev if "{{" not in str(k)]
+            raw, nev = [], {}
+            for k in (str(x) for x in ev):
+                c = k
+                if "{{" in k:
+                    before = set(unknown)
+                    c = convert(k, True)
+                    if unknown - before:  # e.g. {{$ExternalIP}}: leave this choice out
+                        unknown.intersection_update(before)
+                        continue
+                raw.append(c)
+                nev[c] = ev[k]
+            ev = nev
             if any(o != o.strip() for o in raw):
                 spaced.add(key)
             opts, labels = [], []
@@ -327,6 +386,13 @@ def build(base):
                     formatted.append(v)
                 else:
                     formatted.append(fmt.replace("{0}", pf).replace("{1}", v))
+            elif x.get("SkipIfEmpty"):
+                var = next(vv for vv in vars_ if "{{%s}}" % vv["key"] == v)
+                if var.get("type") == "select" or var.get("flag"):
+                    formatted.append(fmt.replace("{0}", pf).replace("{1}", v))
+                else:
+                    var["if_set"] = fmt.replace("{0}", pf).replace("{1}", "%s")
+                    formatted.append(v)
             else:
                 formatted.append(fmt.replace("{0}", pf).replace("{1}", v))
     platform = args_l
@@ -377,6 +443,7 @@ def build(base):
     for k in spaced:  # values like "+map_rotate " carried their own space
         cmd = cmd.replace("{{%s}}" % k, "{{%s}} " % k)
     cmd = re.sub(r"\s+", " ", cmd).strip()
+    cmd = shell_safe(cmd)
 
     # environment (Wine is handled by the panel)
     env = {}
@@ -506,6 +573,28 @@ def build(base):
             continue
         raise Skip("Zusatzschritt %s: %s" % (src, name))
 
+    if base in INI_FROM_SETTINGS:
+        for mc in meta:
+            if str(mc.get("ConfigType", "")).lower() != "ini" or not mc.get("Subsections"):
+                continue
+            final = rel(str(mc.get("ConfigFile", "")))
+            if not final or "{{" in final or any(c["file"] == "server/" + final for c in configs):
+                continue
+            lines = []
+            for sub_ in mc["Subsections"]:
+                lines.append("[%s]" % sub_.get("Heading", ""))
+                for k, f in (sub_.get("SettingMappings") or {}).items():
+                    if str(f).startswith("$"):
+                        val = convert("{{%s}}" % f, True)
+                    else:  # the file itself is the setting; no extra start value
+                        d = (settings.get(f) or {}).get("DefaultValue")
+                        val = "" if d is None or "{{" in str(d) else str(d)
+                        if re.search(r"\bAMP\b|CubeCoders", val):
+                            val = "Mein Server"
+                    lines.append("%s=%s" % (k, val))
+                lines.append("")
+            configs.append({"title": os.path.basename(final), "file": "server/" + final, "format": "ini",
+                            "write_default": True, "default": "\n".join(lines), "settings": []})
     unused = [i for i in range(len(ports)) if i not in used_ports]
     for c in configs:
         for i, _ in enumerate(ports):

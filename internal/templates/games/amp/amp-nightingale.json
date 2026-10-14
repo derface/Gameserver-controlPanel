@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 3796810,
-  "start": "[ -e \"NWX/Config/ServerSettings.ini\" ] || { mkdir -p \"$(dirname \"NWX/Config/ServerSettings.ini\")\"; cp -rn \"NWX/Config/ExampleServerSettings.ini\" \"NWX/Config/ServerSettings.ini\" 2>/dev/null; } ; LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1928980\" ./NWX/Binaries/Linux/NWXServer-Linux-Shipping NWX -port={{port}} -statusPort={{port_2}} -multihome=0.0.0.0 -ini:Engine:[HTTPServer.Listeners]:+ListenerOverrides=(Port={{port_2}},BindAddress=0.0.0.0) -ini:Game:[/Script/Engine.GameSession]:MaxPlayers={{max_players}} -ini:ServerSettings:[/Script/NWX.NWXServerSettings]:StartingDifficulty={{starting_difficulty}} {{enable_cheats}}-stdout -FullStdOutLogOutput",
+  "start": "[ -e \"NWX/Config/ServerSettings.ini\" ] || { mkdir -p \"$(dirname \"NWX/Config/ServerSettings.ini\")\"; cp -rn \"NWX/Config/ExampleServerSettings.ini\" \"NWX/Config/ServerSettings.ini\" 2>/dev/null; } ; LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1928980\" ./NWX/Binaries/Linux/NWXServer-Linux-Shipping NWX -port={{port}} -statusPort={{port_2}} -multihome=0.0.0.0 \"-ini:Engine:[HTTPServer.Listeners]:+ListenerOverrides=(Port={{port_2}},BindAddress=0.0.0.0)\" -ini:Game:[/Script/Engine.GameSession]:MaxPlayers={{max_players}} -ini:ServerSettings:[/Script/NWX.NWXServerSettings]:StartingDifficulty={{starting_difficulty}} {{enable_cheats}}-stdout -FullStdOutLogOutput",
   "ports": [
     {
       "name": "Spiel",

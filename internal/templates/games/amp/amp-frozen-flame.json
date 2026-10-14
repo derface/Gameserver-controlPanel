@@ -57,10 +57,23 @@
       "help": "Passwort für die Fernverwaltung. Der RCON-Port wird nie ins Internet freigegeben."
     },
     {
+      "key": "manual_public_ip",
+      "label": "Öffentliche IP des Servers",
+      "help": "Öffentliche IP, die der Server anzeigt, wenn bei der Auswahl „Manuell“ gewählt ist. Nützlich bei mehreren öffentlichen IPs oder hinter einem Proxy.",
+      "default": ""
+    },
+    {
       "key": "public_ip",
       "label": "Auswahl der öffentlichen IP",
       "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
-      "default": ""
+      "type": "select",
+      "options": [
+        "{{manual_public_ip}}"
+      ],
+      "default": "{{manual_public_ip}}",
+      "labels": [
+        "Von Hand"
+      ]
     },
     {
       "key": "noeac",

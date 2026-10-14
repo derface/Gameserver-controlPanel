@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 3930080,
-  "start": "mkdir -p \"Missions\" ; DOORSTOP_ENABLED=\"1\" DOORSTOP_TARGET_ASSEMBLY=\"/data/server/BepInEx/core/BepInEx.Preloader.dll\" LD_LIBRARY_PATH=\"/data/server/linux64:/data/server/:$LD_LIBRARY_PATH\" LD_PRELOAD=\"libdoorstop.so\" SteamAppId=\"2168680\" ./NuclearOptionServer.x86_64 -logFile - -limitframerate {{limitframerate}}",
+  "start": "mkdir -p \"Missions\" ; DOORSTOP_ENABLED=\"1\" DOORSTOP_TARGET_ASSEMBLY=\"/data/server/BepInEx/core/BepInEx.Preloader.dll\" LD_LIBRARY_PATH=\"/data/server/linux64:/data/server/:$LD_LIBRARY_PATH\" LD_PRELOAD=\"libdoorstop.so\" SteamAppId=\"2168680\" ./NuclearOptionServer.x86_64 -logFile - {{limitframerate}}",
   "ports": [
     {
       "name": "Spiel",
@@ -24,7 +24,8 @@
       "label": "FPS-Grenze",
       "help": "FPS-Grenze des Servers.",
       "type": "number",
-      "default": "30"
+      "default": "30",
+      "if_set": "-limitframerate %s"
     }
   ],
   "memory_mb": 4096,

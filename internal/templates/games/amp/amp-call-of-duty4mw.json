@@ -7,7 +7,7 @@
   "steam_login": true,
   "platform": "windows",
   "runtime": "wine",
-  "start": "mkdir -p \"usermaps\" ; SteamAppId=\"7940\" wine \"./iw3mp.exe\" +set sv_punkbuster 0 +exec \"server.cfg\" +set net_port {{port}} +set authPort {{port_2}} +set masterPort {{port_3}} {{map_mode}} +set dedicated \"{{dedicated}}\" +set fs_game \"{{fs_game}}\"",
+  "start": "mkdir -p \"usermaps\" ; SteamAppId=\"7940\" wine \"./iw3mp.exe\" +set sv_punkbuster 0 +exec \"server.cfg\" +set net_port {{port}} +set authPort {{port_2}} +set masterPort {{port_3}} {{map_mode}} +set dedicated \"{{dedicated}}\" {{fs_game}}",
   "ports": [
     {
       "name": "Spiel",
@@ -45,7 +45,14 @@
       "key": "fs_game",
       "label": "Mod laden",
       "help": "Mod, die beim Start geladen wird, als Pfad im Mods-Ordner, z. B. „Mods/ModWarfare“.",
-      "default": ""
+      "default": "",
+      "if_set": "+set fs_game \"%s\""
+    },
+    {
+      "key": "map_name",
+      "label": "Startkarte",
+      "help": "Karte beim Start. Wird durch die Kartenrotation überschrieben, falls eingerichtet.",
+      "default": "mp_backlot"
     },
     {
       "key": "map_mode",
@@ -53,11 +60,13 @@
       "help": "Ob Kartenrotation an ist (dann auch die Rotationsliste setzen) oder eine bestimmte Startkarte geladen wird (dann Spielart und Startkarte setzen).",
       "type": "select",
       "options": [
-        "+map_rotate"
+        "+map_rotate",
+        "+map \"{{map_name}}\""
       ],
       "default": "+map_rotate",
       "labels": [
-        "Kartenrotation (Standard)"
+        "Kartenrotation (Standard)",
+        "Specific Initial Map"
       ]
     }
   ],

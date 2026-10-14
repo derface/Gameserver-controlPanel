@@ -6,7 +6,7 @@
   "steam_app_id": 1794810,
   "platform": "windows",
   "runtime": "wine",
-  "start": "mkdir -p \"MOE/Binaries/Win64/Mods\" ; SteamAppId=\"1371580\" wine \"./MOE/Binaries/Win64/MOEServer.exe\" MOE {{map}} -game -server -DataLocalFile -NotCheckServerSteamAuth -stdout -FullStdOutLogOutput log={{server_list_id}}.log -LOCALLOGTIMES -PrivateServer -Port={{port}} -QueryPort={{port_2}} -ShutDownServicePort={{port_3}} -bStartShutDownServiceInPrivateServer=true -MultiHome=0.0.0.0 -ShutDownServiceIP=0.0.0.0 -OutAddress={{out_address}} -SessionName=\"{{session_name}}\" -SteamServerName=\"{{session_name}}\" -ShutDownServiceKey=\"{{rcon_password}}\" -pakdir=\"/data/server/MOE/{{server_list_id}}Mods\" {{use_ace}}{{force_steam_net}}-ServerId=\"{{server_id}}\" -ClusterId=\"{{cluster_id}}\" -Description=\"{{description}}\" -NoticeSelfEnable=\"{{notice_self_enable}}\" -NoticeSelfEnterServer=\"{{notice_self_enter_server}}\" -PrivateServerPassword=\"{{private_server_password}}\" -bUseServerAdmin=\"{{b_use_server_admin}}\" -ServerAdminAccounts=\"{{server_admin_accounts}}\" -EnableVACBan=\"{{enable_vac_ban}}\" -SteamModList=\"{{steam_mod_list}}\" -MapDifficultyRate=\"{{map_difficulty_rate}}\" -GameServerPVPType=\"{{game_server_pvp_type}}\" -bCanChat=\"{{b_can_chat}}\" -bCanVoiceChat=\"{{b_can_voice_chat}}\" -NoticeAllEnable=\"{{notice_all_enable}}\" -NoticeEnterServer=\"{{notice_enter_server}}\" -NoticeLeaveServer=\"{{notice_leave_server}}\" -SaveGameIntervalMinute=\"{{save_game_interval_minute}}\" -bUseDurable=\"{{b_use_durable}}\" -bRiderUseShooterMovingCheck=\"{{b_rider_use_shooter_moving_check}}\" -NpcSpawnMultiplier=\"{{npc_spawn_multiplier}}\" -InitCapitalCopper=\"{{init_capital_copper}}\" -bDeadCorpseCreateBag=\"{{b_dead_corpse_create_bag}}\" -bOpenWillDead=\"{{b_open_will_dead}}\" -bAllCanRescue=\"{{b_all_can_rescue}}\" -bCanDropItem=\"{{b_can_drop_item}}\" -bShowFleshPhysicialMaterialEffect=\"{{b_show_flesh_physicial_material_effect}}\" -AITurretTraceProjectileRatio=\"{{ai_turret_trace_projectile_ratio}}\" -MaxActiveCharacterCountConfig=\"{{max_active_character_count_config}}\" -MaxActiveStructureCountConfig=\"{{max_active_structure_count_config}}\" -NormalReduceDurableMultiplier=\"{{normal_reduce_durable_multiplier}}\" -SleepPlayerCharacterDestroyDays=\"{{sleep_player_character_destroy_days}}\" -bEnableServerLevel=\"{{b_enable_server_level}}\" -ServerLevelAddMul=\"{{server_level_add_mul}}\" -FoodBuffValueMulti=\"{{food_buff_value_multi}}\" -MedicineBuffValueMulti=\"{{medicine_buff_value_multi}}\" -ItemCDMulti=\"{{item_cd_multi}}\" -FoodMedicineWineBuffTimeMulti=\"{{food_medicine_wine_buff_time_multi}}\" -ButterflyDropMul=\"{{butterfly_drop_mul}}\" -UnLockSkillPriceMul=\"{{un_lock_skill_price_mul}}\" -FubenCoolDownMultiplier=\"{{fuben_cool_down_multiplier}}\" -KillNpcConflictValueMul=\"{{kill_npc_conflict_value_mul}}\" {{custom_args}}",
+  "start": "mkdir -p \"MOE/Binaries/Win64/Mods\" ; SteamAppId=\"1371580\" wine \"./MOE/Binaries/Win64/MOEServer.exe\" MOE {{map}} -game -server -DataLocalFile -NotCheckServerSteamAuth -stdout -FullStdOutLogOutput log={{server_list_id}}.log -LOCALLOGTIMES -PrivateServer -Port={{port}} -QueryPort={{port_2}} -ShutDownServicePort={{port_3}} -bStartShutDownServiceInPrivateServer=true -MultiHome=0.0.0.0 -ShutDownServiceIP=0.0.0.0 -OutAddress={{out_address}} -SessionName=\"{{session_name}}\" -SteamServerName=\"{{session_name}}\" -ShutDownServiceKey=\"{{rcon_password}}\" -pakdir=\"/data/server/MOE/{{server_list_id}}Mods\" {{use_ace}}{{force_steam_net}}-ServerId=\"{{server_id}}\" -ClusterId=\"{{cluster_id}}\" -Description=\"{{description}}\" -NoticeSelfEnable=\"{{notice_self_enable}}\" -NoticeSelfEnterServer=\"{{notice_self_enter_server}}\" {{private_server_password}} -bUseServerAdmin=\"{{b_use_server_admin}}\" {{server_admin_accounts}} -EnableVACBan=\"{{enable_vac_ban}}\" {{steam_mod_list}} -MapDifficultyRate=\"{{map_difficulty_rate}}\" -GameServerPVPType=\"{{game_server_pvp_type}}\" -bCanChat=\"{{b_can_chat}}\" -bCanVoiceChat=\"{{b_can_voice_chat}}\" -NoticeAllEnable=\"{{notice_all_enable}}\" -NoticeEnterServer=\"{{notice_enter_server}}\" -NoticeLeaveServer=\"{{notice_leave_server}}\" -SaveGameIntervalMinute=\"{{save_game_interval_minute}}\" -bUseDurable=\"{{b_use_durable}}\" -bRiderUseShooterMovingCheck=\"{{b_rider_use_shooter_moving_check}}\" -NpcSpawnMultiplier=\"{{npc_spawn_multiplier}}\" -InitCapitalCopper=\"{{init_capital_copper}}\" -bDeadCorpseCreateBag=\"{{b_dead_corpse_create_bag}}\" -bOpenWillDead=\"{{b_open_will_dead}}\" -bAllCanRescue=\"{{b_all_can_rescue}}\" -bCanDropItem=\"{{b_can_drop_item}}\" -bShowFleshPhysicialMaterialEffect=\"{{b_show_flesh_physicial_material_effect}}\" -AITurretTraceProjectileRatio=\"{{ai_turret_trace_projectile_ratio}}\" -MaxActiveCharacterCountConfig=\"{{max_active_character_count_config}}\" -MaxActiveStructureCountConfig=\"{{max_active_structure_count_config}}\" -NormalReduceDurableMultiplier=\"{{normal_reduce_durable_multiplier}}\" -SleepPlayerCharacterDestroyDays=\"{{sleep_player_character_destroy_days}}\" -bEnableServerLevel=\"{{b_enable_server_level}}\" -ServerLevelAddMul=\"{{server_level_add_mul}}\" -FoodBuffValueMulti=\"{{food_buff_value_multi}}\" -MedicineBuffValueMulti=\"{{medicine_buff_value_multi}}\" -ItemCDMulti=\"{{item_cd_multi}}\" -FoodMedicineWineBuffTimeMulti=\"{{food_medicine_wine_buff_time_multi}}\" -ButterflyDropMul=\"{{butterfly_drop_mul}}\" -UnLockSkillPriceMul=\"{{un_lock_skill_price_mul}}\" -FubenCoolDownMultiplier=\"{{fuben_cool_down_multiplier}}\" -KillNpcConflictValueMul=\"{{kill_npc_conflict_value_mul}}\" {{custom_args}}",
   "ports": [
     {
       "name": "Spiel",
@@ -69,7 +69,8 @@
       "label": "Serverpasswort",
       "help": "Passwort zum Beitreten. Standard: kein Passwort.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "-PrivateServerPassword=\"%s\""
     },
     {
       "key": "b_use_server_admin",
@@ -90,7 +91,8 @@
       "key": "server_admin_accounts",
       "label": "Server-Admins",
       "help": "Steam64-IDs der Admins, durch Semikolon getrennt.",
-      "default": ""
+      "default": "",
+      "if_set": "-ServerAdminAccounts=\"%s\""
     },
     {
       "key": "enable_vac_ban",
@@ -111,7 +113,8 @@
       "key": "steam_mod_list",
       "label": "Steam-Mods laden",
       "help": "Liste der Steam-Mod-Ordner, getrennt durch +. NUR EINE ZEILE! Beispiel: Mods/3181632026+Mods/3202759474. Sonst Pfade relativ zu „MOE/Binaries/Win64“ oder vollständige Pfade.",
-      "default": ""
+      "default": "",
+      "if_set": "-SteamModList=\"%s\""
     },
     {
       "key": "map_difficulty_rate",
@@ -445,7 +448,14 @@
       "key": "out_address",
       "label": "Ausgehende IP-Adresse",
       "help": "Wert „OutAddress“. Meist „Öffentliche IP“. Bei reinen LAN-Servern evtl. die gebundene IP nutzen, dann aber eine echte IP und nicht 0.0.0.0.",
-      "default": ""
+      "type": "select",
+      "options": [
+        "0.0.0.0"
+      ],
+      "default": "0.0.0.0",
+      "labels": [
+        "Application IP Binding"
+      ]
     },
     {
       "key": "session_name",

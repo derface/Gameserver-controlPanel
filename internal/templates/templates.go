@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -66,6 +67,10 @@ type Var struct {
 	Help    string   `json:"help,omitempty"`
 	Needed  bool     `json:"required,omitempty"`
 	Group   string   `json:"group,omitempty"` // tab on the settings page, default "Start"
+	// IfSet is inserted instead of the bare value when the value is not
+	// empty (%s = value); an empty value leaves the argument out entirely,
+	// e.g. `rmiport="%s"` (AMP: SkipIfEmpty).
+	IfSet string `json:"if_set,omitempty"`
 }
 
 // DefaultContent returns the starting content of the file, or nil.
@@ -415,6 +420,8 @@ func (t Template) ResolveVars(in map[string]string) (map[string]string, error) {
 		if v.Type == "command" {
 			// the admin writes this shell command on purpose; only keep it on one line
 			val = strings.TrimSpace(strings.NewReplacer("\n", " ", "\r", " ").Replace(val))
+		} else if v.Type == "select" && contains(v.Options, val) {
+			// a choice the template defines may carry quotes (--new "{{world_name}}")
 		} else {
 			val = Clean(val)
 		}
@@ -458,6 +465,20 @@ var placeholder = regexp.MustCompile(`\{\{\s*([a-z0-9_]+)\s*\}\}`)
 // Render replaces {{key}} placeholders. ports are the host ports in template order:
 // {{port}} is the first, {{port_2}} the second and so on.
 func (t Template) Render(s string, vars map[string]string, ports []int) string {
+	return t.render(s, vars, ports, 0)
+}
+
+// render replaces placeholders. Values the template itself defines (switch
+// flags, choices of a select) may contain placeholders of their own, e.g.
+// Sapiens' start mode `--new "{{world_name}}"`; those get one more pass.
+// Values a user typed are never expanded again.
+func (t Template) render(s string, vars map[string]string, ports []int, depth int) string {
+	nested := func(val string) string {
+		if depth == 0 && strings.Contains(val, "{{") {
+			return t.render(val, vars, ports, 1)
+		}
+		return val
+	}
 	return placeholder.ReplaceAllStringFunc(s, func(m string) string {
 		key := placeholder.FindStringSubmatch(m)[1]
 		if key == "port" && len(ports) > 0 {
@@ -469,11 +490,23 @@ func (t Template) Render(s string, vars map[string]string, ports []int) string {
 			}
 		}
 		for _, v := range t.Vars {
-			if v.Key == key && v.Type == "bool" {
+			if v.Key != key {
+				continue
+			}
+			if v.Type == "bool" {
 				if vars[key] == "true" {
-					return v.Flag
+					return nested(v.Flag)
 				}
 				return ""
+			}
+			if v.Type == "select" && slices.Contains(v.Options, vars[key]) {
+				return nested(vars[key])
+			}
+			if v.IfSet != "" {
+				if vars[key] == "" {
+					return ""
+				}
+				return strings.ReplaceAll(v.IfSet, "%s", vars[key])
 			}
 		}
 		return vars[key]

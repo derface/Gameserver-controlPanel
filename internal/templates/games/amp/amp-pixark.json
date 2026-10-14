@@ -6,7 +6,7 @@
   "steam_app_id": 824360,
   "platform": "windows",
   "runtime": "wine",
-  "start": "cd \"ShooterGame/Binaries/Win64\" && SteamAppId=\"593600\" wine \"./PixARKServer.exe\" {{map}}?listen?DelayRegisterServer=True?bRawSockets=True?Port={{port}}?QueryPort={{port_2}}?RCONEnabled=True?RCONPort={{port_3}}?SessionName=\"{{session_name}}\"?MultiHome=0.0.0.0?ServerPassword={{server_password}}?ServerAdminPassword={{rcon_password}}{{custom_options}} -Seed={{seed}} -CULTUREFORCOOKING=en -NoBattlEye -CubePort={{port_4}} -cubeworld={{cubeworld}} -nosteamclient -NoHangDetection {{no_transfer_from_filtering}}-ClusterDirOverride=\"{{cluster_dir_override}}\" -clusterid={{clusterid}} -server {{custom_flags}} -gameplaylogging -log",
+  "start": "cd \"ShooterGame/Binaries/Win64\" && SteamAppId=\"593600\" wine \"./PixARKServer.exe\" {{map}}?listen?DelayRegisterServer=True?bRawSockets=True?Port={{port}}?QueryPort={{port_2}}?RCONEnabled=True?RCONPort={{port_3}}?SessionName=\"{{session_name}}\"?MultiHome=0.0.0.0?{{server_password}}?ServerAdminPassword={{rcon_password}}{{custom_options}} -Seed={{seed}} -CULTUREFORCOOKING=en -NoBattlEye -CubePort={{port_4}} -cubeworld={{cubeworld}} -nosteamclient -NoHangDetection {{no_transfer_from_filtering}}-ClusterDirOverride=\"{{cluster_dir_override}}\" -clusterid={{clusterid}} -server {{custom_flags}} -gameplaylogging -log",
   "ports": [
     {
       "name": "Spiel",
@@ -35,6 +35,13 @@
       "label": "Serverpasswort",
       "help": "Passwort zum Beitreten. Ohne Fragezeichen.",
       "type": "secret",
+      "default": "",
+      "if_set": "ServerPassword=%s"
+    },
+    {
+      "key": "custom_map",
+      "label": "Name der eigenen Karte",
+      "help": "Eigene Karte. Unter „Karte“ muss „Eigene“ gewählt sein. Für Karten aus späteren DLCs oder Updates, die oben noch fehlen.",
       "default": ""
     },
     {
@@ -45,13 +52,15 @@
       "options": [
         "CubeWorld_Light",
         "Skypiea_light",
-        "Underground_Light"
+        "Underground_Light",
+        "{{custom_map}}"
       ],
       "default": "CubeWorld_Light",
       "labels": [
         "PixARK (Standard)",
         "Skyward",
-        "Terracrypt"
+        "Terracrypt",
+        "--Custom--"
       ]
     },
     {

@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 808040,
-  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"768200\" ./SMALLAND/Binaries/Linux/SMALLANDServer-Linux-Shipping SMALLAND /Game/Maps/WorldGame/WorldGame_Smalland{{friendlyfire}}{{peacefulmode}}{{keepinventory}}{{nodeterioration}}{{private}}{{tamedcreaturesimmortal}}{{crossplay}}?SERVERNAME=\"{{servername}}\" WORLDNAME=\"{{worldname}}\" PASSWORD=\"{{password}}\" lengthofdayseconds=\"{{lengthofdayseconds}}\" lengthofseasonseconds=\"{{lengthofseasonseconds}}\" creaturehealthmodifier=\"{{creaturehealthmodifier}}\" creaturedamagemodifier=\"{{creaturedamagemodifier}}\" creaturerespawnratemodifier=\"{{creaturerespawnratemodifier}}\" resourcerespawnratemodifier=\"{{resourcerespawnratemodifier}}\" creaturespawnchancemodifier=\"{{creaturespawnchancemodifier}}\" craftingtimemodifier=\"{{craftingtimemodifier}}\" craftingfuelmodifier=\"{{craftingfuelmodifier}}\" stormfrequencymodifier=\"{{stormfrequencymodifier}}\" nourishmentlossmodifier=\"{{nourishmentlossmodifier}}\" falldamagemodifier=\"{{falldamagemodifier}}\"{{custom_options}}?SESSIONPLATFORM=pc -ini:Engine:[EpicOnlineServices]:DeploymentId=50f2b148496e4cbbbdeefbecc2ccd6a3 -ini:Engine:[EpicOnlineServices]:DedicatedServerClientId=xyza78918KT08TkA6emolUay8yhvAAy2 -ini:Engine:[EpicOnlineServices]:DedicatedServerClientSecret=aN2GtVw7aHb6hx66HwohNM+qktFaO3vtrLSbGdTzZWk -Port={{port}} -NOSTEAM -stdout -FullStdOutLogOutput",
+  "start": "LD_LIBRARY_PATH=\"/data/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"768200\" ./SMALLAND/Binaries/Linux/SMALLANDServer-Linux-Shipping SMALLAND /Game/Maps/WorldGame/WorldGame_Smalland{{friendlyfire}}{{peacefulmode}}{{keepinventory}}{{nodeterioration}}{{private}}{{tamedcreaturesimmortal}}{{crossplay}}?SERVERNAME=\"{{servername}}\" WORLDNAME=\"{{worldname}}\" {{password}} lengthofdayseconds=\"{{lengthofdayseconds}}\" lengthofseasonseconds=\"{{lengthofseasonseconds}}\" creaturehealthmodifier=\"{{creaturehealthmodifier}}\" creaturedamagemodifier=\"{{creaturedamagemodifier}}\" creaturerespawnratemodifier=\"{{creaturerespawnratemodifier}}\" resourcerespawnratemodifier=\"{{resourcerespawnratemodifier}}\" creaturespawnchancemodifier=\"{{creaturespawnchancemodifier}}\" craftingtimemodifier=\"{{craftingtimemodifier}}\" craftingfuelmodifier=\"{{craftingfuelmodifier}}\" stormfrequencymodifier=\"{{stormfrequencymodifier}}\" nourishmentlossmodifier=\"{{nourishmentlossmodifier}}\" falldamagemodifier=\"{{falldamagemodifier}}\"{{custom_options}}?SESSIONPLATFORM=pc -ini:Engine:[EpicOnlineServices]:DeploymentId=50f2b148496e4cbbbdeefbecc2ccd6a3 -ini:Engine:[EpicOnlineServices]:DedicatedServerClientId=xyza78918KT08TkA6emolUay8yhvAAy2 -ini:Engine:[EpicOnlineServices]:DedicatedServerClientSecret=aN2GtVw7aHb6hx66HwohNM+qktFaO3vtrLSbGdTzZWk -Port={{port}} -NOSTEAM -stdout -FullStdOutLogOutput",
   "ports": [
     {
       "name": "Spiel",
@@ -30,7 +30,8 @@
       "label": "Serverpasswort",
       "help": "Passwort zum Verbinden. Standard: kein Passwort.",
       "type": "secret",
-      "default": ""
+      "default": "",
+      "if_set": "PASSWORD=\"%s\""
     },
     {
       "key": "lengthofdayseconds",
@@ -167,16 +168,24 @@
       "default": ""
     },
     {
+      "key": "manual_public_ip",
+      "label": "Öffentliche IP des Servers",
+      "help": "Öffentliche IP, die der Server anzeigt, wenn „Manuell“ gewählt ist. Nützlich bei mehreren öffentlichen IPs oder hinter Proxy bzw. VPN.",
+      "default": ""
+    },
+    {
       "key": "eos_override_host_ip",
       "label": "Auswahl der öffentlichen IP",
       "help": "Ob die angezeigte öffentliche IP automatisch gewählt wird oder die eingetragene öffentliche IP genutzt wird.",
       "type": "select",
       "options": [
-        ""
+        "",
+        "{{manual_public_ip}}"
       ],
       "default": "",
       "labels": [
-        "Server wählt automatisch (Standard)"
+        "Server wählt automatisch (Standard)",
+        "Manual selection"
       ]
     }
   ],

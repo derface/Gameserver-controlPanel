@@ -138,6 +138,12 @@
       "default": "0"
     },
     {
+      "key": "custom_map",
+      "label": "Name der eigenen Karte",
+      "help": "Eigene Karte. Unter „Karte“ muss „Eigene“ gewählt sein.",
+      "default": ""
+    },
+    {
       "key": "server_map",
       "label": "Karte",
       "help": "Karte des Servers, wenn in MapList.ini keine Liste steht. Die Mission muss auch gesetzt sein, sonst wird die Standardkarte genutzt. Für andere Karten „Eigene“ wählen und den eigenen Kartennamen eintragen.",
@@ -159,7 +165,8 @@
         "SmallTown",
         "StorageFacility",
         "Tanker",
-        "TheFarm"
+        "TheFarm",
+        "{{custom_map}}"
       ],
       "default": "747",
       "labels": [
@@ -179,8 +186,15 @@
         "Small Town",
         "Storage Facility",
         "Tanker",
-        "The Farm"
+        "The Farm",
+        "Eigene"
       ]
+    },
+    {
+      "key": "custom_mission",
+      "label": "Name der eigenen Mission",
+      "help": "Eigene Mission für die gewählte Karte. Unter „Mission“ muss „Eigene“ gewählt sein.",
+      "default": ""
     },
     {
       "key": "server_mission",
@@ -196,7 +210,8 @@
         "TeamElimination",
         "TerroristHunt",
         "Training",
-        "Uplink"
+        "Uplink",
+        "{{custom_mission}}"
       ],
       "default": "Deathmatch",
       "labels": [
@@ -208,7 +223,8 @@
         "Team Elimination",
         "Terrorist Hunt",
         "Training",
-        "Uplink"
+        "Uplink",
+        "Eigene"
       ]
     },
     {

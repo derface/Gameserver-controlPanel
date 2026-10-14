@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 1512690,
-  "start": "mkdir -p \"Renown_Combat/Saved/Config/LinuxServer\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1488310\" ./Renown_Combat/Binaries/Linux/Renown_CombatServer-Linux-Shipping Renown_Combat -Port={{port}} -QueryPort={{port_2}} -BeaconPort={{port_3}} -RCONPort={{port_4}} -RCONPassword=\"{{rcon_password}}\" -ini:Engine:[Script/SteamSockets.SteamSocketsNetDriver]:NetServerMaxTickRate={{net_server_max_tick_rate}} -ini:Engine:[SystemSettings]:Server.FirstPersonOnly={{server_first_person_only}} -ini:Engine:[EpicOnlineServices]:DedicatedServerClientId=xyza78917DzEE5Ey0isciVt66QDm5IzM -ini:Engine:[EpicOnlineServices]:DedicatedServerClientSecret=m/mrnywFCdeA1mW3ZSvv3qcVlQlfwi1a+7Z63Q44EGU",
+  "start": "mkdir -p \"Renown_Combat/Saved/Config/LinuxServer\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1488310\" ./Renown_Combat/Binaries/Linux/Renown_CombatServer-Linux-Shipping Renown_Combat -Port={{port}} -QueryPort={{port_2}} -BeaconPort={{port_3}} -RCONPort={{port_4}} -RCONPassword=\"{{rcon_password}}\" {{net_server_max_tick_rate}} -ini:Engine:[SystemSettings]:Server.FirstPersonOnly={{server_first_person_only}} -ini:Engine:[EpicOnlineServices]:DedicatedServerClientId=xyza78917DzEE5Ey0isciVt66QDm5IzM -ini:Engine:[EpicOnlineServices]:DedicatedServerClientSecret=m/mrnywFCdeA1mW3ZSvv3qcVlQlfwi1a+7Z63Q44EGU",
   "ports": [
     {
       "name": "Spiel-Port",
@@ -33,7 +33,8 @@
       "label": "Max. Netzwerk-Tickrate",
       "help": "Höchste Tickrate des Netzwerk-Treibers.",
       "type": "number",
-      "default": "30"
+      "default": "30",
+      "if_set": "-ini:Engine:[Script/SteamSockets.SteamSocketsNetDriver]:NetServerMaxTickRate=%s"
     },
     {
       "key": "server_first_person_only",

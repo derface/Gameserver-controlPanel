@@ -4,7 +4,7 @@
   "category": "Steam",
   "kind": "steam",
   "steam_app_id": 1874900,
-  "start": "mkdir -p \"Configs\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1874880\" ./ArmaReforgerServer -gproj \"/data/server/addons/data/ArmaReforger.gproj\" -profile \"/data/server/AReforgerMaster\" -bepath \"/data/server/battleye\" -bindPort {{port}} -a2sPort {{port_2}} -config \"/data/server/Configs/serverconfig.json\" -a2sIpAddress 0.0.0.0 -listScenarios -noThrow -maxFPS \"{{max_fps}}\" -freezeCheck \"{{freeze_check}}\" -freezeCheckMode \"{{freeze_check_mode}}\" {{addons_verify}}{{addons_repair}}{{log_stats}} {{custom_server_args}}",
+  "start": "mkdir -p \"Configs\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1874880\" ./ArmaReforgerServer -gproj \"/data/server/addons/data/ArmaReforger.gproj\" -profile \"/data/server/AReforgerMaster\" -bepath \"/data/server/battleye\" -bindPort {{port}} -a2sPort {{port_2}} -config \"/data/server/Configs/serverconfig.json\" -a2sIpAddress 0.0.0.0 -listScenarios -noThrow -maxFPS \"{{max_fps}}\" {{freeze_check}} -freezeCheckMode \"{{freeze_check_mode}}\" {{addons_verify}}{{addons_repair}}{{log_stats}} {{custom_server_args}}",
   "ports": [
     {
       "name": "Spiel",
@@ -36,7 +36,8 @@
       "label": "Prüfzeit für Hänger",
       "help": "Nach welcher Zeit der Server bei einem Hänger gezielt abstürzt. 0 = Erkennung ganz aus.",
       "type": "number",
-      "default": "300"
+      "default": "300",
+      "if_set": "-freezeCheck \"%s\""
     },
     {
       "key": "freeze_check_mode",

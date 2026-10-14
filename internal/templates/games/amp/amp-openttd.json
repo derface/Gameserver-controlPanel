@@ -5,7 +5,7 @@
   "kind": "steam",
   "steam_app_id": 1536610,
   "steam_login": true,
-  "start": "mkdir -p \"config\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1536610\" ./openttd -D 0.0.0.0:{{port}} -c config/openttd.cfg -g \"{{g}}\" -G \"{{g}}\" -t \"{{t}}\"",
+  "start": "mkdir -p \"config\" ; LD_LIBRARY_PATH=\"/data/server/linux64:$LD_LIBRARY_PATH\" SteamAppId=\"1536610\" ./openttd -D 0.0.0.0:{{port}} -c config/openttd.cfg {{g}} {{g}} -t \"{{t}}\"",
   "ports": [
     {
       "name": "Spiel",
@@ -29,7 +29,8 @@
       "key": "g",
       "label": "Name des Spielstands",
       "help": "Name des Spielstands, der beim Start geladen wird. Spielstände und Szenarien gehen. Ohne Angabe beginnt ein neues Spiel. Mit „config/save/autosave/exit.sav“ wird nach dem ersten Autosave der Standard-Autosave geladen.",
-      "default": ""
+      "default": "",
+      "if_set": "-G \"%s\""
     },
     {
       "key": "t",
