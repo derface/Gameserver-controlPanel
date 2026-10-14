@@ -20,7 +20,9 @@ jobs:
       - name: Prüfen
         run: go vet ./... && go test ./...
       - name: Bauen
-        run: make dist VERSION=${{ github.ref_name }}
+        run: |
+          make dist VERSION=${{ github.ref_name }}
+          cd dist && sha256sum gamepanel-linux-* install.sh > SHA256SUMS
       - name: Release anlegen
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

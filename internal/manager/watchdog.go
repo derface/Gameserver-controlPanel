@@ -74,12 +74,12 @@ func (m *Manager) recordCrash(sv store.Server, tpl templates.Template, l *live, 
 	l.crashes = append(keep, now)
 	switch {
 	case sv.Watch.NoAutoRestart:
-		m.Event(sv.ID, "error", "Server "+why+". Automatischer Neustart ist ausgeschaltet.")
+		m.EventKind(sv.ID, "error", "crash", "Server "+why+". Automatischer Neustart ist ausgeschaltet.")
 	case len(l.crashes) >= crashLimit:
 		l.haltMsg = fmt.Sprintf("%d Abstürze in %d Minuten, der Server wurde angehalten. Details in der Konsole.", len(l.crashes), int(crashWindow.Minutes()))
 		l.Phase, l.Msg = "error", l.haltMsg
 		l.crashes = nil
-		m.Event(sv.ID, "error", "Server "+why+". "+l.haltMsg)
+		m.EventKind(sv.ID, "error", "crash", "Server "+why+". "+l.haltMsg)
 		go func(id, cid string, timeout int) {
 			m.expect(id)
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -87,7 +87,7 @@ func (m *Manager) recordCrash(sv store.Server, tpl templates.Template, l *live, 
 			_ = m.dk.Stop(ctx, cid, timeout)
 		}(sv.ID, sv.ContainerID, tpl.StopTimeout)
 	default:
-		m.Event(sv.ID, "warn", "Server "+why+" und wird automatisch neu gestartet.")
+		m.EventKind(sv.ID, "warn", "crash", "Server "+why+" und wird automatisch neu gestartet.")
 	}
 }
 
@@ -108,7 +108,7 @@ func (m *Manager) hangCheck(sv store.Server, l *live) {
 		return
 	}
 	l.hangRun = l.State.StartedAt
-	m.Event(sv.ID, "warn", fmt.Sprintf("Server antwortet seit %d Minuten nicht mehr und wird neu gestartet.", lim))
+	m.EventKind(sv.ID, "warn", "crash", fmt.Sprintf("Server antwortet seit %d Minuten nicht mehr und wird neu gestartet.", lim))
 	m.AutoDiagnose(sv.ID, fmt.Sprintf("Server hing %d Minuten", lim))
 	go func(id string) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

@@ -30,16 +30,13 @@ import (
 const containerUID = 1000
 
 type Manager struct {
-	rt          routerCtl
-	st          *store.Store
-	dk          *docker.Client
-	tpls        *templates.Set
-	dataDir     string
-	Limit       func() (maxServers int) // from the license; <0 = unlimited
-	AutoBackups func() bool             // from the license
-	AIAllowed   func() bool             // from the license
-	Remote      func() (remote.Target, remote.Config)
-	up          uploads
+	rt      routerCtl
+	st      *store.Store
+	dk      *docker.Client
+	tpls    *templates.Set
+	dataDir string
+	Remote  func() (remote.Target, remote.Config)
+	up      uploads
 
 	buildMu   sync.Mutex
 	opMu      sync.Map // id -> *sync.Mutex
@@ -109,8 +106,7 @@ func New(st *store.Store, dk *docker.Client, tpls *templates.Set, dataDir string
 	if err := writeRunScript(dataDir); err != nil {
 		log.Printf("[Panel] Startskript: %v", err)
 	}
-	m := &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{},
-		Limit: func() int { return -1 }, AutoBackups: func() bool { return true }}
+	m := &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{}}
 	m.routerInit()
 	return m
 }
@@ -159,7 +155,7 @@ type CreateReq struct {
 	MemoryMB  int               `json:"memory_mb"`
 	Start     bool              `json:"start"`
 	CreatedBy string            `json:"-"`
-	internal  bool              // self-test: not counted against the license
+	internal  bool              // self-test: may also create servers from broken templates
 	// before runs once the server folder exists, before the container is
 	// created (e.g. to put imported save games in place).
 	before func(dir string, uid int) error
@@ -197,9 +193,6 @@ func (m *Manager) Validate(req CreateReq) (templates.Template, map[string]string
 	}
 	if req.MemoryMB != 0 && req.MemoryMB < tpl.MinMemoryMB {
 		return tpl, nil, nil, fmt.Errorf("%s braucht mindestens %d MB RAM", tpl.Name, tpl.MinMemoryMB)
-	}
-	if lim := m.Limit(); !req.internal && lim >= 0 && m.countServers() >= lim {
-		return tpl, nil, nil, fmt.Errorf("Deine Edition erlaubt %d Server. Für mehr bitte upgraden", lim)
 	}
 	return tpl, vars, ports, nil
 }
@@ -791,6 +784,9 @@ func (m *Manager) refresh(id string) {
 	}
 	if err == nil && sv.CreatedBy != testCreator {
 		m.watchdog(sv, tpl, prev, l)
+		if l.Phase == "error" && prev != nil && prev.Phase != "error" && l.Msg != "" {
+			m.EventKind(id, "error", "error", l.Msg)
+		}
 	}
 	if err == nil {
 		m.recordSample(sv, l)

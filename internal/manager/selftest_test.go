@@ -31,8 +31,6 @@ func TestSelfTestDocker(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := New(st, docker.New("/var/run/docker.sock"), tpls, dir)
-	m.Limit = func() int { return 1 }
-	// a normal server already uses up the license: the self-test must still run
 	if err := st.SaveServer(store.Server{ID: "eigener", Name: "Eigener", Template: "fake-ok", CreatedBy: "manual"}); err != nil {
 		t.Fatal(err)
 	}

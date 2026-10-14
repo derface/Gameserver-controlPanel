@@ -21,7 +21,7 @@
   const hasGL = !!window.THREE && (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } })();
 
   const S = {
-    user: '', role: '', twoFactor: false, license: null, version: '', settings: null,
+    user: '', role: '', twoFactor: false, update: null, version: '', settings: null,
     servers: [], tpls: [], tplById: {}, host: null,
     sel: null, pending: {}, consoleId: null, es: null,
     hist: { cpu: [], ram: [], disk: [], run: [] }
@@ -778,9 +778,9 @@
     } catch (err) { toast(err.message, 'bad'); }
   });
 
-  /* ---------------- Einstellungen + Lizenz ---------------- */
+  /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'backups', 'steam', 'lizenz'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -793,7 +793,8 @@
     if (sec === 'https') { loadProxy(); return loadTLS(); }
     if (sec === 'router') return loadRouter(false);
     if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; api('GET', '/api/settings').then(r => { $('#stmApiKey').value = r.settings.steam_api_key || ''; }).catch(() => {}); return loadSteam(); }
-    if (sec === 'lizenz') { showErr($('#licErr')); $('#licKey').value = ''; return renderLicense(); }
+    if (sec === 'panel') return loadPanelUpdate(false);
+    if (sec === 'benachrichtigungen') return loadNotify();
     if (sec === 'backups') {
       try {
         const rc = await api('GET', '/api/remote');
@@ -834,15 +835,61 @@
     catch (err) { showErr($('#sErr'), err.message); }
     finally { b.disabled = false; b.textContent = 'Verbindung testen'; }
   });
-  function renderLicense() {
-    const l = S.license; if (!l) return;
-    const e = l.edition;
-    $('#edChip').textContent = e.name + (l.updates_until ? ' · Updates bis ' + new Date(l.updates_until).toLocaleDateString('de-DE') : '');
-    let txt = `<b>${esc(e.name)}</b> · ${e.max_servers < 0 ? 'unbegrenzt viele Server' : 'bis zu ' + e.max_servers + ' Server'} · KI ${e.ai ? 'enthalten' : 'nicht enthalten'}`;
-    if (l.licensee) txt += `<br><span class="muted small">Lizenziert für ${esc(l.licensee)}${l.updates_until ? ', Updates bis ' + new Date(l.updates_until).toLocaleDateString('de-DE') + (l.updates_ok ? '' : ' (abgelaufen)') : ''}</span>`;
-    if (!l.valid) txt += '<br><span class="muted small">Ohne Lizenz läuft das Panel im Testmodus mit einem Server.</span>';
-    if (l.error) txt += `<br><span class="err">${esc(l.error)}</span>`;
-    $('#licStatus').innerHTML = txt;
+  async function loadNotify() {
+    showErr($('#ntErr'));
+    let r; try { r = await api('GET', '/api/notify'); } catch (e) { showErr($('#ntErr'), e.message); return; }
+    const c = r.config || {}, on = c.kinds || r.defaults;
+    $('#ntDiscord').value = c.discord || ''; $('#ntNtfy').value = c.ntfy_url || ''; $('#ntToken').value = c.ntfy_token || '';
+    $('#ntKinds').innerHTML = r.kinds.map(k => `<label class="check"><input type="checkbox" value="${esc(k.Key)}" ${on.includes(k.Key) ? 'checked' : ''}> ${esc(k.Label)}</label>`).join('');
+  }
+  $('#ntForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#ntErr'));
+    try {
+      await api('PUT', '/api/notify', { discord: $('#ntDiscord').value, ntfy_url: $('#ntNtfy').value, ntfy_token: $('#ntToken').value, kinds: $$('#ntKinds input:checked').map(x => x.value) });
+      toast('Benachrichtigungen gespeichert', 'ok'); loadNotify();
+    } catch (err) { showErr($('#ntErr'), err.message); }
+  });
+  $('#ntTest').addEventListener('click', async () => {
+    const b = $('#ntTest'); b.disabled = true; showErr($('#ntErr'));
+    try { await api('POST', '/api/notify/test'); toast('Testnachricht verschickt', 'ok'); } catch (err) { showErr($('#ntErr'), err.message); }
+    b.disabled = false;
+  });
+  async function loadPanelUpdate(refresh) {
+    showErr($('#upErr'));
+    $('#upStatus').textContent = 'Frage GitHub …'; $('#upGo').hidden = true; $('#upNotes').hidden = true;
+    let r; try { r = await api('GET', '/api/panel/update' + (refresh ? '?refresh=1' : '')); } catch (e) { $('#upStatus').textContent = ''; showErr($('#upErr'), e.message); return; }
+    const u = r.info; S.update = { available: u.available, latest: u.latest }; renderVersion();
+    if (u.source) $('#upSource').href = u.source;
+    let txt = `Installiert: <b>${esc(u.current)}</b>`;
+    if (u.error) { $('#upStatus').innerHTML = txt; showErr($('#upErr'), u.error); return; }
+    if (u.available) txt += ` · <b class="on-ok">Neu: ${esc(u.latest)}</b>` + (u.published && !u.published.startsWith('0001') ? ` vom ${new Date(u.published).toLocaleDateString('de-DE')}` : '');
+    else if (u.dev_build) txt += ` · neueste Veröffentlichung: ${esc(u.latest)} (du nutzt einen eigenen Entwicklungsstand)`;
+    else txt += ' · das ist die neueste Version';
+    txt += `<br><span class="muted small">Zuletzt geprüft ${new Date(u.checked).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}${u.url ? ` · <a href="${esc(u.url)}" target="_blank" rel="noopener">Release ansehen</a>` : ''}</span>`;
+    $('#upStatus').innerHTML = txt;
+    if (u.available && u.notes) { $('#upNotes').hidden = false; $('#upNotes').textContent = u.notes; }
+    $('#upGo').hidden = !(u.available || u.dev_build); $('#upGo').disabled = !!r.busy;
+    $('#upGo').textContent = u.available ? 'Auf ' + u.latest + ' aktualisieren' : u.latest + ' installieren';
+  }
+  $('#upCheck').addEventListener('click', () => loadPanelUpdate(true));
+  $('#upGo').addEventListener('click', async () => {
+    if (!await confirmBox('Panel aktualisieren?', 'Das Panel lädt die neue Version von GitHub, prüft die Prüfsumme und startet neu. Deine Spieleserver laufen dabei weiter, die Seite ist ein paar Sekunden weg.', 'Aktualisieren')) return;
+    const b = $('#upGo'); b.disabled = true; b.textContent = 'Lädt …'; showErr($('#upErr'));
+    try {
+      const r = await api('POST', '/api/panel/update');
+      toast(r.message, 'ok'); b.textContent = 'Startet neu …';
+      const was = S.version;
+      for (let i = 0; i < 60; i++) {
+        await new Promise(res => setTimeout(res, 2000));
+        try { const st = await api('GET', '/api/state'); if (st.version && st.version !== was) { location.reload(); return; } } catch (e) { /* Panel startet noch */ }
+      }
+      location.reload();
+    } catch (err) { showErr($('#upErr'), err.message); b.disabled = false; b.textContent = 'Erneut versuchen'; }
+  });
+  function renderVersion() {
+    const u = S.update;
+    $('#edChip').textContent = 'v' + String(S.version || '?').replace(/^v/, '') + (u && u.available ? ' · Update da' : '');
+    $('#edChip').classList.toggle('upd', !!(u && u.available));
   }
   function rmFields() {
     const t = $('#rmType').value;
@@ -902,11 +949,6 @@
     try { renderSteam(await api('DELETE', '/api/steam')); $('#stmUser').value = ''; } catch (err) { showErr($('#stmErr'), err.message); }
   });
 
-  $('#licForm').addEventListener('submit', async e => {
-    e.preventDefault(); showErr($('#licErr'));
-    try { S.license = await api('PUT', '/api/license', { key: $('#licKey').value }); renderLicense(); renderKI(); toast('Lizenz aktiviert: ' + S.license.edition.name, 'ok'); $('#licKey').value = ''; }
-    catch (err) { showErr($('#licErr'), err.message); }
-  });
   /* ---------------- Mein Konto ---------------- */
   const fmtLogin = d => d && !String(d).startsWith('0001') ? fmtDate(d) : 'noch nie';
   async function loadMe() {
@@ -1198,7 +1240,6 @@
     $('#dgBody').innerHTML = '<p class="rc-wait"><span class="spin" aria-hidden="true"></span> Lade …</p>';
     try { const r = await api('GET', `/api/servers/${encodeURIComponent(id)}/diagnose`); DG.list = r.diagnoses || []; DG.ai = r.ai; }
     catch (err) { $('#dgBody').innerHTML = `<p class="err">${esc(err.message)}</p>`; return; }
-    if (!DG.ai) { $('#dgBody').innerHTML = '<p>Die KI-Diagnose gehört zu den Editionen Pro und Ultimate.</p>'; $('#dgRun').hidden = true; return; }
     $('#dgRun').hidden = false;
     if (DG.list.length) renderDiag(); else runDiag();
   }
@@ -1348,7 +1389,7 @@
     if (!await confirmBox('Selbsttest abbrechen?', 'Der laufende Testserver wird gelöscht. Bisherige Ergebnisse bleiben erhalten.', 'Test abbrechen')) return;
     try { await api('DELETE', '/api/selftest'); toast('Wird abgebrochen …'); setTimeout(pollTest, 1500); } catch (err) { toast(err.message, 'bad'); }
   });
-  $('#edChip').onclick = () => openSettings(can('admin') ? 'lizenz' : 'konto');
+  $('#edChip').onclick = () => openSettings(can('admin') ? 'panel' : 'konto');
   $('#edChip').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#edChip').click(); } };
 
   /* ---------------- KI ---------------- */
@@ -1368,15 +1409,14 @@
   }
   function renderKI() {
     const body = $('#coreBody'); let lock = $('.locked', body);
-    const l = S.license, s = S.settings;
+    const s = S.settings;
     let msg = '';
-    if (l && !l.edition.ai) msg = 'Der KI-Assistent ist in deiner Edition nicht enthalten. Er gehört zu Pro und Ultimate.';
-    else if (s && !s.ai_provider) msg = 'Richte zuerst einen KI-Anbieter ein: Anthropic, OpenAI oder Ollama auf deinem eigenen Rechner.';
+    if (s && !s.ai_provider) msg = 'Richte zuerst einen KI-Anbieter ein: Anthropic, OpenAI oder Ollama auf deinem eigenen Rechner.';
     $('#askForm').hidden = !!msg; $('#chips').hidden = !!msg;
     if (msg) {
       if (!lock) { lock = document.createElement('div'); lock.className = 'locked'; body.prepend(lock); }
       lock.innerHTML = `<span>${esc(msg)}</span><button class="btn-line" type="button">Einstellungen öffnen</button>`;
-      lock.querySelector('button').onclick = () => openSettings(l && !l.edition.ai ? 'lizenz' : 'ki');
+      lock.querySelector('button').onclick = () => openSettings('ki');
     } else if (lock) lock.remove();
     if (!msg && !$('#chat').children.length) addMsg('KI', 'Sag mir, was für einen Server du willst oder was ich an einem vorhandenen ändern soll. Ich mache einen Vorschlag, und du gibst ihn frei.');
     const first = (S.servers || [])[0], chip = $('#chipChange');
@@ -1528,10 +1568,10 @@
   function mgTab(tab) {
     const s = byId(MG.id), tpl = s && S.tplById[s.template];
     if (!can('operator') && ['settings', 'mods', 'files'].includes(tab)) tab = 'console';
-    if (!['console', 'settings', 'mods', 'backups', 'files', 'tasks', 'events'].includes(tab)) tab = 'console';
+    if (!['console', 'players', 'settings', 'mods', 'backups', 'files', 'tasks', 'events'].includes(tab)) tab = 'console';
     MG.tab = tab;
     $$('#svTabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-    const panes = { console: 'paneConsole', backups: 'paneBackups', files: 'paneFiles', tasks: 'paneTasks', events: 'paneEvents', settings: 'paneSettings', mods: 'paneMods' };
+    const panes = { console: 'paneConsole', players: 'panePlayers', backups: 'paneBackups', files: 'paneFiles', tasks: 'paneTasks', events: 'paneEvents', settings: 'paneSettings', mods: 'paneMods' };
     Object.entries(panes).forEach(([k, id]) => { $('#' + id).hidden = k !== tab; });
     clearTimeout(TK.timer);
     if (tab !== 'files') closeEditor(true);
@@ -1545,10 +1585,66 @@
       loadModList(); if (mr) loadMods(); loadWorkshopInfo();
     }
     else if (tab === 'backups') loadBackups();
+    else if (tab === 'players') loadPlayers();
     else if (tab === 'files') loadFiles(MG.path);
     else loadTasks();
   }
   $('#svTabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) select(MG.id, b.dataset.tab); });
+
+  /* ---------------- Spieler ---------------- */
+  const PL = { data: null, timer: null };
+  const PL_ACT = { kick: 'Rauswerfen', ban: 'Bannen', unban: 'Entbannen', whitelist_add: 'Whitelist +', whitelist_remove: 'Whitelist −', op: 'Admin machen', deop: 'Admin entziehen' };
+  const PL_ONLINE = ['kick', 'ban', 'op'];
+  const plDur = s => s >= 3600 ? Math.floor(s / 3600) + ' Std. ' + Math.floor(s % 3600 / 60) + ' Min.' : Math.floor(s / 60) + ' Min.';
+  async function loadPlayers() {
+    const id = MG.id; clearTimeout(PL.timer);
+    let d; try { d = await api('GET', `/api/servers/${id}/players`); } catch (e) { $('#plInfo').textContent = e.message; return; }
+    if (MG.id !== id || MG.tab !== 'players') return;
+    PL.data = d; renderPlayers();
+    PL.timer = setTimeout(() => { if (MG.tab === 'players' && !document.hidden) loadPlayers(); }, 15000);
+  }
+  function renderPlayers() {
+    const d = PL.data, op = can('operator');
+    $('#plInfo').textContent = !d.running ? 'Server läuft nicht' : d.online_error ? d.online_error
+      : d.online_from ? `${d.online.length} online · ${d.online_from === 'console' ? 'über die Server-Konsole' : 'über die Steam-Abfrage'}` : 'Dieses Spiel meldet keine Spielerliste';
+    const acts = d.actions || [];
+    $('#plOnline').innerHTML = d.online.length ? `<table class="tbl"><thead><tr><th>Name</th><th>Online seit</th><th><span class="sr">Aktionen</span></th></tr></thead><tbody>${d.online.map(p =>
+      `<tr><td><b>${esc(p.name)}</b>${p.score ? ` <span class="muted small">· ${p.score} Punkte</span>` : ''}</td><td class="mono small">${p.seconds ? plDur(p.seconds) : '–'}</td><td><div class="row pl-acts">${op && d.online_ids ? PL_ONLINE.filter(a => acts.includes(a)).map(a =>
+        `<button type="button" class="btn-line small" data-pl="${a}" data-name="${esc(p.name)}">${PL_ACT[a]}</button>`).join('') : ''}</div></td></tr>`).join('')}</tbody></table>`
+      : `<p class="muted small">${d.running ? 'Gerade ist niemand online.' : 'Startet der Server, siehst du hier, wer spielt.'}</p>`;
+    $('#plIdLabel').textContent = d.id_label || 'Spielername';
+    $('#plName').placeholder = d.id_label === 'Steam-ID' ? 'z. B. 76561198012345678' : 'z. B. Steve';
+    const listActs = (d.lists || []).filter(l => l.editable).map(l => ({ key: 'list_add', list: l.key, label: l.label + ' +' }));
+    // with lists the add buttons belong to them (remove sits in the list); without lists all actions by name
+    const order = ['kick', 'ban', 'unban', 'op', 'deop', 'whitelist_add', 'whitelist_remove'];
+    const btns = listActs.length ? listActs : order.filter(a => acts.includes(a)).map(a => ({ key: a, label: PL_ACT[a] }));
+    $('#plForm').hidden = !op || !btns.length;
+    $('#plBtns').innerHTML = btns.map(b => `<button type="button" class="btn-line" data-pla="${b.key}" data-list="${b.list || ''}">${esc(b.label)}</button>`).join('');
+    $('#plLists').innerHTML = (d.lists || []).map(l => `<div class="pl-list"><h4>${esc(l.label)} <span class="muted small">${l.entries.length}</span></h4>
+      ${l.entries.length ? `<ul>${l.entries.map(x => `<li><span>${esc(x)}</span>${op && l.editable ? `<button type="button" class="linkbtn small" data-plrm="${esc(l.key)}" data-name="${esc(x)}">Entfernen</button>` : ''}</li>`).join('')}</ul>` : '<p class="muted small">leer</p>'}
+      ${l.hint ? `<p class="small muted">${esc(l.hint)}</p>` : ''}</div>`).join('');
+    $('#plNote').textContent = !d.supported ? 'Kicken, Bannen und Admins verwalten gibt es für dieses Spiel noch nicht. Die Online-Liste kommt, wenn das Spiel sie über die Steam-Abfrage verrät.' : (d.note || '');
+  }
+  async function plDo(action, name, list, confirmText) {
+    if (!name) { toast('Bitte einen Namen eintragen', 'bad'); return; }
+    if (confirmText && !await confirmBox(confirmText, name, 'Ja')) return;
+    try { const r = await api('POST', `/api/servers/${MG.id}/players`, { action, name, list }); toast(r.message || 'Erledigt', 'ok'); setTimeout(loadPlayers, 800); }
+    catch (e) { toast(e.message, 'bad'); }
+  }
+  $('#plReload').addEventListener('click', loadPlayers);
+  $('#plOnline').addEventListener('click', e => {
+    const b = e.target.closest('[data-pl]'); if (!b) return;
+    const a = b.dataset.pl; plDo(a, b.dataset.name, '', a === 'ban' ? 'Spieler bannen?' : a === 'kick' ? 'Spieler rauswerfen?' : '');
+  });
+  $('#plBtns').addEventListener('click', e => {
+    const b = e.target.closest('[data-pla]'); if (!b) return;
+    plDo(b.dataset.pla, $('#plName').value.trim(), b.dataset.list, b.dataset.pla === 'ban' ? 'Spieler bannen?' : '').then(() => { $('#plName').value = ''; });
+  });
+  $('#plForm').addEventListener('submit', e => e.preventDefault());
+  $('#plLists').addEventListener('click', e => {
+    const b = e.target.closest('[data-plrm]'); if (!b) return;
+    plDo('list_remove', b.dataset.name, b.dataset.plrm, 'Aus der Liste entfernen?');
+  });
 
   // Spiel-Einstellungen
   const GS = { data: null, orig: {}, group: null };
@@ -2044,7 +2140,7 @@
     $('#tkBackupWrap').hidden = !warnable || !d.can_backup;
     $('#tkCond').hidden = $('#tkEmptyWrap').hidden && $('#tkIfUpdWrap').hidden && $('#tkBackupWrap').hidden;
     $('#tkWarnWrap').hidden = !warnable || !d.can_broadcast;
-    $('#tkNote').textContent = warnable && !d.can_broadcast ? 'Dieses Spiel kann vom Panel aus keine Nachricht an die Spieler schicken, deshalb gibt es keine Vorwarnung.' : (a === 'backup' && S.license && !S.license.edition.auto_backup ? 'Geplante Backups gehören nicht zu deiner Edition.' : '');
+    $('#tkNote').textContent = warnable && !d.can_broadcast ? 'Dieses Spiel kann vom Panel aus keine Nachricht an die Spieler schicken, deshalb gibt es keine Vorwarnung.' : '';
   }
   ['tkAction', 'tkKind'].forEach(x => $('#' + x).addEventListener('change', tkFormFields));
   async function saveTasks(tasks, okMsg) {
@@ -2318,8 +2414,9 @@
       a.push({ label: 'HTTPS einrichten', hint: 'Panel', run: () => openSettings('https') });
       a.push({ label: 'Allgemein: Spieler-Adresse und KI-Anbieter', hint: 'Panel', run: () => openSettings('ki') });
       a.push({ label: 'Externe Backups', hint: 'Panel', run: () => openSettings('backups') });
+      a.push({ label: 'Benachrichtigungen (Discord, ntfy)', hint: 'Panel', run: () => openSettings('benachrichtigungen') });
       a.push({ label: 'Steam-Konto', hint: 'Panel', run: () => openSettings('steam') });
-      a.push({ label: 'Lizenz', hint: 'Panel', run: () => openSettings('lizenz') });
+      a.push({ label: 'Panel aktualisieren', hint: 'Panel', run: () => openSettings('panel') });
     }
     a.push({ label: isDark() ? 'Helles Design' : 'Dunkles Design', hint: 'Ansicht', run: toggleTheme });
     a.push({ label: motion ? 'Animationen reduzieren' : 'Animationen einschalten', hint: 'Ansicht', run: toggleMotion });
@@ -2486,7 +2583,7 @@
   async function loadState() {
     try {
       const st = await api('GET', '/api/state');
-      S.license = st.license; renderLicense();
+      if (st.update) { S.update = st.update; } renderVersion();
       if (st.role && st.role !== S.role) { S.role = st.role; document.body.dataset.role = S.role; renderAll(); }
       const ban = $('#dockerBanner');
       ban.hidden = !st.docker_error;
@@ -2502,7 +2599,7 @@
     if (!L.renderer && !$('.nogl')) $('#stage').insertAdjacentHTML('beforeend', '<div class="nogl">Die 3D-Ansicht braucht WebGL. Die Liste daneben funktioniert trotzdem.</div>');
     if (hasGL && !KI.core) { try { KI.core = makeCore($('#core')); } catch (e) { KI.core = null; } }
     if (!KI.core) $('#core').style.height = '24px';
-    renderLicense(); renderKI();
+    renderVersion(); renderKI();
     await Promise.all([loadServers(), loadHost()]);
     const vis = fn => () => { if (!document.hidden) fn(); };
     timers.push(setInterval(vis(loadServers), 2500), setInterval(vis(loadHost), 2000), setInterval(vis(loadState), 30000));
@@ -2513,7 +2610,7 @@
     let st;
     try { st = await api('GET', '/api/state'); }
     catch (e) { document.body.innerHTML = '<p style="padding:24px">Das Panel antwortet nicht. Bitte Seite neu laden.</p>'; return; }
-    S.version = st.version; S.license = st.license; S.user = st.user;
+    S.version = st.version; S.update = st.update || null; S.user = st.user;
     S.role = st.role || ''; S.twoFactor = !!st.two_factor; S.publicHost = st.public_host || '';
     document.body.dataset.role = S.role;
     $('#whoAmI').textContent = st.user || ''; $('#whoRole').textContent = ROLE[S.role] || '';

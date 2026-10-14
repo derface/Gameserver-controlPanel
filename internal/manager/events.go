@@ -43,6 +43,19 @@ func (m *Manager) loadEvents(id string) []Event {
 
 // Event appends to the server's history and keeps the newest entries.
 func (m *Manager) Event(id, level, text string) {
+	kind := ""
+	if level == "error" {
+		kind = "error"
+	}
+	m.EventKind(id, level, kind, text)
+}
+
+// EventKind records an event and sends it as a notification when the user
+// chose that kind (crash, error, update, task, backup, startstop, ai).
+func (m *Manager) EventKind(id, level, kind, text string) {
+	if kind != "" {
+		m.notifyEvent(id, level, kind, text)
+	}
 	m.ev.mu.Lock()
 	defer m.ev.mu.Unlock()
 	evs := append(m.loadEvents(id), Event{Time: time.Now(), Level: level, Text: text})

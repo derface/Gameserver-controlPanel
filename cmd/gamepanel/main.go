@@ -84,9 +84,6 @@ func main() {
 	}
 	a := &api.API{Auth: auth.New(st), Store: st, Mgr: mgr, Host: host, Docker: dk, Web: webFS, Version: version,
 		Audit: audit.Open(*dataDir), TLS: tlsm}
-	mgr.Limit = func() int { return a.License().Edition.MaxServers }
-	mgr.AutoBackups = func() bool { return a.License().Edition.AutoBackup }
-	mgr.AIAllowed = func() bool { return a.License().Edition.AI }
 	var rmu sync.Mutex
 	var rkey string
 	var rt remote.Target
@@ -107,6 +104,7 @@ func main() {
 	defer stop()
 	go host.Run(ctx)
 	go mgr.Run(ctx)
+	go a.RunUpdateCheck(ctx)
 
 	if err := dk.Ping(ctx); err != nil {
 		log.Printf("Warnung: %v", err)

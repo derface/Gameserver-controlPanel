@@ -6,6 +6,7 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"github.com/derface/Gameserver-controlPanel/internal/notify"
 	"os"
 	"path/filepath"
 	"sync"
@@ -125,6 +126,8 @@ type Settings struct {
 	// TrustedProxies are reverse proxies (IPs or networks) whose
 	// X-Forwarded-For/-Proto the panel believes.
 	TrustedProxies []string `json:"trusted_proxies,omitempty"`
+	// Notify sends events to Discord and/or ntfy.
+	Notify notify.Config `json:"notify"`
 }
 
 // RouterMap is a port forwarding the panel created in the router.
@@ -139,7 +142,6 @@ type Data struct {
 	Sessions map[string]Session `json:"sessions"`
 	Servers  []Server           `json:"servers"`
 	Settings Settings           `json:"settings"`
-	License  string             `json:"license,omitempty"`
 	Router   []RouterMap        `json:"router_maps,omitempty"`
 }
 

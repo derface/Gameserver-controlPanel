@@ -65,6 +65,7 @@ func (m *Manager) uploadAsync(id, name string) {
 		defer cancel()
 		if err := t.Put(ctx, key, filepath.Join(m.backupDir(id), name)); err != nil {
 			m.up.set(key, "Externe Kopie fehlgeschlagen: "+err.Error())
+			m.EventKind(id, "error", "error", "Externe Kopie von "+name+" fehlgeschlagen: "+err.Error())
 			return
 		}
 		m.up.done(key)

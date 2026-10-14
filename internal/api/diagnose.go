@@ -21,13 +21,10 @@ func (a *API) routesDiagnose(mux *http.ServeMux) {
 }
 
 func (a *API) diagList(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]any{"diagnoses": a.Mgr.Diagnoses(r.PathValue("id")), "ai": a.License().Edition.AI})
+	writeJSON(w, 200, map[string]any{"diagnoses": a.Mgr.Diagnoses(r.PathValue("id")), "ai": true})
 }
 
 func (a *API) diagRun(w http.ResponseWriter, r *http.Request) {
-	if !a.aiAllowed(w) {
-		return
-	}
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Minute)
 	defer cancel()
 	d, err := a.Mgr.Diagnose(ctx, r.PathValue("id"), "")
@@ -94,13 +91,10 @@ func (a *API) wsInfo(w http.ResponseWriter, r *http.Request) {
 		fail(w, 404, err)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"info": in, "ai": a.License().Edition.AI})
+	writeJSON(w, 200, map[string]any{"info": in, "ai": true})
 }
 
 func (a *API) wsAdvice(w http.ResponseWriter, r *http.Request) {
-	if !a.aiAllowed(w) {
-		return
-	}
 	var in struct {
 		ID string `json:"id"`
 	}

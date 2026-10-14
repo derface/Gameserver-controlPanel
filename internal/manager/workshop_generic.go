@@ -358,9 +358,6 @@ func (m *Manager) WorkshopAdvice(ctx context.Context, id, wid string) (ai.ModAdv
 	if !reWsDigits.MatchString(wid) {
 		return ai.ModAdvice{}, errors.New("Ungültige Workshop-ID")
 	}
-	if m.AIAllowed != nil && !m.AIAllowed() {
-		return ai.ModAdvice{}, errors.New("Der KI-Assistent ist in deiner Edition nicht enthalten")
-	}
 	s := m.aiSettings()
 	if s.AIProvider == "" {
 		return ai.ModAdvice{}, errors.New("Kein KI-Anbieter eingerichtet. Bitte unter Einstellungen → Allgemein & KI auswählen")

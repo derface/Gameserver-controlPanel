@@ -89,7 +89,7 @@ func (a *API) backups(w http.ResponseWriter, r *http.Request) {
 		"total_size":   total,
 		"scope":        scope,
 		"plan":         sv.Backup,
-		"auto_allowed": a.License().Edition.AutoBackup,
+		"auto_allowed": true,
 		"remote":       remoteName,
 		"remote_error": remoteErr,
 	})
@@ -101,7 +101,7 @@ func (a *API) backupCreate(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, err)
 		return
 	}
-	a.Mgr.Event(r.PathValue("id"), "info", "Backup "+b.Name+" erstellt von "+a.Auth.User(r))
+	a.Mgr.EventKind(r.PathValue("id"), "info", "backup", "Backup "+b.Name+" erstellt von "+a.Auth.User(r))
 	writeJSON(w, 201, b)
 }
 
@@ -113,10 +113,6 @@ func (a *API) backupPlan(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, 400, err)
-		return
-	}
-	if in.Every != 0 && !a.License().Edition.AutoBackup {
-		fail(w, 403, errors.New("Geplante Backups sind in deiner Edition nicht enthalten"))
 		return
 	}
 	sv, err := a.Mgr.SetBackupPlan(r.PathValue("id"), in.Every, in.At, in.Keep)

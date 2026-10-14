@@ -13,7 +13,7 @@ Eine einzige Datei, läuft auf jedem Linux mit Docker.
 - **Live:** Status (vorbereiten → installieren → starten → läuft), CPU/RAM je Server, Rechner-Auslastung, Live-Konsole mit Befehlseingabe.
 - **3D-Server-Landschaft** und **KI-Kern** im freigegebenen Design, Hell/Dunkel, Strg+K-Befehlssuche, Animationen abschaltbar.
 - **KI-Assistent:** Anthropic, OpenAI oder Ollama (lokal) mit eigenem Key. Die KI erstellt einen Plan, du gibst ihn frei, dann legt das Panel den Server an.
-- **Lizenzen:** Offline geprüfte, signierte Schlüssel mit Edition (Testmodus/Starter/Pro/Ultimate) und „Updates bis“-Datum.
+- **Freie Software:** GNU AGPL-3.0, kostenlos, alle Funktionen ohne Schlüssel.
 
 ## Auf dem Homeserver testen
 
@@ -34,7 +34,7 @@ Empfehlung: eine **eigene Debian-12-VM** auf Proxmox (nicht in einem unprivilegi
    bash install.sh --binary ./gamepanel-linux-amd64
    ```
    Das Skript installiert Docker, legt den Dienst `gamepanel` an und zeigt die Adresse, z. B. `http://192.168.178.30:8420`.
-4. **Admin-Konto anlegen**, dann ersten Server erstellen. Ohne Lizenz läuft der **Testmodus mit einem Server**. Einen Pro-Schlüssel zum Testen erzeugst du mit `licgen` (unten).
+4. **Admin-Konto anlegen**, dann ersten Server erstellen.
 5. **Von außen spielen:** In der FritzBox die Game-Ports auf die **VM-IP** weiterleiten.
    ⚠️ Die AMP-VM (`192.168.178.19`) nutzt vermutlich dieselben Standard-Ports. Zwei Weiterleitungen auf denselben Port gehen nicht – solange beide laufen, im Panel andere Ports verwenden oder den AMP-Server stoppen.
 
@@ -98,7 +98,7 @@ Einstellungen → Selbsttest (oder Strg+K → „Selbsttest“). Das Panel prüf
 4. Antwort auf die Spielerabfrage (A2S bzw. Minecraft-Ping)
 5. 30 Sekunden stabil, danach wird der Testserver samt Dateien gelöscht
 
-Ergebnis je Spiel: **ok**, **unsicher** (läuft, aber Abfrage fehlt oder ist nicht prüfbar), **fehler** (mit den letzten Logzeilen) oder **übersprungen** (feste Ports belegt, zu wenig Platz oder RAM). Ein Spielekauf ist nicht nötig: Dedicated Server lädt SteamCMD anonym. Testserver zählen nicht gegen das Server-Limit der Edition. Der Lauf übersteht Neustarts des Panels und setzt fort; ab 10 GB freiem Platz hält er an. Der Bericht lässt sich als Markdown herunterladen.
+Ergebnis je Spiel: **ok**, **unsicher** (läuft, aber Abfrage fehlt oder ist nicht prüfbar), **fehler** (mit den letzten Logzeilen) oder **übersprungen** (feste Ports belegt, zu wenig Platz oder RAM). Ein Spielekauf ist nicht nötig: Dedicated Server lädt SteamCMD anonym. Der Lauf übersteht Neustarts des Panels und setzt fort; ab 10 GB freiem Platz hält er an. Der Bericht lässt sich als Markdown herunterladen.
 
 ## Spiel-Einstellungen
 
@@ -150,7 +150,7 @@ Auf der Server-Karte bzw. in der Detailansicht: **Backups** und **Dateien**.
 
 - **Backups** liegen unter `/var/lib/gamepanel/backups/<server-id>/` als `.tar.gz`. Gesichert werden die Spieldaten, nicht die per SteamCMD geladenen Spieldateien (die lädt das Panel jederzeit neu). Was genau, steht im Backup-Tab („Gesichert werden: …“) und kommt aus `backup_exclude`/`backup_include` der Vorlage.
 - Minecraft Java wird im laufenden Betrieb konsistent gesichert (`save-off` / `save-all flush` / `save-on`).
-- **Automatisch** alle 6 h, 12 h oder täglich zu einer Uhrzeit (Pro und Ultimate). Alte automatische Backups werden nach „Behalten“ gelöscht, manuelle nie.
+- **Automatisch** alle 6 h, 12 h oder täglich zu einer Uhrzeit. Alte automatische Backups werden nach „Behalten“ gelöscht, manuelle nie.
 - **Wiederherstellen** sichert vorher den aktuellen Stand („Vor Wiederherstellung“, die letzten 3 bleiben), stoppt den Server, ersetzt die Daten und startet ihn wieder.
 - **Dateien:** Ordner durchsuchen, Textdateien bis 2 MB im Browser bearbeiten (Strg+S), hochladen (auch per Drag & Drop), herunterladen, umbenennen, löschen. Zugriff ist auf den Serverordner beschränkt.
 
@@ -175,7 +175,7 @@ Unter **Einstellungen → Benutzer und Rechte** legt ein Admin weitere Konten an
 |---|---|
 | Zuschauer | Server, Konsole, Backup-Liste, Aufgaben und Verlauf ansehen |
 | Betreiber | zusätzlich starten, stoppen, Befehle, Update, Backups, Dateien, Spiel-Einstellungen, Mods, Aufgaben |
-| Admin | alles: Server anlegen/löschen, Panel-Einstellungen, Steam, Lizenz, Selbsttest, KI, Benutzer, Protokoll, HTTPS |
+| Admin | alles: Server anlegen/löschen, Panel-Einstellungen, Steam, Panel-Update, Selbsttest, KI, Benutzer, Protokoll, HTTPS |
 
 Betreiber und Zuschauer lassen sich auf einzelne Server beschränken; andere Server sehen sie gar nicht. Rechteänderungen und Sperren wirken sofort, gesperrte oder gelöschte Konten werden überall abgemeldet. Der letzte aktive Admin kann nicht gesperrt, herabgestuft oder gelöscht werden.
 
@@ -274,7 +274,7 @@ Der KI-Assistent plant nicht nur neue Server, er ändert auch vorhandene („den
 
 ## KI-Diagnose
 
-Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber, Editionen mit KI). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.
+Server-Seite → Details → **„Mit KI prüfen“** (ab Rolle Betreiber). Das Panel sammelt Fakten (RAM-/CPU-Grenze, Auslastung der letzten sechs Stunden als Minutenwerte, Laufzeit, Spieler, Exit-Code, freier RAM und Plattenplatz des Rechners, andere Server), den Verlauf, einen Konsolenauszug (Fehler- und Warnzeilen dedupliziert plus die letzten 40 Zeilen, ohne Rauschen) und die Treffer eigener Regeln („Killed“/OOM, Speicherfehler, Segfault, Port belegt, fehlende Bibliothek, Steam-Fehler, RAM/CPU dauerhaft voll, Abstürze und Hänger der letzten 24 Stunden, Platte fast voll). Passwörter, IP-Adressen, Steam-IDs, E-Mail-Adressen und lange Schlüssel werden vorher entfernt.
 
 Die KI antwortet mit Schweregrad, Zusammenfassung, Befunden mit Beleg und bis zu vier Vorschlägen. Ausführbar per Klick (mit Rückfrage): RAM ändern (auf 256 MB gerundet, höchstens 90 % des Rechners), Startwert ändern (nur vorhandene, nicht geheime Variablen mit erlaubtem Wert), Neustart, Update. Alles andere ist ein Hinweis. Die letzten fünf Diagnosen je Server liegen in `<data>/diagnose/<id>.json`.
 
@@ -290,61 +290,37 @@ Das Skript (`internal/manager/ampexport.py`, nur Python-Standardbibliothek) pack
 
 Im Panel erscheint jede Instanz mit der erkannten Vorlage (über die Steam-App-ID, eigene Vorlagen vor erzeugten). „Übernehmen“ legt den Server an: Instanz-Einstellungen werden auf die Variablen der Vorlage abgebildet (Name ohne Sonderzeichen gleich, `$MaxUsers` → `max_players`), Dateien landen unter `server/`. Vorlagenfeld `amp_import` für Abweichungen: `map` (z. B. Zomboid `{"Zomboid/": "home/Zomboid/"}`), `vars_from_files` (Wert aus einem Dateinamen, z. B. der Zomboid-Servername) und feste `vars` (Icarus setzt die letzte Prospect fort). Empfangene Archive liegen bis zur Übernahme unter `<data>/import/amp`.
 
-## Lizenzen
+## Spielerverwaltung
 
-```bash
-go run ./cmd/licgen keygen   # einmalig: erzeugt licgen-private.key + öffentlichen Schlüssel
-go run ./cmd/licgen sign -edition pro -name "Max Muster" -months 12
-```
-- Der **öffentliche** Schlüssel steht in `internal/license/license.go` (`PublicKey`).
-- Der **private** Schlüssel gehört nur dir. **Nie ins Repo** (steht in `.gitignore`). Wer ihn hat, kann Lizenzen erzeugen.
-- Editionen: Testmodus 1 Server · Starter 3 · Pro 10 + KI · Ultimate unbegrenzt + KI.
+Reiter **Spieler** auf jeder Server-Seite: wer online ist (mit Spielzeit), dazu Rauswerfen, Bannen, Whitelist und Admins, soweit das Spiel es kann. Ab Rolle Betreiber; Zuschauer sehen nur die Liste.
 
-## Eigene Vorlagen
+| Spiel | Online-Liste | Aktionen | Listen |
+|---|---|---|---|
+| Minecraft Java | Konsole `list` (rcon-cli) | kick, ban, pardon, whitelist, op/deop | whitelist.json, ops.json, banned-players.json (Änderungen per Konsole) |
+| Project Zomboid | Konsole `players` | kickuser, banuser, unbanuser, setaccesslevel, Whitelist | in der Spieldatenbank |
+| Valheim | Steam-Abfrage | – | `saves/adminlist.txt`, `bannedlist.txt`, `permittedlist.txt` (Steam-IDs, bearbeitet das Panel direkt) |
+| Factorio | Konsole `/players online` | /kick, /ban, /unban, /promote, /demote, /whitelist | – |
+| Terraria | Konsole `playing` | kick, ban | – |
+| Source-Spiele (CS2, TF2, GMod, …) | Steam-Abfrage | kick | – |
+| übrige Steam-Spiele | Steam-Abfrage (A2S_PLAYER), sofern das Spiel Namen meldet | – | – |
 
-Eine JSON-Datei nach `/var/lib/gamepanel/templates/` legen und das Panel neu starten (`systemctl restart gamepanel`). Gleiche `id` wie eine eingebaute Vorlage überschreibt diese.
+Bei Spielen mit Konsole über stdin liest das Panel die Antwort aus dem Log direkt nach dem Befehl. Namen und IDs werden streng geprüft (keine Anführungszeichen, Semikolons usw.), jede Aktion steht im Verlauf und im Protokoll. Neue Spiele kommen als Profil in `internal/manager/players.go` dazu.
 
-```json
-{
-  "id": "mein-spiel", "name": "Mein Spiel", "category": "Steam", "kind": "steam",
-  "steam_app_id": 123456,
-  "start": "./server_binary -port {{port}} -name \"{{server_name}}\"",
-  "ports": [{"name": "Spiel", "port": 27015, "proto": "udp"}],
-  "vars": [{"key": "server_name", "label": "Servername", "default": "Mein Server"}],
-  "memory_mb": 4096, "min_memory_mb": 2048,
-  "console": "stdin", "ready": "Server started", "status": "beta"
-}
-```
-- `kind: steam` – nutzt die gemeinsame Steam-Laufzeit, installiert per SteamCMD nach `/data/server`.
-- `kind: image` – beliebiges Docker-Image (`image`, `env`), z. B. die Minecraft-Vorlagen.
-- Platzhalter: `{{port}}` (erster Port), `{{port_2}}` …, sowie jede Variable. Variablentypen: `text`, `number`, `secret`, `select` (+`options`), `bool` (+`flag`), `slug`, `command`. Auswahlwerte und `flag` dürfen selbst Platzhalter enthalten (z. B. `--new "{{world_name}}"`), sie werden einmal mit eingesetzt; von Nutzern eingetragene Werte nie. `if_set` (z. B. `-password %s`) setzt das Argument nur, wenn der Wert nicht leer ist. Jede Startzeile muss mit Standardwerten und mit jeder Auswahl gültiges Bash ergeben (Test `TestStartLinesAreValidBash`).
-- `console`: `stdin` (Befehle gehen an die Server-Eingabe) oder `exec` mit `exec_prefix` (z. B. `rcon-cli`).
-- `ready`: Regulärer Ausdruck im Log, ab dem der Server als „läuft“ gilt.
+## Benachrichtigungen
 
-## Aufbau
+Einstellungen → **Benachrichtigungen**: Discord-Webhook und/oder ntfy-Thema (auch eigener ntfy-Server, optional mit Zugangstoken). Auswählbar: Abstürze und Hänger, Fehler (Aufgaben, Backups, externe Kopien, Installation), Spiel-Updates, ausgeführte Aufgaben, erstellte Backups, Start/Stopp durch Benutzer, KI-Diagnosen, neue Panel-Version. Dieselbe Meldung kommt je Server höchstens alle 10 Minuten. „Testnachricht senden“ prüft die Einstellung. Webhook-URL und Token werden in der Oberfläche nur gekürzt angezeigt.
 
-```
-cmd/gamepanel     Programmstart
-cmd/licgen        Lizenzschlüssel erzeugen (nur für dich)
-internal/api      HTTP-API + Auslieferung der Oberfläche, Rechteprüfung
-internal/auth     Konten, Rollen, Sitzungen, Zwei-Faktor (TOTP)
-internal/audit    Protokoll (audit.log)
-internal/https    HTTP und HTTPS auf einem Port, Zertifikate
-internal/upnp     Portfreigaben im Router (UPnP-IGD)
-internal/reach    Prüfung von außen (öffentliche IP, DNS, check-host.net, mcsrvstat.us)
-internal/manager  Server anlegen/starten/stoppen, Live-Status, Ports
-internal/docker   Docker-Engine-API über den Unix-Socket
-internal/templates Vorlagen (games/*.json)
-internal/ai       Plan-Erstellung mit Anthropic/OpenAI/Ollama
-internal/license  Ed25519-Lizenzprüfung
-web/static        Oberfläche (HTML/CSS/JS + three.js), wird in die Datei eingebettet
-scripts/install.sh Installer
-```
-Nur Go-Standardbibliothek. Einzige fremde Teile: `internal/thirdparty/acme` (Kopie von golang.org/x/crypto/acme, BSD) für Let's Encrypt und `web/static/vendor/qrcode.js` (MIT) für den QR-Code. Daten liegen in `/var/lib/gamepanel/panel.json` (Rechte 600).
+## Panel-Update
+
+Einstellungen → **Panel & Updates**: Das Panel fragt GitHub kurz nach dem Start und dann alle 6 Stunden nach dem neuesten Release (`GP_REPO`, Standard `derface/Gameserver-controlPanel`; für private Repos `GP_GITHUB_TOKEN`). Ist eine neuere Version da, zeigt die Seitenleiste „Update da“ und auf Wunsch kommt eine Benachrichtigung. „Aktualisieren“ lädt `gamepanel-linux-<arch>` aus dem Release, prüft es gegen `SHA256SUMS` (ohne Prüfsumme wird nichts installiert), legt die alte Datei als `gamepanel.old` daneben und startet das Panel im selben Prozess neu. Spieleserver laufen weiter. Releases baut `.github/workflows/release.yml` bei jedem Tag `v*` (Programmdateien, `install.sh`, `SHA256SUMS`). Zurück zur alten Version: `mv /opt/gamepanel/gamepanel.old /opt/gamepanel/gamepanel && systemctl restart gamepanel`.
+
+## Lizenz
+
+Bytewise Panel ist freie Software unter der **GNU Affero General Public License v3.0** (`LICENSE`). Du darfst es kostenlos nutzen, verändern und weitergeben. Wer eine veränderte Fassung anderen über das Netz anbietet, muss deren Quellcode ebenfalls offenlegen (AGPL §13); das Panel verlinkt dazu unter Einstellungen → Panel & Updates auf den Quellcode. Fremdbestandteile: `internal/thirdparty/acme` (BSD), `web/static/vendor/qrcode.js` und `three.js` (MIT), Vorlagen-Daten aus LinuxGSM und AMPTemplates (MIT).
 
 ## Stand & Grenzen von 0.1
 
-- Getestet: kompletter Ablauf mit echtem Docker (anlegen, starten, Konsole, Befehle, stoppen, RAM ändern, zweite Instanz mit neuem Port, löschen), Login, Lizenzen.
+- Getestet: kompletter Ablauf mit echtem Docker (anlegen, starten, Konsole, Befehle, stoppen, RAM ändern, zweite Instanz mit neuem Port, löschen), Login.
 - Auf echter Hardware geprüft (Debian 13, Docker 29): Minecraft Java (Beitritt mit Client), Valheim (SteamCMD-Download, Start). Die übrigen Steam-Vorlagen (Status „Beta“) sind noch ungetestet.
 - Spielerzahlen: Minecraft Java (Server-List-Ping) sowie Valheim, CS2, GMod, TF2, 7DTD (Steam A2S). Übrige Spiele zeigen CPU statt Spieler.
 - Das Panel läuft als root (braucht Docker-Zugriff). Ins Internet nur mit HTTPS (eingebaut oder per Traefik) und Zwei-Faktor-Anmeldung.
@@ -353,6 +329,5 @@ Nur Go-Standardbibliothek. Einzige fremde Teile: `internal/thirdparty/acme` (Kop
 ## Nächste Schritte
 
 1. Selbsttest über alle Vorlagen laufen lassen, Fehler korrigieren, Status anpassen
-2. Lizenz-Server + Anbindung an den Shop, Online-Prüfung
-5. Mehrere Rechner (Nodes), Discord-Webhooks
+5. Mehrere Rechner (Nodes)
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)

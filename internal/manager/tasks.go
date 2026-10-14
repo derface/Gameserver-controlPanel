@@ -282,7 +282,7 @@ func (m *Manager) runConditional(ctx context.Context, id string, t store.Task, s
 			return
 		default:
 			notes = append(notes, "Update "+st.Installed+" → "+st.Latest)
-			m.Event(id, "info", fmt.Sprintf("Neue Version bei Steam (Build %s, installiert %s)", st.Latest, st.Installed))
+			m.EventKind(id, "info", "update", fmt.Sprintf("Neue Version bei Steam (Build %s, installiert %s)", st.Latest, st.Installed))
 		}
 	}
 	if t.WhenEmpty && m.isUp(id) {
@@ -415,9 +415,7 @@ func (m *Manager) RunTaskNow(ctx context.Context, id string, t store.Task) strin
 	)
 	pre := ""
 	if t.BackupFirst && (t.Action == "restart" || t.Action == "update" || t.Action == "stop") {
-		if !m.AutoBackups() {
-			pre = "ohne Backup (nicht in deiner Edition) · "
-		} else if b, berr := m.CreateBackup(actx, id, KindAuto); berr != nil {
+		if b, berr := m.CreateBackup(actx, id, KindAuto); berr != nil {
 			m.Event(id, "error", "Aufgabe "+label+" abgebrochen: Backup vorher fehlgeschlagen: "+berr.Error())
 			return "Fehler: Backup vorher fehlgeschlagen, " + label + " abgebrochen: " + berr.Error()
 		} else {
@@ -438,10 +436,6 @@ func (m *Manager) RunTaskNow(ctx context.Context, id string, t store.Task) strin
 		out, err = m.Command(actx, id, t.Command)
 		label += " „" + t.Command + "“"
 	case "backup":
-		if !m.AutoBackups() {
-			err = errors.New("Geplante Backups gehören nicht zu deiner Edition")
-			break
-		}
 		var b BackupInfo
 		b, err = m.CreateBackup(actx, id, KindAuto)
 		out = b.Name
@@ -458,7 +452,7 @@ func (m *Manager) RunTaskNow(ctx context.Context, id string, t store.Task) strin
 	if out != "" && t.Action != "command" {
 		msg += ": " + out
 	}
-	m.Event(id, "info", msg)
+	m.EventKind(id, "info", taskKind(t.Action), msg)
 	if out == "" {
 		out = "ok"
 	}
@@ -500,7 +494,7 @@ func (m *Manager) UpdateServer(ctx context.Context, id string) (string, error) {
 		return "", err
 	}
 	up := m.isUp(id)
-	m.Event(id, "info", "Update wird gestartet")
+	m.EventKind(id, "info", "update", "Update wird gestartet")
 	switch {
 	case tpl.Kind == "steam":
 		_ = os.Remove(filepath.Join(m.ServerDir(id), "server", ".gp-installed"))
@@ -533,7 +527,7 @@ type TaskView struct {
 	CanBroadcast bool        `json:"can_broadcast"`
 	CanQuery     bool        `json:"can_query"`
 	CanUpdate    bool        `json:"can_update"`
-	CanBackup    bool        `json:"can_backup"`       // edition allows automatic backups
+	CanBackup    bool        `json:"can_backup"`
 	CanCheck     bool        `json:"can_check_update"` // Steam: compare builds
 	Installed    string      `json:"installed_build,omitempty"`
 	UpdateOnRun  bool        `json:"update_on_run"`
@@ -553,7 +547,7 @@ func (m *Manager) Tasks(id string) (TaskView, error) {
 	}
 	v := TaskView{Watch: sv.Watch, CanBroadcast: tpl.Broadcast != "", CanQuery: tpl.Query != nil && tpl.Query.Type != "",
 		CanUpdate: tpl.Kind == "steam" || tpl.Image != "", Events: m.Events(id), Tasks: []TaskInfo{},
-		CanBackup: m.AutoBackups(), CanCheck: tpl.Kind == "steam", UpdateOnRun: sv.UpdateOnRun}
+		CanBackup: true, CanCheck: tpl.Kind == "steam", UpdateOnRun: sv.UpdateOnRun}
 	if tpl.Kind == "steam" {
 		v.Installed = m.installedBuild(id, tpl)
 	}
@@ -655,4 +649,15 @@ func (m *Manager) RunTaskByID(id, taskID string) error {
 		}
 	}
 	return errors.New("Aufgabe nicht gefunden")
+}
+
+// taskKind is the notification kind of a finished task.
+func taskKind(action string) string {
+	switch action {
+	case "update":
+		return "update"
+	case "backup":
+		return "backup"
+	}
+	return "task"
 }

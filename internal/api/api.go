@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/derface/Gameserver-controlPanel/internal/notify"
 	"io/fs"
 	"net/http"
 	"regexp"
@@ -20,7 +21,6 @@ import (
 	"github.com/derface/Gameserver-controlPanel/internal/docker"
 	"github.com/derface/Gameserver-controlPanel/internal/hoststats"
 	"github.com/derface/Gameserver-controlPanel/internal/https"
-	"github.com/derface/Gameserver-controlPanel/internal/license"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
@@ -35,12 +35,6 @@ type API struct {
 	Version string
 	Audit   *audit.Log
 	TLS     *https.Manager
-}
-
-func (a *API) License() license.Status {
-	key := ""
-	a.Store.Read(func(d *store.Data) { key = d.License })
-	return license.Check(key)
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -100,9 +94,13 @@ func (a *API) Handler() http.Handler {
 
 	mux.HandleFunc("GET /api/settings", a.need(auth.Admin, a.getSettings))
 	mux.HandleFunc("PUT /api/settings", a.need(auth.Admin, a.putSettings))
-	mux.HandleFunc("PUT /api/license", a.need(auth.Admin, a.putLicense))
 	mux.HandleFunc("POST /api/ai/plan", a.need(auth.Admin, a.aiPlan))
 	mux.HandleFunc("POST /api/ai/test", a.need(auth.Admin, a.aiTest))
+	a.routesPanelUpdate(mux)
+	a.routesPlayers(mux)
+	mux.HandleFunc("GET /api/notify", a.need(auth.Admin, a.notifyGet))
+	mux.HandleFunc("PUT /api/notify", a.need(auth.Admin, a.notifyPut))
+	mux.HandleFunc("POST /api/notify/test", a.need(auth.Admin, a.notifyTest))
 
 	files := http.FileServer(http.FS(a.Web))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -155,7 +153,7 @@ func (a *API) state(w http.ResponseWriter, r *http.Request) {
 		"two_factor":   u.TOTP != "",
 		"version":      a.Version,
 		"docker_error": dockerErr,
-		"license":      a.License(),
+		"update":       map[bool]any{true: updateState(), false: nil}[u.Role == auth.Admin],
 	})
 }
 
@@ -381,7 +379,7 @@ func (a *API) action(w http.ResponseWriter, r *http.Request) {
 		var msg string
 		msg, err = a.Mgr.UpdateServer(r.Context(), id)
 		if err == nil {
-			a.Mgr.Event(id, "info", "Update von "+a.Auth.User(r)+": "+msg)
+			a.Mgr.EventKind(id, "info", "update", "Update von "+a.Auth.User(r)+": "+msg)
 		}
 	case "command":
 		var req struct {
@@ -408,7 +406,7 @@ func (a *API) action(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if txt := map[string]string{"start": "Gestartet", "stop": "Gestoppt", "restart": "Neu gestartet", "recreate": "Neu angelegt"}[r.PathValue("action")]; txt != "" {
-		a.Mgr.Event(id, "info", txt+" von "+a.Auth.User(r))
+		a.Mgr.EventKind(id, "info", "startstop", txt+" von "+a.Auth.User(r))
 	}
 	sv, _ := a.Store.Server(id)
 	writeJSON(w, 200, a.Mgr.Info(sv))
@@ -485,7 +483,7 @@ func cleanLine(l string) string {
 	return strings.TrimRight(l, " \t")
 }
 
-// ---------- settings, license, ai ----------
+// ---------- settings, ai ----------
 
 func mask(s string) string {
 	if len(s) < 8 {
@@ -503,6 +501,7 @@ func (a *API) getSettings(w http.ResponseWriter, r *http.Request) {
 	s.AnthropicKey = mask(s.AnthropicKey)
 	s.OpenAIKey = mask(s.OpenAIKey)
 	s.SteamAPIKey = mask(s.SteamAPIKey)
+	s.Notify = maskNotify(s.Notify)
 	writeJSON(w, 200, map[string]any{"settings": s, "default_model": ai.DefaultModel(s.AIProvider)})
 }
 
@@ -541,25 +540,6 @@ func (a *API) putSettings(w http.ResponseWriter, r *http.Request) {
 	a.getSettings(w, r)
 }
 
-func (a *API) putLicense(w http.ResponseWriter, r *http.Request) {
-	var in struct {
-		Key string `json:"key"`
-	}
-	if err := decode(r, &in); err != nil {
-		fail(w, 400, err)
-		return
-	}
-	key := strings.TrimSpace(in.Key)
-	if key != "" {
-		if _, err := license.Verify(key); err != nil {
-			fail(w, 400, err)
-			return
-		}
-	}
-	_ = a.Store.Update(func(d *store.Data) error { d.License = key; return nil })
-	writeJSON(w, 200, a.License())
-}
-
 func (a *API) aiContext() ai.Context {
 	h := a.Host.Get()
 	c := ai.Context{TotalMemMB: int(h.MemTotalMB)}
@@ -575,18 +555,7 @@ func (a *API) aiContext() ai.Context {
 	return c
 }
 
-func (a *API) aiAllowed(w http.ResponseWriter) bool {
-	if !a.License().Edition.AI {
-		fail(w, 403, errors.New("Der KI-Assistent ist in deiner Edition nicht enthalten"))
-		return false
-	}
-	return true
-}
-
 func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
-	if !a.aiAllowed(w) {
-		return
-	}
 	var in struct {
 		Prompt  string   `json:"prompt"`
 		History []string `json:"history"`
@@ -704,4 +673,65 @@ func (a *API) focusServer(prompt string, history []string) string {
 		}
 	}
 	return ""
+}
+
+// ---------- notifications ----------
+
+// maskNotify hides the secret part of the webhook and the ntfy token.
+func maskNotify(c notify.Config) notify.Config {
+	if c.Discord != "" {
+		if i := strings.LastIndex(c.Discord, "/"); i > 0 {
+			c.Discord = c.Discord[:i+1] + "••••"
+		}
+	}
+	c.NtfyToken = mask(c.NtfyToken)
+	return c
+}
+
+func (a *API) notifyGet(w http.ResponseWriter, r *http.Request) {
+	var c notify.Config
+	a.Store.Read(func(d *store.Data) { c = d.Settings.Notify })
+	writeJSON(w, 200, map[string]any{"config": maskNotify(c), "kinds": notify.Kinds, "defaults": notify.DefaultKinds})
+}
+
+func (a *API) notifyPut(w http.ResponseWriter, r *http.Request) {
+	var in notify.Config
+	if err := decode(r, &in); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	var cur notify.Config
+	a.Store.Read(func(d *store.Data) { cur = d.Settings.Notify })
+	// unchanged masked values keep the stored secret
+	if strings.HasSuffix(in.Discord, "••••") {
+		in.Discord = cur.Discord
+	}
+	if strings.Contains(in.NtfyToken, "••••") {
+		in.NtfyToken = cur.NtfyToken
+	}
+	if in.Kinds == nil {
+		in.Kinds = []string{}
+	}
+	if err := in.Validate(); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	_ = a.Store.Update(func(d *store.Data) error { d.Settings.Notify = in; return nil })
+	a.notifyGet(w, r)
+}
+
+func (a *API) notifyTest(w http.ResponseWriter, r *http.Request) {
+	var c notify.Config
+	a.Store.Read(func(d *store.Data) { c = d.Settings.Notify })
+	if !c.Enabled() {
+		fail(w, 400, errors.New("Erst Discord oder ntfy eintragen und speichern"))
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	if err := notify.Send(ctx, c, notify.Message{Title: "Bytewise Panel", Text: "Testnachricht von " + a.Auth.User(r) + ": Benachrichtigungen kommen an.", Level: "info"}); err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]bool{"ok": true})
 }

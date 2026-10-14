@@ -11,6 +11,7 @@ dist:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)" -o dist/gamepanel-linux-amd64 ./cmd/gamepanel
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags "$(LDFLAGS)" -o dist/gamepanel-linux-arm64 ./cmd/gamepanel
 	cp scripts/install.sh dist/install.sh
+	cd dist && sha256sum gamepanel-linux-* install.sh > SHA256SUMS
 
 run: build
 	GP_DATA=./devdata GP_LISTEN=127.0.0.1:8420 ./dist/gamepanel

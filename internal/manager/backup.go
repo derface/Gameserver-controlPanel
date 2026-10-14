@@ -472,9 +472,6 @@ func (m *Manager) runSchedule(ctx context.Context) {
 			return
 		case <-t.C:
 		}
-		if !m.AutoBackups() {
-			continue
-		}
 		now := time.Now()
 		for _, sv := range m.st.Servers() {
 			if !due(sv.Backup, now) || sv.ContainerID == "" {
@@ -485,7 +482,12 @@ func (m *Manager) runSchedule(ctx context.Context) {
 			go func(id string) {
 				bctx, cancel := context.WithTimeout(ctx, time.Hour)
 				defer cancel()
-				_, err := m.CreateBackup(bctx, id, KindAuto)
+				b, err := m.CreateBackup(bctx, id, KindAuto)
+				if err != nil {
+					m.EventKind(id, "error", "error", "Automatisches Backup fehlgeschlagen: "+err.Error())
+				} else {
+					m.EventKind(id, "info", "backup", "Automatisches Backup "+b.Name+" erstellt")
+				}
 				_ = m.st.ModifyServer(id, func(cur *store.Server) error {
 					cur.Backup.LastError = ""
 					if err != nil {

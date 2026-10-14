@@ -144,6 +144,7 @@
     <p class="msg-line" id="svMsg" hidden></p>
     <nav class="tabs" role="tablist" aria-label="Bereich" id="svTabs">
       <button type="button" role="tab" id="tabConsole" data-tab="console">Konsole</button>
+      <button type="button" role="tab" id="tabPlayers" data-tab="players">Spieler</button>
       <button type="button" role="tab" id="tabSettings" data-tab="settings" class="op-only">Einstellungen</button>
       <button type="button" role="tab" id="tabMods" data-tab="mods" class="op-only" hidden>Mods</button>
       <button type="button" role="tab" id="tabBackups" data-tab="backups">Backups</button>
@@ -305,6 +306,17 @@
     <p class="small muted" id="tkNote"></p>
   </section>
 
+  <section class="mg-pane" id="panePlayers" role="tabpanel" aria-labelledby="tabPlayers" hidden>
+    <div class="pl-head"><h3>Online</h3><span class="small muted" id="plInfo"></span><button type="button" class="btn-line small" id="plReload">Neu laden</button></div>
+    <div id="plOnline" class="pl-online"></div>
+    <form class="pl-add op-only" id="plForm" autocomplete="off">
+      <label class="field"><span id="plIdLabel">Spielername</span><input id="plName" maxlength="64" spellcheck="false"></label>
+      <div class="pl-btns" id="plBtns"></div>
+    </form>
+    <div id="plLists" class="pl-lists"></div>
+    <p class="small muted" id="plNote"></p>
+  </section>
+
   <section class="mg-pane" id="paneEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
     <ol class="ev-list" id="evList" aria-live="polite"></ol>
   </section>
@@ -421,9 +433,10 @@
         <a href="#/einstellungen/https" data-sec="https">HTTPS</a>
         <a href="#/einstellungen/router" data-sec="router">Router &amp; Ports</a>
         <a href="#/einstellungen/ki" data-sec="ki">Allgemein &amp; KI</a>
+        <a href="#/einstellungen/benachrichtigungen" data-sec="benachrichtigungen">Benachrichtigungen</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
-        <a href="#/einstellungen/lizenz" data-sec="lizenz">Lizenz</a>
+        <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
       </nav>
       <div class="set-body">
   <div class="set-block" id="meBlock" data-sec="konto">
@@ -539,13 +552,24 @@
     <details class="howto" id="stmLogWrap" hidden><summary>Was SteamCMD gesagt hat</summary><pre class="stm-log" id="stmLog"></pre></details>
     <div class="dlg-actions"><button type="button" class="btn-line" id="stmLogout" hidden>Abmelden</button><button type="submit" class="btn-accent" id="stmGo">Anmelden</button></div>
   </form>
-  <form id="licForm" class="set-block admin-only" data-sec="lizenz">
-    <h2>Lizenz</h2>
-    <p id="licStatus"></p>
-    <label class="field"><span>Lizenzschlüssel</span><textarea id="licKey" rows="3" placeholder="GP1.…" spellcheck="false"></textarea></label>
-    <p class="err" id="licErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="submit" class="btn-accent">Aktivieren</button></div>
+  <form id="ntForm" class="set-block admin-only" data-sec="benachrichtigungen" autocomplete="off">
+    <h2>Benachrichtigungen</h2>
+    <p class="muted small">Das Panel meldet sich bei Abstürzen, Fehlern oder Updates auf deinem Handy oder in Discord. Gleiche Meldungen kommen höchstens alle 10 Minuten.</p>
+    <label class="field"><span>Discord-Webhook <em class="muted">optional</em></span><input id="ntDiscord" placeholder="https://discord.com/api/webhooks/…" spellcheck="false"><small>In Discord: Kanal → Bearbeiten → Integrationen → Webhooks → Neuer Webhook → URL kopieren.</small></label>
+    <label class="field"><span>ntfy-Thema <em class="muted">optional</em></span><input id="ntNtfy" placeholder="https://ntfy.sh/mein-panel oder https://ntfy.deine-domain.de/panel" spellcheck="false"><small>Mit der ntfy-App auf dem Handy dasselbe Thema abonnieren. Eigener ntfy-Server geht auch.</small></label>
+    <label class="field"><span>ntfy-Zugangstoken <em class="muted">optional</em></span><input id="ntToken" type="password" placeholder="tk_…" autocomplete="off"></label>
+    <fieldset class="nt-kinds"><legend>Was gemeldet wird</legend><div id="ntKinds"></div></fieldset>
+    <p class="err" id="ntErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="ntTest">Testnachricht senden</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
+  <div id="upBlock" class="set-block admin-only" data-sec="panel">
+    <h2>Panel &amp; Updates</h2>
+    <p class="muted small">Bytewise Panel ist freie Software unter der <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL-3.0</a>: kostenlos, ohne Lizenzschlüssel, alle Funktionen frei. <a id="upSource" href="https://github.com/derface/Gameserver-controlPanel" target="_blank" rel="noopener">Quellcode</a></p>
+    <p id="upStatus" class="small"></p>
+    <div id="upNotes" class="up-notes" hidden></div>
+    <p class="err" id="upErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="upCheck">Nach Updates suchen</button><button type="button" class="btn-accent" id="upGo" hidden>Jetzt aktualisieren</button></div>
+  </div>
 
         <div class="set-block admin-only" data-sec="router" id="rtBlock">
           <h2>Router &amp; Ports</h2>

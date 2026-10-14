@@ -529,9 +529,6 @@ func (m *Manager) aiSettings() store.Settings {
 
 // Diagnose asks the AI about one server and stores the result.
 func (m *Manager) Diagnose(ctx context.Context, id, trigger string) (ai.Diagnosis, error) {
-	if m.AIAllowed != nil && !m.AIAllowed() {
-		return ai.Diagnosis{}, errors.New("Der KI-Assistent ist in deiner Edition nicht enthalten")
-	}
 	s := m.aiSettings()
 	if s.AIProvider == "" {
 		return ai.Diagnosis{}, errors.New("Kein KI-Anbieter eingerichtet. Bitte unter Einstellungen → Allgemein & KI auswählen")
@@ -555,7 +552,7 @@ func (m *Manager) Diagnose(ctx context.Context, id, trigger string) (ai.Diagnosi
 // per day, so a crash loop does not run up the AI bill.
 func (m *Manager) AutoDiagnose(id, why string) {
 	s := m.aiSettings()
-	if !s.AIAutoDiagnose || s.AIProvider == "" || (m.AIAllowed != nil && !m.AIAllowed()) {
+	if !s.AIAutoDiagnose || s.AIProvider == "" {
 		return
 	}
 	now := time.Now()
@@ -590,6 +587,6 @@ func (m *Manager) AutoDiagnose(id, why string) {
 		if len(d.Actions) > 0 {
 			txt += " Vorschläge unter „Mit KI prüfen“."
 		}
-		m.Event(id, lvl, txt)
+		m.EventKind(id, lvl, "ai", txt)
 	}()
 }
