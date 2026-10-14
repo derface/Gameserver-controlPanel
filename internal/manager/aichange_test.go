@@ -37,3 +37,24 @@ func TestAIChangeEnshrouded(t *testing.T) {
 		t.Fatalf("%+v %v", ch, notes)
 	}
 }
+
+func TestAIChangeLenient(t *testing.T) {
+	m, st := settingsMgr(t)
+	_ = st.Update(func(d *store.Data) error {
+		d.Servers = append(d.Servers, store.Server{ID: "en", Name: "Enshrouded01", Template: "enshrouded", MemoryMB: 8192, Vars: map[string]string{}})
+		return nil
+	})
+	// keys without prefix, under vars, preset in lower case, file by name
+	ch, _, err := m.CheckChanges("en", map[string]string{"experienceCombatFactor": "2", "gameSettingsPreset": "custom"},
+		map[string]map[string]string{"enshrouded_server.json": {"resourceDropStackAmountFactor": "1.8"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, c := range ch {
+		got[c.Key] = c.Where + "=" + c.New
+	}
+	if got["gameSettings.experienceCombatFactor"] != "0=2" || got["gameSettingsPreset"] != "0=Custom" || got["gameSettings.resourceDropStackAmountFactor"] != "0=1.8" {
+		t.Fatalf("%v", got)
+	}
+}

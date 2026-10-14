@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,16 +21,56 @@ import (
 )
 
 type Plan struct {
-	Action   string                       `json:"action,omitempty"` // "" or create | change (an existing server)
-	Server   string                       `json:"server,omitempty"` // id, for change
-	Files    map[string]map[string]string `json:"files,omitempty"`
-	Template string                       `json:"template"`
-	Name     string                       `json:"name"`
-	Vars     map[string]string            `json:"vars"`
-	MemoryMB int                          `json:"memory_mb"`
-	Reply    string                       `json:"reply"`
-	Steps    []string                     `json:"steps"`
-	Question string                       `json:"question,omitempty"` // set when the AI needs more info
+	Action   string            `json:"action,omitempty"` // "" or create | change (an existing server)
+	Server   string            `json:"server,omitempty"` // id, for change
+	Files    map[string]StrMap `json:"files,omitempty"`
+	Template string            `json:"template"`
+	Name     string            `json:"name"`
+	Vars     StrMap            `json:"vars"`
+	MemoryMB int               `json:"memory_mb"`
+	Reply    string            `json:"reply"`
+	Steps    []string          `json:"steps"`
+	Question string            `json:"question,omitempty"` // set when the AI needs more info
+}
+
+// StrMap takes numbers and booleans as text: models often write 2 instead
+// of "2".
+type StrMap map[string]string
+
+func (m *StrMap) UnmarshalJSON(b []byte) error {
+	var raw map[string]any
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	out := StrMap{}
+	flatten(raw, "", out)
+	*m = out
+	return nil
+}
+
+// flatten writes nested objects as dotted keys: {"gameSettings":{"a":2}}
+// becomes "gameSettings.a" = "2".
+func flatten(raw map[string]any, prefix string, out StrMap) {
+	for k, v := range raw {
+		if prefix != "" {
+			k = prefix + "." + k
+		}
+		switch x := v.(type) {
+		case map[string]any:
+			flatten(x, k, out)
+		case string:
+			out[k] = x
+		case float64:
+			out[k] = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			out[k] = strconv.FormatBool(x)
+		case nil:
+			out[k] = ""
+		default:
+			j, _ := json.Marshal(x)
+			out[k] = string(j)
+		}
+	}
 }
 
 type Context struct {
@@ -292,7 +333,7 @@ func MakePlan(ctx context.Context, s store.Settings, tpls *templates.Set, c Cont
 		p.MemoryMB = c.FreeMemMB
 	}
 	if p.Vars == nil {
-		p.Vars = map[string]string{}
+		p.Vars = StrMap{}
 	}
 	if strings.TrimSpace(p.Name) == "" {
 		p.Name = tpl.Name

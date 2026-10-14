@@ -106,100 +106,216 @@ type SettingChange struct {
 	New   string `json:"new"`
 }
 
-// CheckChanges validates proposed values and returns the real differences.
-// Unknown keys and invalid values are dropped with a note.
-func (m *Manager) CheckChanges(id string, vars map[string]string, filesIn map[string]map[string]string) ([]SettingChange, []string, error) {
-	_, tpl, err := m.get(id)
-	if err != nil {
-		return nil, nil, err
+type aiSlot struct {
+	where string // "vars" or file index
+	file  string // title
+	v     *VarValue
+	s     *SettingValue
+}
+
+func (x aiSlot) key() string {
+	if x.v != nil {
+		return x.v.Key
 	}
+	return x.s.Key
+}
+
+func (x aiSlot) label() string {
+	if x.v != nil {
+		return x.v.Label
+	}
+	return x.s.Label
+}
+
+// CheckChanges validates proposed values and returns the real differences.
+// Models are not exact: a key may come without its prefix
+// ("experienceCombatFactor"), under "vars" although it is in a file, or with
+// the file name instead of its number. Unknown keys and invalid values are
+// dropped with a note, numbers are clamped to the game's range.
+func (m *Manager) CheckChanges(id string, vars map[string]string, filesIn map[string]map[string]string) ([]SettingChange, []string, error) {
 	v, err := m.Settings(id)
 	if err != nil {
 		return nil, nil, err
 	}
-	var out []SettingChange
-	var notes []string
-	for k, val := range vars {
-		var found *VarValue
-		for i := range v.Vars {
-			if v.Vars[i].Key == k {
-				found = &v.Vars[i]
+	var slots []aiSlot
+	for i := range v.Vars {
+		if t := v.Vars[i].Type; t != "secret" && t != "command" {
+			slots = append(slots, aiSlot{where: "vars", v: &v.Vars[i]})
+		}
+	}
+	for fi := range v.Files {
+		f := &v.Files[fi]
+		if !f.Editable {
+			continue
+		}
+		for j := range f.Settings {
+			if f.Settings[j].Type != "secret" {
+				slots = append(slots, aiSlot{where: strconv.Itoa(fi), file: f.Title, s: &f.Settings[j]})
 			}
 		}
-		if found == nil || found.Type == "secret" || found.Type == "command" {
-			notes = append(notes, "Startwert „"+k+"“ gibt es nicht, ausgelassen")
-			continue
+	}
+	fileHint := func(h string) string {
+		if h == "" || h == "vars" {
+			return h
 		}
-		if found.Type == "select" && len(found.Options) > 0 && !strContains(found.Options, val) {
-			notes = append(notes, fmt.Sprintf("„%s“: %q ist keine erlaubte Auswahl, ausgelassen", found.Label, val))
-			continue
+		if _, err := strconv.Atoi(h); err == nil {
+			return h
 		}
-		if found.Type == "bool" && val != "true" && val != "false" {
-			notes = append(notes, fmt.Sprintf("„%s“: nur true/false, ausgelassen", found.Label))
-			continue
+		lh := strings.ToLower(h)
+		for fi, f := range v.Files {
+			if strings.ToLower(f.Title) == lh || strings.HasSuffix(strings.ToLower(f.File), lh) {
+				return strconv.Itoa(fi)
+			}
 		}
-		if val != found.Value {
-			out = append(out, SettingChange{Where: "vars", Key: k, Label: found.Label, Old: found.Value, New: val})
+		return ""
+	}
+	find := func(hint, key string) *aiSlot {
+		pick := func(match func(aiSlot) bool) *aiSlot {
+			var hits []int
+			for i, x := range slots {
+				if match(x) {
+					hits = append(hits, i)
+				}
+			}
+			for _, i := range hits {
+				if slots[i].where == hint {
+					return &slots[i]
+				}
+			}
+			if len(hits) == 1 {
+				return &slots[hits[0]]
+			}
+			return nil
 		}
+		lk := strings.ToLower(strings.TrimSpace(key))
+		tail := func(s string) string { return s[strings.LastIndexAny(s, "./")+1:] }
+		for _, match := range []func(aiSlot) bool{
+			func(x aiSlot) bool { return x.key() == key },
+			func(x aiSlot) bool { return strings.ToLower(x.key()) == lk },
+			func(x aiSlot) bool { return strings.ToLower(tail(x.key())) == tail(lk) },
+			func(x aiSlot) bool { return strings.ToLower(x.label()) == lk },
+		} {
+			if r := pick(match); r != nil {
+				return r
+			}
+		}
+		return nil
+	}
+	type prop struct{ hint, key, val string }
+	var props []prop
+	for k, val := range vars {
+		props = append(props, prop{"vars", k, val})
 	}
 	for fi, kv := range filesIn {
-		i, err := strconv.Atoi(fi)
-		if err != nil || i < 0 || i >= len(v.Files) || !v.Files[i].Editable {
-			notes = append(notes, "Datei "+fi+" gibt es nicht, ausgelassen")
+		h := fileHint(fi)
+		for k, val := range kv {
+			props = append(props, prop{h, k, val})
+		}
+	}
+	var out []SettingChange
+	var notes []string
+	seen := map[string]bool{}
+	for _, p := range props {
+		x := find(p.hint, p.key)
+		if x == nil {
+			notes = append(notes, "„"+p.key+"“ gibt es bei diesem Server nicht, ausgelassen")
 			continue
 		}
-		f := v.Files[i]
-		for k, val := range kv {
-			var found *SettingValue
-			for j := range f.Settings {
-				if f.Settings[j].Key == k {
-					found = &f.Settings[j]
+		id := x.where + "/" + x.key()
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+		val := strings.TrimSpace(p.val)
+		if x.v != nil {
+			vv := x.v
+			if vv.Type == "select" && len(vv.Options) > 0 && !strContains(vv.Options, val) {
+				notes = append(notes, fmt.Sprintf("„%s“: %q ist keine erlaubte Auswahl, ausgelassen", vv.Label, val))
+				continue
+			}
+			if vv.Type == "bool" {
+				if val = normBool(val); val == "" {
+					notes = append(notes, fmt.Sprintf("„%s“: nur an oder aus, ausgelassen", vv.Label))
+					continue
 				}
 			}
-			if found == nil || found.Type == "secret" {
-				notes = append(notes, "„"+k+"“ gibt es in "+f.Title+" nicht, ausgelassen")
-				continue
-			}
-			if found.Type == "number" {
-				// the game's limits beat the AI's wish (Enshrouded: XP at most x2)
-				if n, err := strconv.ParseFloat(strings.TrimSpace(val), 64); err == nil {
-					c := n
-					if found.Min != nil && c < *found.Min {
-						c = *found.Min
-					}
-					if found.Max != nil && c > *found.Max {
-						c = *found.Max
-					}
-					if c != n {
-						val = strconv.FormatFloat(c, 'f', -1, 64)
-						notes = append(notes, fmt.Sprintf("„%s“: %s geht im Spiel nicht, auf %s begrenzt", found.Label, strconv.FormatFloat(n, 'f', -1, 64), val))
-					}
+			if vv.Type == "number" {
+				if _, err := strconv.Atoi(val); err != nil {
+					notes = append(notes, fmt.Sprintf("„%s“ muss eine ganze Zahl sein, ausgelassen", vv.Label))
+					continue
 				}
 			}
-			if _, err := fileValue(found.Setting, val); err != nil {
-				notes = append(notes, err.Error()+", ausgelassen")
-				continue
+			if val != vv.Value {
+				out = append(out, SettingChange{Where: "vars", Key: vv.Key, Label: vv.Label, Old: vv.Value, New: val})
 			}
-			if found.Type == "select" && len(found.Options) > 0 && !strContains(found.Options, val) {
-				notes = append(notes, fmt.Sprintf("„%s“: %q ist keine erlaubte Auswahl, ausgelassen", found.Label, val))
-				continue
-			}
-			same := val == found.Value
-			if found.Type == "number" {
-				a, e1 := strconv.ParseFloat(val, 64)
-				b, e2 := strconv.ParseFloat(found.Value, 64)
-				same = same || (e1 == nil && e2 == nil && a == b)
-			}
-			if !same || !found.Present {
-				out = append(out, SettingChange{Where: fi, Key: k, Label: found.Label, Old: found.Value, New: val})
+			continue
+		}
+		st := x.s
+		if st.Type == "bool" {
+			if b := normBool(val); b != "" {
+				val = b
 			}
 		}
+		if st.Type == "number" {
+			// the game's limits beat the AI's wish (Enshrouded: XP at most x2)
+			if n, err := strconv.ParseFloat(val, 64); err == nil {
+				c := n
+				if st.Min != nil && c < *st.Min {
+					c = *st.Min
+				}
+				if st.Max != nil && c > *st.Max {
+					c = *st.Max
+				}
+				if c != n {
+					val = strconv.FormatFloat(c, 'f', -1, 64)
+					notes = append(notes, fmt.Sprintf("„%s“: %s geht im Spiel nicht, auf %s begrenzt", st.Label, strconv.FormatFloat(n, 'f', -1, 64), val))
+				}
+			}
+		}
+		if st.Type == "select" && len(st.Options) > 0 && !strContains(st.Options, val) {
+			// "custom" for "Custom"
+			for _, o := range st.Options {
+				if strings.EqualFold(o, val) {
+					val = o
+				}
+			}
+			if !strContains(st.Options, val) {
+				notes = append(notes, fmt.Sprintf("„%s“: %q ist keine erlaubte Auswahl, ausgelassen", st.Label, val))
+				continue
+			}
+		}
+		if _, err := fileValue(st.Setting, val); err != nil {
+			notes = append(notes, err.Error()+", ausgelassen")
+			continue
+		}
+		same := val == st.Value
+		if st.Type == "number" {
+			a, e1 := strconv.ParseFloat(val, 64)
+			b, e2 := strconv.ParseFloat(st.Value, 64)
+			same = same || (e1 == nil && e2 == nil && a == b)
+		}
+		if !same || !st.Present {
+			out = append(out, SettingChange{Where: x.where, Key: st.Key, Label: st.Label, Old: st.Value, New: val})
+		}
 	}
-	_ = tpl
 	if len(out) == 0 && len(notes) > 0 {
-		return nil, notes, errors.New("Keiner der Vorschläge der KI passte zu den Einstellungen dieses Servers")
+		n := notes
+		if len(n) > 4 {
+			n = append(n[:4:4], fmt.Sprintf("… und %d weitere", len(notes)-4))
+		}
+		return nil, notes, errors.New("Keiner der Vorschläge der KI passte zu den Einstellungen dieses Servers: " + strings.Join(n, "; "))
 	}
 	return out, notes, nil
+}
+
+func normBool(v string) string {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "true", "1", "yes", "ja", "an", "on":
+		return "true"
+	case "false", "0", "no", "nein", "aus", "off":
+		return "false"
+	}
+	return ""
 }
 
 func strContains(xs []string, x string) bool {

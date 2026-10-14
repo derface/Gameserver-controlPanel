@@ -626,7 +626,11 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 			fail(w, 400, errors.New("Die KI meinte einen Server, den es nicht gibt. Bitte den Namen nennen"))
 			return
 		}
-		changes, notes, err := a.Mgr.CheckChanges(p.Server, p.Vars, p.Files)
+		files := map[string]map[string]string{}
+		for k, v := range p.Files {
+			files[k] = v
+		}
+		changes, notes, err := a.Mgr.CheckChanges(p.Server, p.Vars, files)
 		if err != nil {
 			fail(w, 400, err)
 			return
