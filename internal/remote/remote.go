@@ -72,7 +72,7 @@ func Test(ctx context.Context, t Target) error {
 		return err
 	}
 	defer os.Remove(tmp.Name())
-	payload := "Verbindungstest [Panel] " + time.Now().Format(time.RFC3339)
+	payload := "Verbindungstest Bytewise Panel " + time.Now().Format(time.RFC3339)
 	tmp.WriteString(payload)
 	tmp.Close()
 	key := "_verbindungstest.txt"

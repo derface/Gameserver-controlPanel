@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# [Panel] – Installer für Linux
+# Bytewise Panel – Installer für Linux
 #
 #   curl -fsSL https://<deine-domain>/install.sh | sudo bash
 #   sudo ./install.sh --binary ./gamepanel-linux-amd64      # lokale Datei installieren
@@ -109,7 +109,7 @@ VERSION="$("$INSTALL_DIR/gamepanel" -version 2>/dev/null || echo '?')"
 
 cat > "$UNIT" <<EOF
 [Unit]
-Description=[Panel] Gameserver Control Panel
+Description=Bytewise Panel Gameserver Control Panel
 Documentation=https://github.com/$REPO
 After=network-online.target docker.service
 Wants=network-online.target

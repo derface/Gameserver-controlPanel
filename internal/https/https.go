@@ -358,7 +358,7 @@ func (m *Manager) ensureSelf() error {
 	serial, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 120))
 	tpl := &x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: "Gamepanel", Organization: []string{"Gamepanel (selbst signiert)"}},
+		Subject:               pkix.Name{CommonName: "Bytewise Panel", Organization: []string{"Bytewise Panel (selbst signiert)"}},
 		NotBefore:             time.Now().Add(-time.Hour),
 		NotAfter:              time.Now().AddDate(0, 0, 397), // browsers refuse longer ones
 		KeyUsage:              x509.KeyUsageDigitalSignature,

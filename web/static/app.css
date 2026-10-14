@@ -1,4 +1,4 @@
-/* [Panel] – Instrument-Look: dunkel als Standard, Signal-Orange als einziger Akzent. */
+/* Bytewise Panel – Instrument-Look: dunkel als Standard, Signal-Orange als einziger Akzent. */
 :root{
   --bg:#111210; --panel:#191A17; --panel-2:#23241F; --ink:#ECE8E0; --muted:#9C978D; --line:#34332E;
   --accent:#FF5A1F; --on-accent:#141414; --ok:#5FD697; --bad:#FF6B5B; --lcd:#0B0C0A; --lcd-ink:#D9D5CC; --lcd-dim:#7C776E;

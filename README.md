@@ -1,9 +1,9 @@
-# [Panel] – Gameserver Control Panel
+# Bytewise Panel – Gameserver Control Panel
 
 Selbst gehostetes Control Panel für Gameserver mit 3D-Übersicht und KI-Assistent.
 Eine einzige Datei, läuft auf jedem Linux mit Docker.
 
-> Arbeitsname `[Panel]`. Der endgültige Produktname kommt noch.
+> Technisch heißt alles weiter `gamepanel` (Dienst, Datenordner `/var/lib/gamepanel`, Programmdatei), damit bestehende Installationen beim Update nicht umziehen müssen.
 
 ## Was Version 0.1 kann
 

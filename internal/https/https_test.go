@@ -65,7 +65,7 @@ func TestOnePort(t *testing.T) {
 		t.Fatal(c, body)
 	}
 	st := m.Status()
-	if st.Subject != "Gamepanel" || !strings.Contains(strings.Join(st.Names, " "), "play.example.de") || !strings.Contains(strings.Join(st.Names, " "), "192.168.178.54") {
+	if st.Subject != "Bytewise Panel" || !strings.Contains(strings.Join(st.Names, " "), "play.example.de") || !strings.Contains(strings.Join(st.Names, " "), "192.168.178.54") {
 		t.Fatalf("%+v", st)
 	}
 

@@ -26,7 +26,7 @@ const (
 	ticketTTL   = 5 * time.Minute
 	iterations  = 210_000
 	minPassword = 10
-	Issuer      = "Gamepanel"
+	Issuer      = "Bytewise Panel"
 )
 
 // Roles, from weakest to strongest.

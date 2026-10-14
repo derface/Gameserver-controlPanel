@@ -87,7 +87,7 @@ func TestLoginTwoFactor(t *testing.T) {
 
 	// switch on 2FA
 	secret, uri := a.BeginTOTP("chef")
-	if !strings.HasPrefix(uri, "otpauth://totp/Gamepanel:chef?") || !strings.Contains(uri, "secret="+secret) {
+	if !strings.HasPrefix(uri, "otpauth://totp/Bytewise%20Panel:chef?") || !strings.Contains(uri, "secret="+secret) {
 		t.Fatal(uri)
 	}
 	if _, err := a.EnableTOTP("chef", "000000"); err == nil {

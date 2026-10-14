@@ -1,4 +1,4 @@
-/* [Panel] Web-Oberfläche. Kein Build-Schritt: reines JavaScript + three.js (r128). */
+/* Bytewise Panel Web-Oberfläche. Kein Build-Schritt: reines JavaScript + three.js (r128). */
 'use strict';
 (function () {
   const $ = (s, el) => (el || document).querySelector(s);
@@ -938,7 +938,7 @@
   // Zwei-Faktor einrichten
   let tfCodesText = '';
   function showCodes(codes) {
-    tfCodesText = 'Gamepanel – Wiederherstellungscodes für ' + S.user + ' (' + location.host + ')\n' + codes.join('\n') + '\n';
+    tfCodesText = 'Bytewise Panel – Wiederherstellungscodes für ' + S.user + ' (' + location.host + ')\n' + codes.join('\n') + '\n';
     $('#tfList').innerHTML = codes.map(c => `<li>${esc(c)}</li>`).join('');
     $('#tfStep1').hidden = true; $('#tfAct1').hidden = true; $('#tfStep2').hidden = false; $('#tfAct2').hidden = false;
   }
@@ -1123,7 +1123,7 @@
     const st = r.status, parts = [];
     parts.push(r.secure ? '<span class="on-ok">Diese Verbindung ist verschlüsselt.</span>' : '<b>Diese Verbindung ist unverschlüsselt.</b>');
     if (st.off) parts.push('<span class="err">Die Umleitung auf HTTPS ist per GP_NO_TLS abgeschaltet.</span>');
-    if (st.subject) parts.push(`Zertifikat: <b>${esc(st.issuer && st.issuer !== st.subject ? st.issuer : st.subject === 'Gamepanel' ? 'selbst signiert' : st.subject)}</b>, gültig bis ${esc(new Date(st.not_after).toLocaleDateString('de-DE'))}` +
+    if (st.subject) parts.push(`Zertifikat: <b>${esc(st.issuer && st.issuer !== st.subject ? st.issuer : (st.subject === 'Gamepanel' || st.subject === 'Bytewise Panel') ? 'selbst signiert' : st.subject)}</b>, gültig bis ${esc(new Date(st.not_after).toLocaleDateString('de-DE'))}` +
       (st.names && st.names.length ? `<br><span class="muted small">für ${esc(st.names.slice(0, 8).join(', '))}${st.names.length > 8 ? ' …' : ''}</span>` : ''));
     $('#tlsStatus').innerHTML = parts.join('<br>');
     showErr($('#tlsErr'), st.error || '');
@@ -2350,7 +2350,7 @@
     clearTimeout(TS.timer); clearTimeout(stmTimer); clearTimeout(TK.timer);
     if (n.page !== 'server' && S.consoleId) closeConsole();
     const s = n.page === 'server' ? byId(n.id) : null;
-    document.title = (s ? s.name : TITLES[n.page] || 'Panel') + ' · [Panel]';
+    document.title = (s ? s.name : TITLES[n.page] || 'Panel') + ' · Bytewise Panel';
     if (n.page === 'home') { requestAnimationFrame(() => { sizeLand(); drawSparks(); }); }
     else if (n.page === 'server') {
       if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
