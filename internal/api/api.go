@@ -101,6 +101,7 @@ func (a *API) Handler() http.Handler {
 	a.routesStatus(mux)
 	a.routesGameEvents(mux)
 	a.routesDiscord(mux)
+	a.routesGeo(mux)
 	mux.HandleFunc("GET /api/notify", a.need(auth.Admin, a.notifyGet))
 	mux.HandleFunc("PUT /api/notify", a.need(auth.Admin, a.notifyPut))
 	mux.HandleFunc("POST /api/notify/test", a.need(auth.Admin, a.notifyTest))

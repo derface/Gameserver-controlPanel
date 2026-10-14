@@ -1667,7 +1667,7 @@
     const id = MG.id; clearTimeout(PL.timer);
     let d; try { d = await api('GET', `/api/servers/${id}/players`); } catch (e) { $('#plInfo').textContent = e.message; return; }
     if (MG.id !== id || MG.tab !== 'players') return;
-    PL.data = d; renderPlayers(); loadStats(id);
+    PL.data = d; renderPlayers(); loadStats(id); loadGeo(id);
     PL.timer = setTimeout(() => { if (MG.tab === 'players' && !document.hidden) loadPlayers(); }, 15000);
   }
   function renderPlayers() {
@@ -1714,6 +1714,148 @@
       `<tr><td>${p.online ? '<span class="dot on" aria-label="online"></span> ' : ''}<b>${esc(p.name)}</b></td><td class="mono small">${plDur(p.seconds)}</td><td class="mono small">${p.sessions}</td><td class="mono small">${esc(fmtWhen(p.last))}</td></tr>`).join('')}</tbody></table>`
       : `<p class="small muted">${v.has_names ? '' : 'Spielzeiten je Spieler gibt es, sobald das Spiel Namen verrät (Steam-Abfrage oder Minecraft).'}</p>`;
   }
+  /* ---------------- Herkunftskarte ---------------- */
+  const GEO = { svg: null, vb: null, data: null, forId: null, scope: 'one', fitted: false };
+  const MAP_W = 1000, mercY = lat => Math.log(Math.tan(Math.PI / 4 + Math.max(-85, Math.min(85, lat)) * Math.PI / 360));
+  const MAP_H = (mercY(84) - mercY(-58)) * MAP_W / (2 * Math.PI);
+  const proj = (lat, lon) => [(lon + 180) / 360 * MAP_W, (mercY(84) - mercY(lat)) * MAP_W / (2 * Math.PI)];
+  const GEO_VIEW = { world: [0, 0, MAP_W, MAP_H], eu: [455, 165, 160, 215] };
+  let worldSVG = null;
+  async function worldMap() {
+    if (!worldSVG) worldSVG = fetch('/img/world.svg').then(r => { if (!r.ok) throw new Error('Karte fehlt'); return r.text(); });
+    return worldSVG;
+  }
+  async function loadGeo(id) {
+    const scope = $('#geoScope').value;
+    let v; try { v = await api('GET', scope === 'all' ? '/api/geo' : `/api/servers/${id}/geo`); } catch (e) { return; }
+    if (MG.id !== id || MG.tab !== 'players') return;
+    if (GEO.forId !== id + scope) { GEO.forId = id + scope; GEO.fitted = false; }
+    GEO.data = v;
+    $('#geoOff').hidden = v.enabled; $('#geoBody').hidden = !v.enabled;
+    $('#geoAskAdmin').hidden = can('admin');
+    $('#geoSub').textContent = v.enabled && v.total ? `${v.total} ${v.total === 1 ? 'Besuch' : 'Besuche'} erfasst` : '';
+    if (!v.enabled) return;
+    const notes = [];
+    if (v.db.loading) notes.push('Die Ortsdatenbank wird gerade geladen (gut 100 MB). Das dauert ein paar Minuten, bis dahin zählt das Panel noch keine Orte.');
+    else if (!v.db.ready) notes.push('Noch keine Ortsdatenbank.' + (v.db.error ? ' Fehler: ' + v.db.error : '') + (can('admin') ? ' <button type="button" class="linkbtn" id="geoReload">Jetzt laden</button>' : ''));
+    if (v.source_error) notes.push(esc(v.source_error));
+    if (v.db.ready && !v.source_error && !v.total && !v.live.length) notes.push('Noch keine Verbindungen erfasst. Sobald jemand ein paar Minuten auf einem laufenden Server spielt, erscheint er hier.');
+    $('#geoNote').hidden = !notes.length; $('#geoNote').innerHTML = notes.join('<br>');
+    const rl = $('#geoReload'); if (rl) rl.onclick = async () => { rl.disabled = true; try { await api('POST', '/api/geo/update'); toast('Ortsdatenbank wird geladen', 'ok'); setTimeout(() => loadGeo(MG.id), 3000); } catch (e) { toast(e.message, 'bad'); } };
+    await renderGeo();
+  }
+  const cityName = p => p.kind === 'lan' ? 'Heimnetz' : p.kind === 'relay' ? 'über Steam-Relay' : p.kind === 'unknown' ? 'unbekannt' : [p.city, p.country_name].filter(Boolean).join(', ') || p.country || '?';
+  const flag = cc => cc && cc.length === 2 ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1f1a5 + c.charCodeAt(0))) : '';
+  async function renderGeo() {
+    const v = GEO.data, box = $('#geoMap');
+    if (!GEO.svg || !box.contains(GEO.svg)) {
+      let txt; try { txt = await worldMap(); } catch (e) { box.insertAdjacentHTML('beforeend', `<p class="err">${esc(e.message)}</p>`); return; }
+      const tmp = document.createElement('div'); tmp.innerHTML = txt;
+      GEO.svg = tmp.querySelector('svg'); GEO.svg.classList.add('geo-svg');
+      GEO.svg.insertAdjacentHTML('beforeend', '<g class="geo-dots"></g>');
+      box.prepend(GEO.svg); geoInteract();
+    }
+    // countries shaded by visits
+    const max = Math.max(1, ...v.countries.map(c => c.sessions));
+    const byCC = Object.fromEntries(v.countries.map(c => [c.country, c]));
+    $$('path[data-cc]', GEO.svg).forEach(p => {
+      const c = byCC[p.dataset.cc];
+      p.classList.toggle('has', !!c);
+      p.style.setProperty('--a', c ? (0.18 + 0.6 * Math.sqrt(c.sessions / max)).toFixed(2) : 0);
+    });
+    const pmax = Math.max(1, ...v.points.map(p => p.sessions));
+    const dots = v.points.map(p => { const [x, y] = proj(p.lat, p.lon); return `<circle class="geo-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" data-r="${(3 + 9 * Math.sqrt(p.sessions / pmax)).toFixed(1)}"
+      data-tip="${esc(cityName(p))}|${p.sessions} ${p.sessions === 1 ? 'Besuch' : 'Besuche'} · ${esc(plDur(p.seconds))}|zuletzt ${esc(fmtWhen(p.last))}"/>`; });
+    const live = v.live.filter(l => !l.kind && (l.lat || l.lon)).map(l => { const [x, y] = proj(l.lat, l.lon); return `<circle class="geo-live-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" data-r="5" data-tip="${esc(cityName(l))}|spielt gerade (seit ${esc(fmtWhen(l.since))})"/>`; });
+    $('.geo-dots', GEO.svg).innerHTML = dots.join('') + live.join('');
+    if (!GEO.fitted) { GEO.fitted = true; geoZoom(v.points.length ? 'fit' : 'eu'); } else geoApply();
+    const srv = id => { const s = byId(id); return s ? s.name : id; };
+    $('#geoLive').innerHTML = v.live.length ? v.live.map(l => `<li>${flag(l.country)} ${esc(cityName(l))}${$('#geoScope').value === 'all' ? ` <span class="muted small">· ${esc(srv(l.server))}</span>` : ''} <span class="muted small">seit ${esc(fmtWhen(l.since))}</span></li>`).join('') : '<li class="muted small">Gerade niemand.</li>';
+    $('#geoCountries').innerHTML = v.countries.length ? v.countries.slice(0, 12).map(c => {
+      const share = v.total ? Math.round(c.sessions / v.total * 100) : 0;
+      return `<li><span>${flag(c.country)} ${esc(c.name || c.country)}</span><span class="mono small">${c.sessions} · ${share} %</span><i style="--w:${share}%"></i></li>`;
+    }).join('') : '<li class="muted small">Noch keine.</li>';
+    const extra = [];
+    if (v.lan.sessions) extra.push(`${v.lan.sessions}× aus dem Heimnetz`);
+    if (v.relay.sessions) extra.push(`${v.relay.sessions}× über Steam-Relay (Ort verborgen, das Spiel leitet über Valve-Server)`);
+    if (v.unknown.sessions) extra.push(`${v.unknown.sessions}× Ort unbekannt`);
+    $('#geoExtra').textContent = extra.join(' · ');
+  }
+  function geoApply() {
+    if (!GEO.svg || !GEO.vb) return;
+    const [x, y, w, h] = GEO.vb;
+    GEO.svg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
+    const px = w / Math.max(1, GEO.svg.clientWidth || 800); // map units per screen pixel
+    $$('circle', GEO.svg).forEach(c => c.setAttribute('r', (+c.dataset.r * px).toFixed(2)));
+    GEO.svg.style.setProperty('--sw', (px * 0.8).toFixed(3));
+  }
+  function geoClamp(vb) {
+    let [x, y, w, h] = vb;
+    w = Math.min(MAP_W, Math.max(20, w)); h = w * (GEO.vb ? GEO.vb[3] / GEO.vb[2] : MAP_H / MAP_W);
+    x = Math.min(MAP_W - w, Math.max(0, x)); y = Math.min(Math.max(0, MAP_H - h), Math.max(Math.min(0, MAP_H - h), y));
+    return [x, y, w, h];
+  }
+  function geoZoom(kind) {
+    const box = $('#geoMap'), ratio = (box.clientHeight || 400) / (box.clientWidth || 800);
+    let [x, y, w, h] = kind === 'keep' && GEO.vb ? GEO.vb : (GEO_VIEW[kind] || GEO_VIEW.world);
+    if (kind === 'fit') {
+      const pts = (GEO.data.points || []).map(p => proj(p.lat, p.lon));
+      if (!pts.length) return geoZoom('eu');
+      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+      x = Math.min(...xs); y = Math.min(...ys); w = Math.max(...xs) - x; h = Math.max(...ys) - y;
+      const pad = Math.max(25, w * 0.15, h * 0.15); x -= pad; y -= pad; w += 2 * pad; h += 2 * pad;
+    }
+    // keep the box's aspect ratio, centered on the wanted area
+    const cx = x + w / 2, cy = y + h / 2;
+    if (h / w > ratio) w = h / ratio; else h = w * ratio;
+    GEO.vb = [cx - w / 2, cy - h / 2, w, h];
+    GEO.vb = geoClamp(GEO.vb);
+    geoApply();
+  }
+  function geoInteract() {
+    const svg = GEO.svg, tip = $('#geoTip');
+    const toMap = (ev) => { const r = svg.getBoundingClientRect(), [x, y, w, h] = GEO.vb; return [x + (ev.clientX - r.left) / r.width * w, y + (ev.clientY - r.top) / r.height * h]; };
+    const zoomAt = (f, pt) => {
+      const [x, y, w, h] = GEO.vb, nw = w * f, nh = h * f;
+      const [px, py] = pt || [x + w / 2, y + h / 2];
+      GEO.vb = geoClamp([px - (px - x) * f, py - (py - y) * f, nw, nh]); geoApply();
+    };
+    svg.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.deltaY > 0 ? 1.25 : 0.8, toMap(e)); }, { passive: false });
+    let drag = null;
+    svg.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, vb: GEO.vb.slice() }; svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener('pointermove', e => {
+      if (drag) {
+        const r = svg.getBoundingClientRect();
+        GEO.vb = geoClamp([drag.vb[0] - (e.clientX - drag.x) / r.width * drag.vb[2], drag.vb[1] - (e.clientY - drag.y) / r.height * drag.vb[3], drag.vb[2], drag.vb[3]]);
+        geoApply(); tip.hidden = true; return;
+      }
+      const c = e.target.closest('circle');
+      if (!c) { tip.hidden = true; return; }
+      const [a, b, d] = c.dataset.tip.split('|');
+      tip.innerHTML = `<b>${a}</b><br>${b}${d ? '<br><span class="muted">' + d + '</span>' : ''}`;
+      const r = $('#geoMap').getBoundingClientRect();
+      tip.style.left = (e.clientX - r.left + 12) + 'px'; tip.style.top = (e.clientY - r.top + 12) + 'px'; tip.hidden = false;
+    });
+    const end = () => { drag = null; };
+    svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+    svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+    $('.geo-zoom').onclick = e => {
+      const b = e.target.closest('[data-gz]'); if (!b) return;
+      if (b.dataset.gz === 'in') zoomAt(0.67); else if (b.dataset.gz === 'out') zoomAt(1.5); else geoZoom(b.dataset.gz);
+    };
+    window.addEventListener('resize', () => { if (GEO.vb && document.body.contains(svg)) geoZoom('keep'); });
+  }
+  $('#geoScope').addEventListener('change', () => loadGeo(MG.id));
+  $('#geoEnable').addEventListener('click', async () => {
+    const b = $('#geoEnable'); b.disabled = true;
+    try { await api('PUT', '/api/geo', { enabled: true }); toast('Herkunftskarte ist an. Die Ortsdatenbank wird jetzt geladen.', 'ok'); GEO.forId = null; await loadGeo(MG.id); }
+    catch (e) { toast(e.message, 'bad'); }
+    b.disabled = false;
+  });
+  $('#geoDisable').addEventListener('click', async () => {
+    if (!await confirmBox('Herkunftskarte ausschalten?', 'Das Panel erfasst dann keine Orte mehr. Was schon gezählt ist, bleibt in der Statistik.', 'Ausschalten')) return;
+    try { await api('PUT', '/api/geo', { enabled: false }); loadGeo(MG.id); } catch (e) { toast(e.message, 'bad'); }
+  });
   async function loadHints() {
     let l; try { l = await api('GET', '/api/insights'); } catch (e) { return; }
     $('#homeHints').hidden = !l.length;

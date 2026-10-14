@@ -79,6 +79,10 @@ pkg_install() {
 
 say "System: $(. /etc/os-release 2>/dev/null && echo "$PRETTY_NAME" || uname -s), $ARCH"
 command -v curl >/dev/null || pkg_install curl ca-certificates
+# conntrack: zeigt dem Panel, von wo Spieler verbinden (Herkunftskarte)
+if ! command -v conntrack >/dev/null; then
+  if [ "$PM" = apt ]; then (pkg_install conntrack) || true; else (pkg_install conntrack-tools) || true; fi
+fi
 
 # ---------- Docker ----------
 if ! command -v docker >/dev/null; then

@@ -326,6 +326,30 @@
       <div class="heat-wrap"><div class="heat" id="stHeat" role="img" aria-label="Spieler nach Wochentag und Uhrzeit"></div></div>
       <div id="stPlayers"></div>
     </section>
+    <section class="pl-geo" id="plGeo" aria-labelledby="hPlGeo">
+      <div class="geo-head"><h3 id="hPlGeo">Herkunft</h3><span class="small muted" id="geoSub"></span>
+        <select id="geoScope" aria-label="Welche Server"><option value="one">Dieser Server</option><option value="all">Alle Server</option></select></div>
+      <div id="geoOff" hidden>
+        <p class="small muted">Zeigt auf einer Karte, aus welchen Ländern und Städten Spieler verbinden. Das Panel erkennt das an den Verbindungen zu den Spiel-Ports und schlägt den Ort in einer Datenbank auf deinem Server nach (DB-IP Lite, gut 100 MB, wird einmal im Monat aktualisiert). Gespeichert werden nur Land und Stadt, nie IP-Adressen.</p>
+        <button type="button" class="btn-accent admin-only" id="geoEnable">Herkunftskarte einschalten</button>
+        <p class="small muted" id="geoAskAdmin">Ein Admin kann die Herkunftskarte einschalten.</p>
+      </div>
+      <div id="geoBody" hidden>
+        <p class="note" id="geoNote" hidden></p>
+        <div class="geo-wrap">
+          <div class="geo-map" id="geoMap" role="img" aria-label="Weltkarte mit den Orten der Spieler">
+            <div class="geo-zoom"><button type="button" data-gz="in" aria-label="Hineinzoomen">+</button><button type="button" data-gz="out" aria-label="Herauszoomen">−</button><button type="button" data-gz="fit">Punkte</button><button type="button" data-gz="eu">Europa</button><button type="button" data-gz="world">Welt</button></div>
+            <div class="geo-tip" id="geoTip" hidden></div>
+          </div>
+          <div class="geo-side">
+            <h4>Jetzt verbunden</h4><ul class="geo-live" id="geoLive"></ul>
+            <h4>Länder</h4><ol class="geo-cc" id="geoCountries"></ol>
+            <p class="small muted" id="geoExtra"></p>
+          </div>
+        </div>
+        <p class="small muted geo-foot">Orte ungefähr, oft nur die Stadt des Internetanbieters. <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a> (CC BY 4.0). Karte: Natural Earth. <button type="button" class="linkbtn small admin-only" id="geoDisable">Ausschalten</button></p>
+      </div>
+    </section>
   </section>
 
   <section class="mg-pane" id="paneEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>

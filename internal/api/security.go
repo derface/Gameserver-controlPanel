@@ -212,6 +212,8 @@ var actions = map[string]string{
 	"POST /api/panel/update":                        "Panel aktualisiert",
 	"PUT /api/notify":                               "Benachrichtigungen geändert",
 	"POST /api/notify/test":                         "Test-Benachrichtigung gesendet",
+	"PUT /api/geo":                                  "Herkunftskarte geändert",
+	"POST /api/geo/update":                          "Ortsdatenbank neu geladen",
 	"PUT /api/discord":                              "Discord-Bot geändert",
 	"POST /api/discord/test":                        "Discord-Statusnachricht gesendet",
 	"PUT /api/proxy":                                "Reverse-Proxy geändert",

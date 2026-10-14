@@ -134,6 +134,8 @@ type Settings struct {
 	Status StatusConfig `json:"status"`
 	// Discord is the bot: slash commands and a self-updating status message.
 	Discord discord.Config `json:"discord"`
+	// Geo records where players connect from (place only, no addresses).
+	Geo bool `json:"geo,omitempty"`
 }
 
 // StatusConfig configures the public status page (no login).

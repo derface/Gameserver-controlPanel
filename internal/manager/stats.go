@@ -39,6 +39,7 @@ type serverStats struct {
 	Players map[string]*playerStat `json:"players"`
 	Online  map[string]time.Time   `json:"online"`
 	Since   time.Time              `json:"since"`
+	Geo     map[string]*geoStat    `json:"geo,omitempty"` // where players connect from
 }
 
 const statsKeep = 90 * 24 * time.Hour

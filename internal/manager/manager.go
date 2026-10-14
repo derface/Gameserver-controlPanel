@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/derface/Gameserver-controlPanel/internal/geoip"
 	"io"
 	"log"
 	"net"
@@ -35,6 +36,8 @@ type Manager struct {
 	dk      *docker.Client
 	tpls    *templates.Set
 	dataDir string
+	geo     *geoip.DB
+	gt      *geoTracker
 	Remote  func() (remote.Target, remote.Config)
 	up      uploads
 
@@ -106,7 +109,8 @@ func New(st *store.Store, dk *docker.Client, tpls *templates.Set, dataDir string
 	if err := writeRunScript(dataDir); err != nil {
 		log.Printf("[Panel] Startskript: %v", err)
 	}
-	m := &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{}}
+	m := &Manager{st: st, dk: dk, tpls: tpls, dataDir: dataDir, jobs: map[string]*job{}, live: map[string]*live{},
+		geo: geoip.New(filepath.Join(dataDir, "geo")), gt: newGeoTracker()}
 	m.routerInit()
 	return m
 }
@@ -915,6 +919,7 @@ func (m *Manager) Run(ctx context.Context) {
 	go m.runTasks(ctx)
 	go m.runRouter(ctx)
 	go m.runStats(ctx)
+	go m.runGeo(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {
