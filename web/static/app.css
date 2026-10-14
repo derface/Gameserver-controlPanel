@@ -755,3 +755,25 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .pl-list{border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}.pl-list h4{margin:0 0 8px}
 .pl-list ul{list-style:none;margin:0;padding:0}.pl-list li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent);font-family:var(--font-mono);font-size:13px}
 .btn-line.small{padding:4px 10px;font-size:12px;min-height:0}
+
+.pl-stats{margin-top:22px;border-top:1px solid var(--line);padding-top:14px}.pl-stats h3{margin:0 0 8px}
+.insights{margin:0 0 12px;padding-left:18px}.insights li{margin:4px 0}
+.insights-card{margin-bottom:16px;padding:14px 18px}.insights-card h2{margin:0 0 6px;font-size:16px}
+.heat-wrap{overflow-x:auto;margin-bottom:14px}
+.heat{display:grid;grid-template-columns:28px repeat(24,minmax(14px,1fr));gap:3px;min-width:420px;max-width:760px}
+.heat .hc{aspect-ratio:1;border-radius:3px;background:color-mix(in srgb,var(--accent) calc(var(--a)*100%),var(--line) 20%)}
+.heat .hc.none{background:transparent;outline:1px dashed color-mix(in srgb,var(--line) 70%,transparent);outline-offset:-1px}
+.heat .wd,.heat .hh{font-family:var(--font-mono);font-size:10px;color:var(--muted);align-self:center}
+.dot.on{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3ccf91;vertical-align:1px}
+/* Events */
+.ge-h{margin-top:28px}
+.ge-list{margin-top:6px}
+.ge-item{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.ge-item .ml-st{width:90px}
+.ge-item>.linkbtn{flex-shrink:0;margin-top:3px}
+.ge-chg{margin:6px 0 12px;padding-left:18px;font-size:13.5px;display:flex;flex-direction:column;gap:3px}
+.ge-times{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.ge-times{grid-template-columns:1fr}.ge-item{flex-wrap:wrap}}
+.dc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media (max-width:640px){.dc-grid{grid-template-columns:1fr}}
+#dcEndpoint{display:block;margin-top:4px;overflow-wrap:anywhere;user-select:all}

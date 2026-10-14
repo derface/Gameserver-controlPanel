@@ -85,6 +85,7 @@
         <div class="stat"><span class="label">Speicherplatz</span><span class="v" id="vDisk">–</span><canvas id="sDisk" aria-hidden="true"></canvas></div>
         <div class="stat"><span class="label">Spieler online</span><span class="v" id="vRun">–</span><canvas id="sRun" aria-hidden="true"></canvas></div>
       </section>
+    <section class="card insights-card" id="homeHints" hidden aria-labelledby="hHints"><h2 id="hHints">Hinweise</h2><ul class="insights" id="homeHintList"></ul></section>
     <div class="home-grid">
       <section class="stage card" id="stage" aria-label="3D-Ansicht der Server">
         <canvas id="land" aria-label="Drehbare 3D-Ansicht der Gameserver. Server anklicken öffnet ihn."></canvas>
@@ -174,6 +175,7 @@
       <div class="st-foot">
         <p class="small muted" id="stNote"></p>
         <button type="button" class="btn-line" id="stUndo">Frühere Stände</button>
+        <button type="button" class="btn-line op-only" id="stEvent">Als Event planen</button>
         <button type="submit" class="btn-accent" id="stSave">Speichern</button>
       </div>
     </form>
@@ -304,6 +306,9 @@
       <button type="submit" class="btn-accent">Hinzufügen</button>
     </form>
     <p class="small muted" id="tkNote"></p>
+    <h3 class="ge-h">Events <span class="small muted">zeitlich begrenzte Einstellungen</span></h3>
+    <p class="small muted" id="geHint">Im Reiter Einstellungen Werte ändern und „Als Event planen“ wählen, oder die KI fragen, z. B. „Mach am Wochenende ein Highrate-Event“. Danach stellt das Panel alles von selbst zurück.</p>
+    <div id="geList" class="ge-list"></div>
   </section>
 
   <section class="mg-pane" id="panePlayers" role="tabpanel" aria-labelledby="tabPlayers" hidden>
@@ -315,6 +320,12 @@
     </form>
     <div id="plLists" class="pl-lists"></div>
     <p class="small muted" id="plNote"></p>
+    <section class="pl-stats" id="plStats" aria-labelledby="hPlStats">
+      <h3 id="hPlStats">Statistik <span class="small muted" id="stSince"></span></h3>
+      <ul class="insights" id="stInsights"></ul>
+      <div class="heat-wrap"><div class="heat" id="stHeat" role="img" aria-label="Spieler nach Wochentag und Uhrzeit"></div></div>
+      <div id="stPlayers"></div>
+    </section>
   </section>
 
   <section class="mg-pane" id="paneEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
@@ -434,6 +445,8 @@
         <a href="#/einstellungen/router" data-sec="router">Router &amp; Ports</a>
         <a href="#/einstellungen/ki" data-sec="ki">Allgemein &amp; KI</a>
         <a href="#/einstellungen/benachrichtigungen" data-sec="benachrichtigungen">Benachrichtigungen</a>
+        <a href="#/einstellungen/statusseite" data-sec="statusseite">Statusseite</a>
+        <a href="#/einstellungen/discord" data-sec="discord">Discord-Bot</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
         <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
@@ -561,6 +574,45 @@
     <fieldset class="nt-kinds"><legend>Was gemeldet wird</legend><div id="ntKinds"></div></fieldset>
     <p class="err" id="ntErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="ntTest">Testnachricht senden</button><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="spForm" class="set-block admin-only" data-sec="statusseite" autocomplete="off">
+    <h2>Statusseite</h2>
+    <p class="muted small">Eine Seite ohne Anmeldung für deine Mitspieler: welche Server laufen, wer spielt und wie man beitritt. Passwörter und Einstellungen stehen dort nie. Adresse: <a id="spLink" href="/status" target="_blank" rel="noopener">/status</a></p>
+    <label class="check"><input type="checkbox" id="spOn"> Statusseite einschalten</label>
+    <label class="field"><span>Überschrift</span><input id="spTitle" maxlength="80" placeholder="Unsere Gameserver"></label>
+    <label class="field"><span>Hinweis oben <em class="muted">optional</em></span><textarea id="spNote" rows="2" maxlength="500" placeholder="z. B. Passwörter gibt es im Discord. Fragen an David."></textarea></label>
+    <label class="field"><span>Eigene Adresse <em class="muted">optional</em></span><input id="spHost" placeholder="status.meine-domain.de" spellcheck="false"><small>Unter dieser Domain zeigt das Panel nur die Statusseite, die Anmeldung ist dort nicht erreichbar. Domain wie beim Panel per Reverse Proxy auf diesen Rechner leiten.</small></label>
+    <label class="check"><input type="checkbox" id="spNames"> Namen der Spieler zeigen, die gerade online sind</label>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zeigen</th><th>Server</th><th>Hinweis für Mitspieler</th></tr></thead><tbody id="spRows"></tbody></table></div>
+    <p class="err" id="spErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="submit" class="btn-accent">Speichern</button></div>
+  </form>
+  <form id="dcForm" class="set-block admin-only" data-sec="discord" autocomplete="off">
+    <h2>Discord-Bot</h2>
+    <p class="muted small">Ein eigener Bot für deinen Discord-Server: eine Statusnachricht, die sich selbst aktualisiert, und die Befehle <code>/status</code>, <code>/start</code>, <code>/stop</code> und <code>/restart</code>. <code>/status</code> darf jeder, starten und stoppen nur die Rollen und Personen unten.</p>
+    <details class="howto"><summary>So richtest du den Bot ein (5 Minuten)</summary>
+      <ol class="small">
+        <li>Auf <a href="https://discord.com/developers/applications" target="_blank" rel="noopener">discord.com/developers/applications</a> „New Application“ anlegen, z. B. „Bytewise Panel“.</li>
+        <li>Unter <b>General Information</b> die <b>Application ID</b> und den <b>Public Key</b> kopieren und unten eintragen.</li>
+        <li>Unter <b>Bot</b> „Reset Token“ klicken und den <b>Token</b> unten eintragen. Den Token niemandem zeigen.</li>
+        <li>Unter <b>Installation</b> bei „Guild Install“ die Scopes <code>applications.commands</code> und <code>bot</code> wählen, als Rechte „View Channels“, „Send Messages“ und „Embed Links“. Den Install-Link öffnen und den Bot auf deinen Discord-Server holen.</li>
+        <li>In Discord unter Einstellungen → Erweitert den <b>Entwicklermodus</b> einschalten. Dann Rechtsklick auf deinen Server, den Kanal für die Statusnachricht und die Rolle(n) → „ID kopieren“.</li>
+        <li>Unten speichern. Danach unter <b>General Information</b> bei „Interactions Endpoint URL“ diese Adresse eintragen und speichern: <code id="dcEndpoint" class="mono"></code> Discord prüft sie sofort; das klappt nur, wenn das Panel von außen per HTTPS erreichbar ist (bei dir über Traefik).</li>
+      </ol>
+    </details>
+    <div class="dc-grid">
+      <label class="field"><span>Application ID</span><input id="dcApp" inputmode="numeric" spellcheck="false" placeholder="123456789012345678"></label>
+      <label class="field"><span>Public Key</span><input id="dcKey" spellcheck="false" placeholder="64 Zeichen 0-9 a-f"></label>
+      <label class="field"><span>Bot-Token</span><input id="dcToken" type="password" autocomplete="off" placeholder="MTIz…"></label>
+      <label class="field"><span>Server-ID <em class="muted">empfohlen</em></span><input id="dcGuild" inputmode="numeric" spellcheck="false" placeholder="Rechtsklick auf deinen Server → ID kopieren"><small>Mit Server-ID sind die Befehle sofort da, ohne erst nach bis zu einer Stunde.</small></label>
+      <label class="field"><span>Kanal für die Statusnachricht <em class="muted">optional</em></span><input id="dcChannel" inputmode="numeric" spellcheck="false" placeholder="Kanal-ID"></label>
+    </div>
+    <label class="field"><span>Rollen, die starten und stoppen dürfen</span><input id="dcRoles" spellcheck="false" placeholder="Rollen-IDs, mit Komma getrennt"></label>
+    <label class="field"><span>Einzelne Personen, die starten und stoppen dürfen</span><input id="dcUsers" spellcheck="false" placeholder="Nutzer-IDs, mit Komma getrennt"></label>
+    <fieldset class="nt-kinds"><legend>Server, die der Bot zeigt und steuern darf</legend><div id="dcServers"></div></fieldset>
+    <p class="small" id="dcState"></p>
+    <p class="err" id="dcErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="dcTest">Statusnachricht jetzt senden</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
   <div id="upBlock" class="set-block admin-only" data-sec="panel">
     <h2>Panel &amp; Updates</h2>
@@ -697,6 +749,22 @@
     <p class="err" id="tfErr" role="alert" hidden></p>
     <div class="dlg-actions" id="tfAct1"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Einschalten</button></div>
     <div class="dlg-actions" id="tfAct2" hidden><button type="button" class="btn-line" id="tfDl">Als Datei speichern</button><button type="button" class="btn-line" id="tfCopy">Kopieren</button><button type="button" class="btn-accent" data-close>Fertig</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgEvent" class="dlg">
+  <form id="geForm" novalidate>
+    <div class="dlg-head"><h2>Event planen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <p class="small muted">Diese Werte gelten nur im gewählten Zeitraum. Zum Start und zum Ende startet der Server neu, die Spieler werden vorher gewarnt und auf Discord angekündigt, wenn das eingerichtet ist.</p>
+    <ul class="ge-chg" id="geChanges"></ul>
+    <label class="field"><span>Name</span><input id="geName" maxlength="60" placeholder="z. B. Highrate-Wochenende" required></label>
+    <div class="ge-times">
+      <label class="field"><span>Beginn</span><input id="geStart" type="datetime-local" required></label>
+      <label class="field"><span>Ende</span><input id="geEnd" type="datetime-local" required></label>
+    </div>
+    <label class="check"><input type="checkbox" id="geWeekly"> Jede Woche wiederholen</label>
+    <p class="err" id="geErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="geOk">Event planen</button></div>
   </form>
 </dialog>
 

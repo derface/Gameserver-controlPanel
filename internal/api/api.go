@@ -98,6 +98,9 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("POST /api/ai/test", a.need(auth.Admin, a.aiTest))
 	a.routesPanelUpdate(mux)
 	a.routesPlayers(mux)
+	a.routesStatus(mux)
+	a.routesGameEvents(mux)
+	a.routesDiscord(mux)
 	mux.HandleFunc("GET /api/notify", a.need(auth.Admin, a.notifyGet))
 	mux.HandleFunc("PUT /api/notify", a.need(auth.Admin, a.notifyPut))
 	mux.HandleFunc("POST /api/notify/test", a.need(auth.Admin, a.notifyTest))
@@ -118,7 +121,7 @@ func (a *API) Handler() http.Handler {
 		}
 		files.ServeHTTP(w, r)
 	})
-	return secureHeaders(mux)
+	return secureHeaders(a.statusHost(mux))
 }
 
 func secureHeaders(h http.Handler) http.Handler {
@@ -560,6 +563,7 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 		Prompt  string   `json:"prompt"`
 		History []string `json:"history"`
 		Server  string   `json:"server"` // optional: the server the chat is about
+		TZ      int      `json:"tz"`     // browser offset to UTC in minutes
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, 400, err)
@@ -574,6 +578,9 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 		in.History = in.History[len(in.History)-12:]
 	}
 	c.History = in.History
+	if in.TZ >= -14*60 && in.TZ <= 14*60 {
+		c.Now = time.Now().In(time.FixedZone("Nutzer", in.TZ*60)).Truncate(time.Minute)
+	}
 	focus := in.Server
 	if focus == "" {
 		focus = a.focusServer(in.Prompt, in.History)
@@ -589,6 +596,10 @@ func (a *API) aiPlan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := map[string]any{"plan": p}
+	if p.Action == "event" {
+		a.aiEventPreview(w, p, resp)
+		return
+	}
 	if p.Action == "change" {
 		sv, ok := a.Store.Server(p.Server)
 		if !ok {
@@ -735,3 +746,8 @@ func (a *API) notifyTest(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, 200, map[string]bool{"ok": true})
 }
+
+var (
+	errNotFound = errors.New("Nicht gefunden")
+	errTooLong  = errors.New("Text zu lang")
+)

@@ -105,6 +105,7 @@ func main() {
 	go host.Run(ctx)
 	go mgr.Run(ctx)
 	go a.RunUpdateCheck(ctx)
+	go a.RunDiscord(ctx)
 
 	if err := dk.Ping(ctx); err != nil {
 		log.Printf("Warnung: %v", err)

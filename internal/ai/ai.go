@@ -21,7 +21,7 @@ import (
 )
 
 type Plan struct {
-	Action   string            `json:"action,omitempty"` // "" or create | change (an existing server)
+	Action   string            `json:"action,omitempty"` // "" or create | change (an existing server) | event (temporary change)
 	Server   string            `json:"server,omitempty"` // id, for change
 	Files    map[string]StrMap `json:"files,omitempty"`
 	Template string            `json:"template"`
@@ -31,6 +31,10 @@ type Plan struct {
 	Reply    string            `json:"reply"`
 	Steps    []string          `json:"steps"`
 	Question string            `json:"question,omitempty"` // set when the AI needs more info
+	// for action event: the period the values apply, RFC3339 with offset
+	Start  string `json:"start,omitempty"`
+	End    string `json:"end,omitempty"`
+	Weekly bool   `json:"weekly,omitempty"`
 }
 
 // StrMap takes numbers and booleans as text: models often write 2 instead
@@ -81,7 +85,11 @@ type Context struct {
 	Focus string
 	// History is the conversation so far ("Du: …" / "KI: …").
 	History []string
+	// Now is the user's local time, for events ("am Wochenende").
+	Now time.Time
 }
+
+var weekdayDE = [...]string{"Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"}
 
 func DefaultModel(provider string) string {
 	switch provider {
@@ -98,9 +106,9 @@ func DefaultModel(provider string) string {
 func systemPrompt(tpls []templates.Template, c Context) string {
 	var b strings.Builder
 	b.WriteString(`Du bist der KI-Assistent eines Gameserver-Panels. Du planst neue Gameserver und änderst vorhandene.
-Antworte AUSSCHLIESSLICH mit einem JSON-Objekt, ohne Text davor oder danach. Es gibt drei Antworten:
+Antworte AUSSCHLIESSLICH mit einem JSON-Objekt, ohne Text davor oder danach. Es gibt vier Antworten:
 
-A) Vorhandenen Server ändern, wenn der Nutzer von einem vorhandenen Server spricht (z. B. "den Enshrouded-Server als Highrate", "mehr Loot", "schwerer", "mehr Spieler"):
+A) Vorhandenen Server dauerhaft ändern, wenn der Nutzer von einem vorhandenen Server spricht und keinen Zeitraum nennt (z. B. "den Enshrouded-Server als Highrate", "mehr Loot", "schwerer", "mehr Spieler"):
 {"action":"change","server":"<id>","vars":{"<key>":"<wert>"},"files":{"<datei-nr>":{"<key>":"<wert>"}},"memory_mb":<zahl oder 0>,
  "reply":"<2-4 Sätze auf Deutsch: was du änderst und welche Wirkung das hat>"}
 - Nutze nur Schlüssel aus "Einstellungen des Servers" unten, mit Werten im angegebenen Typ und Bereich, als Text, Zahlen mit Punkt. Bleib innerhalb der Bereiche; geht ein Wunsch darüber hinaus, nimm den Höchstwert und sag das im reply.
@@ -113,6 +121,13 @@ A) Vorhandenen Server ändern, wenn der Nutzer von einem vorhandenen Server spri
 B) Neuen Server planen:
 {"action":"create","template":"<id>","name":"<kurzer Servername>","vars":{"<key>":"<wert>"},"memory_mb":<zahl>,
  "reply":"<2-3 Sätze auf Deutsch: was du vorschlägst und warum>","steps":["<Schritt>", "..."]}
+
+D) Zeitlich begrenztes Event auf einem vorhandenen Server, wenn der Nutzer einen Zeitraum nennt ("am Wochenende", "heute Abend", "von Freitag bis Sonntag", "jeden Samstag"):
+{"action":"event","server":"<id>","name":"<kurzer Eventname, z. B. Highrate-Wochenende>","start":"<RFC3339 mit Zeitzone>","end":"<RFC3339 mit Zeitzone>","weekly":<true wenn jede Woche>,
+ "vars":{...},"files":{...},"reply":"<2-3 Sätze: Zeitraum, wichtigste Werte, dass danach alles automatisch zurückgestellt wird>"}
+- Werte wie bei A. Das Panel stellt die alten Werte nach dem Ende selbst wieder her.
+- "Wochenende" ohne Uhrzeit = Freitag 18:00 bis Sonntag 23:00 des kommenden (oder laufenden) Wochenendes. "Heute Abend" = heute 18:00 bis 23:59. Ein Event dauert höchstens 14 Tage, ein wöchentliches höchstens 6 Tage.
+- Läuft der genannte Zeitraum schon (z. B. Samstag und "am Wochenende"), beginne jetzt.
 
 C) Rückfrage, wenn die Anfrage unklar ist oder kein Spiel passt:
 {"question":"<eine kurze Rückfrage auf Deutsch>"}
@@ -127,6 +142,9 @@ Regeln für B:
 - steps: 4 bis 6 kurze deutsche Schritte, die das Panel ausführt (Container anlegen, Dateien laden, Einstellungen, Start).
 Beziehe dich auf das bisherige Gespräch, wenn die neue Nachricht daran anknüpft.
 `)
+	if !c.Now.IsZero() {
+		fmt.Fprintf(&b, "\nJetzt ist %s, %s (Zeitzone des Nutzers).\n", weekdayDE[c.Now.Weekday()], c.Now.Format(time.RFC3339))
+	}
 	fmt.Fprintf(&b, "\nRechner: %d MB RAM gesamt, davon %d MB frei.\n", c.TotalMemMB, c.FreeMemMB)
 	if len(c.Servers) > 0 {
 		b.WriteString("Vorhandene Server: " + strings.Join(c.Servers, "; ") + "\n")
@@ -316,7 +334,7 @@ func MakePlan(ctx context.Context, s store.Settings, tpls *templates.Set, c Cont
 	if p.Question != "" {
 		return p, nil
 	}
-	if p.Action == "change" {
+	if p.Action == "change" || p.Action == "event" {
 		if p.Server == "" {
 			return p, errors.New("Die KI hat nicht gesagt, welcher Server geändert werden soll. Bitte den Namen nennen")
 		}

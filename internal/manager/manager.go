@@ -686,6 +686,7 @@ func (m *Manager) Delete(ctx context.Context, id string, wipe bool) error {
 	delete(m.live, id)
 	m.mu.Unlock()
 	m.dropEvents(id)
+	_ = os.Remove(m.statsFile(id))
 	return m.st.DeleteServer(id)
 }
 
@@ -913,6 +914,7 @@ func (m *Manager) Run(ctx context.Context) {
 	go m.runSchedule(ctx)
 	go m.runTasks(ctx)
 	go m.runRouter(ctx)
+	go m.runStats(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {

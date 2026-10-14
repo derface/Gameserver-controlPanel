@@ -1,0 +1,26 @@
+:root{--bg:#121214;--card:#1b1c20;--line:#2c2e34;--ink:#f1efe9;--muted:#9b9da4;--accent:#ff5a1f;--ok:#3ccf91;--warn:#f5a524;--bad:#e5484d;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--bg:#f4f2ee;--card:#fff;--line:#e3e0d9;--ink:#17181b;--muted:#6b6e75;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 40px;max-width:980px;margin-inline:auto}
+.muted{color:var(--muted)}
+.top{display:flex;gap:14px;align-items:center;margin-bottom:22px}
+.top img{border-radius:10px}
+h1{margin:0;font-size:26px;letter-spacing:-.01em}
+.top p{margin:4px 0 0;white-space:pre-line}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.card h2{margin:0;font-size:18px}
+.game{font-size:13px;color:var(--muted)}
+.state{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+.state i{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.state.online i{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 25%,transparent)}
+.state.startet i{background:var(--warn)}.state.fehler i{background:var(--bad)}
+.names{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.names li{font-size:13px;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--line) 70%,transparent)}
+.join{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.join code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:color-mix(in srgb,var(--line) 60%,transparent);padding:6px 10px;border-radius:8px;user-select:all}
+button,a.btn{font:inherit;font-size:14px;border-radius:8px;padding:6px 12px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-decoration:none}
+a.btn.primary{background:var(--accent);border-color:var(--accent);color:#111;font-weight:600}
+.hint,.snote{font-size:13px;color:var(--muted);margin:0}
+.snote{color:var(--ink)}
+footer{margin-top:30px;font-size:12px;text-align:center}

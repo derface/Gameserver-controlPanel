@@ -6,6 +6,7 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"github.com/derface/Gameserver-controlPanel/internal/discord"
 	"github.com/derface/Gameserver-controlPanel/internal/notify"
 	"os"
 	"path/filepath"
@@ -67,6 +68,7 @@ type Server struct {
 	CreatedBy   string            `json:"created_by,omitempty"` // "manual" | "ai"
 	Backup      BackupPlan        `json:"backup"`
 	Tasks       []Task            `json:"tasks,omitempty"`
+	GameEvents  []GameEvent       `json:"game_events,omitempty"`
 	Watch       Watch             `json:"watch"`
 	NoRouter    bool              `json:"no_router,omitempty"` // do not open its ports in the router
 }
@@ -128,6 +130,25 @@ type Settings struct {
 	TrustedProxies []string `json:"trusted_proxies,omitempty"`
 	// Notify sends events to Discord and/or ntfy.
 	Notify notify.Config `json:"notify"`
+	// Status is the public status page for friends.
+	Status StatusConfig `json:"status"`
+	// Discord is the bot: slash commands and a self-updating status message.
+	Discord discord.Config `json:"discord"`
+}
+
+// StatusConfig configures the public status page (no login).
+type StatusConfig struct {
+	Enabled   bool                    `json:"enabled"`
+	Host      string                  `json:"host,omitempty"` // own host name, e.g. status.example.com
+	Title     string                  `json:"title,omitempty"`
+	Note      string                  `json:"note,omitempty"`
+	ShowNames bool                    `json:"show_names"` // show who is online
+	Servers   map[string]StatusServer `json:"servers,omitempty"`
+}
+
+type StatusServer struct {
+	Show bool   `json:"show"`
+	Note string `json:"note,omitempty"` // e.g. "Passwort steht im Discord"
 }
 
 // RouterMap is a port forwarding the panel created in the router.
@@ -283,4 +304,28 @@ func copyServer(sv Server) Server {
 		c.Tasks[i] = t
 	}
 	return c
+}
+
+// GameEvent changes settings for a time span and sets them back afterwards
+// (e.g. "Saturday 20–23: double XP").
+type GameEvent struct {
+	ID        string            `json:"id"`
+	Name      string            `json:"name"`
+	Start     time.Time         `json:"start"`
+	End       time.Time         `json:"end"`
+	Weekly    bool              `json:"weekly,omitempty"`
+	Changes   []EventChange     `json:"changes"`
+	Orig      map[string]string `json:"orig,omitempty"`   // "where|key" -> value before the event
+	State     string            `json:"state"`            // geplant | aktiv | beendet
+	Warned    int               `json:"warned,omitempty"` // minutes of the last in-game warning
+	Created   time.Time         `json:"created"`
+	LastError string            `json:"last_error,omitempty"`
+}
+
+type EventChange struct {
+	Where string `json:"where"` // "vars" or file index
+	Key   string `json:"key"`
+	Label string `json:"label"`
+	Value string `json:"value"`
+	Old   string `json:"old,omitempty"` // value when the event was planned (display only)
 }

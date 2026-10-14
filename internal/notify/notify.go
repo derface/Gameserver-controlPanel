@@ -21,6 +21,7 @@ var Kinds = []struct{ Key, Label string }{
 	{"error", "Fehler (Aufgaben, Backups, Installation)"},
 	{"update", "Spiel-Updates"},
 	{"task", "Ausgeführte Aufgaben"},
+	{"event", "Events (Ankündigung, Beginn, Ende)"},
 	{"backup", "Backups erstellt"},
 	{"startstop", "Start und Stopp durch Benutzer"},
 	{"ai", "KI-Diagnosen"},
@@ -28,7 +29,7 @@ var Kinds = []struct{ Key, Label string }{
 }
 
 // DefaultKinds are on when nothing was chosen yet.
-var DefaultKinds = []string{"crash", "error", "update", "ai", "panel"}
+var DefaultKinds = []string{"crash", "error", "update", "event", "ai", "panel"}
 
 type Config struct {
 	Discord   string   `json:"discord,omitempty"`    // webhook URL

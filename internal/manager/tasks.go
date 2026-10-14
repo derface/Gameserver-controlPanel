@@ -178,6 +178,7 @@ func (m *Manager) runTasks(ctx context.Context) {
 		case <-tick.C:
 		}
 		m.checkTasks(ctx, time.Now())
+		m.checkEvents(ctx, time.Now())
 	}
 }
 

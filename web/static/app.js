@@ -780,7 +780,7 @@
 
   /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'backups', 'steam', 'panel'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -795,6 +795,8 @@
     if (sec === 'steam') { $('#stmPass').value = ''; $('#stmCode').value = ''; api('GET', '/api/settings').then(r => { $('#stmApiKey').value = r.settings.steam_api_key || ''; }).catch(() => {}); return loadSteam(); }
     if (sec === 'panel') return loadPanelUpdate(false);
     if (sec === 'benachrichtigungen') return loadNotify();
+    if (sec === 'statusseite') return loadStatusPage();
+    if (sec === 'discord') return loadDiscord();
     if (sec === 'backups') {
       try {
         const rc = await api('GET', '/api/remote');
@@ -834,6 +836,53 @@
     try { const r = await api('PUT', '/api/settings', settingsBody()); S.settings = r.settings; await api('POST', '/api/ai/test'); toast('Verbindung zur KI klappt', 'ok'); renderKI(); }
     catch (err) { showErr($('#sErr'), err.message); }
     finally { b.disabled = false; b.textContent = 'Verbindung testen'; }
+  });
+  async function loadStatusPage() {
+    showErr($('#spErr'));
+    let r; try { r = await api('GET', '/api/status-page'); } catch (e) { showErr($('#spErr'), e.message); return; }
+    const c = r.config || {};
+    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names;
+    $('#spLink').href = c.host ? 'https://' + c.host + '/' : '/status'; $('#spLink').textContent = c.host ? c.host : location.host + '/status';
+    $('#spRows').innerHTML = r.servers.length ? r.servers.map(x => `<tr data-id="${esc(x.id)}"><td><input type="checkbox" class="sp-show" ${x.show ? 'checked' : ''} aria-label="${esc(x.name)} zeigen"></td>
+      <td><b>${esc(x.name)}</b><br><span class="small muted">${esc(x.game)}</span></td><td><input class="sp-note" maxlength="200" value="${esc(x.note || '')}" placeholder="z. B. Passwort im Discord"></td></tr>`).join('')
+      : '<tr class="empty"><td colspan="3">Noch keine Server.</td></tr>';
+  }
+  $('#spForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#spErr'));
+    const servers = {};
+    $$('#spRows tr[data-id]').forEach(tr => { servers[tr.dataset.id] = { show: $('.sp-show', tr).checked, note: $('.sp-note', tr).value }; });
+    try {
+      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, servers });
+      toast('Statusseite gespeichert', 'ok'); loadStatusPage();
+    } catch (err) { showErr($('#spErr'), err.message); }
+  });
+  async function loadDiscord() {
+    showErr($('#dcErr'));
+    let r; try { r = await api('GET', '/api/discord'); } catch (e) { showErr($('#dcErr'), e.message); return; }
+    const c = r.config || {};
+    $('#dcApp').value = c.app_id || ''; $('#dcKey').value = c.public_key || ''; $('#dcToken').value = c.token || '';
+    $('#dcGuild').value = c.guild_id || ''; $('#dcChannel').value = c.channel || '';
+    $('#dcRoles').value = (c.roles || []).join(', '); $('#dcUsers').value = (c.users || []).join(', ');
+    $('#dcEndpoint').textContent = r.endpoint;
+    $('#dcServers').innerHTML = r.servers.length ? r.servers.map(x => `<label class="check"><input type="checkbox" value="${esc(x.id)}" ${x.allowed ? 'checked' : ''}> ${esc(x.name)} <span class="muted small">${esc(x.game)}</span></label>`).join('')
+      : '<p class="small muted">Noch keine Server.</p>';
+    const st = r.state || {}, ok = st.last_update && !String(st.last_update).startsWith('0001');
+    $('#dcState').innerHTML = st.last_error ? `<span class="bad">Statusnachricht: ${esc(st.last_error)}</span>`
+      : ok ? 'Statusnachricht zuletzt aktualisiert: ' + esc(fmtDate(st.last_update)) : c.channel ? '' : '<span class="muted">Ohne Kanal gibt es keine Statusnachricht, die Befehle gehen trotzdem.</span>';
+  }
+  const idList = v => v.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
+  $('#dcForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#dcErr'));
+    try {
+      const r = await api('PUT', '/api/discord', { app_id: $('#dcApp').value, public_key: $('#dcKey').value, token: $('#dcToken').value, guild_id: $('#dcGuild').value, channel: $('#dcChannel').value,
+        roles: idList($('#dcRoles').value), users: idList($('#dcUsers').value), servers: $$('#dcServers input:checked').map(x => x.value) });
+      toast(r.note || 'Discord-Bot gespeichert', /aber/.test(r.note || '') ? 'bad' : 'ok'); setTimeout(loadDiscord, 1500);
+    } catch (err) { showErr($('#dcErr'), err.message); }
+  });
+  $('#dcTest').addEventListener('click', async () => {
+    const b = $('#dcTest'); b.disabled = true; showErr($('#dcErr'));
+    try { await api('POST', '/api/discord/test'); toast('Statusnachricht ist in Discord', 'ok'); loadDiscord(); } catch (err) { showErr($('#dcErr'), err.message); }
+    b.disabled = false;
   });
   async function loadNotify() {
     showErr($('#ntErr'));
@@ -1428,8 +1477,9 @@
     const history = KI.hist.slice();
     addMsg('Du', text); setCore('thinking');
     try {
-      const r = await api('POST', '/api/ai/plan', { prompt: text, history });
+      const r = await api('POST', '/api/ai/plan', { prompt: text, history, tz: -new Date().getTimezoneOffset() });
       if (r.plan.question) { addMsg('KI', r.plan.question); }
+      else if (r.plan.action === 'event') { addMsg('KI', r.plan.reply || 'So würde ich das Event planen.'); showChange(r.plan, r.changes || [], r.notes || [], r.server, r.event); }
       else if (r.plan.action === 'change') { addMsg('KI', r.plan.reply || 'Das würde ich ändern.'); showChange(r.plan, r.changes || [], r.notes || [], r.server); }
       else { addMsg('KI', r.plan.reply || 'Hier ist mein Vorschlag.'); showPlan(r.plan, r.template, r.warning); }
     } catch (e) { addMsg('KI', e.message, 'bad'); }
@@ -1450,20 +1500,37 @@
     $('#editPlan').onclick = () => openCreate(plan);
     $('#runPlan').onclick = () => warning ? openCreate(plan) : runPlan();
   }
-  function showChange(plan, changes, notes, sv) {
-    KI.plan = plan; KI.change = { changes, sv }; KI.track = null;
+  function showChange(plan, changes, notes, sv, ev) {
+    KI.plan = plan; KI.change = { changes, sv, ev }; KI.track = null;
     const p = $('#plan'); p.hidden = false; KI.order++;
     const fmtV = v => v === '' || v == null ? '–' : v;
     const running = sv && (sv.status === 'running' || sv.status === 'starting');
     p.innerHTML = `<div class="plan-head"><span class="mono muted">Änderung Nr. ${String(KI.order).padStart(4, '0')}</span><span class="stamp" id="stamp">Wartet auf Freigabe</span></div>
-      <h3>${esc(sv ? sv.name : plan.server)}</h3>
+      <h3>${esc(sv ? sv.name : plan.server)}${ev ? ' · ' + esc(ev.name) : ''}</h3>
+      ${ev ? `<p class="small"><b>Zeitraum:</b> ${esc(fmtSpan(ev.start, ev.end))}${ev.weekly ? ', jede Woche' : ''}. Danach stellt das Panel die bisherigen Werte von selbst wieder her.</p>` : ''}
       ${changes.length ? `<table class="tbl chg"><thead><tr><th>Einstellung</th><th>Bisher</th><th>Neu</th></tr></thead><tbody>${changes.map(c =>
         `<tr><td>${esc(c.label)}</td><td class="mono muted">${esc(fmtV(c.old))}</td><td class="mono"><b>${esc(fmtV(c.new))}</b></td></tr>`).join('')}</tbody></table>`
         : '<p class="muted">Die Werte stehen schon so da, es gibt nichts zu ändern.</p>'}
       ${notes.length ? `<p class="small muted">${notes.map(esc).join('<br>')}</p>` : ''}
-      ${changes.length && running ? '<p class="small">Der Server läuft und wird dafür neu gestartet. Spieler werden kurz getrennt.</p>' : ''}
-      <div class="plan-actions"><a class="btn-line" href="#/server/${encodeURIComponent(plan.server)}/settings">Einstellungen öffnen</a>${changes.length ? '<button class="btn-accent" type="button" id="runChange">Übernehmen</button>' : ''}</div>`;
-    if (changes.length) $('#runChange').onclick = runChange;
+      ${changes.length && running && !ev ? '<p class="small">Der Server läuft und wird dafür neu gestartet. Spieler werden kurz getrennt.</p>' : ''}
+      <div class="plan-actions"><a class="btn-line" href="#/server/${encodeURIComponent(plan.server)}/${ev ? 'tasks' : 'settings'}">${ev ? 'Events ansehen' : 'Einstellungen öffnen'}</a>${changes.length ? `<button class="btn-accent" type="button" id="runChange">${ev ? 'Event anlegen' : 'Übernehmen'}</button>` : ''}</div>`;
+    if (changes.length) $('#runChange').onclick = ev ? runEventFromAI : runChange;
+  }
+  function runEventFromAI() {
+    const { changes, ev } = KI.change || {}; if (!changes || !ev) return;
+    const vars = {}, files = {};
+    for (const c of changes) {
+      if (c.where === 'vars') vars[c.key] = c.new;
+      else if (c.where !== 'memory') (files[c.where] = files[c.where] || {})[c.key] = c.new;
+    }
+    const list = changes.filter(c => c.where !== 'memory').map(c => `<li><b>${esc(c.label)}</b> <span class="muted">${esc(c.old ?? '')}</span> → <span class="mono">${esc(c.new)}</span></li>`).join('');
+    const id = KI.plan.server;
+    KI.onEvent = () => {
+      KI.onEvent = null;
+      $('#stamp').textContent = 'Geplant'; $('#stamp').classList.add('ok'); $('#runChange').disabled = true; $('#runChange').textContent = 'Angelegt';
+    };
+    GE_SERVER = id;
+    openEventDialog({ vars, files }, list, ev);
   }
   async function runChange() {
     const { changes, sv } = KI.change || {}; if (!changes || KI.busy) return;
@@ -1600,7 +1667,7 @@
     const id = MG.id; clearTimeout(PL.timer);
     let d; try { d = await api('GET', `/api/servers/${id}/players`); } catch (e) { $('#plInfo').textContent = e.message; return; }
     if (MG.id !== id || MG.tab !== 'players') return;
-    PL.data = d; renderPlayers();
+    PL.data = d; renderPlayers(); loadStats(id);
     PL.timer = setTimeout(() => { if (MG.tab === 'players' && !document.hidden) loadPlayers(); }, 15000);
   }
   function renderPlayers() {
@@ -1624,6 +1691,33 @@
       ${l.entries.length ? `<ul>${l.entries.map(x => `<li><span>${esc(x)}</span>${op && l.editable ? `<button type="button" class="linkbtn small" data-plrm="${esc(l.key)}" data-name="${esc(x)}">Entfernen</button>` : ''}</li>`).join('')}</ul>` : '<p class="muted small">leer</p>'}
       ${l.hint ? `<p class="small muted">${esc(l.hint)}</p>` : ''}</div>`).join('');
     $('#plNote').textContent = !d.supported ? 'Kicken, Bannen und Admins verwalten gibt es für dieses Spiel noch nicht. Die Online-Liste kommt, wenn das Spiel sie über die Steam-Abfrage verrät.' : (d.note || '');
+  }
+  const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  async function loadStats(id) {
+    let v; try { v = await api('GET', `/api/servers/${id}/stats`); } catch (e) { return; }
+    if (MG.id !== id) return;
+    const since = v.since && !v.since.startsWith('0001') ? new Date(v.since) : null;
+    $('#stSince').textContent = since ? `seit ${since.toLocaleDateString('de-DE')}` + (v.last_played && !v.last_played.startsWith('0001') ? ` · zuletzt gespielt ${fmtWhen(v.last_played)}` : '') : 'sammelt ab jetzt jede Minute';
+    $('#stInsights').innerHTML = (v.insights || []).map(x => `<li>${esc(x)}</li>`).join('');
+    // Mo … So as rows, 0–23 as columns
+    const cells = [];
+    cells.push('<span></span>' + Array.from({ length: 24 }, (_, h) => `<span class="hh">${h % 3 === 0 ? h : ''}</span>`).join(''));
+    [1, 2, 3, 4, 5, 6, 0].forEach((d, i) => {
+      cells.push(`<span class="wd">${WD[i]}</span>` + v.heat[d].map((x, h) => {
+        const a = x < 0 ? 0 : v.heat_max > 0 ? Math.max(.08, x / v.heat_max) : .08;
+        return `<span class="hc${x < 0 ? ' none' : ''}" style="--a:${a.toFixed(2)}" title="${WD[i]} ${h}:00 – ${x < 0 ? 'keine Daten' : x.toFixed(1).replace('.', ',') + ' Spieler im Schnitt'}"></span>`;
+      }).join(''));
+    });
+    $('#stHeat').innerHTML = cells.join('');
+    const ps = v.players || [];
+    $('#stPlayers').innerHTML = ps.length ? `<table class="tbl"><thead><tr><th>Spieler</th><th>Spielzeit</th><th>Sitzungen</th><th>Zuletzt</th></tr></thead><tbody>${ps.slice(0, 20).map(p =>
+      `<tr><td>${p.online ? '<span class="dot on" aria-label="online"></span> ' : ''}<b>${esc(p.name)}</b></td><td class="mono small">${plDur(p.seconds)}</td><td class="mono small">${p.sessions}</td><td class="mono small">${esc(fmtWhen(p.last))}</td></tr>`).join('')}</tbody></table>`
+      : `<p class="small muted">${v.has_names ? '' : 'Spielzeiten je Spieler gibt es, sobald das Spiel Namen verrät (Steam-Abfrage oder Minecraft).'}</p>`;
+  }
+  async function loadHints() {
+    let l; try { l = await api('GET', '/api/insights'); } catch (e) { return; }
+    $('#homeHints').hidden = !l.length;
+    $('#homeHintList').innerHTML = l.slice(0, 6).map(x => `<li><a href="#/server/${encodeURIComponent(x.server)}/players">${esc(x.name)}</a>: ${esc(x.text)}</li>`).join('');
   }
   async function plDo(action, name, list, confirmText) {
     if (!name) { toast('Bitte einen Namen eintragen', 'bad'); return; }
@@ -1812,13 +1906,70 @@
     });
     return { vars: collectVars($('#stBody'), true), files };
   }
-  $('#stForm').addEventListener('submit', async e => {
-    e.preventDefault();
+  function settingsDiff() {
     const now = collectSettings(), body = { vars: {}, files: {} };
     for (const [k, v] of Object.entries(now.vars)) if (GS.orig.vars[k] !== v) body.vars[k] = v;
     for (const [f, kv] of Object.entries(now.files)) for (const [k, v] of Object.entries(kv)) {
       if (!GS.orig.files[f] || GS.orig.files[f][k] !== v) (body.files[f] = body.files[f] || {})[k] = v;
     }
+    body.empty = !Object.keys(body.vars).length && !Object.keys(body.files).length;
+    return body;
+  }
+  // label shown next to a changed field, for the event dialog
+  function fieldLabel(el) {
+    const l = el.id && document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+    return (l && l.textContent.replace(/\s*\*$/, '').trim()) || el.dataset.var || el.dataset.k || '';
+  }
+  $('#stEvent').addEventListener('click', () => {
+    const body = settingsDiff();
+    if (body.empty) { toast('Erst Werte ändern, die während des Events gelten sollen. Gespeichert wird dabei nichts.'); return; }
+    const items = [];
+    $$('#stBody [data-var], #stBody [data-cf]').forEach(el => {
+      const isVar = !!el.dataset.var, k = isVar ? el.dataset.var : el.dataset.k;
+      const v = isVar ? body.vars[k] : (body.files[el.dataset.cf] || {})[k];
+      if (v === undefined) return;
+      const old = isVar ? GS.orig.vars[k] : (GS.orig.files[el.dataset.cf] || {})[k];
+      items.push(`<li><b>${esc(fieldLabel(el))}</b> <span class="muted">${esc(old ?? '')}</span> → <span class="mono">${esc(el.type === 'password' ? '••••' : v)}</span></li>`);
+    });
+    openEventDialog({ vars: body.vars, files: body.files }, items.join(''));
+  });
+  const toLocalInput = d => { const x = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return x.toISOString().slice(0, 16); };
+  let GE_PENDING = null, GE_SERVER = null, GE_FROM_ST = false;
+  function openEventDialog(changes, listHTML, preset) {
+    GE_PENDING = changes;
+    GE_FROM_ST = !preset; if (!preset) GE_SERVER = MG.id;
+    const p = preset || {}, now = new Date();
+    // default: next Friday 18:00 to Sunday 23:00
+    const fri = new Date(now.getFullYear(), now.getMonth(), now.getDate() + ((5 - now.getDay() + 7) % 7 || 7), 18, 0);
+    const sun = new Date(fri.getFullYear(), fri.getMonth(), fri.getDate() + 2, 23, 0);
+    $('#geChanges').innerHTML = listHTML;
+    $('#geName').value = p.name || '';
+    $('#geStart').value = toLocalInput(p.start ? new Date(p.start) : fri);
+    $('#geEnd').value = toLocalInput(p.end ? new Date(p.end) : sun);
+    $('#geWeekly').checked = !!p.weekly;
+    $('#geErr').hidden = true;
+    $('#dlgEvent').showModal(); setTimeout(() => $('#geName').focus(), 30);
+  }
+  $('#geForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = t => { $('#geErr').textContent = t; $('#geErr').hidden = false; };
+    const name = $('#geName').value.trim(), st = new Date($('#geStart').value), en = new Date($('#geEnd').value);
+    if (!name) return err('Bitte einen Namen eingeben.');
+    if (isNaN(st) || isNaN(en)) return err('Bitte Beginn und Ende angeben.');
+    if (en <= st) return err('Das Ende muss nach dem Beginn liegen.');
+    const b = $('#geOk'); b.disabled = true;
+    try {
+      const r = await api('POST', `/api/servers/${GE_SERVER}/game-events`, { name, start: st.toISOString(), end: en.toISOString(), weekly: $('#geWeekly').checked, vars: GE_PENDING.vars || {}, files: GE_PENDING.files || {} });
+      $('#dlgEvent').close();
+      toast('Event „' + r.event.name + '“ geplant' + ((r.notes || []).length ? ' · ' + r.notes.join(' ') : ''), 'ok');
+      if (GE_FROM_ST && R.page === 'server' && MG.tab === 'settings') renderSettings(); // discard the unsaved edits, they belong to the event
+      if (KI.onEvent) KI.onEvent(r.event);
+    } catch (x) { err(x.message); }
+    finally { b.disabled = false; }
+  });
+  $('#stForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = settingsDiff(); delete body.empty;
     if (!Object.keys(body.vars).length && !Object.keys(body.files).length) { toast('Nichts geändert'); return; }
     const b = $('#stSave'); b.disabled = true; b.textContent = GS.data.running ? 'Stoppt, speichert, startet …' : 'Speichert …';
     try {
@@ -2051,7 +2202,7 @@
     if (MG.id !== id || MG.tab !== tab || R.page !== 'server') return;
     if (TK.forId !== id) { TK.checked = false; TK.forId = id; }
     TK.data = d;
-    if (tab === 'tasks') renderTasks(); else renderEvents();
+    if (tab === 'tasks') { renderTasks(); loadGameEvents(); } else renderEvents();
     TK.timer = setTimeout(loadTasks, 10000);
   }
   function renderEvents() {
@@ -2084,6 +2235,35 @@
     }).join('') : '<tr class="empty"><td colspan="6">Noch keine Aufgaben. Zum Beispiel: täglich um 4 Uhr neu starten, vorher die Spieler warnen.</td></tr>';
     tkFormFields();
   }
+  // zeitlich begrenzte Events
+  const GE_STATE = { geplant: ['muted', 'Geplant'], aktiv: ['ok', 'Läuft'], beendet: ['muted', 'Beendet'] };
+  const fmtSpan = (a, b) => {
+    const A = new Date(a), B = new Date(b), o = { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
+    return A.toLocaleString('de-DE', o) + ' bis ' + (A.toDateString() === B.toDateString() ? B.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : B.toLocaleString('de-DE', o));
+  };
+  async function loadGameEvents() {
+    const id = MG.id;
+    let d; try { d = await api('GET', `/api/servers/${id}/game-events`); } catch (e) { return; }
+    if (MG.id !== id) return;
+    const evs = (d.events || []).slice().sort((a, b) => new Date(a.start) - new Date(b.start));
+    $('#geList').innerHTML = evs.map(ev => {
+      const [cls, lab] = GE_STATE[ev.state] || GE_STATE.geplant;
+      const chg = (ev.changes || []).map(c => `<span class="tk-tag">${esc(c.label || c.key)}: ${esc(c.value)}</span>`).join('');
+      const btn = can('operator') ? `<button type="button" class="linkbtn small" data-ge-del="${esc(ev.id)}" data-name="${esc(ev.name)}" data-state="${esc(ev.state)}">${ev.state === 'aktiv' ? 'Jetzt beenden' : 'Löschen'}</button>` : '';
+      return `<div class="ge-item"><span class="ml-st ml-${cls}">${esc(lab)}</span><div class="ml-t"><b>${esc(ev.name)}</b>
+        <span class="small muted">${esc(fmtSpan(ev.start, ev.end))}${ev.weekly ? ' · jede Woche' : ''}</span>
+        <div class="tk-tags">${chg}</div>${ev.last_error ? `<p class="small bad">${esc(ev.last_error)}</p>` : ''}</div>${btn}</div>`;
+    }).join('');
+    $('#geHint').hidden = evs.length > 0 && !can('operator');
+  }
+  $('#geList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-ge-del]'); if (!b) return;
+    const active = b.dataset.state === 'aktiv';
+    if (!await confirmBox(active ? 'Event jetzt beenden?' : 'Event löschen?', active ? 'Die alten Werte werden wiederhergestellt, der Server startet dafür neu.' : '„' + b.dataset.name + '“ wird gelöscht.', active ? 'Beenden' : 'Löschen')) return;
+    b.disabled = true;
+    try { await api('DELETE', `/api/servers/${MG.id}/game-events/${b.dataset.geDel}`); toast(active ? 'Event beendet, alte Werte zurück' : 'Event gelöscht', 'ok'); loadGameEvents(); }
+    catch (x) { toast(x.message, 'bad'); b.disabled = false; }
+  });
   const waitText = m => m >= 60 ? (m / 60) + ' Std.' : m + ' Min.';
   function tkTags(t) {
     const d = TK.data || {}, tags = [];
@@ -2415,6 +2595,8 @@
       a.push({ label: 'Allgemein: Spieler-Adresse und KI-Anbieter', hint: 'Panel', run: () => openSettings('ki') });
       a.push({ label: 'Externe Backups', hint: 'Panel', run: () => openSettings('backups') });
       a.push({ label: 'Benachrichtigungen (Discord, ntfy)', hint: 'Panel', run: () => openSettings('benachrichtigungen') });
+      a.push({ label: 'Statusseite für Mitspieler', hint: 'Panel', run: () => openSettings('statusseite') });
+      a.push({ label: 'Discord-Bot einrichten', hint: 'Panel', run: () => openSettings('discord') });
       a.push({ label: 'Steam-Konto', hint: 'Panel', run: () => openSettings('steam') });
       a.push({ label: 'Panel aktualisieren', hint: 'Panel', run: () => openSettings('panel') });
     }
@@ -2547,7 +2729,7 @@
     if (n.page !== 'server' && S.consoleId) closeConsole();
     const s = n.page === 'server' ? byId(n.id) : null;
     document.title = (s ? s.name : TITLES[n.page] || 'Panel') + ' · Bytewise Panel';
-    if (n.page === 'home') { requestAnimationFrame(() => { sizeLand(); drawSparks(); }); }
+    if (n.page === 'home') { requestAnimationFrame(() => { sizeLand(); drawSparks(); }); loadHints(); }
     else if (n.page === 'server') {
       if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
       if (prevId !== n.id || prev !== 'server') { MG.id = n.id; MG.path = ''; GS.group = null; closeEditor(true); if (S.consoleId && S.consoleId !== n.id) closeConsole(); }

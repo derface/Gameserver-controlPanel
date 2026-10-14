@@ -425,3 +425,58 @@ func (m *Manager) CommandOutput(ctx context.Context, id, cmd string) ([]string, 
 }
 
 var commandWait = 1500 * time.Millisecond
+
+// PublicPlayers returns online names for the status page and the Discord
+// bot: the console list if the "Spieler" tab fetched it recently, else the
+// Steam player query. It never sends console commands.
+func (m *Manager) PublicPlayers(id string) []string {
+	if c, ok := playerCache.Load(id); ok && time.Since(c.(cachedPlayers).at) < 2*time.Minute {
+		var out []string
+		for _, p := range c.(cachedPlayers).list {
+			out = append(out, p.Name)
+		}
+		return out
+	}
+	sv, tpl, err := m.get(id)
+	if err != nil || !m.isUp(id) {
+		return nil
+	}
+	if tpl.Query != nil && tpl.Query.Type == "a2s" && tpl.Query.Port >= 0 && tpl.Query.Port < len(sv.Ports) {
+		ps, err := query.A2SPlayers("127.0.0.1", sv.Ports[tpl.Query.Port].Host)
+		if err != nil {
+			return nil
+		}
+		var out []string
+		for _, p := range ps {
+			if strings.TrimSpace(p.Name) != "" {
+				out = append(out, p.Name)
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+// JoinInfo tells friends how to connect: address and, for Source games,
+// a steam://connect link.
+func (m *Manager) JoinInfo(id, host string) (addr, steamLink, hint string) {
+	sv, tpl, err := m.get(id)
+	if err != nil || len(sv.Ports) == 0 {
+		return "", "", ""
+	}
+	addr = fmt.Sprintf("%s:%d", host, sv.Ports[0].Host)
+	switch {
+	case tpl.ID == "minecraft-java":
+		hint = "Minecraft → Mehrspieler → Server hinzufügen → Adresse einfügen."
+	case tpl.ID == "minecraft-bedrock":
+		hint = "Minecraft → Spielen → Server → Server hinzufügen: Adresse und Port getrennt eintragen."
+	case tpl.ID == "valheim":
+		hint = "Valheim → Spiel beitreten → „Per IP beitreten“ → Adresse einfügen."
+	case tpl.Query != nil && tpl.Query.Type == "a2s" && (strings.Contains(tpl.Start, "srcds") || tpl.ID == "cs2"):
+		steamLink = "steam://connect/" + addr
+		hint = "Auf „Beitreten“ klicken (öffnet Steam) oder in der Spielkonsole: connect " + addr
+	default:
+		hint = "Im Spiel über „Direkt verbinden“ bzw. „Per IP beitreten“ die Adresse eintragen."
+	}
+	return addr, steamLink, hint
+}

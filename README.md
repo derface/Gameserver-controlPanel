@@ -314,6 +314,29 @@ Einstellungen → **Benachrichtigungen**: Discord-Webhook und/oder ntfy-Thema (a
 
 Einstellungen → **Panel & Updates**: Das Panel fragt GitHub kurz nach dem Start und dann alle 6 Stunden nach dem neuesten Release (`GP_REPO`, Standard `derface/Gameserver-controlPanel`; für private Repos `GP_GITHUB_TOKEN`). Ist eine neuere Version da, zeigt die Seitenleiste „Update da“ und auf Wunsch kommt eine Benachrichtigung. „Aktualisieren“ lädt `gamepanel-linux-<arch>` aus dem Release, prüft es gegen `SHA256SUMS` (ohne Prüfsumme wird nichts installiert), legt die alte Datei als `gamepanel.old` daneben und startet das Panel im selben Prozess neu. Spieleserver laufen weiter. Releases baut `.github/workflows/release.yml` bei jedem Tag `v*` (Programmdateien, `install.sh`, `SHA256SUMS`). Zurück zur alten Version: `mv /opt/gamepanel/gamepanel.old /opt/gamepanel/gamepanel && systemctl restart gamepanel`.
 
+## Events (zeitlich begrenzt)
+
+Werte im Reiter **Einstellungen** ändern und **Als Event planen** wählen: Name, Beginn, Ende, auf Wunsch jede Woche. Gespeichert wird dabei nichts dauerhaft. Zum Beginn merkt sich das Panel die alten Werte, setzt die neuen und startet den Server neu; zum Ende stellt es alles zurück. Spieler werden 10 und 1 Minute vorher im Spiel gewarnt (wenn das Spiel Nachrichten kann), die Ankündigung geht an Discord/ntfy (Art „Events“). Die Liste steht im Reiter **Aufgaben** unter „Events“; ein laufendes Event lässt sich dort sofort beenden.
+
+Die KI versteht das auch: „Mach am Wochenende ein Highrate-Event auf Enshrouded“. Sie schlägt Zeitraum und Werte vor, angelegt wird erst nach „Event anlegen“. Grenzen: höchstens 14 Tage, wöchentlich höchstens 6 Tage, 20 Events pro Server.
+
+## Statusseite für Mitspieler
+
+**Einstellungen → Statusseite**: eine Seite ohne Anmeldung unter `/status` mit den ausgewählten Servern, wer spielt, Adresse, Beitreten-Knopf (Steam-Spiele) und einem Hinweis pro Server (z. B. „Passwort im Discord“). Passwörter oder Einstellungen stehen dort nie. Mit einer eigenen Adresse (z. B. `status.bytewise-it.de`, per Reverse Proxy auf das Panel geleitet) zeigt das Panel unter dieser Domain nur die Statusseite; Anmeldung und API sind dort nicht erreichbar.
+
+## Discord-Bot
+
+**Einstellungen → Discord-Bot**: eigener Bot ohne Dauerverbindung. Discord schickt die Befehle signiert an `https://<panel>/api/discord/interactions` (Ed25519-geprüft), das Panel antwortet direkt.
+
+- `/status` (jeder), `/start`, `/stop`, `/restart` (nur freigegebene Rollen oder Personen), mit Server-Auswahl beim Tippen.
+- Eine Statusnachricht im gewählten Kanal, die sich selbst aktualisiert (bei Änderungen, sonst alle 15 Minuten).
+- Nur die angehakten Server sind für den Bot sichtbar und steuerbar.
+- Die Anleitung zum Anlegen der Discord-Application steht aufklappbar im Panel. Das Panel muss dafür von außen per HTTPS erreichbar sein.
+
+## Spieler-Statistik
+
+Das Panel zählt jede Minute die Spieler laufender Server (Steam-Abfrage oder Konsole) und hebt 90 Tage auf. Im Reiter **Spieler** steht eine Wochen-Heatmap, die Spielzeit pro Spieler (wo das Spiel Namen liefert) und Hinweise: die ruhigste Stunde für Neustarts, geplante Neustarts, die oft Spieler treffen, und Server, auf denen seit 14 Tagen niemand gespielt hat. Die Hinweise aller Server stehen auch auf der Übersicht.
+
 ## Lizenz
 
 Bytewise Panel ist freie Software unter der **GNU Affero General Public License v3.0** (`LICENSE`). Du darfst es kostenlos nutzen, verändern und weitergeben. Wer eine veränderte Fassung anderen über das Netz anbietet, muss deren Quellcode ebenfalls offenlegen (AGPL §13); das Panel verlinkt dazu unter Einstellungen → Panel & Updates auf den Quellcode. Fremdbestandteile: `internal/thirdparty/acme` (BSD), `web/static/vendor/qrcode.js` und `three.js` (MIT), Vorlagen-Daten aus LinuxGSM und AMPTemplates (MIT).
