@@ -1,5 +1,9 @@
 [
  [
+  "([\\d.,]+) GB RAM frei",
+  "$1 GB RAM free"
+ ],
+ [
   "^von (?=\\d)",
   "of "
  ],

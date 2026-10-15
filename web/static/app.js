@@ -587,7 +587,40 @@
   /* ---------------- Werte + Verläufe ---------------- */
   function pushHist(k, v) { const h = S.hist[k]; h.push(v); if (h.length > 45) h.shift(); }
   function setV(id, html) { const el = document.getElementById(id); if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+  /* Übersicht aller Rechner (nur wenn weitere Rechner gekoppelt sind) */
+  const committed = (node, running) => S.servers.filter(s => (s.node || '') === node && (!running || isOn(s))).reduce((a, s) => a + (s.memory_mb || 0), 0);
+  // where a new server fits best: most RAM left once the running servers
+  // may use all they are given
+  function fleetRoom() {
+    const out = [];
+    if (S.host && S.host.mem_total_mb) out.push({ id: '', name: 'Dieser Rechner', host: S.host, online: true });
+    (S.nodes || []).forEach(n => { if (n.online && n.host && n.host.mem_total_mb) out.push({ id: n.id, name: n.name, host: n.host, online: true }); });
+    out.forEach(m => { m.room = Math.max(0, m.host.mem_total_mb - Math.max(m.host.mem_used_mb, committed(m.id, true))); });
+    return out;
+  }
+  const gbs = mb => (mb / 1024).toFixed(mb >= 10240 ? 0 : 1).replace('.', DEC);
+  function bar(pct, warn) { pct = Math.max(0, Math.min(100, pct || 0)); return `<span class="fl-bar${pct >= warn ? ' hot' : ''}"><i style="width:${pct.toFixed(0)}%"></i></span>`; }
+  function renderFleet() {
+    const box = $('#homeFleet'); if (!box) return;
+    const nodes = S.nodes || [];
+    box.hidden = !nodes.length || !can('admin');
+    if (box.hidden) return;
+    const rows = [{ id: '', name: (S.host && S.host.hostname) || 'Dieser Rechner', me: true, online: true, host: S.host || {} }].concat(nodes.map(n => ({ ...n, host: n.host || {} })));
+    $('#fleetList').innerHTML = rows.map(m => {
+      const h = m.host, srv = S.servers.filter(s => (s.node || '') === m.id), run = srv.filter(s => s.status === 'running').length;
+      const ramPct = h.mem_total_mb ? h.mem_used_mb / h.mem_total_mb * 100 : 0, diskPct = h.disk_total_gb ? h.disk_used_gb / h.disk_total_gb * 100 : 0;
+      const prom = committed(m.id);
+      return `<div class="fl-row${m.online ? '' : ' off'}">
+        <div class="fl-name"><b>${esc(m.name)}</b><span class="small muted">${m.me ? 'dieses Panel' : m.online ? 'erreichbar' : 'nicht erreichbar'} · ${run} von ${srv.length} Servern laufen</span></div>
+        ${m.online && h.mem_total_mb ? `<div class="fl-m"><span class="small muted">CPU ${Math.round(h.cpu_percent)} %</span>${bar(h.cpu_percent, 85)}</div>
+        <div class="fl-m"><span class="small muted">RAM ${gbs(h.mem_used_mb)} / ${gbs(h.mem_total_mb)} GB</span>${bar(ramPct, 90)}<span class="small muted" title="Summe der RAM-Grenzen aller Server dort">zugeteilt ${gbs(prom)} GB</span></div>
+        <div class="fl-m"><span class="small muted">Platte ${Math.round(h.disk_used_gb)} / ${Math.round(h.disk_total_gb)} GB</span>${bar(diskPct, 90)}</div>` : `<div class="fl-m wide small muted">${esc(m.error || 'keine Daten')}</div>`}
+      </div>`;
+    }).join('');
+  }
+
   function renderHost() {
+    renderFleet();
     const h = S.host; if (!h) return;
     const run = S.servers.filter(s => s.status === 'running').length;
     const pl = S.servers.reduce((a, s) => a + (hasPl(s) ? s.players : 0), 0);
@@ -752,9 +785,31 @@
     try { list = await api('GET', '/api/nodes'); } catch (e) { /* egal */ }
     S.nodes = list;
     $('#cNodeWrap').hidden = !list.length;
-    $('#cNode').innerHTML = '<option value="">Dieser Rechner</option>' + list.map(n => `<option value="${esc(n.id)}"${n.online ? '' : ' disabled'}>${esc(n.name)}${n.online ? '' : ' (nicht erreichbar)'}</option>`).join('');
+    const room = Object.fromEntries(fleetRoom().map(m => [m.id, m.room]));
+    const free = id => room[id] != null ? ` · ${gbs(Math.max(0, room[id]))} GB RAM frei` : '';
+    $('#cNode').innerHTML = `<option value="">Dieser Rechner${free('')}</option>` + list.map(n => `<option value="${esc(n.id)}"${n.online ? '' : ' disabled'}>${esc(n.name)}${n.online ? free(n.id) : ' (nicht erreichbar)'}</option>`).join('');
+    nodeHint();
   }
+  // suggest the machine with the most RAM not yet given to servers
+  function nodeHint() {
+    const el = $('#cNodeHint'); if (!el) return;
+    const t = S.tplById[$('#cTpl').value], need = +$('#cMem').value || (t && t.memory_mb) || 0;
+    const ms = fleetRoom().sort((a, b) => b.room - a.room || a.host.cpu_percent - b.host.cpu_percent);
+    const best = ms[0], cur = ms.find(m => m.id === $('#cNode').value);
+    el.hidden = true;
+    if (!best || ms.length < 2) return;
+    if (best.room < need) return; // nowhere enough, the RAM slider says the rest
+    if (cur && cur.room < need && best.id !== cur.id) {
+      el.innerHTML = `Auf ${esc(cur.name)} ist nicht mehr genug RAM frei (${gbs(Math.max(0, cur.room))} GB). Mehr Platz hat <button type="button" class="linkbtn" data-pick="${esc(best.id)}">${esc(best.name)}</button> (${gbs(best.room)} GB).`;
+      el.className = 'note warn'; el.hidden = false;
+    } else if (best.id !== $('#cNode').value && (!cur || best.room - cur.room >= 2048)) {
+      el.innerHTML = `Am meisten Platz hat <button type="button" class="linkbtn" data-pick="${esc(best.id)}">${esc(best.name)}</button> (${gbs(best.room)} GB RAM frei).`;
+      el.className = 'note'; el.hidden = false;
+    }
+  }
+  $('#cNodeHint').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) { $('#cNode').value = b.dataset.pick; fillCreate(); } });
   $('#cNode').addEventListener('change', () => fillCreate());
+  $('#cMem').addEventListener('change', () => nodeHint());
   function openCreate(prefill) {
     fillNodes();
     createPrefill = prefill || null;
@@ -772,6 +827,7 @@
     $('#cNotes').hidden = !t.notes; $('#cNotes').textContent = t.notes || '';
     const node = (S.nodes || []).find(n => n.id === $('#cNode').value);
     memRange($('#cMem'), $('#cMemV'), t.min_memory_mb, p && p.memory_mb ? p.memory_mb : t.memory_mb, node && node.host);
+    nodeHint();
     $('#cVars').innerHTML = (t.vars || []).map(v => varField(v, p && p.vars && p.vars[v.key] != null && p.vars[v.key] !== '' ? String(p.vars[v.key]) : v.default, false)).join('');
   }
   $('#cTpl').addEventListener('change', fillCreate);
@@ -3313,7 +3369,7 @@
   async function loadServers() {
     try {
       S.servers = await api('GET', '/api/servers'); S.loaded = true; renderAll();
-      if (S.servers.some(x => x.node) && (!S.nodesAt || Date.now() - S.nodesAt > 30000)) { S.nodesAt = Date.now(); api('GET', '/api/nodes').then(l => { S.nodes = l; }).catch(() => {}); }
+      if ((S.servers.some(x => x.node) || (S.nodes && S.nodes.length)) && (!S.nodesAt || Date.now() - S.nodesAt > 10000)) { S.nodesAt = Date.now(); api('GET', '/api/nodes').then(l => { S.nodes = l; renderFleet(); }).catch(() => {}); }
       if (S.reconnect && S.consoleId === S.reconnect && !S.es) { const s = byId(S.reconnect); if (s && isOn(s)) { S.reconnect = null; connectConsole(s.id); } }
     } catch (e) { /* nächste Runde */ }
   }
@@ -3344,7 +3400,7 @@
     const vis = fn => () => { if (!document.hidden) fn(); };
     timers.push(setInterval(vis(loadServers), 2500), setInterval(vis(loadHost), 2000), setInterval(vis(loadState), 30000));
     route();
-    if (can('admin')) { pollTest(); api('GET', '/api/router').then(r => { S.routerOn = r.enabled; }).catch(() => {}); }
+    if (can('admin')) { pollTest(); api('GET', '/api/router').then(r => { S.routerOn = r.enabled; }).catch(() => {}); api('GET', '/api/nodes').then(l => { S.nodes = l; S.nodesAt = Date.now(); renderFleet(); }).catch(() => {}); }
   }
   async function boot() {
     let st;

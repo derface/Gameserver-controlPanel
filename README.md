@@ -425,7 +425,10 @@ Danach stehen die Server des zweiten Rechners in der Liste, mit dessen Namen. An
 - Der Code enthält einen Schlüssel mit vollen Admin-Rechten über den zweiten Rechner. Gespeichert wird dort nur sein Hash; entziehen geht jederzeit. Im Protokoll des zweiten Rechners steht „david (über Hauptpanel)“.
 - HTTPS mit selbst signiertem Zertifikat: Das erste Panel merkt sich beim Koppeln den Fingerabdruck und spricht danach nur noch mit genau diesem Zertifikat. Ändert er sich, steht der Rechner auf „nicht erreichbar“, bis man das neue Zertifikat bestätigt.
 - Abgefragt wird alle 5 Sekunden. Antwortet ein Rechner nicht, bleiben seine Server mit Hinweis in der Liste.
-- Noch nicht über Rechnergrenzen: Statusseite, Discord-Bot, Spieler-Statistik, Herkunftskarte „alle Server“ und Speicher-Übersicht zeigen nur den eigenen Rechner. Für die Server dort gelten die Einstellungen im Panel des Rechners selbst.
+- Statusseite, Kalender-Abo und Mod-Pakete des ersten Panels können auch Server der anderen Rechner zeigen (Häkchen unter Einstellungen → Statusseite). Spielzeiten derselben Spieler werden zusammengezählt. Adresse für Spieler: die des Rechners, wenn dort eine eingetragen ist, sonst die des ersten Panels.
+- Der Discord-Bot des ersten Panels zeigt und steuert auch Server der anderen Rechner (`/status`, `/start`, `/stop`, `/restart`, `/whitelist`). Im Verlauf des Rechners steht „Discord: Name (über Hauptpanel)“.
+- Die Übersicht zeigt eine Karte „Rechner“ mit CPU, RAM, Platte und laufenden Servern je Rechner. Beim Anlegen steht neben jedem Rechner, wie viel RAM noch frei ist (abzüglich dessen, was laufende Server nutzen dürfen), mit Vorschlag für den Rechner mit dem meisten Platz.
+- Noch nur je Rechner: Spieler-Statistik im Panel, Herkunftskarte „alle Server“ und Speicher-Übersicht.
 
 ## English / Sprache
 

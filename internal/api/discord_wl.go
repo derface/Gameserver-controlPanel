@@ -38,9 +38,9 @@ func (a *API) wlLinks(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 	can := []srv{}
-	for _, s := range a.Store.Servers() {
-		if a.Mgr.CanWhitelist(s.ID) {
-			can = append(can, srv{s.ID, s.Name})
+	for _, s := range a.fleetInfos() {
+		if a.fleetCanWhitelist(s.ID) {
+			can = append(can, srv{s.ID, a.fleetName(s)})
 		}
 	}
 	writeJSON(w, 200, map[string]any{"links": links, "servers": can})
@@ -101,9 +101,9 @@ func (a *API) wlCommand(c discord.Config, in discord.Interaction) map[string]any
 		return ephemeral("Diesen Spielernamen hat schon jemand anderes eingetragen. Wenn das ein Fehler ist, frag einen Admin.")
 	}
 	var names []string
-	for _, id := range c.WLServers {
-		if sv, ok := a.Store.Server(id); ok {
-			names = append(names, sv.Name)
+	for _, s := range a.fleetInfos() {
+		if slices.Contains(c.WLServers, s.ID) {
+			names = append(names, s.Name)
 		}
 	}
 	go a.wlSync(context.Background(), false)
@@ -158,23 +158,23 @@ func (a *API) wlSync(ctx context.Context, force bool) {
 			}
 		}
 		for id, name := range l.Applied {
-			if want[id] == name || !a.Mgr.IsUp(id) {
+			if want[id] == name || !a.fleetIsUp(id) {
 				continue
 			}
 			cctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			if _, err := a.Mgr.PlayerAction(cctx, id, "whitelist_remove", name, ""); err == nil || strings.Contains(err.Error(), "nicht gefunden") {
+			if err := a.fleetPlayerAction(cctx, id, "whitelist_remove", name, "Discord-Whitelist"); err == nil || strings.Contains(err.Error(), "nicht gefunden") {
 				delete(l.Applied, id)
-			} else if _, ok := a.Store.Server(id); !ok {
+			} else if !a.fleetHas(id) {
 				delete(l.Applied, id) // server deleted
 			}
 			cancel()
 		}
 		for id, name := range want {
-			if l.Applied[id] == name || !a.Mgr.IsUp(id) {
+			if l.Applied[id] == name || !a.fleetIsUp(id) {
 				continue
 			}
 			cctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			if _, err := a.Mgr.PlayerAction(cctx, id, "whitelist_add", name, ""); err == nil {
+			if err := a.fleetPlayerAction(cctx, id, "whitelist_add", name, "Discord-Whitelist"); err == nil {
 				l.Applied[id] = name
 			} else {
 				l.Note = err.Error()

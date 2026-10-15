@@ -105,6 +105,7 @@ func (a *API) Handler() http.Handler {
 	a.routesPanelUpdate(mux)
 	a.routesPlayers(mux)
 	a.routesStatus(mux)
+	a.routesFleet(mux)
 	a.routesGameEvents(mux)
 	a.routesDiscord(mux)
 	a.routesGeo(mux)

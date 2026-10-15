@@ -86,6 +86,10 @@
         <div class="stat"><span class="label">Speicherplatz</span><span class="v" id="vDisk">–</span><canvas id="sDisk" aria-hidden="true"></canvas></div>
         <div class="stat"><span class="label">Spieler online</span><span class="v" id="vRun">–</span><canvas id="sRun" aria-hidden="true"></canvas></div>
       </section>
+    <section class="card fleet-card admin-only" id="homeFleet" hidden aria-labelledby="hFleet">
+      <div class="card-head"><h2 id="hFleet">Rechner</h2><a class="link" href="#/einstellungen/rechner">Verwalten</a></div>
+      <div class="fleet" id="fleetList"></div>
+    </section>
     <section class="card insights-card" id="homeHints" hidden aria-labelledby="hHints"><h2 id="hHints">Hinweise</h2><ul class="insights" id="homeHintList"></ul></section>
     <div class="home-grid">
       <section class="stage card" id="stage" aria-label="3D-Ansicht der Server">
@@ -785,6 +789,7 @@
     </div>
     <p class="note" id="cNotes" hidden></p>
     <label class="field" id="cNodeWrap" hidden><span>Rechner</span><select id="cNode"></select></label>
+    <p class="note" id="cNodeHint" hidden></p>
     <label class="field"><span>Name im Panel</span><input id="cName" maxlength="40" required></label>
     <div class="field"><span>Arbeitsspeicher <b id="cMemV" class="mono"></b></span><input id="cMem" type="range" step="256"></div>
     <div id="cVars" class="vars"></div>

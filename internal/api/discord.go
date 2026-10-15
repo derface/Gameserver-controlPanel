@@ -16,6 +16,7 @@ import (
 
 	"github.com/derface/Gameserver-controlPanel/internal/auth"
 	"github.com/derface/Gameserver-controlPanel/internal/discord"
+	"github.com/derface/Gameserver-controlPanel/internal/nodes"
 	"github.com/derface/Gameserver-controlPanel/internal/proxy"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
@@ -47,8 +48,8 @@ func (a *API) discordGet(w http.ResponseWriter, r *http.Request) {
 		Allowed bool   `json:"allowed"`
 	}
 	rows := []row{}
-	for _, s := range a.Mgr.List() {
-		rows = append(rows, row{s.ID, s.Name, s.TemplateName, slices.Contains(c.Servers, s.ID)})
+	for _, s := range a.fleetInfos() {
+		rows = append(rows, row{s.ID, a.fleetName(s), s.TemplateName, slices.Contains(c.Servers, s.ID)})
 	}
 	dc.Lock()
 	st := map[string]any{"last_error": dc.lastErr, "last_update": dc.lastOK}
@@ -82,14 +83,14 @@ func (a *API) discordPut(w http.ResponseWriter, r *http.Request) {
 	}
 	var ok []string
 	for _, id := range in.Servers {
-		if _, found := a.Store.Server(id); found && !slices.Contains(ok, id) {
+		if a.fleetHas(id) && !slices.Contains(ok, id) {
 			ok = append(ok, id)
 		}
 	}
 	in.Servers = ok
 	var wl []string
 	for _, id := range in.WLServers {
-		if a.Mgr.CanWhitelist(id) && !slices.Contains(wl, id) {
+		if a.fleetCanWhitelist(id) && !slices.Contains(wl, id) {
 			wl = append(wl, id)
 		}
 	}
@@ -146,7 +147,13 @@ func (a *API) discordTest(w http.ResponseWriter, r *http.Request) {
 // cheapServers lists the allowed servers without asking for player names
 // (fast enough for the 3-second answer).
 func (a *API) cheapServers(c discord.Config) []publicServer {
-	return a.publicServers(func(id string) (bool, string) { return slices.Contains(c.Servers, id), "" }, false, "")
+	list := a.publicServers(func(id string) (bool, string) { return slices.Contains(c.Servers, id), "" }, false, "")
+	for _, s := range a.fleetInfos() { // servers of other machines, from the last check
+		if strings.Contains(s.ID, nodes.Sep) && slices.Contains(c.Servers, s.ID) {
+			list = append(list, publicServer{ID: s.ID, Name: s.Name, Game: s.TemplateName, State: publicState(s), Players: max(s.Players, 0), Max: s.MaxPlayers})
+		}
+	}
+	return list
 }
 
 // discordServers are the servers the bot may show, with the status page
@@ -155,9 +162,13 @@ func (a *API) discordServers(c discord.Config) []publicServer {
 	host := ""
 	var sc store.StatusConfig
 	a.Store.Read(func(d *store.Data) { host, sc = d.Settings.PublicHost, d.Settings.Status })
-	return a.publicServers(func(id string) (bool, string) {
-		return slices.Contains(c.Servers, id), sc.Servers[id].Note
-	}, true, host)
+	o := pubOpts{Notes: map[string]string{}, Names: true, Host: host}
+	for _, id := range c.Servers {
+		o.Notes[id] = sc.Servers[id].Note
+	}
+	v := a.localPublic(o)
+	a.addRemotePublic(&v, o)
+	return v.Servers
 }
 
 var stateIcon = map[string]string{"online": "🟢", "startet": "🟡", "fehler": "🔴", "aus": "⚫", "wartung": "🛠️"}
@@ -434,15 +445,7 @@ func (a *API) discordCommand(c discord.Config, in discord.Interaction) map[strin
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
-		var err error
-		switch in.Data.Name {
-		case "start":
-			err = a.Mgr.Start(ctx, p.ID)
-		case "stop":
-			err = a.Mgr.Stop(ctx, p.ID)
-		case "restart":
-			err = a.Mgr.Restart(ctx, p.ID)
-		}
+		err := a.fleetPower(ctx, p.ID, in.Data.Name, "Discord: "+who)
 		var msg string
 		if in.Data.Name == "start" || in.Data.Name == "restart" {
 			msg = "✅ " + p.Name + " wurde " + v[1] + ". Bis man beitreten kann, dauert es oft noch ein, zwei Minuten."

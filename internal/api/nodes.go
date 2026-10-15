@@ -35,7 +35,14 @@ func (a *API) nodeRoutes(mux *http.ServeMux) {
 
 func (a *API) nodeHello(w http.ResponseWriter, r *http.Request) {
 	host, _ := os.Hostname()
-	writeJSON(w, 200, nodes.Hello{Version: a.Version, Hostname: host, Servers: len(a.Mgr.List())})
+	h := nodes.Hello{Version: a.Version, Hostname: host}
+	for _, s := range a.Mgr.List() {
+		h.Servers++
+		if a.Mgr.CanWhitelist(s.ID) {
+			h.Whitelist = append(h.Whitelist, s.ID)
+		}
+	}
+	writeJSON(w, 200, h)
 }
 
 func (a *API) nodeKeys(w http.ResponseWriter, r *http.Request) {

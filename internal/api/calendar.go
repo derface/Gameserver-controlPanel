@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/auth"
+	"github.com/derface/Gameserver-controlPanel/internal/nodes"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
 
@@ -146,7 +147,19 @@ func (a *API) calendarFeed(w http.ResponseWriter, r *http.Request) {
 	line("X-WR-CALNAME:" + icsEscape(title+" · Events"))
 	line("REFRESH-INTERVAL;VALUE=DURATION:PT1H")
 	line("X-PUBLISHED-TTL:PT1H")
-	for _, ev := range a.publicEvents(a.calendarServers(c), 60*24*time.Hour) {
+	events := a.publicEvents(a.calendarServers(c), 60*24*time.Hour)
+	remote := pubOpts{Notes: map[string]string{}, Horizon: 60 * 24 * time.Hour}
+	for id, e := range c.Servers {
+		if e.Show && strings.Contains(id, nodes.Sep) {
+			remote.Notes[id] = ""
+		}
+	}
+	if len(remote.Notes) > 0 { // servers of other machines on the status page
+		var v pubView
+		a.addRemotePublic(&v, remote)
+		events = append(events, v.Events...)
+	}
+	for _, ev := range events {
 		line("BEGIN:VEVENT")
 		line("UID:" + ev.ID + "@bytewise-panel")
 		line("DTSTAMP:" + stamp)

@@ -53,5 +53,12 @@
  "wird abgefragt": "checking",
  "Adresse unbekannt": "Unknown address",
  "Kopplungscode erzeugt": "Pairing code created",
- "Kopplung entzogen": "Pairing revoked"
+ "Kopplung entzogen": "Pairing revoked",
+ "Verwalten": "Manage",
+ "dieses Panel": "this panel",
+ "keine Daten": "no data",
+ "Summe der RAM-Grenzen aller Server dort": "Sum of the RAM limits of all servers there",
+ "Am meisten Platz hat": "Most room is on",
+ "Der Rechner mit diesem Server antwortet gerade nicht": "The machine with this server is not answering right now",
+ "Discord-Whitelist": "Discord whitelist"
 }

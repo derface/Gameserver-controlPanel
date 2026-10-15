@@ -53,13 +53,15 @@ type Status struct {
 	Docker   string           `json:"docker_error,omitempty"`
 	Count    int              `json:"servers"`
 	servers  []map[string]any // as the node sent them
+	wl       []string
 }
 
 // Hello is the node's answer when a panel connects.
 type Hello struct {
-	Version  string `json:"version"`
-	Hostname string `json:"hostname"`
-	Servers  int    `json:"servers"`
+	Version   string   `json:"version"`
+	Hostname  string   `json:"hostname"`
+	Servers   int      `json:"servers"`
+	Whitelist []string `json:"whitelist,omitempty"` // servers with a whitelist the panel can change
 }
 
 // Pool keeps the connections to all nodes.
@@ -172,7 +174,7 @@ func (p *Pool) poll(ctx context.Context, n store.Node) {
 	}
 	s.Online, s.Error, s.Seen = true, "", time.Now()
 	s.Version, s.Hostname, s.Docker, s.Host = hello.Version, hello.Hostname, state.Docker, host
-	s.servers, s.Count = servers, len(servers)
+	s.servers, s.Count, s.wl = servers, len(servers), hello.Whitelist
 }
 
 // Status lists all nodes with their state.
@@ -495,3 +497,51 @@ func (p *Pool) ServerName(id string) string {
 // PollNode asks one node right away, e.g. after creating a server there, so
 // the list here already has it.
 func (p *Pool) PollNode(ctx context.Context, n store.Node) { p.poll(ctx, n) }
+
+// Server returns one server of a node as this panel lists it.
+func (p *Pool) Server(id string) (map[string]any, bool) {
+	for _, s := range p.Servers() {
+		if s["id"] == id {
+			return s, true
+		}
+	}
+	return nil, false
+}
+
+// IsUp says whether a node's server runs (and its node answers).
+func (p *Pool) IsUp(id string) bool {
+	s, ok := p.Server(id)
+	return ok && s["status"] == "running" && s["node_offline"] == nil
+}
+
+// CanWhitelist says whether the panel can change the whitelist of a node's
+// server.
+func (p *Pool) CanWhitelist(id string) bool {
+	nid, rid, ok := Split(id)
+	if !ok {
+		return false
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if s := p.status[nid]; s != nil {
+		for _, x := range s.wl {
+			if x == rid {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Online lists the nodes that answered at the last check.
+func (p *Pool) Online() []store.Node {
+	var out []store.Node
+	for _, st := range p.Status() {
+		if st.Online {
+			if n, ok := p.Get(st.ID); ok {
+				out = append(out, n)
+			}
+		}
+	}
+	return out
+}

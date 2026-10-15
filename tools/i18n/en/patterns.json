@@ -394,5 +394,17 @@
  [
   "(.+?) von (.+?) \\(über (.+?)\\)",
   "{0} by {1} (via {2})"
+ ],
+ [
+  "zugeteilt (.+)",
+  "assigned {0}"
+ ],
+ [
+  "Platte (.+)",
+  "Disk {0}"
+ ],
+ [
+  "Auf (.+?) ist nicht mehr genug RAM frei \\((.+?) GB\\)\\. Mehr Platz hat",
+  "Not enough RAM left on {0} ({1} GB). More room on"
  ]
 ]

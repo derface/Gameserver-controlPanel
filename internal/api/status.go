@@ -136,72 +136,114 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 			host = ""
 		}
 	}
-	list := a.publicServers(func(id string) (bool, string) {
-		e, ok := c.Servers[id]
-		return ok && e.Show, e.Note
-	}, c.ShowNames, host)
-	for i := range list {
-		list[i].Key = "s-" + list[i].ID
-		if sv, ok := a.Store.Server(list[i].ID); ok {
-			list[i].Season = seasonOf(sv)
-		}
-		if cm, ok := a.Mgr.ClientModsCached(list[i].ID); ok {
-			list[i].Mods = len(cm.Mods)
+	o := pubOpts{Notes: map[string]string{}, Names: c.ShowNames, Host: host, LAN: k == 1, Uptime: !c.HideUptime,
+		Players: c.ShowPlayers, Horizon: 14 * 24 * time.Hour}
+	for id, e := range c.Servers {
+		if e.Show {
+			o.Notes[id] = e.Note
 		}
 	}
-	if !c.HideUptime {
-		for i := range list {
-			days, pct := a.Mgr.UptimeCached(list[i].ID)
+	v := a.localPublic(o)
+	a.addRemotePublic(&v, o)
+	for i := range v.Servers {
+		v.Servers[i].Key = "s-" + v.Servers[i].ID
+	}
+	title := c.Title
+	if title == "" {
+		title = "Unsere Gameserver"
+	}
+	cal := ""
+	if c.CalToken != "" {
+		cal = "/api/public/calendar/" + c.CalToken + ".ics"
+	}
+	body := map[string]any{"title": title, "note": c.Note, "servers": v.Servers, "updated": time.Now(),
+		"events": v.Events, "calendar": cal}
+	if c.ShowPlayers {
+		body["players"] = v.Players
+	}
+	statusCache.body[k] = body
+	statusCache.at[k] = time.Now()
+	writeJSON(w, 200, statusCache.body[k])
+}
+
+// pubOpts says what a public view (status page, Discord, calendar) shows.
+// The same options go to other machines for their servers.
+type pubOpts struct {
+	Notes   map[string]string `json:"notes"` // server id → note; only these servers
+	Names   bool              `json:"names"`
+	Host    string            `json:"host"`
+	LAN     bool              `json:"lan"` // visitor from the home network
+	Uptime  bool              `json:"uptime"`
+	Players bool              `json:"players"`
+	Horizon time.Duration     `json:"horizon"` // events up to this far ahead; 0 = none
+	Mods    bool              `json:"mods"`
+}
+
+type pubView struct {
+	Servers []publicServer        `json:"-"`
+	Events  []publicEvent         `json:"events"`
+	Players []manager.PlayerTotal `json:"players"`
+}
+
+// localPublic builds the public view of this machine's servers.
+func (a *API) localPublic(o pubOpts) pubView {
+	v := pubView{Events: []publicEvent{}}
+	v.Servers = a.publicServers(func(id string) (bool, string) {
+		note, ok := o.Notes[id]
+		return ok, note
+	}, o.Names, o.Host)
+	for i := range v.Servers {
+		if sv, ok := a.Store.Server(v.Servers[i].ID); ok {
+			v.Servers[i].Season = seasonOf(sv)
+		}
+		if cm, ok := a.Mgr.ClientModsCached(v.Servers[i].ID); ok {
+			v.Servers[i].Mods = len(cm.Mods)
+		}
+	}
+	if o.Uptime {
+		for i := range v.Servers {
+			days, pct := a.Mgr.UptimeCached(v.Servers[i].ID)
 			known := false
 			for _, d := range days {
 				up := int(d.Up*100 + 0.5)
 				if d.Known == 0 {
 					up = -1 // no data that day
 				}
-				list[i].Uptime = append(list[i].Uptime, [2]int{up, d.Crashes})
+				v.Servers[i].Uptime = append(v.Servers[i].Uptime, [2]int{up, d.Crashes})
 				known = known || d.Known > 0
 			}
 			if known {
 				p := math.Round(pct*10) / 10
-				list[i].UptimePct = &p
+				v.Servers[i].UptimePct = &p
 			} else {
-				list[i].Uptime = nil
+				v.Servers[i].Uptime = nil
 			}
 		}
 	}
-	if lan := manager.LANIP(); k == 1 && lan != "" {
-		for i := range list {
-			if list[i].State == "online" {
-				list[i].LANAddr, _, _ = a.Mgr.JoinInfo(list[i].ID, lan)
+	if lan := manager.LANIP(); o.LAN && lan != "" {
+		for i := range v.Servers {
+			if v.Servers[i].State == "online" {
+				v.Servers[i].LANAddr, _, _ = a.Mgr.JoinInfo(v.Servers[i].ID, lan)
 			}
 		}
-	}
-	title := c.Title
-	if title == "" {
-		title = "Unsere Gameserver"
 	}
 	var shown []store.Server
-	for _, s := range list {
+	for _, s := range v.Servers {
 		if sv, ok := a.Store.Server(s.ID); ok {
 			shown = append(shown, sv)
 		}
 	}
-	cal := ""
-	if c.CalToken != "" {
-		cal = "/api/public/calendar/" + c.CalToken + ".ics"
+	if o.Horizon > 0 {
+		v.Events = a.publicEvents(shown, o.Horizon)
 	}
-	body := map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now(),
-		"events": a.publicEvents(shown, 14*24*time.Hour), "calendar": cal}
-	if c.ShowPlayers {
+	if o.Players {
 		names := map[string]string{}
 		for _, sv := range shown {
 			names[sv.ID] = sv.Name
 		}
-		body["players"] = a.Mgr.PlayerTotals(names, 50)
+		v.Players = a.Mgr.PlayerTotals(names, 50)
 	}
-	statusCache.body[k] = body
-	statusCache.at[k] = time.Now()
-	writeJSON(w, 200, statusCache.body[k])
+	return v
 }
 
 // publicServers lists the servers pick() lets through, as players see them.
@@ -212,17 +254,7 @@ func (a *API) publicServers(pick func(id string) (bool, string), names bool, hos
 		if !show {
 			continue
 		}
-		p := publicServer{ID: s.ID, Name: s.Name, Game: s.TemplateName, Players: max(s.Players, 0), Max: s.MaxPlayers, Note: note}
-		switch s.Status {
-		case "running":
-			p.State = "online"
-		case "starting", "installing", "preparing":
-			p.State = "startet"
-		case "error":
-			p.State = "fehler"
-		default:
-			p.State = "aus"
-		}
+		p := publicServer{ID: s.ID, Name: s.Name, Game: s.TemplateName, Players: max(s.Players, 0), Max: s.MaxPlayers, Note: note, State: publicState(s)}
 		if sv, ok := a.Store.Server(s.ID); ok && sv.InMaintenance(time.Now()) {
 			p.State = "wartung"
 			if !sv.Maintenance.Until.IsZero() {
@@ -260,9 +292,9 @@ func (a *API) statusCfgGet(w http.ResponseWriter, r *http.Request) {
 		Note string `json:"note"`
 	}
 	rows := []row{}
-	for _, s := range a.Mgr.List() {
+	for _, s := range a.fleetInfos() {
 		e := c.Servers[s.ID]
-		rows = append(rows, row{s.ID, s.Name, s.TemplateName, e.Show, e.Note})
+		rows = append(rows, row{s.ID, a.fleetName(s), s.TemplateName, e.Show, e.Note})
 	}
 	writeJSON(w, 200, map[string]any{"config": c, "servers": rows})
 }
@@ -281,7 +313,7 @@ func (a *API) statusCfgPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for id, e := range in.Servers {
-		if _, ok := a.Store.Server(id); !ok {
+		if !a.fleetHas(id) {
 			delete(in.Servers, id)
 			continue
 		}
@@ -337,4 +369,20 @@ func (a *API) statusHost(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// publicState is the state players see.
+func publicState(s manager.Info) string {
+	if s.InMaintenance(time.Now()) {
+		return "wartung"
+	}
+	switch s.Status {
+	case "running":
+		return "online"
+	case "starting", "installing", "preparing":
+		return "startet"
+	case "error":
+		return "fehler"
+	}
+	return "aus"
 }
