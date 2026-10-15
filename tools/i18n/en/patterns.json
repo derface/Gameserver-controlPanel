@@ -406,5 +406,9 @@
  [
   "Auf (.+?) ist nicht mehr genug RAM frei \\((.+?) GB\\)\\. Mehr Platz hat",
   "Not enough RAM left on {0} ({1} GB). More room on"
+ ],
+ [
+  "(.+?) von (\\d+) Kernen ausgelastet",
+  "{0} of {1} cores busy"
  ]
 ]

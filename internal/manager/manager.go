@@ -100,7 +100,9 @@ type Info struct {
 	Status       string       `json:"status"` // preparing | installing | starting | running | stopped | error
 	Message      string       `json:"message,omitempty"`
 	Progress     float64      `json:"progress,omitempty"`
-	CPU          float64      `json:"cpu"`
+	CPU          float64      `json:"cpu"`       // 0–100 % of the cores it may use
+	CPUCores     float64      `json:"cpu_cores"` // cores busy right now
+	CPULimit     float64      `json:"cpu_limit"` // cores it may use
 	MemMB        float64      `json:"mem_mb"`
 	Players      int          `json:"players"`     // -1 = unbekannt
 	MaxPlayers   int          `json:"max_players"` // 0 = unbekannt
@@ -982,7 +984,11 @@ func (m *Manager) Info(sv store.Server) Info {
 		in.Status, in.Message = "preparing", j.Msg
 	case l != nil:
 		in.Status, in.Message, in.Progress = l.Phase, l.Msg, l.Progress
-		in.CPU = l.Stats.CPUPercent
+		// like the history: share of the cores the server may use (all of the
+		// machine without a CPU limit); Docker counts 100 % per core
+		in.CPUCores = l.Stats.CPUPercent / 100
+		in.CPU = l.Stats.CPUPercent / m.cores(sv)
+		in.CPULimit = m.cores(sv)
 		in.Players, in.MaxPlayers = l.Players, l.MaxPl
 		if l.Phase != "running" {
 			in.Players, in.MaxPlayers = -1, 0

@@ -82,6 +82,8 @@
   const portList = s => (s.ports || []).map(p => p.host + '/' + p.proto).join(', ');
   const pad2 = n => String(n).padStart(2, '0');
   const hasPl = s => s.status === 'running' && s.players >= 0;
+  // CPU: share of the cores a server may use; the tip says how many cores are busy
+  const cpuTip = s => s.cpu_limit ? `${(s.cpu_cores || 0).toFixed(1).replace('.', DEC)} von ${Math.round(s.cpu_limit)} Kernen ausgelastet` : '';
   const load = s => s.status !== 'running' ? 0 : clamp(0.55 * (s.mem_mb / Math.max(1, s.memory_mb)) + 0.45 * Math.min(1, s.cpu / 100), 0, 1);
 
   /* ============ 3D: gemeinsamer Partikel-Kern (KI + Anmeldung) ============ */
@@ -387,7 +389,7 @@
     set($('#svMeta'), `<span class="pill ${esc(s.status)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
       ${port ? `<button type="button" class="addr" data-copy="${esc(addr() + ':' + port)}" title="Adresse kopieren">${esc(addr())}:${port}</button>` : ''}
       ${hasPl(s) ? `<span>${s.players} / ${s.max_players} Spieler</span>` : ''}
-      ${s.status === 'running' ? `<span>CPU ${Math.round(s.cpu)} %</span><span>RAM ${gb(s.mem_mb)} / ${gb(s.memory_mb)} GB</span>` : `<span>RAM ${gb(s.memory_mb)} GB</span>`}`);
+      ${s.status === 'running' ? `<span title="${esc(cpuTip(s))}">CPU ${Math.round(s.cpu)} %</span><span>RAM ${gb(s.mem_mb)} / ${gb(s.memory_mb)} GB</span>` : `<span>RAM ${gb(s.memory_mb)} GB</span>`}`);
     const pw = $('[data-sv="power"]'); pw.textContent = on ? 'Stoppen' : 'Starten'; pw.disabled = busy;
     pw.classList.toggle('btn-accent', !on); pw.classList.toggle('btn-line', on);
     $('[data-sv="restart"]').disabled = !on || busy;
@@ -405,7 +407,7 @@
         <div><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}${s.join_hint ? `<span class="small muted join-hint">${esc(s.join_hint)}</span>` : ''}${S.lanIP && port && S.lanIP !== addr() ? `<span class="small muted join-hint">Aus dem Heimnetz: ${esc(S.lanIP)}:${port}</span>` : ''}</dd></div>
         <div><dt>Ports</dt><dd>${esc(portList(s)) || '–'}</dd></div>
         <div><dt>Arbeitsspeicher</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' von ' : ''}${gb(s.memory_mb)} GB</dd></div>
-        <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' : '–'}</dd></div>
+        <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' + (s.cpu_limit ? `<br><span class="small muted">${esc(cpuTip(s))}</span>` : '') : '–'}</dd></div>
         <div><dt>Spieler</dt><dd>${hasPl(s) ? s.players + ' von ' + s.max_players : '–'}</dd></div>
         <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString(LOC)}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
         <div><dt>ID</dt><dd class="mono">${esc(s.id)}</dd></div>
@@ -455,7 +457,7 @@
     } else {
       const first = hasPl(s)
         ? `<div><span class="k">Spieler</span><span class="v">${pad2(s.players)}<small>/${pad2(s.max_players)}</small></span></div>`
-        : `<div><span class="k">CPU</span><span class="v">${s.status === 'running' ? Math.round(s.cpu) : '–'}<small> %</small></span></div>`;
+        : `<div title="${esc(cpuTip(s))}"><span class="k">CPU</span><span class="v">${s.status === 'running' ? Math.round(s.cpu) : '–'}<small> %</small></span></div>`;
       body = `<div class="mod-foot">${first}
         <div><span class="k">RAM</span><span class="v">${s.status === 'running' ? gb(s.mem_mb) : '–'}<small> / ${gb(s.memory_mb)} GB</small></span></div>
         <button class="power" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></div>
