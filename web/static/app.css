@@ -871,3 +871,9 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .fl-bar i{display:block;height:100%;background:var(--ok)}.fl-bar.hot i{background:var(--bad)}
 @media (max-width:760px){.fl-row{grid-template-columns:1fr 1fr}.fl-name{grid-column:1/-1}.fl-m.wide{grid-column:1/-1}}
 .note.warn{border-left-color:var(--bad);color:var(--ink)}
+.mv-notes{margin:4px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.mv-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:8px}
+.mv-bar i{display:block;height:100%;width:35%;background:var(--accent);animation:mvslide 1.2s ease-in-out infinite alternate}
+#mvRun.done .mv-bar i{width:100%;animation:none}
+@keyframes mvslide{from{transform:translateX(-30%)}to{transform:translateX(220%)}}
+@media (prefers-reduced-motion:reduce){.mv-bar i{animation:none;width:100%;opacity:.5}}

@@ -398,6 +398,7 @@
     $('#svMaint').hidden = !mt;
     if (mt) $('#svMaintText').textContent = '🛠 Wartung' + (mt.until && !mt.until.startsWith('0001') ? ' bis ' + fmtWhen(mt.until) : '') + (mt.note ? ': ' + mt.note : '') + (mt.close_ports ? ' · Ports geschlossen' : '') + ' · Aufgaben und Absturz-Wächter pausieren';
     $('#svMaintBtn').textContent = mt ? 'Wartung ändern …' : 'Wartungsmodus …';
+    $('#svMoveBtn').hidden = !can('admin') || !(S.nodes && S.nodes.length);
     $('#svRouterBtn').textContent = s.no_router ? 'Ports im Router öffnen' : 'Ports nicht im Router öffnen'; $('#svRouterBtn').hidden = !S.routerOn;
     const tpl = S.tplById[s.template];
     $('#tabMods').hidden = false;
@@ -426,12 +427,52 @@
     else if (a === 'edit') openEdit(s);
     else if (a === 'maint') openMaint(s);
     else if (a === 'invite') openInvite(s);
+    else if (a === 'move') openMove(s);
     else if (a === 'delete') openDelete(s);
   });
   document.addEventListener('click', async e => {
     const c = e.target.closest('[data-copy]'); if (!c) return;
     try { await navigator.clipboard.writeText(c.dataset.copy); toast('Adresse kopiert: ' + c.dataset.copy, 'ok'); } catch (err) { toast(c.dataset.copy); }
   });
+
+  /* ---------------- Umziehen ---------------- */
+  let mvServer = null, mvTimer = 0;
+  function openMove(s) {
+    mvServer = s; clearTimeout(mvTimer);
+    $('#mvName').textContent = s.name;
+    const here = s.node || '';
+    const room = Object.fromEntries(fleetRoom().map(m => [m.id, m.room]));
+    const opts = [{ id: '', name: 'Dieser Rechner', online: true }].concat((S.nodes || []).map(n => ({ id: n.id, name: n.name, online: n.online })))
+      .filter(m => m.id !== here);
+    $('#mvTarget').innerHTML = opts.map(m => `<option value="${esc(m.id)}"${m.online ? '' : ' disabled'}>${esc(m.name)}${!m.online ? ' (nicht erreichbar)' : room[m.id] != null ? ' · ' + gbs(room[m.id]) + ' GB RAM frei' : ''}</option>`).join('');
+    const first = opts.find(m => m.online); if (first) $('#mvTarget').value = first.id;
+    $('#mvAsk').hidden = false; $('#mvRun').hidden = true; $('#mvOk').hidden = false; $('#mvOk').disabled = !first;
+    $('#mvClose').textContent = 'Abbrechen'; showErr($('#mvErr'));
+    $('#dlgMove').showModal();
+  }
+  $('#mvForm').addEventListener('submit', async e => {
+    e.preventDefault(); if (!mvServer) return;
+    showErr($('#mvErr')); $('#mvOk').disabled = true;
+    try {
+      const j = await api('POST', '/api/move', { server: mvServer.id, target: $('#mvTarget').value });
+      $('#mvAsk').hidden = true; $('#mvRun').hidden = false; $('#mvOk').hidden = true;
+      $('#mvClose').textContent = 'Im Hintergrund weiterlaufen lassen';
+      pollMove(j.id);
+    } catch (err) { showErr($('#mvErr'), err.message); $('#mvOk').disabled = false; }
+  });
+  async function pollMove(id) {
+    let j;
+    try { j = await api('GET', '/api/move/' + id); } catch (e) { mvTimer = setTimeout(() => pollMove(id), 2000); return; }
+    $('#mvStep').textContent = j.step + (j.bytes ? ` · Paket ${fmtBytes(j.bytes)}` : '');
+    $('#mvRun').classList.toggle('done', j.done);
+    if (!j.done) { mvTimer = setTimeout(() => pollMove(id), 1000); return; }
+    $('#mvClose').textContent = 'Schließen';
+    await loadServers();
+    if (j.error) { showErr($('#mvErr'), j.error); if (!j.new_id) return; }
+    toast(`${j.name} ist umgezogen: ${j.from} → ${j.to}`, 'ok');
+    if (j.new_id) { if (!j.error) $('#dlgMove').close(); select(j.new_id); }
+  }
+  const fmtBytes = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(0) + ' MB' : (b / 1073741824).toFixed(1).replace('.', DEC) + ' GB';
 
   /* ---------------- Aktionen ---------------- */
   async function act(s, action, okMsg) {

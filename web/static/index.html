@@ -141,6 +141,7 @@
             <button type="button" role="menuitem" data-sv="settings-tab">Spiel-Einstellungen</button>
             <button type="button" role="menuitem" data-sv="maint" id="svMaintBtn">Wartungsmodus …</button>
             <button type="button" role="menuitem" data-sv="invite">Einladungslink …</button>
+            <button type="button" role="menuitem" class="admin-only" data-sv="move" id="svMoveBtn" hidden>Auf anderen Rechner umziehen …</button>
             <button type="button" role="menuitem" class="admin-only" data-sv="router" id="svRouterBtn">Ports nicht im Router öffnen</button>
             <button type="button" role="menuitem" class="admin-only danger" data-sv="delete">Server löschen</button>
           </div>
@@ -890,6 +891,28 @@
     <label class="check"><input type="checkbox" id="geWeekly"> Jede Woche wiederholen</label>
     <p class="err" id="geErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="geOk">Event planen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgMove" class="dlg small">
+  <form id="mvForm" novalidate>
+    <div class="dlg-head"><h2>Umziehen</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <div id="mvAsk">
+      <p class="small"><b id="mvName"></b> zieht mit Spielständen, Einstellungen, Aufgaben, Events, Verlauf und Spieler-Statistik auf einen anderen Rechner um.</p>
+      <label class="field"><span>Neuer Rechner</span><select id="mvTarget"></select></label>
+      <ul class="small muted mv-notes">
+        <li>Der Server wird dafür gestoppt. Lief er, startet er auf dem neuen Rechner wieder.</li>
+        <li>Die Spieldateien lädt der neue Rechner neu herunter (wie beim Anlegen). Das kann je nach Spiel eine Weile dauern.</li>
+        <li>Die Ports können sich ändern, wenn sie dort schon belegt sind. Mitspieler brauchen dann die neue Adresse.</li>
+        <li>Backups bleiben auf dem alten Rechner. Sein Serverordner bleibt als Sicherheit liegen und lässt sich dort unter Einstellungen → Speicher löschen.</li>
+      </ul>
+    </div>
+    <div id="mvRun" hidden>
+      <p class="small" id="mvStep" aria-live="polite"></p>
+      <div class="mv-bar" aria-hidden="true"><i></i></div>
+    </div>
+    <p class="err" id="mvErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close id="mvClose">Abbrechen</button><button type="submit" class="btn-accent" id="mvOk">Umziehen</button></div>
   </form>
 </dialog>
 

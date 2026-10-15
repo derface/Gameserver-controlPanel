@@ -43,5 +43,15 @@
  "Besucher": "Visitor",
  "Der Steam-Guard-Code besteht aus 5 Zeichen": "The Steam Guard code has 5 characters",
  "verpasst (Panel war aus)": "missed (panel was off)",
- "ok: %d · unsicher: %d · fehler: %d · übersprungen: %d · offen: %d": "ok: %d · uncertain: %d · error: %d · skipped: %d · open: %d"
+ "ok: %d · unsicher: %d · fehler: %d · übersprungen: %d · offen: %d": "ok: %d · uncertain: %d · error: %d · skipped: %d · open: %d",
+ "Anlegen auf dem neuen Rechner: %w": "Creating on the new machine: %w",
+ "Packen auf dem alten Rechner: %w": "Packing on the old machine: %w",
+ "Packen fehlgeschlagen: %w": "Packing failed: %w",
+ "Paket nicht vollständig angekommen: %w": "Package did not arrive completely: %w",
+ "Spielstände auspacken: %w": "Unpacking save games: %w",
+ "Umzugspaket beschädigt: %w": "Move package damaged: %w",
+ "Umgezogen, aber der alte Server ließ sich nicht entfernen (bitte von Hand löschen): %w": "Moved, but the old server could not be removed (please delete it by hand): %w",
+ "Der Rechner des Servers hat Version %s, hier läuft %s. Bitte erst beide auf denselben Stand bringen": "The server's machine runs version %s, this one %s. Please bring both to the same version first",
+ "Der Ziel-Rechner hat Version %s, hier läuft %s. Bitte erst beide auf denselben Stand bringen": "The target machine runs version %s, this one %s. Please bring both to the same version first",
+ "Die Vorlage %s gibt es hier nicht. Ist das Panel hier auf demselben Stand?": "Template %s does not exist here. Is this panel on the same version?"
 }

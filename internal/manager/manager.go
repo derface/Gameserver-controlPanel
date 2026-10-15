@@ -12,6 +12,7 @@ import (
 	"github.com/derface/Gameserver-controlPanel/internal/geoip"
 	"io"
 	"log"
+	"maps"
 	"net"
 	"os"
 	"path/filepath"
@@ -169,6 +170,12 @@ type CreateReq struct {
 	// before runs once the server folder exists, before the container is
 	// created (e.g. to put imported save games in place).
 	before func(dir string, uid int) error
+	// apply changes the new server before it is saved (moves keep their tasks,
+	// events and so on).
+	apply func(sv *store.Server)
+	// keepVars takes the variables as they are, even if the template asks
+	// for more today (moves)
+	keepVars bool
 }
 
 // Validate checks a request without creating anything. It returns the
@@ -183,6 +190,12 @@ func (m *Manager) Validate(req CreateReq) (templates.Template, map[string]string
 		return tpl, nil, nil, errors.New("Der Name muss 1 bis 40 Zeichen lang sein")
 	}
 	vars, err := tpl.ResolveVars(req.Vars)
+	if err != nil && req.keepVars { // a move takes the values the server had
+		vars, err = maps.Clone(req.Vars), nil
+		if vars == nil {
+			vars = map[string]string{}
+		}
+	}
 	if err != nil {
 		return tpl, nil, nil, err
 	}
@@ -287,6 +300,9 @@ func (m *Manager) Create(req CreateReq) (store.Server, error) {
 	}
 	if sv.CreatedBy == "" {
 		sv.CreatedBy = "manual"
+	}
+	if req.apply != nil {
+		req.apply(&sv)
 	}
 	if err := m.st.SaveServer(sv); err != nil {
 		return sv, err

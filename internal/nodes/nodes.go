@@ -545,3 +545,33 @@ func (p *Pool) Online() []store.Node {
 	}
 	return out
 }
+
+// Stream sends a request with a body of any size and returns the answer
+// unread (for move packages). The caller closes the body.
+func (p *Pool) Stream(ctx context.Context, n store.Node, method, path string, body io.Reader, size int64, user string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, strings.TrimRight(n.URL, "/")+path, body)
+	if err != nil {
+		return nil, err
+	}
+	if size >= 0 {
+		req.ContentLength = size
+	}
+	authorize(req, n.Token, user)
+	req.Header.Set("Content-Type", "application/x-tar")
+	resp, err := p.client(n).Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Rechner „%s“ nicht erreichbar: %w", n.Name, friendly(err))
+	}
+	if resp.StatusCode >= 300 {
+		defer resp.Body.Close()
+		var e struct {
+			Error string `json:"error"`
+		}
+		b, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+		if json.Unmarshal(b, &e) == nil && e.Error != "" {
+			return nil, errors.New(e.Error)
+		}
+		return nil, fmt.Errorf("Rechner „%s“: Antwort %d", n.Name, resp.StatusCode)
+	}
+	return resp, nil
+}

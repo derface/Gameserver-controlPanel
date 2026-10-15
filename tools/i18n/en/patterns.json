@@ -410,5 +410,29 @@
  [
   "(.+?) von (\\d+) Kernen ausgelastet",
   "{0} of {1} cores busy"
+ ],
+ [
+  "Paket wird vom Rechner „(.+?)“ geholt",
+  "Fetching the package from machine “{0}”"
+ ],
+ [
+  "Server wird auf „(.+?)“ angelegt",
+  "Creating the server on “{0}”"
+ ],
+ [
+  "(.+?) ist umgezogen: (.+?) → (.+)",
+  "{0} has moved: {1} → {2}"
+ ],
+ [
+  "SteamCMD-Installation fehlgeschlagen \\((.+?)\\): (.+)",
+  "SteamCMD installation failed ({0}): {1}"
+ ],
+ [
+  "Umgezogen von (.+?) \\((.+?)\\)",
+  "Moved from {0} ({1})"
+ ],
+ [
+  "Paket (.+)",
+  "package {0}"
  ]
 ]
