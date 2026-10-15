@@ -29,6 +29,7 @@
     <p id="authErr" class="err" role="alert" hidden></p>
     <button class="btn-accent wide" type="submit" id="authBtn">Anmelden</button>
     <button class="linkbtn" type="button" id="authBack" hidden>Zurück zur Anmeldung</button>
+    <button class="linkbtn auth-lang" type="button" id="authLang" data-noi18n></button>
   </form>
 </section>
 
@@ -161,7 +162,7 @@
     <div class="con-grid">
       <section class="lcd" id="konsole" aria-label="Konsole">
         <div class="lcd-head"><span id="conName">Konsole</span><span class="live" id="conLive" hidden><i></i>Live</span></div>
-        <div class="lines" id="lines"></div>
+        <div class="lines" id="lines" data-noi18n></div>
         <form class="lcd-in op-only" id="cmdForm">
           <span aria-hidden="true">›</span>
           <label class="sr" for="cmdInput">Befehl an den Server senden</label>
@@ -499,6 +500,12 @@
   <div class="set-block" id="meBlock" data-sec="konto">
     <h2>Mein Konto</h2>
     <p id="meLine" class="small"></p>
+    <label class="field" style="max-width:320px"><span>Sprache / Language</span>
+      <select id="langPick" data-noi18n>
+        <option value="auto">Automatisch / Automatic</option>
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+      </select></label>
     <form id="pwForm" autocomplete="on">
       <input type="text" name="username" id="pwUser" autocomplete="username" hidden>
       <div class="vars">
@@ -908,6 +915,7 @@
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<script src="i18n.js"></script>
 <script src="vendor/three.min.js"></script>
 <script src="vendor/qrcode.js"></script>
 <script src="app.js"></script>

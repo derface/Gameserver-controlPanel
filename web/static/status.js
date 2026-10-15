@@ -1,5 +1,6 @@
 /* Öffentliche Statusseite: zeigt die freigegebenen Server, ohne Anmeldung. */
 (() => {
+  const LOC = (window.I18N && I18N.locale) || 'de-DE', DEC = (window.I18N && I18N.dec) || ',';
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const LABEL = { online: 'Online', startet: 'Startet', aus: 'Aus', fehler: 'Gestört', wartung: 'Wartung' };
@@ -17,20 +18,20 @@
     $('#msg').textContent = 'Gerade ist kein Server freigegeben.';
     $('#list').innerHTML = d.servers.map(s => `<article class="card">
       <h2>${esc(s.name)}</h2><span class="game">${esc(s.game)}</span>
-      <span class="state ${s.state}"><i></i>${LABEL[s.state] || s.state}${s.until ? ' bis ' + esc(new Date(s.until).toLocaleString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' })) : ''}${s.state === 'online' ? ` · ${s.players}${s.max ? ' / ' + s.max : ''} Spieler` : ''}</span>
+      <span class="state ${s.state}"><i></i>${LABEL[s.state] || s.state}${s.until ? ' bis ' + esc(new Date(s.until).toLocaleString(LOC, { weekday: 'short', hour: '2-digit', minute: '2-digit' })) : ''}${s.state === 'online' ? ` · ${s.players}${s.max ? ' / ' + s.max : ''} Spieler` : ''}</span>
       ${s.names && s.names.length ? `<ul class="names">${s.names.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
       ${s.address ? `<div class="join"><code>${esc(s.address)}</code><button type="button" data-copy="${esc(s.address)}">Kopieren</button>${s.steam_link ? `<a class="btn primary" href="${esc(s.steam_link)}">Beitreten</a>` : ''}</div>` : ''}
       ${s.lan_address ? `<div class="join lan"><span class="lanl">Du bist im Heimnetz, nimm diese Adresse:</span><code>${esc(s.lan_address)}</code><button type="button" data-copy="${esc(s.lan_address)}">Kopieren</button></div>` : ''}
       ${s.hint ? `<p class="hint">${esc(s.hint)}</p>` : ''}
       ${s.note ? `<p class="snote">${esc(s.note)}</p>` : ''}
-      ${s.season ? `<p class="season">🏆 ${esc(s.season.name)} · seit ${esc(new Date(s.season.since).toLocaleDateString('de-DE'))}${s.season.next ? ` · neue Saison ab ${esc(new Date(s.season.next).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}` : ''}</p>` : ''}
-      ${s.season && s.season.fame && s.season.fame.length ? `<details class="mods fame"><summary>Ruhmeshalle</summary><ul class="modl">${s.season.fame.map(f => `<li><b>${esc(f.name)}</b> <span class="muted">${esc(new Date(f.start).toLocaleDateString('de-DE'))}–${esc(new Date(f.end).toLocaleDateString('de-DE'))}</span>${f.top && f.top.length ? '<br>' + f.top.map((t, i) => ['🥇', '🥈', '🥉'][i] + ' ' + esc(t)).join(' ') : ''}</li>`).join('')}</ul></details>` : ''}
+      ${s.season ? `<p class="season">🏆 ${esc(s.season.name)} · seit ${esc(new Date(s.season.since).toLocaleDateString(LOC))}${s.season.next ? ` · neue Saison ab ${esc(new Date(s.season.next).toLocaleString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}` : ''}</p>` : ''}
+      ${s.season && s.season.fame && s.season.fame.length ? `<details class="mods fame"><summary>Ruhmeshalle</summary><ul class="modl">${s.season.fame.map(f => `<li><b>${esc(f.name)}</b> <span class="muted">${esc(new Date(f.start).toLocaleDateString(LOC))}–${esc(new Date(f.end).toLocaleDateString(LOC))}</span>${f.top && f.top.length ? '<br>' + f.top.map((t, i) => ['🥇', '🥈', '🥉'][i] + ' ' + esc(t)).join(' ') : ''}</li>`).join('')}</ul></details>` : ''}
       ${s.mods ? `<details class="mods" data-key="${esc(s.key)}"><summary>Mods (${s.mods})</summary><div class="mods-body muted small">Lädt …</div></details>` : ''}
       ${s.uptime ? uptimeBars(s.uptime, s.uptime_pct) : ''}
     </article>`).join('');
     const evs = d.events || [];
     $('#events').hidden = !evs.length && !d.calendar;
-    const fmt = t => new Date(t).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const fmt = t => new Date(t).toLocaleString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     $('#evList').innerHTML = evs.length ? evs.map(e => `<li class="${e.active ? 'now' : ''}"><b>${esc(e.name)}</b> <span class="muted">· ${esc(e.server)}</span><br>
       <span class="when">${e.active ? 'läuft gerade, bis ' + esc(fmt(e.end)) : esc(fmt(e.start)) + ' bis ' + esc(fmt(e.end))}${e.weekly ? ' · jede Woche' : ''}</span>${e.what ? `<br><span class="muted small">${esc(e.what)}</span>` : ''}</li>`).join('')
       : '<li class="muted">Gerade ist nichts geplant.</li>';
@@ -41,20 +42,20 @@
     const ago = t => { const h = (Date.now() - new Date(t)) / 3600e3; return h < 0.1 ? 'gerade eben' : h < 24 ? 'heute' : h < 48 ? 'gestern' : 'vor ' + Math.round(h / 24) + ' Tagen'; };
     $('#plSum').textContent = pl.length ? pl.length + ' Spieler · zusammen ' + dur(pl.reduce((a, p) => a + p.seconds, 0)) : '';
     $('#plRows').innerHTML = pl.map(p => `<tr><td>${p.online ? '<i class="on" title="gerade online"></i>' : ''}<b>${esc(p.name)}</b></td><td>${dur(p.seconds)}</td><td>${esc(p.fav)}${p.servers > 1 ? ` <span class="muted">+${p.servers - 1}</span>` : ''}</td>
-      <td>${new Date(p.first).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td><td>${p.online ? 'jetzt' : ago(p.last)}</td></tr>`).join('');
+      <td>${new Date(p.first).toLocaleDateString(LOC, { day: '2-digit', month: '2-digit', year: 'numeric' })}</td><td>${p.online ? 'jetzt' : ago(p.last)}</td></tr>`).join('');
     document.querySelectorAll('details.mods[data-key]').forEach(d => { if (openMods.has(d.dataset.key)) { d.open = true; } });
-    $('#upd').textContent = 'Stand ' + new Date(d.updated).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    $('#upd').textContent = 'Stand ' + new Date(d.updated).toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' });
   }
   function uptimeBars(days, pct) {
     const start = new Date(); start.setHours(12, 0, 0, 0); start.setDate(start.getDate() - (days.length - 1));
     const bars = days.map(([up, cr], i) => {
       const d = new Date(start); d.setDate(start.getDate() + i);
-      const day = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+      const day = d.toLocaleDateString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit' });
       const t = up < 0 ? `${day}: keine Daten` : `${day}: ${up} % online${cr ? `, ${cr} ${cr === 1 ? 'Absturz' : 'Abstürze'}` : ''}`;
       return `<i class="${up < 0 ? 'none' : cr ? 'crash' : ''}" style="--h:${Math.max(up, 0)}%" title="${esc(t)}"></i>`;
     }).join('');
     return `<div class="uptime"><div class="ubars" role="img" aria-label="Online in den letzten 30 Tagen">${bars}</div>
-      <span class="ulabel">${pct != null ? String(pct).replace('.', ',') + ' % online' : ''} · letzte 30 Tage</span></div>`;
+      <span class="ulabel">${pct != null ? String(pct).replace('.', DEC) + ' % online' : ''} · letzte 30 Tage</span></div>`;
   }
   // open mod lists stay open across the 20-second refresh
   const openMods = new Set();

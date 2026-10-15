@@ -1,5 +1,6 @@
 /* Einladungsseite: alles, was ein Freund zum Beitreten braucht. */
 (() => {
+  const LOC = (window.I18N && I18N.locale) || 'de-DE', DEC = (window.I18N && I18N.dec) || ',';
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const LABEL = { online: 'Läuft gerade', startet: 'Startet gerade', aus: 'Gerade aus', fehler: 'Gestört', wartung: 'Wartung' };
@@ -17,7 +18,7 @@
     $('#msg').hidden = true; $('#card').hidden = false;
     $('#card').innerHTML = `
       <span class="game">${esc(s.game)}</span>
-      <span class="state ${s.state}"><i></i>${LABEL[s.state] || s.state}${s.until ? ' bis ' + esc(new Date(s.until).toLocaleString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' })) : ''}${s.state === 'online' ? ` · ${s.players}${s.max ? ' / ' + s.max : ''} Spieler` : ''}</span>
+      <span class="state ${s.state}"><i></i>${LABEL[s.state] || s.state}${s.until ? ' bis ' + esc(new Date(s.until).toLocaleString(LOC, { weekday: 'short', hour: '2-digit', minute: '2-digit' })) : ''}${s.state === 'online' ? ` · ${s.players}${s.max ? ' / ' + s.max : ''} Spieler` : ''}</span>
       ${s.names && s.names.length ? `<ul class="names">${s.names.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
       ${s.note ? `<p class="inv-note">${esc(s.note)}</p>` : ''}
       <h2 class="inv-h">So kommst du drauf</h2>

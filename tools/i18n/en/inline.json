@@ -1,0 +1,94 @@
+[
+ [
+  "^von (?=\\d)",
+  "of "
+ ],
+ [
+  "([\\d.,]+ [KMGT]?B) lokal belegt",
+  "$1 used locally"
+ ],
+ [
+  "^1 Backups",
+  "1 backup"
+ ],
+ [
+  "(\\d+) von (\\d+) Servern laufen",
+  "$1 of $2 servers running"
+ ],
+ [
+  "(\\d+) von (\\d+) Servern aktiv",
+  "$1 of $2 servers active"
+ ],
+ [
+  "(\\d+) von (\\d+) Ports nicht offen",
+  "$1 of $2 ports not open"
+ ],
+ [
+  "([\\d.,]+ [KMGT]?B) frei",
+  "$1 free"
+ ],
+ [
+  "von ([\\d.,]+ [KMGT]?B) \\((\\d+) % belegt\\)",
+  "of $1 ($2 % used)"
+ ],
+ [
+  "([\\d.,]+) von ([\\d.,]+)",
+  "$1 of $2"
+ ],
+ [
+  "(\\d+) Kerne",
+  "$1 cores"
+ ],
+ [
+  "(\\d+) Spiele(?![\\p{L}])",
+  "$1 games"
+ ],
+ [
+  "läuft seit ",
+  "running for "
+ ],
+ [
+  "spielt gerade \\(seit ",
+  "playing now (for "
+ ],
+ [
+  "(\\d+) Std\\. (\\d+) Min\\.",
+  "$1 h $2 min"
+ ],
+ [
+  "(\\d+) Std\\.",
+  "$1 h"
+ ],
+ [
+  "(\\d+) Min\\.",
+  "$1 min"
+ ],
+ [
+  "(\\d+) Spieler(?![\\p{L}])",
+  "$1 players"
+ ],
+ [
+  "zusammen (\\d+) h",
+  "$1 h in total"
+ ],
+ [
+  "(\\d+) Einträge",
+  "$1 entries"
+ ],
+ [
+  "(\\d+) Besuche?(?![\\p{L}])",
+  "$1 visits"
+ ],
+ [
+  "(\\d{1,2}:\\d\\d) Uhr",
+  "$1"
+ ],
+ [
+  "(?<![\\p{L}])z\\. B\\.",
+  "e.g."
+ ],
+ [
+  "(?<![\\p{L}])bzw\\.",
+  "or"
+ ]
+]

@@ -113,3 +113,34 @@ func DE(s string) string {
 	}
 	return s
 }
+
+//go:embed en.json
+var tplEnJSON []byte
+
+var (
+	enOnce sync.Once
+	enMap  map[string]string
+)
+
+// EN translates a German template or AMP text to English: hand-made
+// translations from en.json first, then AMP's original English text.
+func EN(s string) (string, bool) {
+	enOnce.Do(func() {
+		ampOnce.Do(loadAMP)
+		enMap = map[string]string{}
+		for en, de := range ampDe {
+			if de != "" && de != en {
+				if prev, ok := enMap[de]; !ok || en < prev { // stable choice on duplicates
+					enMap[de] = en
+				}
+			}
+		}
+		own := map[string]string{}
+		_ = json.Unmarshal(tplEnJSON, &own)
+		for de, en := range own {
+			enMap[de] = en
+		}
+	})
+	t, ok := enMap[s]
+	return t, ok
+}

@@ -312,7 +312,7 @@ func hostOnly(h string) string {
 // statusHost serves only the status page under its own host name, so the
 // panel's login is not reachable through it.
 func (a *API) statusHost(next http.Handler) http.Handler {
-	public := map[string]bool{"/status.html": true, "/status.js": true, "/status.css": true, "/api/public/status": true, "/invite.html": true, "/invite.js": true}
+	public := map[string]bool{"/status.html": true, "/status.js": true, "/status.css": true, "/api/public/status": true, "/invite.html": true, "/invite.js": true, "/i18n.js": true, "/i18n/en.json": true}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c := a.statusCfg()
 		if c.Enabled && c.Host != "" && strings.EqualFold(hostOnly(r.Host), c.Host) {

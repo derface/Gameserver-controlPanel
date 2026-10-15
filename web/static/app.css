@@ -849,3 +849,4 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .dc-h{margin:22px 0 4px}#dcLinks h4{margin:14px 0 6px}
 .sz{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .sz-h{margin:14px 0 4px;font-size:15px}
+.auth-lang{display:block;margin:14px auto 0;font-size:13px;opacity:.8}

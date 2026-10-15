@@ -1,0 +1,346 @@
+[
+ [
+  "(\\d{1,2}:\\d\\d) Uhr",
+  "{0}"
+ ],
+ [
+  "(.+?) einschalten",
+  "Turn on {0}"
+ ],
+ [
+  "(.+?) auf der Statusseite zeigen",
+  "Show {0} on the status page"
+ ],
+ [
+  "(.+?) ausschalten",
+  "Turn off {0}"
+ ],
+ [
+  "(\\S+) löschen",
+  "Delete {0}"
+ ],
+ [
+  "(.+?) bis (.+?)",
+  "{0} to {1}"
+ ],
+ [
+  "(.+?) bis (.+?) Minuten",
+  "{0} to {1} minutes"
+ ],
+ [
+  "(.+?) bis (.+?) Spieler",
+  "{0} to {1} players"
+ ],
+ [
+  "(.+?) bis (.+?) Plätze",
+  "{0} to {1} slots"
+ ],
+ [
+  "(\\d+) bis (\\d+) (.+)",
+  "{0} to {1} {2}"
+ ],
+ [
+  "heute (.+)",
+  "today {0}"
+ ],
+ [
+  "gestern (.+)",
+  "yesterday {0}"
+ ],
+ [
+  "heute",
+  "today"
+ ],
+ [
+  "gestern",
+  "yesterday"
+ ],
+ [
+  "gerade eben",
+  "just now"
+ ],
+ [
+  "vor (\\d+) Tagen",
+  "{0} days ago"
+ ],
+ [
+  "Stand (.+)",
+  "As of {0}"
+ ],
+ [
+  "geprüft (.+)",
+  "checked {0}"
+ ],
+ [
+  "· geprüft (.+)",
+  "· checked {0}"
+ ],
+ [
+  "Geprüft (.+)",
+  "Checked {0}"
+ ],
+ [
+  "Zuletzt geprüft (.+)",
+  "Last checked {0}"
+ ],
+ [
+  "seit (.+?) · zuletzt gespielt (.+)",
+  "since {0} · last played {1}"
+ ],
+ [
+  "seit (.+)",
+  "since {0}"
+ ],
+ [
+  "zuletzt gespielt (.+)",
+  "last played {0}"
+ ],
+ [
+  "Docker ist nicht erreichbar\\. Läuft der Docker-Dienst\\? Prüfen mit: sudo systemctl status docker\\. \\((.+)\\)",
+  "Docker is not reachable. Is the Docker service running? Check with: sudo systemctl status docker. ({0})"
+ ],
+ [
+  "Gesichert werden: (.+?)\\. Die Spieldateien selbst lädt das Panel bei Bedarf neu\\.",
+  "Backed up: {0}. The panel re-downloads the game files themselves when needed."
+ ],
+ [
+  "Einstellungen geändert von (.+?): (.+)",
+  "Settings changed by {0}: {1}"
+ ],
+ [
+  "Wirkt nur, wenn „(.+?)“ eingeschaltet ist\\.",
+  "Only takes effect if “{0}” is turned on."
+ ],
+ [
+  "Wirkt nur, wenn „(.+?)“ auf „(.+?)“ steht\\.",
+  "Only takes effect if “{0}” is set to “{1}”."
+ ],
+ [
+  "Wartung beginnt \\(bis (.+?)\\): (.+)",
+  "Maintenance starts (until {0}): {1}"
+ ],
+ [
+  "Wartung beginnt \\(bis (.+?)\\)\\.",
+  "Maintenance starts (until {0})."
+ ],
+ [
+  "Wartung beginnt: (.+)",
+  "Maintenance starts: {0}"
+ ],
+ [
+  "Wartung beendet \\(geplant bis (.+?)\\)\\.",
+  "Maintenance ended (planned until {0})."
+ ],
+ [
+  "Wartung beendet(.*)",
+  "Maintenance ended{0}"
+ ],
+ [
+  "Update auf (.+?)\\.?",
+  "Update to {0}"
+ ],
+ [
+  "Noch keine Mods installiert\\.",
+  "No mods installed yet."
+ ],
+ [
+  "Noch keine Plugins installiert\\.",
+  "No plugins installed yet."
+ ],
+ [
+  "Die Werte unter „(.+?)“ bekommt das Spiel beim Start mit\\. Wer sie ändert, bekommt einen neuen Container; Spielstände bleiben erhalten\\.",
+  "The values under “{0}” are passed to the game on start. Changing them creates a new container; saves are kept."
+ ],
+ [
+  "(.+?) bis (.+?) · (\\d+) Std\\. gespielt",
+  "{0} to {1} · {2} h played"
+ ],
+ [
+  "Bisher (\\d+) Std\\. gespielt\\. Vorne: (.+)",
+  "{0} h played so far. Leading: {1}"
+ ],
+ [
+  "Event „(.+?)“ angekündigt: (.+?) bis (.+?), jede Woche\\. (.*)",
+  "Event “{0}” announced: {1} to {2}, every week. {3}"
+ ],
+ [
+  "Event „(.+?)“ angekündigt: (.+?) bis (.+?)\\. (.*)",
+  "Event “{0}” announced: {1} to {2}. {3}"
+ ],
+ [
+  "Event „(.+?)“ beginnt\\. (.*)",
+  "Event “{0}” begins. {1}"
+ ],
+ [
+  "Event „(.+?)“ ist vorbei\\. (.*)",
+  "Event “{0}” is over. {1}"
+ ],
+ [
+  "(.+?): (\\d+)",
+  "{0}: {1}"
+ ],
+ [
+  "(\\d+)× aus dem Heimnetz",
+  "{0}× from the home network"
+ ],
+ [
+  "(\\d+)× über Steam-Relay \\(Ort verborgen, das Spiel leitet über Valve-Server\\)",
+  "{0}× via Steam relay (location hidden, the game routes through Valve servers)"
+ ],
+ [
+  "(.+?), (.+)",
+  "{0}, {1}"
+ ],
+ [
+  "(.+?), jede Woche",
+  "{0}, every week"
+ ],
+ [
+  ", gültig bis (.+)",
+  ", valid until {0}"
+ ],
+ [
+  "für (.+)",
+  "for {0}"
+ ],
+ [
+  "(.+?): (\\d.*)",
+  "{0}: {1}"
+ ],
+ [
+  "Die Server-Art (?:(.+?) )?unterstützt keine Mods oder Plugins\\. Stelle unter Einstellungen auf Paper \\(Plugins\\) oder Fabric, NeoForge oder Forge \\(Mods\\) um",
+  "The server type {0} does not support mods or plugins. Switch to Paper (plugins) or Fabric, NeoForge or Forge (mods) under Settings"
+ ],
+ [
+  "(.+?) · jede Woche",
+  "{0} · every week"
+ ],
+ [
+  "Nachts neu starten(.*)",
+  "Restart at night{0}"
+ ],
+ [
+  "nur wenn leer \\(max\\. (.+?)\\)",
+  "only when empty (max. {0})"
+ ],
+ [
+  "(.+?): mehr Spieler und schneller leveln",
+  "{0}: more players and faster levelling"
+ ],
+ [
+  "(\\d+) Mods?",
+  "{0} mods"
+ ],
+ [
+  "1 Mod",
+  "1 mod"
+ ],
+ [
+  "(\\d+) Spieler",
+  "{0} players"
+ ],
+ [
+  "(\\d+) Spieler online",
+  "{0} players online"
+ ],
+ [
+  "(\\d+) Server",
+  "{0} servers"
+ ],
+ [
+  "1 Server",
+  "1 server"
+ ],
+ [
+  "(\\d+) Tage",
+  "{0} days"
+ ],
+ [
+  "(\\d+) Stunden",
+  "{0} hours"
+ ],
+ [
+  "(\\d+) Minuten",
+  "{0} minutes"
+ ],
+ [
+  "(\\d+) Sekunden",
+  "{0} seconds"
+ ],
+ [
+  "(.+?) % online · letzte 30 Tage",
+  "{0} % online · last 30 days"
+ ],
+ [
+  "Online in den letzten 30 Tagen",
+  "Online in the last 30 days"
+ ],
+ [
+  "„(.+?)“ ist keine IP-Adresse und kein Netz \\(z\\. B\\. 192\\.168\\.178\\.50 oder 10\\.10\\.10\\.0/24\\)",
+  "“{0}” is not an IP address or network (e.g. 192.168.178.50 or 10.10.10.0/24)"
+ ],
+ [
+  "Am ruhigsten ist es um (.+?) Uhr \\(im Schnitt (.+?) Spieler\\)\\. Gut für Neustarts und Updates\\.",
+  "The quietest time is {0} (on average {1} players). Good for restarts and updates."
+ ],
+ [
+  "Über Discord von (.+?): Starte (.+)",
+  "Via Discord from {0}: Start {1}"
+ ],
+ [
+  "Über Discord von (.+?): Stoppe (.+)",
+  "Via Discord from {0}: Stop {1}"
+ ],
+ [
+  "Über Discord von (.+?): Starte (.+?) neu",
+  "Via Discord from {0}: Restart {1}"
+ ],
+ [
+  "(.+?) · Bytewise Panel",
+  "{0} · Bytewise Panel"
+ ],
+ [
+  "(\\d+) Mod · (.+)",
+  "{0} mod · {1}"
+ ],
+ [
+  "(\\d+) Mods · (.+)",
+  "{0} mods · {1}"
+ ],
+ [
+  "zuletzt (.+)",
+  "last {0}"
+ ],
+ [
+  "Bisher (.+)",
+  "So far {0}"
+ ],
+ [
+  "(.+?) von ([^\\d\\s]\\S*)",
+  "{0} by {1}"
+ ],
+ [
+  "(\\d+) Server, (\\d+) davon laufen",
+  "{0} servers, {1} of them running"
+ ],
+ [
+  "1 Server, läuft",
+  "1 server, running"
+ ],
+ [
+  "Wartung beendet von (.+)",
+  "Maintenance ended by {0}"
+ ],
+ [
+  "z\\. B\\. (.+)",
+  "e.g. {0}"
+ ],
+ [
+  "Verbindung klappt aus (.+)",
+  "Connection works from {0}"
+ ],
+ [
+  "gültig bis (.+)",
+  "valid until {0}"
+ ]
+]

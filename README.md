@@ -412,3 +412,11 @@ Bytewise Panel ist freie Software unter der **GNU Affero General Public License 
 1. Selbsttest über alle Vorlagen laufen lassen, Fehler korrigieren, Status anpassen
 5. Mehrere Rechner (Nodes)
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)
+
+## English / Sprache
+
+The panel is also available in English. It follows the browser language; under **Settings → My account → Language** (or the link below the sign-in form) you can pick German, English or automatic. The status page and invite links switch too, also via `?lang=en`.
+
+Wie es funktioniert: Das Panel ist auf Deutsch geschrieben. `web/static/i18n.js` übersetzt die Seite beim Anzeigen mit einem Wörterbuch (`web/static/i18n/en.json`): ganze Texte, Muster für Texte mit Zahlen und Namen, bekannte Wendungen in längeren Texten. Texte aus den Spielvorlagen (Einstellungen, Hinweise) tauscht der Server aus, wenn der Browser Englisch anfragt (`X-Lang: en`); die AMP-Texte haben dafür ohnehin ihr englisches Original, die übrigen stehen in `internal/templates/en.json`. Konsole, Dateiinhalte und Namen bleiben wie sie sind. Was schon im Verlauf steht, bleibt in der Sprache, in der es geschrieben wurde; Nachrichten an Discord und im Spiel bleiben Deutsch.
+
+Übersetzungen pflegen: Quellen in `tools/i18n/en/*.json` (Deutsch → Englisch), danach `python3 tools/i18n/build.py`. Neue Texte aus dem Go-Code listet `go run ./tools/i18n/gostrings ./internal`.

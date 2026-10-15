@@ -41,6 +41,9 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(code)
+	if _, ok := w.(*enWriter); ok {
+		v = localize(v)
+	}
 	_ = json.NewEncoder(w).Encode(v)
 }
 
@@ -129,7 +132,7 @@ func (a *API) Handler() http.Handler {
 		}
 		files.ServeHTTP(w, r)
 	})
-	return secureHeaders(a.statusHost(mux))
+	return secureHeaders(withLang(a.statusHost(mux)))
 }
 
 func secureHeaders(h http.Handler) http.Handler {

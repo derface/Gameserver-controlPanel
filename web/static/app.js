@@ -1,6 +1,7 @@
 /* Bytewise Panel Web-Oberfläche. Kein Build-Schritt: reines JavaScript + three.js (r128). */
 'use strict';
 (function () {
+  const LOC = (window.I18N && I18N.locale) || 'de-DE', DEC = (window.I18N && I18N.dec) || ',';
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
   const root = document.documentElement;
@@ -17,7 +18,7 @@
   const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : !lightMQ.matches;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const gb = mb => (mb / 1024).toFixed(mb >= 10240 ? 0 : 1).replace('.', ',');
+  const gb = mb => (mb / 1024).toFixed(mb >= 10240 ? 0 : 1).replace('.', DEC);
   const hasGL = !!window.THREE && (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } })();
 
   const S = {
@@ -30,6 +31,7 @@
   /* ---------------- API ---------------- */
   async function api(method, path, body) {
     const opt = { method, headers: { 'X-Panel': '1' }, credentials: 'same-origin' };
+    if (LOC !== 'de-DE') opt.headers['X-Lang'] = 'en';
     if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
     const r = await fetch(path, opt);
     let data = null;
@@ -38,6 +40,15 @@
     if (!r.ok) throw new Error((data && data.error) || ('Fehler ' + r.status));
     return data;
   }
+
+  /* ---------------- Sprache ---------------- */
+  (() => {
+    const I = window.I18N;
+    const pick = $('#langPick'), sw = $('#authLang');
+    if (!I) { if (pick) pick.closest('label').hidden = true; if (sw) sw.hidden = true; return; }
+    if (pick) { pick.value = I.choice; pick.addEventListener('change', () => I.set(pick.value)); }
+    if (sw) { sw.textContent = I.lang === 'en' ? 'Deutsch' : 'English'; sw.addEventListener('click', () => I.set(I.lang === 'en' ? 'de' : 'en')); }
+  })();
 
   function closeDialogs() { $$('dialog[open]').forEach(d => d.close()); }
 
@@ -396,7 +407,7 @@
         <div><dt>Arbeitsspeicher</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' von ' : ''}${gb(s.memory_mb)} GB</dd></div>
         <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' : '–'}</dd></div>
         <div><dt>Spieler</dt><dd>${hasPl(s) ? s.players + ' von ' + s.max_players : '–'}</dd></div>
-        <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString('de-DE')}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
+        <div><dt>Angelegt</dt><dd>${new Date(s.created).toLocaleDateString(LOC)}${s.created_by === 'ai' ? ' mit KI' : ''}</dd></div>
         <div><dt>ID</dt><dd class="mono">${esc(s.id)}</dd></div>
         ${routerRow(s)}
       </dl><div class="sv-checks">${can('operator') ? '<button type="button" class="btn-line" data-diag>Mit KI prüfen</button>' : ''}${can('operator') && port ? `<button type="button" class="btn-line" data-reach>Von außen erreichbar? Prüfen</button>` : ''}</div>${s.notes ? `<p class="note">${esc(s.notes)}</p>` : ''}`);
@@ -583,7 +594,7 @@
     pushHist('cpu', h.cpu_percent); pushHist('ram', h.mem_used_mb / 1024); pushHist('disk', h.disk_used_gb); pushHist('run', pl);
     $('#hostName').textContent = 'CPU · ' + (h.hostname || 'Rechner');
     setV('vCpu', Math.round(h.cpu_percent) + '<small>% · ' + h.cores + ' Kerne</small>');
-    setV('vRam', (h.mem_used_mb / 1024).toFixed(1).replace('.', ',') + '<small> / ' + (h.mem_total_mb / 1024).toFixed(0) + ' GB</small>');
+    setV('vRam', (h.mem_used_mb / 1024).toFixed(1).replace('.', DEC) + '<small> / ' + (h.mem_total_mb / 1024).toFixed(0) + ' GB</small>');
     setV('vDisk', Math.round(h.disk_used_gb) + '<small> / ' + Math.round(h.disk_total_gb) + ' GB</small>');
     setV('vRun', pl + '<small> · ' + run + ' von ' + S.servers.length + ' Servern aktiv</small>');
     drawSparks();
@@ -640,7 +651,7 @@
   function memRange(input, label, min, val) {
     const hostMax = S.host ? Math.floor(S.host.mem_total_mb / 256) * 256 : 32768;
     input.min = min; input.max = Math.max(min, hostMax); input.value = clamp(val, min, input.max);
-    const show = () => { label.textContent = (input.value / 1024).toFixed(input.value % 1024 ? 2 : 0).replace('.', ',') + ' GB'; };
+    const show = () => { label.textContent = (input.value / 1024).toFixed(input.value % 1024 ? 2 : 0).replace('.', DEC) + ' GB'; };
     input.oninput = show; show();
   }
   function showErr(el, msg) { el.textContent = msg || ''; el.hidden = !msg; }
@@ -851,7 +862,7 @@
     $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime; $('#spModDl').checked = !!c.mod_download; $('#spPlayers').checked = !!c.show_players;
     spCal(c.cal_token, c.host);
     $('#spLink').href = c.host ? 'https://' + c.host + '/' : '/status'; $('#spLink').textContent = c.host ? c.host : location.host + '/status';
-    $('#spRows').innerHTML = r.servers.length ? r.servers.map(x => `<tr data-id="${esc(x.id)}"><td><input type="checkbox" class="sp-show" ${x.show ? 'checked' : ''} aria-label="${esc(x.name)} zeigen"></td>
+    $('#spRows').innerHTML = r.servers.length ? r.servers.map(x => `<tr data-id="${esc(x.id)}"><td><input type="checkbox" class="sp-show" ${x.show ? 'checked' : ''} aria-label="${esc(x.name)} auf der Statusseite zeigen"></td>
       <td><b>${esc(x.name)}</b><br><span class="small muted">${esc(x.game)}</span></td><td><input class="sp-note" maxlength="200" value="${esc(x.note || '')}" placeholder="z. B. Passwort im Discord"></td></tr>`).join('')
       : '<tr class="empty"><td colspan="3">Noch keine Server.</td></tr>';
   }
@@ -990,10 +1001,10 @@
     if (u.source) $('#upSource').href = u.source;
     let txt = `Installiert: <b>${esc(u.current)}</b>`;
     if (u.error) { $('#upStatus').innerHTML = txt; showErr($('#upErr'), u.error); return; }
-    if (u.available) txt += ` · <b class="on-ok">Neu: ${esc(u.latest)}</b>` + (u.published && !u.published.startsWith('0001') ? ` vom ${new Date(u.published).toLocaleDateString('de-DE')}` : '');
+    if (u.available) txt += ` · <b class="on-ok">Neu: ${esc(u.latest)}</b>` + (u.published && !u.published.startsWith('0001') ? ` vom ${new Date(u.published).toLocaleDateString(LOC)}` : '');
     else if (u.dev_build) txt += ` · neueste Veröffentlichung: ${esc(u.latest)} (du nutzt einen eigenen Entwicklungsstand)`;
     else txt += ' · das ist die neueste Version';
-    txt += `<br><span class="muted small">Zuletzt geprüft ${new Date(u.checked).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}${u.url ? ` · <a href="${esc(u.url)}" target="_blank" rel="noopener">Release ansehen</a>` : ''}</span>`;
+    txt += `<br><span class="muted small">Zuletzt geprüft ${new Date(u.checked).toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' })}${u.url ? ` · <a href="${esc(u.url)}" target="_blank" rel="noopener">Release ansehen</a>` : ''}</span>`;
     $('#upStatus').innerHTML = txt;
     if (u.available && u.notes) { $('#upNotes').hidden = false; $('#upNotes').textContent = u.notes; }
     $('#upGo').hidden = !(u.available || u.dev_build); $('#upGo').disabled = !!r.busy;
@@ -1293,7 +1304,7 @@
     const st = r.status, parts = [];
     parts.push(r.secure ? '<span class="on-ok">Diese Verbindung ist verschlüsselt.</span>' : '<b>Diese Verbindung ist unverschlüsselt.</b>');
     if (st.off) parts.push('<span class="err">Die Umleitung auf HTTPS ist per GP_NO_TLS abgeschaltet.</span>');
-    if (st.subject) parts.push(`Zertifikat: <b>${esc(st.issuer && st.issuer !== st.subject ? st.issuer : (st.subject === 'Gamepanel' || st.subject === 'Bytewise Panel') ? 'selbst signiert' : st.subject)}</b>, gültig bis ${esc(new Date(st.not_after).toLocaleDateString('de-DE'))}` +
+    if (st.subject) parts.push(`Zertifikat: <b>${esc(st.issuer && st.issuer !== st.subject ? st.issuer : (st.subject === 'Gamepanel' || st.subject === 'Bytewise Panel') ? 'selbst signiert' : st.subject)}</b>, gültig bis ${esc(new Date(st.not_after).toLocaleDateString(LOC))}` +
       (st.names && st.names.length ? `<br><span class="muted small">für ${esc(st.names.slice(0, 8).join(', '))}${st.names.length > 8 ? ' …' : ''}</span>` : ''));
     $('#tlsStatus').innerHTML = parts.join('<br>');
     showErr($('#tlsErr'), st.error || '');
@@ -1358,7 +1369,7 @@
         ${r.verdict !== 'fail' && r.address ? `<button type="button" class="addr" data-copy="${esc(r.address)}" title="Adresse kopieren">${esc(r.address)}</button>` : ''}</div></div>
       <ul class="rc-steps">${r.steps.map(x => row(x.state, x.title, x.detail)).join('')}</ul>
       ${ports ? `<div class="rc-scroll"><table class="rc-ports"><thead><tr><th scope="col">Port</th><th scope="col">Router</th><th scope="col">Von außen</th></tr></thead><tbody>${ports}</tbody></table></div>` : ''}
-      <p class="small muted">Geprüft ${new Date(r.checked).toLocaleTimeString('de-DE')}${r.services && r.services.length ? ' · Für den Test von außen wurden ' + esc(r.services.join(' und ')) + ' gefragt (sie sehen nur deine öffentliche IP und den Port).' : ''}</p>`;
+      <p class="small muted">Geprüft ${new Date(r.checked).toLocaleTimeString(LOC)}${r.services && r.services.length ? ' · Für den Test von außen wurden ' + esc(r.services.join(' und ')) + ' gefragt (sie sehen nur deine öffentliche IP und den Port).' : ''}</p>`;
   }
   /* ---------------- KI-Diagnose ---------------- */
   const DG = { id: null, busy: false, list: [] };
@@ -1394,10 +1405,10 @@
   function renderDiag() {
     const d = DG.list[0]; if (!d) return;
     const [cls, ic, head] = SEV[d.severity] || SEV.hinweis;
-    const when = new Date(d.time).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+    const when = new Date(d.time).toLocaleString(LOC, { dateStyle: 'short', timeStyle: 'short' });
     const finds = (d.findings || []).map(f => `<li class="rc-${cls === 'ok' ? 'ok' : 'warn'}"><span class="rc-ic" aria-hidden="true">${cls === 'ok' ? '✓' : '!'}</span><div><b>${esc(f.title)}</b><span>${esc(f.detail)}</span>${f.evidence ? `<code class="mono dg-ev">${esc(f.evidence)}</code>` : ''}</div></li>`).join('');
     const acts = (d.actions || []).map((a, i) => `<li><div><b>${esc(a.title)}</b><span>${esc(a.why)}${a.kind === 'var' ? ` <span class="mono">${esc(a.key)} = ${esc(a.value)}</span>` : ''}</span></div>${actionBtn(a, i)}</li>`).join('');
-    const older = DG.list.slice(1).map(o => `<li><span class="muted small">${esc(new Date(o.time).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }))}${o.trigger ? ' · ' + esc(o.trigger) : ''}</span><br>${esc((SEV[o.severity] || SEV.hinweis)[2])}: ${esc(o.summary)}</li>`).join('');
+    const older = DG.list.slice(1).map(o => `<li><span class="muted small">${esc(new Date(o.time).toLocaleString(LOC, { dateStyle: 'short', timeStyle: 'short' }))}${o.trigger ? ' · ' + esc(o.trigger) : ''}</span><br>${esc((SEV[o.severity] || SEV.hinweis)[2])}: ${esc(o.summary)}</li>`).join('');
     $('#dgBody').innerHTML = `<div class="rc-verdict rc-${cls}"><span class="rc-ic big" aria-hidden="true">${ic}</span><div><b>${esc(head)}</b><span>${esc(d.summary)}</span></div></div>
       ${finds ? `<ul class="rc-steps">${finds}</ul>` : ''}
       ${acts ? `<h3 class="dg-h">Vorschläge</h3><ul class="dg-acts">${acts}</ul><p class="small muted">Nichts passiert ohne deinen Klick. RAM-Änderungen legen den Container neu an, Spielstände bleiben erhalten.</p>` : ''}
@@ -1693,8 +1704,8 @@
       d.showModal(); setTimeout(() => { inp.focus(); inp.select(); }, 30);
     });
   }
-  const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(0) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : (b / 1073741824).toFixed(2).replace('.', ',') + ' GB';
-  const fmtDate = d => new Date(d).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(0) + ' KB' : b < 1073741824 ? (b / 1048576).toFixed(1).replace('.', DEC) + ' MB' : (b / 1073741824).toFixed(2).replace('.', DEC) + ' GB';
+  const fmtDate = d => new Date(d).toLocaleString(LOC, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const ICON = {
     dir: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 014.5 5H9l2 2.5h8.5A1.5 1.5 0 0121 9v9.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 18.5z"/></svg>',
     file: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>',
@@ -1776,7 +1787,7 @@
     let v; try { v = await api('GET', `/api/servers/${id}/stats`); } catch (e) { return; }
     if (MG.id !== id) return;
     const since = v.since && !v.since.startsWith('0001') ? new Date(v.since) : null;
-    $('#stSince').textContent = since ? `seit ${since.toLocaleDateString('de-DE')}` + (v.last_played && !v.last_played.startsWith('0001') ? ` · zuletzt gespielt ${fmtWhen(v.last_played)}` : '') : 'sammelt ab jetzt jede Minute';
+    $('#stSince').textContent = since ? `seit ${since.toLocaleDateString(LOC)}` + (v.last_played && !v.last_played.startsWith('0001') ? ` · zuletzt gespielt ${fmtWhen(v.last_played)}` : '') : 'sammelt ab jetzt jede Minute';
     $('#stInsights').innerHTML = (v.insights || []).map(x => `<li>${esc(x)}</li>`).join('');
     // Mo … So as rows, 0–23 as columns
     const cells = [];
@@ -1784,7 +1795,7 @@
     [1, 2, 3, 4, 5, 6, 0].forEach((d, i) => {
       cells.push(`<span class="wd">${WD[i]}</span>` + v.heat[d].map((x, h) => {
         const a = x < 0 ? 0 : v.heat_max > 0 ? Math.max(.08, x / v.heat_max) : .08;
-        return `<span class="hc${x < 0 ? ' none' : ''}" style="--a:${a.toFixed(2)}" title="${WD[i]} ${h}:00 – ${x < 0 ? 'keine Daten' : x.toFixed(1).replace('.', ',') + ' Spieler im Schnitt'}"></span>`;
+        return `<span class="hc${x < 0 ? ' none' : ''}" style="--a:${a.toFixed(2)}" title="${WD[i]} ${h}:00 – ${x < 0 ? 'keine Daten' : x.toFixed(1).replace('.', DEC) + ' Spieler im Schnitt'}"></span>`;
       }).join(''));
     });
     $('#stHeat').innerHTML = cells.join('');
@@ -1847,12 +1858,12 @@
     let v; try { v = await api('GET', `/api/servers/${id}/seasons`); } catch (e) { return; }
     if (MG.id !== id) return;
     SZ.v = v; const c = v.current;
-    $('#szSub').textContent = `${c.name} · seit ${new Date(c.start).toLocaleDateString('de-DE')}`;
+    $('#szSub').textContent = `${c.name} · seit ${new Date(c.start).toLocaleDateString(LOC)}`;
     $('#szNow').innerHTML = v.standings.length ? `Bisher ${Math.round(v.hours)} Std. gespielt. Vorne: ${v.standings.slice(0, 3).map(p => `<b>${esc(p.name)}</b> ${hrs(p.seconds)}`).join(', ')}` : '<span class="muted">In dieser Saison wurde noch nicht gespielt (Spielzeiten gibt es, wenn das Spiel Namen verrät).</span>';
     $('#szPlan').hidden = !v.plan;
     if (v.plan) $('#szPlanText').textContent = `Geplant: neue Saison „${v.plan.name}“ am ${fmtDate(v.plan.at)} · zurückgesetzt wird ${v.plan.wipe.join(', ')}`;
     $('#szPast').innerHTML = v.past.length ? `<h3 class="sz-h">Ruhmeshalle</h3>` + v.past.map(p => `<div class="ml-item"><span class="ml-st ml-muted">#${p.n}</span><div class="ml-t"><b>${esc(p.name)}</b>
-      <span class="small muted">${new Date(p.start).toLocaleDateString('de-DE')} bis ${new Date(p.end).toLocaleDateString('de-DE')} · ${Math.round(p.hours)} Std. gespielt</span>
+      <span class="small muted">${new Date(p.start).toLocaleDateString(LOC)} bis ${new Date(p.end).toLocaleDateString(LOC)} · ${Math.round(p.hours)} Std. gespielt</span>
       ${p.top && p.top.length ? `<p class="small">${p.top.slice(0, 3).map((t, i) => ['🥇', '🥈', '🥉'][i] + ' ' + esc(t.name) + ' ' + hrs(t.seconds)).join(' · ')}</p>` : ''}</div>
       ${p.backup ? `<button type="button" class="btn-line sm admin-only" data-sz-restore="${esc(p.backup)}" data-name="${esc(p.name)}">Welt zurückholen</button>` : ''}</div>`).join('') : '';
   }
@@ -1920,10 +1931,10 @@
     const url = id === '_host' ? `/api/host/history?span=${st.span}` : `/api/servers/${id}/history?span=${st.span}`;
     api('GET', url).then(v => { if (st.id === id) { st.v = v; perfDraw(box, st); } }).catch(() => {});
   }
-  const gbTxt = mb => mb <= 0 ? '0' : mb >= 1024 ? (mb / 1024).toFixed(1).replace('.', ',') + ' GB' : Math.round(mb) + ' MB';
+  const gbTxt = mb => mb <= 0 ? '0' : mb >= 1024 ? (mb / 1024).toFixed(1).replace('.', DEC) + ' GB' : Math.round(mb) + ' MB';
   function perfTime(t, span) {
     const d = new Date(t * 1000);
-    return span === '24h' ? d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    return span === '24h' ? d.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit' });
   }
   function perfDraw(box, st) {
     const v = st.v, pts = v.points || [];
@@ -1969,7 +1980,7 @@
       flush();
       const grid = [0, 0.5, 1].map(f => `<line class="ch-grid" x1="${L}" x2="${W - R}" y1="${y(c.max * f).toFixed(1)}" y2="${y(c.max * f).toFixed(1)}"/><text class="ch-ax" x="${L - 6}" y="${(y(c.max * f) + 4).toFixed(1)}" text-anchor="end">${esc(c.fmt(c.step ? Math.round(c.max * f) : c.max * f))}</text>`).join('');
       const nt = W < 500 ? 3 : 4, narrow = W < 500;
-      const ticks = Array.from({ length: nt }, (_, i) => { const t = v.from + (v.to - v.from) * (i + 0.5) / nt; return `<text class="ch-ax" x="${x(t).toFixed(1)}" y="${H - 4}" text-anchor="middle">${esc(narrow && st.span !== '24h' ? new Date(t * 1000).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : perfTime(t, st.span))}</text>`; }).join('');
+      const ticks = Array.from({ length: nt }, (_, i) => { const t = v.from + (v.to - v.from) * (i + 0.5) / nt; return `<text class="ch-ax" x="${x(t).toFixed(1)}" y="${H - 4}" text-anchor="middle">${esc(narrow && st.span !== '24h' ? new Date(t * 1000).toLocaleDateString(LOC, { day: '2-digit', month: '2-digit' }) : perfTime(t, st.span))}</text>`; }).join('');
       const ref = c.ref ? `<line class="ch-ref" x1="${L}" x2="${W - R}" y1="${y(c.ref).toFixed(1)}" y2="${y(c.ref).toFixed(1)}"/><text class="ch-ax ch-reft" x="${W - R}" y="${(y(c.ref) - 4).toFixed(1)}" text-anchor="end">${esc(c.refLabel)}</text>` : '';
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('height', H);
       svg.innerHTML = off + grid + ref + `<path class="ch-area" d="${area}"/><path class="ch-line" d="${d}"/>` + errs + ticks +
@@ -1997,8 +2008,8 @@
         if (val != null) { dot.setAttribute('cx', cx); dot.setAttribute('cy', gg.y(val)); dot.removeAttribute('hidden'); } else dot.setAttribute('hidden', '');
       });
       const t0 = new Date(p.t * 1000), t1 = new Date((p.t + v.step) * 1000);
-      const when = st.span === '24h' ? `${t0.toLocaleDateString('de-DE', { weekday: 'short' })} ${t0.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}–${t1.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
-        : t0.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const when = st.span === '24h' ? `${t0.toLocaleDateString(LOC, { weekday: 'short' })} ${t0.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' })}–${t1.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' })}`
+        : t0.toLocaleString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       const rows = [];
       if (!p.k) rows.push('<span class="muted">keine Daten</span>');
       else {
@@ -2045,7 +2056,10 @@
     const rl = $('#geoReload'); if (rl) rl.onclick = async () => { rl.disabled = true; try { await api('POST', '/api/geo/update'); toast('Ortsdatenbank wird geladen', 'ok'); setTimeout(() => loadGeo(MG.id), 3000); } catch (e) { toast(e.message, 'bad'); } };
     await renderGeo();
   }
-  const cityName = p => p.kind === 'lan' ? 'Heimnetz' : p.kind === 'relay' ? 'über Steam-Relay' : p.kind === 'unknown' ? 'unbekannt' : [p.city, p.country_name].filter(Boolean).join(', ') || p.country || '?';
+  // country names come from the database in German; other languages ask the browser
+  const regionNames = LOC !== 'de-DE' && window.Intl && Intl.DisplayNames ? new Intl.DisplayNames([LOC], { type: 'region' }) : null;
+  const ctry = (cc, name) => { if (regionNames && cc) { try { return regionNames.of(cc); } catch (e) { /* unbekannter Code */ } } return name || cc; };
+  const cityName = p => p.kind === 'lan' ? 'Heimnetz' : p.kind === 'relay' ? 'über Steam-Relay' : p.kind === 'unknown' ? 'unbekannt' : [p.city, ctry(p.country, p.country_name)].filter(Boolean).join(', ') || p.country || '?';
   const flag = cc => cc && cc.length === 2 ? String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1f1a5 + c.charCodeAt(0))) : '';
   async function renderGeo() {
     const v = GEO.data, box = $('#geoMap');
@@ -2074,7 +2088,7 @@
     $('#geoLive').innerHTML = v.live.length ? v.live.map(l => `<li>${flag(l.country)} ${esc(cityName(l))}${$('#geoScope').value === 'all' ? ` <span class="muted small">· ${esc(srv(l.server))}</span>` : ''} <span class="muted small">seit ${esc(fmtWhen(l.since))}</span></li>`).join('') : '<li class="muted small">Gerade niemand.</li>';
     $('#geoCountries').innerHTML = v.countries.length ? v.countries.slice(0, 12).map(c => {
       const share = v.total ? Math.round(c.sessions / v.total * 100) : 0;
-      return `<li><span>${flag(c.country)} ${esc(c.name || c.country)}</span><span class="mono small">${c.sessions} · ${share} %</span><i style="--w:${share}%"></i></li>`;
+      return `<li><span>${flag(c.country)} ${esc(ctry(c.country, c.name))}</span><span class="mono small">${c.sessions} · ${share} %</span><i style="--w:${share}%"></i></li>`;
     }).join('') : '<li class="muted small">Noch keine.</li>';
     const extra = [];
     if (v.lan.sessions) extra.push(`${v.lan.sessions}× aus dem Heimnetz`);
@@ -2187,7 +2201,7 @@
   // Spiel-Einstellungen
   const GS = { data: null, orig: {}, group: null };
   /* Einstellungen im Kachel-Layout: Reiter je Gruppe, eine Kachel je Wert */
-  const numDe = n => String(n).replace('.', ',');
+  const numDe = n => String(n).replace('.', DEC);
   function stCard(o) {
     // o: {id, attrs, label, help, type, value, options, labels, unit, min, max, group, file, key, when}
     const help = o.help ? `<p class="st-help">${esc(o.help)}</p>` : '';
@@ -2318,7 +2332,7 @@
     ul.innerHTML = '<li class="muted">Lädt …</li>'; d.showModal();
     try {
       const list = await api('GET', `/api/servers/${MG.id}/settings/backups`);
-      ul.innerHTML = list.length ? list.map(b => `<li><div><b>${esc(new Date(b.when).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}</b>
+      ul.innerHTML = list.length ? list.map(b => `<li><div><b>${esc(new Date(b.when).toLocaleString(LOC, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }))}</b>
           <span class="small muted">Stand vor: ${esc((b.changed || []).slice(0, 6).join(', '))}${(b.changed || []).length > 6 ? ' …' : ''}</span></div>
           <button type="button" class="btn-line" data-undo="${esc(b.id)}">Zurückholen</button></li>`).join('')
         : '<li class="muted">Noch keine Stände. Sie entstehen beim ersten Speichern.</li>';
@@ -2427,7 +2441,7 @@
 
   // Mods (Modrinth)
   const MD = { st: null, want: [], info: {}, q: '', off: 0, hits: [] };
-  const fmtNum = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : n >= 1e3 ? Math.round(n / 1e3) + ' Tsd.' : String(n);
+  const fmtNum = n => n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', DEC) + ' Mio.' : n >= 1e3 ? Math.round(n / 1e3) + ' Tsd.' : String(n);
   /* ---------------- Installierte Mods ---------------- */
   const ML_STATE = { geladen: ['ok', 'Geladen'], fehler: ['bad', 'Fehler'], fehlt: ['bad', 'Fehlt'], nicht_geladen: ['warn', 'Nicht heruntergeladen'],
     aktiv: ['on', 'Aktiv'], installiert: ['muted', 'Installiert'], inaktiv: ['muted', 'Aus'] };
@@ -2440,14 +2454,14 @@
     const mods = d.mods || [], cnt = k => mods.filter(x => x.state === k).length;
     const parts = [mods.length + (mods.length === 1 ? ' Mod' : ' Mods')];
     [['geladen', 'geladen'], ['fehler', 'mit Fehler'], ['fehlt', 'fehlen'], ['nicht_geladen', 'nicht heruntergeladen'], ['inaktiv', 'aus']].forEach(([k, t]) => { if (cnt(k)) parts.push(cnt(k) + ' ' + t); });
-    const since = d.log_since && !String(d.log_since).startsWith('0001') ? new Date(d.log_since).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : '';
+    const since = d.log_since && !String(d.log_since).startsWith('0001') ? new Date(d.log_since).toLocaleString(LOC, { dateStyle: 'short', timeStyle: 'short' }) : '';
     $('#mlInfo').textContent = mods.length
       ? parts.join(' · ') + (since ? ` · Konsole ${d.running ? 'seit dem Start' : 'des letzten Laufs'} (${since}) ausgewertet` : ' · noch kein Start, deshalb ist unbekannt, was geladen wird') + ((d.notes || []).length ? ' · ' + d.notes.join(' ') : '')
       : 'Keine Mods gefunden. Das Panel erkennt Steam-Workshop-Inhalte, Project-Zomboid-Mods, BepInEx-Plugins (Valheim), Pak- und UE4SS-Mods (Unreal-Spiele wie Palworld) sowie Minecraft-Mods und -Plugins.';
     $('#mlList').innerHTML = mods.map(m => {
       const [cls, lab] = ML_STATE[m.state] || ML_STATE.installiert;
       const sub = [m.source, m.version ? 'Version ' + m.version : '', m.workshop && m.name !== m.workshop ? 'Workshop ' + m.workshop : '', m.size ? fmtSize(m.size) : '',
-        m.modified && !String(m.modified).startsWith('0001') ? 'Stand ' + new Date(m.modified).toLocaleDateString('de-DE') : ''].filter(Boolean).map(esc).join(' · ');
+        m.modified && !String(m.modified).startsWith('0001') ? 'Stand ' + new Date(m.modified).toLocaleDateString(LOC) : ''].filter(Boolean).map(esc).join(' · ');
       const name = m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.name)}</a>` : esc(m.name);
       const note = m.note ? (m.state === 'fehler' ? `<code class="mono dg-ev">${esc(m.note)}</code>` : `<p class="small">${esc(m.note)}</p>`) : '';
       const upd = m.update_hint ? '<p class="small ml-upd">Im Workshop gibt es eine neuere Version. Der Server holt sie beim nächsten Start.</p>' : '';
@@ -2649,7 +2663,7 @@
     const hm = pad2(t.getHours()) + ':' + pad2(t.getMinutes());
     if (t.toDateString() === now.toDateString()) return 'heute ' + hm;
     if (t.toDateString() === tom.toDateString()) return 'morgen ' + hm;
-    return t.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' ' + hm;
+    return t.toLocaleDateString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' ' + hm;
   };
   const schedText = t => t.every_hours ? (t.every_hours === 1 ? 'Stündlich' : `Alle ${t.every_hours} Stunden`)
     : (t.days && t.days.length ? t.days.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map(d => DAYS[d]).join(', ') : 'Täglich') + ' ' + t.at;
@@ -2697,7 +2711,7 @@
   const GE_STATE = { geplant: ['muted', 'Geplant'], aktiv: ['ok', 'Läuft'], beendet: ['muted', 'Beendet'] };
   const fmtSpan = (a, b) => {
     const A = new Date(a), B = new Date(b), o = { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
-    return A.toLocaleString('de-DE', o) + ' bis ' + (A.toDateString() === B.toDateString() ? B.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : B.toLocaleString('de-DE', o));
+    return A.toLocaleString(LOC, o) + ' bis ' + (A.toDateString() === B.toDateString() ? B.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' }) : B.toLocaleString(LOC, o));
   };
   async function loadGameEvents() {
     const id = MG.id;
