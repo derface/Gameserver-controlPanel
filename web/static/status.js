@@ -20,6 +20,7 @@
       <span class="state ${s.state}"><i></i>${LABEL[s.state] || s.state}${s.state === 'online' ? ` · ${s.players}${s.max ? ' / ' + s.max : ''} Spieler` : ''}</span>
       ${s.names && s.names.length ? `<ul class="names">${s.names.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
       ${s.address ? `<div class="join"><code>${esc(s.address)}</code><button type="button" data-copy="${esc(s.address)}">Kopieren</button>${s.steam_link ? `<a class="btn primary" href="${esc(s.steam_link)}">Beitreten</a>` : ''}</div>` : ''}
+      ${s.lan_address ? `<div class="join lan"><span class="lanl">Du bist im Heimnetz, nimm diese Adresse:</span><code>${esc(s.lan_address)}</code><button type="button" data-copy="${esc(s.lan_address)}">Kopieren</button></div>` : ''}
       ${s.hint ? `<p class="hint">${esc(s.hint)}</p>` : ''}
       ${s.note ? `<p class="snote">${esc(s.note)}</p>` : ''}
     </article>`).join('');

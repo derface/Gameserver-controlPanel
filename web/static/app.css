@@ -804,3 +804,4 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .geo-cc li{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline}
 .geo-cc i{grid-column:1/-1;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--w),color-mix(in srgb,var(--line) 70%,transparent) var(--w))}
 .geo-foot{margin-top:10px}
+.join-hint{display:block;margin-top:3px;line-height:1.4}

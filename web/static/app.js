@@ -372,7 +372,7 @@
     const set = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h = html; } };
     $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '');
     $('#svName').textContent = s.name;
-    const port = s.ports && s.ports[0] ? s.ports[0].host : '';
+    const port = s.join_port || (s.ports && s.ports[0] ? s.ports[0].host : '');
     set($('#svMeta'), `<span class="pill ${esc(s.status)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
       ${port ? `<button type="button" class="addr" data-copy="${esc(addr() + ':' + port)}" title="Adresse kopieren">${esc(addr())}:${port}</button>` : ''}
       ${hasPl(s) ? `<span>${s.players} / ${s.max_players} Spieler</span>` : ''}
@@ -387,7 +387,7 @@
     // settings that wait for the first start reload once the status moves on
     if (MG.tab === 'settings' && GS.data && GS.status !== s.status && GS.data.files.some(f => !f.editable) && !document.activeElement.closest('#stForm')) loadSettings();
     set($('#svInfo'), `<h2>Details</h2><dl class="kv one">
-        <div><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}</dd></div>
+        <div><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}${s.join_hint ? `<span class="small muted join-hint">${esc(s.join_hint)}</span>` : ''}${S.lanIP && port && S.lanIP !== addr() ? `<span class="small muted join-hint">Aus dem Heimnetz: ${esc(S.lanIP)}:${port}</span>` : ''}</dd></div>
         <div><dt>Ports</dt><dd>${esc(portList(s)) || '–'}</dd></div>
         <div><dt>Arbeitsspeicher</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' von ' : ''}${gb(s.memory_mb)} GB</dd></div>
         <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' : '–'}</dd></div>
@@ -2935,7 +2935,7 @@
     try { st = await api('GET', '/api/state'); }
     catch (e) { document.body.innerHTML = '<p style="padding:24px">Das Panel antwortet nicht. Bitte Seite neu laden.</p>'; return; }
     S.version = st.version; S.update = st.update || null; S.user = st.user;
-    S.role = st.role || ''; S.twoFactor = !!st.two_factor; S.publicHost = st.public_host || '';
+    S.role = st.role || ''; S.twoFactor = !!st.two_factor; S.publicHost = st.public_host || ''; S.lanIP = st.lan_ip || '';
     document.body.dataset.role = S.role;
     $('#whoAmI').textContent = st.user || ''; $('#whoRole').textContent = ROLE[S.role] || '';
     $('#meAvatar').textContent = (st.user || '?').slice(0, 1).toUpperCase();

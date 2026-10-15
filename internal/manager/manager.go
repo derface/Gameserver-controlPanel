@@ -90,6 +90,8 @@ type live struct {
 // Info is what the API returns for one server.
 type Info struct {
 	store.Server
+	JoinPort     int          `json:"join_port,omitempty"` // the port players type in
+	JoinHint     string       `json:"join_hint,omitempty"`
 	TemplateName string       `json:"template_name"`
 	Category     string       `json:"category"`
 	Console      string       `json:"console"`
@@ -943,6 +945,10 @@ func (m *Manager) Run(ctx context.Context) {
 func (m *Manager) Info(sv store.Server) Info {
 	tpl, _ := m.tpls.Get(sv.Template)
 	in := Info{Players: -1, Server: sv, TemplateName: tpl.Name, Category: tpl.Category, Console: tpl.Console, Notes: tpl.Notes, DataDir: m.ServerDir(sv.ID), Router: m.routerPorts(sv.ID)}
+	if a, _, h := m.joinFor(sv, tpl, "x"); a != "" {
+		in.JoinPort, _ = strconv.Atoi(a[strings.LastIndex(a, ":")+1:])
+		in.JoinHint = h
+	}
 	// never send secrets to the browser in lists
 	in.Vars = map[string]string{}
 	for _, v := range tpl.Vars {

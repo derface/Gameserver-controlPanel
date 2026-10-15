@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/auth"
+	"github.com/derface/Gameserver-controlPanel/internal/manager"
+	"github.com/derface/Gameserver-controlPanel/internal/proxy"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
 
@@ -35,6 +37,7 @@ type publicServer struct {
 	Max       int      `json:"max"`
 	Names     []string `json:"names,omitempty"`
 	Address   string   `json:"address,omitempty"`
+	LANAddr   string   `json:"lan_address,omitempty"` // only for visitors from the home network
 	SteamLink string   `json:"steam_link,omitempty"`
 	Hint      string   `json:"hint,omitempty"`
 	Note      string   `json:"note,omitempty"`
@@ -42,8 +45,18 @@ type publicServer struct {
 
 var statusCache struct {
 	sync.Mutex
-	at   time.Time
-	body map[string]any
+	at   [2]time.Time
+	body [2]map[string]any // [0] internet, [1] home network
+}
+
+// fromLAN says whether the visitor sits in the home network. Behind a
+// proxy the panel only believes it when the proxy is trusted.
+func fromLAN(r *http.Request) bool {
+	if r.Header.Get("X-Forwarded-For") != "" && !proxy.Trusted(r) {
+		return false
+	}
+	ip := net.ParseIP(auth.ClientIP(r))
+	return ip != nil && (ip.IsPrivate() || ip.IsLoopback())
 }
 
 func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
@@ -55,8 +68,12 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	statusCache.Lock()
 	defer statusCache.Unlock()
-	if time.Since(statusCache.at) < 15*time.Second && statusCache.body != nil {
-		writeJSON(w, 200, statusCache.body)
+	k := 0
+	if fromLAN(r) {
+		k = 1
+	}
+	if time.Since(statusCache.at[k]) < 15*time.Second && statusCache.body[k] != nil {
+		writeJSON(w, 200, statusCache.body[k])
 		return
 	}
 	host := ""
@@ -71,13 +88,20 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 		e, ok := c.Servers[id]
 		return ok && e.Show, e.Note
 	}, c.ShowNames, host)
+	if lan := manager.LANIP(); k == 1 && lan != "" {
+		for i := range list {
+			if list[i].State == "online" {
+				list[i].LANAddr, _, _ = a.Mgr.JoinInfo(list[i].ID, lan)
+			}
+		}
+	}
 	title := c.Title
 	if title == "" {
 		title = "Unsere Gameserver"
 	}
-	statusCache.body = map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now()}
-	statusCache.at = time.Now()
-	writeJSON(w, 200, statusCache.body)
+	statusCache.body[k] = map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now()}
+	statusCache.at[k] = time.Now()
+	writeJSON(w, 200, statusCache.body[k])
 }
 
 // publicServers lists the servers pick() lets through, as players see them.
@@ -158,7 +182,7 @@ func (a *API) statusCfgPut(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = a.Store.Update(func(d *store.Data) error { d.Settings.Status = in; return nil })
 	statusCache.Lock()
-	statusCache.body = nil
+	statusCache.body = [2]map[string]any{}
 	statusCache.Unlock()
 	a.statusCfgGet(w, r)
 }

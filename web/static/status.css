@@ -24,3 +24,5 @@ a.btn.primary{background:var(--accent);border-color:var(--accent);color:#111;fon
 .hint,.snote{font-size:13px;color:var(--muted);margin:0}
 .snote{color:var(--ink)}
 footer{margin-top:30px;font-size:12px;text-align:center}
+.join.lan{align-items:center}
+.lanl{flex-basis:100%;font-size:13px;color:var(--muted)}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/derface/Gameserver-controlPanel/internal/query"
+	"github.com/derface/Gameserver-controlPanel/internal/store"
 	"github.com/derface/Gameserver-controlPanel/internal/templates"
 )
 
@@ -461,10 +463,22 @@ func (m *Manager) PublicPlayers(id string) []string {
 // a steam://connect link.
 func (m *Manager) JoinInfo(id, host string) (addr, steamLink, hint string) {
 	sv, tpl, err := m.get(id)
-	if err != nil || len(sv.Ports) == 0 {
+	if err != nil {
+		return "", "", ""
+	}
+	return m.joinFor(sv, tpl, host)
+}
+
+func (m *Manager) joinFor(sv store.Server, tpl templates.Template, host string) (addr, steamLink, hint string) {
+	if len(sv.Ports) == 0 {
 		return "", "", ""
 	}
 	addr = fmt.Sprintf("%s:%d", host, sv.Ports[0].Host)
+	// Steam's server list and many in-game searches ask the query port
+	qaddr := ""
+	if tpl.Query != nil && tpl.Query.Type == "a2s" && tpl.Query.Port > 0 && tpl.Query.Port < len(sv.Ports) && sv.Ports[tpl.Query.Port].Host != sv.Ports[0].Host {
+		qaddr = fmt.Sprintf("%s:%d", host, sv.Ports[tpl.Query.Port].Host)
+	}
 	switch {
 	case tpl.ID == "minecraft-java":
 		hint = "Minecraft → Mehrspieler → Server hinzufügen → Adresse einfügen."
@@ -472,11 +486,43 @@ func (m *Manager) JoinInfo(id, host string) (addr, steamLink, hint string) {
 		hint = "Minecraft → Spielen → Server → Server hinzufügen: Adresse und Port getrennt eintragen."
 	case tpl.ID == "valheim":
 		hint = "Valheim → Spiel beitreten → „Per IP beitreten“ → Adresse einfügen."
+	case tpl.ID == "enshrouded" && qaddr != "":
+		addr = qaddr
+		hint = "Enshrouded → Spielen → Beitreten → „Nach IPv4/Domain suchen“ (Taste T) → Adresse einfügen, dann das Passwort deiner Gruppe."
 	case tpl.Query != nil && tpl.Query.Type == "a2s" && (strings.Contains(tpl.Start, "srcds") || tpl.ID == "cs2"):
 		steamLink = "steam://connect/" + addr
 		hint = "Auf „Beitreten“ klicken (öffnet Steam) oder in der Spielkonsole: connect " + addr
+	case qaddr != "":
+		hint = "Im Spiel über „Direkt verbinden“ bzw. „Per IP beitreten“ die Adresse eintragen. Oder in Steam: Ansicht → Spieleserver → Favoriten → Server hinzufügen → " + qaddr
 	default:
 		hint = "Im Spiel über „Direkt verbinden“ bzw. „Per IP beitreten“ die Adresse eintragen."
 	}
 	return addr, steamLink, hint
+}
+
+var lanCache struct {
+	sync.Mutex
+	ip string
+	at time.Time
+}
+
+// LANIP is this machine's address in the home network (the one it uses
+// to reach the internet), for players at home.
+func LANIP() string {
+	lanCache.Lock()
+	defer lanCache.Unlock()
+	if lanCache.ip != "" && time.Since(lanCache.at) < 10*time.Minute {
+		return lanCache.ip
+	}
+	c, err := net.Dial("udp4", "192.0.2.1:9") // no packet is sent
+	if err != nil {
+		return ""
+	}
+	defer c.Close()
+	ip := c.LocalAddr().(*net.UDPAddr).IP
+	if !ip.IsPrivate() {
+		return ""
+	}
+	lanCache.ip, lanCache.at = ip.String(), time.Now()
+	return lanCache.ip
 }

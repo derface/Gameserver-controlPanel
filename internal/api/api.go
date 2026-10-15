@@ -157,6 +157,7 @@ func (a *API) state(w http.ResponseWriter, r *http.Request) {
 		"two_factor":   u.TOTP != "",
 		"version":      a.Version,
 		"docker_error": dockerErr,
+		"lan_ip":       map[bool]string{true: manager.LANIP()}[u.Name != ""],
 		"update":       map[bool]any{true: updateState(), false: nil}[u.Role == auth.Admin],
 	})
 }
