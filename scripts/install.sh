@@ -145,5 +145,7 @@ IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 echo
 say "Panel $VERSION läuft."
 echo "   Öffne im Browser:  http://${IP:-<server-ip>}:$PORT"
-echo "   Beim ersten Aufruf legst du dein Admin-Konto an."
+if ! grep -q '"hash"' "$DATA_DIR/panel.json" 2>/dev/null; then
+  echo "   Beim ersten Aufruf legst du dein Admin-Konto an."
+fi
 echo "${c_dim}   Logs: journalctl -u gamepanel -f   ·   Daten: $DATA_DIR${c_off}"
