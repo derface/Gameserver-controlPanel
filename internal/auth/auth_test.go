@@ -272,3 +272,32 @@ func TestLegacySession(t *testing.T) {
 		t.Fatal("umgestellte Sitzung abgelehnt")
 	}
 }
+
+func TestNodeKey(t *testing.T) {
+	a, st := newAuth(t)
+	key, err := a.NewNodeKey("Hauptpanel")
+	if err != nil || !strings.HasPrefix(key, NodeKeyPrefix) {
+		t.Fatal(key, err)
+	}
+	st.Read(func(d *store.Data) {
+		if len(d.NodeKeys) != 1 || strings.Contains(d.NodeKeys[0].Hash, key) || d.NodeKeys[0].Hash != tokenKey(key) {
+			t.Error("Schlüssel muss gehasht gespeichert sein")
+		}
+	})
+	r := httptest.NewRequest("GET", "/api/servers", nil)
+	r.Header.Set("Authorization", "Bearer "+key)
+	r.Header.Set("X-Node-User", "david\n")
+	u, ok := a.Current(r)
+	if !ok || u.Role != Admin || !u.ViaNode || u.Name != "david (über Hauptpanel)" {
+		t.Fatalf("%+v %v", u, ok)
+	}
+	r.Header.Set("Authorization", "Bearer "+key+"x")
+	if _, ok := a.Current(r); ok {
+		t.Error("falscher Schlüssel angenommen")
+	}
+	_ = st.Update(func(d *store.Data) error { d.NodeKeys = nil; return nil })
+	r.Header.Set("Authorization", "Bearer "+key)
+	if _, ok := a.Current(r); ok {
+		t.Error("entzogener Schlüssel angenommen")
+	}
+}

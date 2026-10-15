@@ -9,8 +9,8 @@ import (
 
 func TestLocalizeTemplateTexts(t *testing.T) {
 	v := map[string]any{
-		"name":  "Spielerplätze", // user content: stays
-		"label": "Spielerplätze",
+		"name":     "Spielerplätze", // user content: stays
+		"label":    "Spielerplätze",
 		"settings": []map[string]any{{"help": "Spieler können sich im Spiel schreiben.", "labels": []string{"Wenig", "Maximal"}}},
 	}
 	h := withLang(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { writeJSON(w, 200, v) }))

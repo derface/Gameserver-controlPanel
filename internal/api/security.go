@@ -11,6 +11,7 @@ import (
 
 	"github.com/derface/Gameserver-controlPanel/internal/audit"
 	"github.com/derface/Gameserver-controlPanel/internal/auth"
+	"github.com/derface/Gameserver-controlPanel/internal/nodes"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
 
@@ -127,6 +128,10 @@ func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 			fail(w, http.StatusForbidden, errors.New("Dafür fehlen dir die Rechte."))
 			return
 		}
+		remote := false
+		if id != "" && a.Nodes != nil && strings.Contains(id, nodes.Sep) {
+			h, remote = a.proxyServer, true // a server on another machine
+		}
 		n := &note{}
 		ctx := context.WithValue(context.WithValue(r.Context(), keyUser, u), keyNote, n)
 		r = r.WithContext(ctx)
@@ -138,6 +143,8 @@ func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 		if id != "" {
 			if sv, ok := a.Store.Server(id); ok {
 				target = sv.Name
+			} else if remote {
+				target = a.Nodes.ServerName(id)
 			} else {
 				target = id
 			}
@@ -163,6 +170,11 @@ func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 
 var actions = map[string]string{
 	"POST /api/servers":                             "Server angelegt",
+	"POST /api/node/keys":                           "Kopplungscode erzeugt",
+	"DELETE /api/node/keys/{kid}":                   "Kopplung entzogen",
+	"POST /api/nodes":                               "Rechner hinzugefügt",
+	"PATCH /api/nodes/{nid}":                        "Rechner geändert",
+	"DELETE /api/nodes/{nid}":                       "Rechner entfernt",
 	"DELETE /api/import/amp/{iid}":                  "AMP-Export verworfen",
 	"POST /api/servers/{id}/diagnose":               "Mit KI geprüft",
 	"POST /api/servers/{id}/modlist/toggle":         "Mod geschaltet",

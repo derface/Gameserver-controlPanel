@@ -98,6 +98,9 @@ func (a *API) invitePublic(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !found {
+		if len(tok) >= 16 && a.publicFromNodes(w, r, "/api/public/invite/"+tok, "") {
+			return // a server on another machine
+		}
 		fail(w, 404, errors.New("Diesen Einladungslink gibt es nicht (mehr)."))
 		return
 	}

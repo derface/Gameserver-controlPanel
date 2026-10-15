@@ -22,6 +22,7 @@ import (
 	"github.com/derface/Gameserver-controlPanel/internal/hoststats"
 	"github.com/derface/Gameserver-controlPanel/internal/https"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
+	"github.com/derface/Gameserver-controlPanel/internal/nodes"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 )
 
@@ -35,6 +36,7 @@ type API struct {
 	Version string
 	Audit   *audit.Log
 	TLS     *https.Manager
+	Nodes   *nodes.Pool // other machines this panel controls
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
@@ -77,6 +79,7 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("POST /api/logout", a.csrfOnly(a.logout))
 
 	mux.HandleFunc("GET /api/host", a.need(auth.Viewer, a.host))
+	a.nodeRoutes(mux)
 	mux.HandleFunc("GET /api/templates", a.need(auth.Viewer, a.templates))
 	mux.HandleFunc("GET /api/servers", a.need(auth.Viewer, a.servers))
 	mux.HandleFunc("POST /api/servers", a.need(auth.Admin, a.create))
@@ -258,7 +261,20 @@ func (a *API) servers(w http.ResponseWriter, r *http.Request) {
 			out = append(out, s)
 		}
 	}
-	writeJSON(w, 200, out)
+	if a.Nodes == nil || u.ViaNode { // a node shows only its own servers
+		writeJSON(w, 200, out)
+		return
+	}
+	all := make([]any, 0, len(out))
+	for _, s := range out {
+		all = append(all, s)
+	}
+	for _, s := range a.Nodes.Servers() {
+		if id, _ := s["id"].(string); auth.CanSee(u, id) {
+			all = append(all, s)
+		}
+	}
+	writeJSON(w, 200, all)
 }
 
 func (a *API) server(w http.ResponseWriter, r *http.Request) {
@@ -278,6 +294,10 @@ func (a *API) create(w http.ResponseWriter, r *http.Request) {
 	body := map[string]json.RawMessage{}
 	if err := decode(r, &body); err != nil {
 		fail(w, 400, err)
+		return
+	}
+	if nid := strings.Trim(string(body["node"]), `"`); nid != "" && nid != "null" && a.Nodes != nil {
+		a.createOnNode(w, r, nid, body)
 		return
 	}
 	raw, _ := json.Marshal(body)

@@ -25,6 +25,7 @@ import (
 	"github.com/derface/Gameserver-controlPanel/internal/hoststats"
 	"github.com/derface/Gameserver-controlPanel/internal/https"
 	"github.com/derface/Gameserver-controlPanel/internal/manager"
+	"github.com/derface/Gameserver-controlPanel/internal/nodes"
 	"github.com/derface/Gameserver-controlPanel/internal/remote"
 	"github.com/derface/Gameserver-controlPanel/internal/store"
 	"github.com/derface/Gameserver-controlPanel/internal/templates"
@@ -83,7 +84,7 @@ func main() {
 		log.Printf("[HTTPS] Umleitung auf HTTPS ist abgeschaltet (GP_NO_TLS / -no-tls)")
 	}
 	a := &api.API{Auth: auth.New(st), Store: st, Mgr: mgr, Host: host, Docker: dk, Web: webFS, Version: version,
-		Audit: audit.Open(*dataDir), TLS: tlsm}
+		Audit: audit.Open(*dataDir), TLS: tlsm, Nodes: nodes.New(st)}
 	var rmu sync.Mutex
 	var rkey string
 	var rt remote.Target
@@ -105,6 +106,7 @@ func main() {
 	mgr.Host = host.Get
 	go host.Run(ctx)
 	go mgr.Run(ctx)
+	go a.Nodes.Run(ctx)
 	go a.RunUpdateCheck(ctx)
 	go a.RunDiscord(ctx)
 

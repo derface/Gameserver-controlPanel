@@ -492,6 +492,7 @@
         <a href="#/einstellungen/statusseite" data-sec="statusseite">Statusseite</a>
         <a href="#/einstellungen/discord" data-sec="discord">Discord-Bot</a>
         <a href="#/einstellungen/speicher" data-sec="speicher">Speicher &amp; Auslastung</a>
+        <a href="#/einstellungen/rechner" data-sec="rechner">Mehrere Rechner</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
         <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
@@ -696,6 +697,42 @@
     <p class="err" id="sgErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="sgRefresh">Neu berechnen</button></div>
   </div>
+  <div id="ndBlock" class="set-block admin-only" data-sec="rechner">
+    <h2>Mehrere Rechner</h2>
+    <p class="muted small">Gameserver auf weiteren Rechnern von hier aus verwalten. Auf jedem Rechner läuft dafür ein eigenes Bytewise Panel (dieselbe Installation). Seine Server erscheinen dann hier mit dem Namen des Rechners. Konsole, Einstellungen, Dateien, Backups und Aufgaben laufen auf dem Rechner selbst, das Panel hier reicht nur weiter.</p>
+    <div id="ndList"></div>
+    <h3>Rechner hinzufügen</h3>
+    <ol class="small nd-steps">
+      <li>Auf dem anderen Rechner Bytewise Panel installieren (gleiche Version wie hier).</li>
+      <li>Dort unter <b>Einstellungen → Mehrere Rechner</b> einen Kopplungscode erzeugen.</li>
+      <li>Den Code hier einfügen.</li>
+    </ol>
+    <form id="ndAdd" autocomplete="off">
+      <div class="vars">
+        <label class="field full"><span>Kopplungscode</span><input id="ndCode" placeholder="gpnode:…" spellcheck="false" required></label>
+        <label class="field"><span>Name <em class="muted">optional</em></span><input id="ndName" placeholder="z. B. Keller-PC" maxlength="40"></label>
+      </div>
+      <p class="err" id="ndErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="submit" class="btn-accent" id="ndAddBtn">Hinzufügen</button></div>
+    </form>
+    <div class="sec2">
+      <h4>Diesen Rechner von einem anderen Panel aus steuern lassen</h4>
+      <p class="small muted">Der Kopplungscode gibt dem anderen Panel volle Admin-Rechte über diesen Rechner. Er wird nur einmal angezeigt; entziehen lässt er sich jederzeit unten.</p>
+      <form id="nkForm" autocomplete="off">
+        <div class="vars">
+          <label class="field"><span>Adresse dieses Rechners</span><input id="nkUrl" spellcheck="false" required><small>So, wie das andere Panel ihn erreicht, z. B. https://192.168.178.60:8420</small></label>
+          <label class="field"><span>Name des anderen Panels</span><input id="nkLabel" value="Hauptpanel" maxlength="40"></label>
+        </div>
+        <p class="err" id="nkErr" role="alert" hidden></p>
+        <div class="dlg-actions"><button type="submit" class="btn-line">Kopplungscode erzeugen</button></div>
+      </form>
+      <div id="nkShow" class="nk-show" hidden>
+        <p class="small"><b>Kopplungscode</b> (nur jetzt sichtbar):</p>
+        <div class="nk-code"><code id="nkCode" data-noi18n></code><button type="button" class="btn-line" id="nkCopy">Kopieren</button></div>
+      </div>
+      <ul class="nk-list" id="nkList"></ul>
+    </div>
+  </div>
   <div id="upBlock" class="set-block admin-only" data-sec="panel">
     <h2>Panel &amp; Updates</h2>
     <p class="muted small">Bytewise Panel ist freie Software unter der <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL-3.0</a>: kostenlos, ohne Lizenzschlüssel, alle Funktionen frei. <a id="upSource" href="https://github.com/derface/Gameserver-controlPanel" target="_blank" rel="noopener">Quellcode</a></p>
@@ -747,6 +784,7 @@
       <select id="cTpl" size="7" required></select>
     </div>
     <p class="note" id="cNotes" hidden></p>
+    <label class="field" id="cNodeWrap" hidden><span>Rechner</span><select id="cNode"></select></label>
     <label class="field"><span>Name im Panel</span><input id="cName" maxlength="40" required></label>
     <div class="field"><span>Arbeitsspeicher <b id="cMemV" class="mono"></b></span><input id="cMem" type="range" step="256"></div>
     <div id="cVars" class="vars"></div>

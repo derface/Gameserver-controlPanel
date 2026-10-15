@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"github.com/derface/Gameserver-controlPanel/internal/proxy"
@@ -366,6 +367,9 @@ func (a *Auth) EndSessions(user, keepTok string) int {
 
 // Current returns the logged-in, enabled user of a request.
 func (a *Auth) Current(r *http.Request) (store.User, bool) {
+	if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer "+NodeKeyPrefix) {
+		return a.nodeUser(r, strings.TrimPrefix(h, "Bearer "))
+	}
 	c, err := r.Cookie(CookieName)
 	if err != nil || c.Value == "" {
 		return store.User{}, false
@@ -700,4 +704,61 @@ func view(d *store.Data, u store.User) UserView {
 // CanSee reports whether u may work with the server id at all.
 func CanSee(u store.User, id string) bool {
 	return u.Role == Admin || len(u.Servers) == 0 || slices.Contains(u.Servers, id)
+}
+
+// NodeKeyPrefix starts every key another panel uses to control this one.
+const NodeKeyPrefix = "gpn_"
+
+// NewNodeKey creates a key for another panel. The key itself is returned
+// once; only its hash is kept.
+func (a *Auth) NewNodeKey(label string) (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	key := NodeKeyPrefix + base64.RawURLEncoding.EncodeToString(b)
+	id := make([]byte, 4)
+	_, _ = rand.Read(id)
+	return key, a.st.Update(func(d *store.Data) error {
+		d.NodeKeys = append(d.NodeKeys, store.NodeKey{ID: hex.EncodeToString(id), Label: label, Hash: tokenKey(key), Created: time.Now()})
+		return nil
+	})
+}
+
+// nodeUser lets a panel holding a node key act as admin. The name of the
+// person behind it comes along in X-Node-User, for the protocol.
+func (a *Auth) nodeUser(r *http.Request, key string) (store.User, bool) {
+	h := tokenKey(key)
+	found, label := false, ""
+	a.st.Read(func(d *store.Data) {
+		for _, k := range d.NodeKeys {
+			if subtle.ConstantTimeCompare([]byte(k.Hash), []byte(h)) == 1 {
+				found, label = true, k.Label
+			}
+		}
+	})
+	if !found {
+		return store.User{}, false
+	}
+	_ = a.st.Update(func(d *store.Data) error {
+		for i := range d.NodeKeys {
+			if d.NodeKeys[i].Hash == h && time.Since(d.NodeKeys[i].LastUsed) > time.Minute {
+				d.NodeKeys[i].LastUsed, d.NodeKeys[i].LastFrom = time.Now(), ClientIP(r)
+			}
+		}
+		return nil
+	})
+	name := label
+	if who := strings.Map(func(c rune) rune {
+		if c < 32 || c == 127 {
+			return -1
+		}
+		return c
+	}, r.Header.Get("X-Node-User")); who != "" {
+		if len(who) > 40 {
+			who = who[:40]
+		}
+		name = who + " (über " + label + ")"
+	}
+	return store.User{Name: name, Role: Admin, Created: time.Now(), ViaNode: true}, true
 }

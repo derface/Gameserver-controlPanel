@@ -74,6 +74,9 @@ func (a *API) publicMods(w http.ResponseWriter, r *http.Request) {
 	noAudit(r)
 	sv, ok := a.publicServerFor(r.PathValue("key"))
 	if !ok {
+		if key := r.PathValue("key"); !strings.HasPrefix(key, "s-") && a.publicFromNodes(w, r, "/api/public/mods/"+key, "") {
+			return
+		}
 		fail(w, 404, errNotFound)
 		return
 	}
@@ -97,6 +100,9 @@ func (a *API) publicModpack(w http.ResponseWriter, r *http.Request) {
 	noAudit(r)
 	key := strings.TrimSuffix(r.PathValue("file"), ".zip")
 	sv, ok := a.publicServerFor(key)
+	if !ok && !strings.HasPrefix(key, "s-") && a.publicFromNodes(w, r, "/api/public/mods/"+key, "/api/public/modpack/"+key+".zip") {
+		return
+	}
 	if !ok || !a.statusCfg().ModDownload {
 		http.NotFound(w, r)
 		return

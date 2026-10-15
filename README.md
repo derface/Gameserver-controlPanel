@@ -413,6 +413,20 @@ Bytewise Panel ist freie Software unter der **GNU Affero General Public License 
 5. Mehrere Rechner (Nodes)
 6. KI-Überwachung (Crash-Analyse, Tipps wie „Sichtweite senken“)
 
+## Mehrere Rechner
+
+Unter **Einstellungen → Mehrere Rechner** verwaltet ein Panel die Gameserver weiterer Rechner mit. Auf jedem Rechner läuft dafür ein eigenes Bytewise Panel (gleiche Installation, gleiche Version).
+
+1. Auf dem zweiten Rechner: „Kopplungscode erzeugen“ mit der Adresse, unter der das erste Panel ihn erreicht (z. B. `https://192.168.178.60:8420`).
+2. Im ersten Panel den Code unter „Rechner hinzufügen“ einfügen.
+
+Danach stehen die Server des zweiten Rechners in der Liste, mit dessen Namen. Anlegen geht über die Auswahl „Rechner“ im Anlegen-Dialog. Konsole, Einstellungen, Dateien, Backups, Aufgaben und Mods laufen auf dem Rechner selbst; das Panel reicht alles weiter und prüft vorher die Rechte des Benutzers. Einladungslinks und Mod-Pakete funktionieren auch über das erste Panel.
+
+- Der Code enthält einen Schlüssel mit vollen Admin-Rechten über den zweiten Rechner. Gespeichert wird dort nur sein Hash; entziehen geht jederzeit. Im Protokoll des zweiten Rechners steht „david (über Hauptpanel)“.
+- HTTPS mit selbst signiertem Zertifikat: Das erste Panel merkt sich beim Koppeln den Fingerabdruck und spricht danach nur noch mit genau diesem Zertifikat. Ändert er sich, steht der Rechner auf „nicht erreichbar“, bis man das neue Zertifikat bestätigt.
+- Abgefragt wird alle 5 Sekunden. Antwortet ein Rechner nicht, bleiben seine Server mit Hinweis in der Liste.
+- Noch nicht über Rechnergrenzen: Statusseite, Discord-Bot, Spieler-Statistik, Herkunftskarte „alle Server“ und Speicher-Übersicht zeigen nur den eigenen Rechner. Für die Server dort gelten die Einstellungen im Panel des Rechners selbst.
+
 ## English / Sprache
 
 The panel is also available in English. It follows the browser language; under **Settings → My account → Language** (or the link below the sign-in form) you can pick German, English or automatic. The status page and invite links switch too, also via `?lang=en`.

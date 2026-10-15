@@ -28,6 +28,7 @@ type User struct {
 	TOTPLast  int64     `json:"totp_last,omitempty"` // last accepted time step, so a code works only once
 	Recovery  []string  `json:"recovery,omitempty"`  // sha256 of the unused recovery codes
 	LastLogin time.Time `json:"last_login,omitempty"`
+	ViaNode   bool      `json:"-"` // request from another panel with a node key
 }
 
 // Session is stored under the sha256 of its token, so a leaked panel.json
@@ -245,6 +246,30 @@ type Data struct {
 	Servers  []Server           `json:"servers"`
 	Settings Settings           `json:"settings"`
 	Router   []RouterMap        `json:"router_maps,omitempty"`
+	Nodes    []Node             `json:"nodes,omitempty"`     // other machines this panel controls
+	NodeKeys []NodeKey          `json:"node_keys,omitempty"` // panels allowed to control this machine
+}
+
+// Node is another machine running Bytewise Panel that this panel controls.
+// Its servers appear here with the id "<node id>~<server id>".
+type Node struct {
+	ID    string    `json:"id"`
+	Name  string    `json:"name"`
+	URL   string    `json:"url"`   // e.g. https://192.168.178.60:8420
+	Token string    `json:"token"` // the node's key, sent as Bearer token
+	FP    string    `json:"fp"`    // sha256 of the node's TLS certificate, pinned on first contact ("" for http)
+	Added time.Time `json:"added"`
+}
+
+// NodeKey lets another panel control this machine. Only the sha256 of the
+// key is stored.
+type NodeKey struct {
+	ID       string    `json:"id"`
+	Label    string    `json:"label"`
+	Hash     string    `json:"hash"`
+	Created  time.Time `json:"created"`
+	LastUsed time.Time `json:"last_used,omitempty"`
+	LastFrom string    `json:"last_from,omitempty"`
 }
 
 type Store struct {

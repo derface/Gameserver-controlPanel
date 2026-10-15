@@ -381,7 +381,7 @@
     if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
     const on = isOn(s), busy = !!S.pending[s.id] || s.status === 'preparing';
     const set = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h = html; } };
-    $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '');
+    $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '') + (s.node_name ? ' · auf ' + s.node_name : '');
     $('#svName').textContent = s.name;
     const port = s.join_port || (s.ports && s.ports[0] ? s.ports[0].host : '');
     set($('#svMeta'), `<span class="pill ${esc(s.status)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
@@ -461,11 +461,11 @@
         <button class="power" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></div>
         ${s.message ? `<p class="msg-line ${s.status === 'error' ? 'bad' : ''}">${esc(s.message)}</p>` : ''}`;
     }
-    return `<div class="mod-top"><span class="mono game">${s.created_by === 'selbsttest' ? 'Selbsttest · ' : ''}${esc(s.template_name)} · ${esc(portList(s))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
+    return `<div class="mod-top"><span class="mono game">${s.created_by === 'selbsttest' ? 'Selbsttest · ' : ''}${esc(s.template_name)}${s.node_name ? ' · ' + esc(s.node_name) : ''} · ${esc(portList(s))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
       <h3>${esc(s.name)}</h3>${body}`;
   }
   const SF = { q: '', f: '' };
-  const matches = s => (!SF.q || (s.name + ' ' + s.template_name).toLowerCase().includes(SF.q)) && (!SF.f || (SF.f === 'on' ? isOn(s) : !isOn(s)));
+  const matches = s => (!SF.q || (s.name + ' ' + s.template_name + ' ' + (s.node_name || '')).toLowerCase().includes(SF.q)) && (!SF.f || (SF.f === 'on' ? isOn(s) : !isOn(s)));
   function renderCards() {
     const box = $('#mods');
     const list = S.servers.filter(matches);
@@ -498,7 +498,7 @@
     const html = S.servers.length ? S.servers.slice(0, 8).map(s => {
       const on = isOn(s), busy = !!S.pending[s.id] || s.status === 'preparing';
       return `<li data-id="${esc(s.id)}"><a class="row" href="#/server/${encodeURIComponent(s.id)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>
-        <span class="nm"><b>${esc(s.name)}</b><small>${esc(s.template_name)}</small></span>
+        <span class="nm"><b>${esc(s.name)}</b><small>${esc(s.template_name)}${s.node_name ? ' · ' + esc(s.node_name) : ''}</small></span>
         <span class="rt">${hasPl(s) ? s.players + ' / ' + s.max_players + ' Spieler' : esc(statusLabel(s))}</span></a>
         <button class="power op-only" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></li>`;
     }).join('') + (S.servers.length > 8 ? `<li class="more"><a href="#/server">und ${S.servers.length - 8} weitere</a></li>` : '')
@@ -648,14 +648,84 @@
     });
     return out;
   }
-  function memRange(input, label, min, val) {
-    const hostMax = S.host ? Math.floor(S.host.mem_total_mb / 256) * 256 : 32768;
+  function memRange(input, label, min, val, host) {
+    host = host || S.host;
+    const hostMax = host && host.mem_total_mb ? Math.floor(host.mem_total_mb / 256) * 256 : 32768;
     input.min = min; input.max = Math.max(min, hostMax); input.value = clamp(val, min, input.max);
     const show = () => { label.textContent = (input.value / 1024).toFixed(input.value % 1024 ? 2 : 0).replace('.', DEC) + ' GB'; };
     input.oninput = show; show();
   }
   function showErr(el, msg) { el.textContent = msg || ''; el.hidden = !msg; }
   document.addEventListener('click', e => { const c = e.target.closest('[data-close]'); if (c) c.closest('dialog').close(); });
+
+  /* ---------------- Mehrere Rechner ---------------- */
+  let ndTimer = 0;
+  const pctTxt = (a, b) => b > 0 ? Math.round(a / b * 100) + ' %' : '–';
+  async function loadNodes() {
+    clearTimeout(ndTimer);
+    if (!$('#nkUrl').value) $('#nkUrl').value = location.origin;
+    let list = [], keys = [];
+    try { [list, keys] = await Promise.all([api('GET', '/api/nodes'), api('GET', '/api/node/keys')]); } catch (e) { toast(e.message, 'bad'); return; }
+    S.nodes = list;
+    $('#ndList').innerHTML = list.length ? `<div class="tbl-wrap"><table class="tbl nd-tbl"><thead><tr><th>Rechner</th><th>Zustand</th><th class="num">CPU</th><th class="num">RAM</th><th class="num">Platte</th><th class="num">Server</th><th></th></tr></thead><tbody>${list.map(n => {
+      const h = n.host || {};
+      const state = n.online
+        ? `<span class="on-ok">erreichbar</span>${n.version && n.version !== S.version ? `<br><span class="bad-txt small">Version ${esc(n.version)}, hier ${esc(S.version)}. Bitte beide gleich halten.</span>` : ''}${n.docker_error ? '<br><span class="bad-txt small">Docker dort nicht erreichbar</span>' : ''}`
+        : `<span class="bad-txt">nicht erreichbar</span><br><span class="small muted">${esc(n.error || '')}${n.seen && !String(n.seen).startsWith('0001') ? ' · zuletzt ' + esc(fmtWhen(n.seen)) : ''}</span>`;
+      return `<tr data-nid="${esc(n.id)}"><td><b>${esc(n.name)}</b><br><a class="small mono" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.url.replace(/^https?:\/\//, ''))}</a>${n.fp ? `<br><span class="small muted mono" title="Fingerabdruck des Zertifikats (SHA-256)">${esc(n.fp.slice(0, 16))}…</span>` : n.url.startsWith('http://') ? '<br><span class="small muted">ohne HTTPS</span>' : ''}</td>
+        <td>${state}</td>
+        <td class="num mono">${n.online && h.cores ? Math.round(h.cpu_percent) + ' %' : '–'}</td>
+        <td class="num mono">${n.online && h.mem_total_mb ? pctTxt(h.mem_used_mb, h.mem_total_mb) : '–'}</td>
+        <td class="num mono">${n.online && h.disk_total_gb ? pctTxt(h.disk_used_gb, h.disk_total_gb) : '–'}</td>
+        <td class="num mono">${n.servers || 0}</td>
+        <td class="nd-act">${!n.online && /Zertifikat/.test(n.error || '') ? '<button type="button" class="btn-line sm" data-nd-pin>Neues Zertifikat übernehmen</button>' : ''}<button type="button" class="btn-line sm" data-nd-ren>Umbenennen</button> <button type="button" class="btn-line sm" data-nd-del>Entfernen</button></td></tr>`;
+    }).join('')}</tbody></table></div>` : '<p class="small muted">Noch keine weiteren Rechner.</p>';
+    $('#nkList').innerHTML = keys.map(k => `<li data-kid="${esc(k.id)}"><span><b>${esc(k.label)}</b> <span class="small muted">· erzeugt ${esc(fmtWhen(k.created))}${k.last_used && !String(k.last_used).startsWith('0001') ? ' · zuletzt benutzt ' + esc(fmtWhen(k.last_used)) + (k.last_from ? ' von ' + esc(k.last_from) : '') : ' · noch nicht benutzt'}</span></span><button type="button" class="btn-line sm" data-nk-del>Entziehen</button></li>`).join('');
+    if (location.hash.includes('/rechner')) ndTimer = setTimeout(loadNodes, 10000);
+  }
+  $('#ndList').addEventListener('click', async e => {
+    const tr = e.target.closest('tr[data-nid]'); if (!tr) return;
+    const n = (S.nodes || []).find(x => x.id === tr.dataset.nid); if (!n) return;
+    if (e.target.closest('[data-nd-del]')) {
+      if (!await confirmBox('Rechner entfernen?', `„${n.name}“ verschwindet aus diesem Panel. Die Server dort laufen weiter und lassen sich im Panel des Rechners selbst verwalten. Den Kopplungscode dort am besten auch entziehen.`, 'Entfernen')) return;
+      try { await api('DELETE', '/api/nodes/' + n.id); toast('Rechner entfernt', 'ok'); loadNodes(); loadServers(); } catch (err) { toast(err.message, 'bad'); }
+    }
+    if (e.target.closest('[data-nd-pin]')) {
+      if (!await confirmBox('Neues Zertifikat übernehmen?', `Nur bestätigen, wenn sich das Zertifikat von „${n.name}“ wirklich geändert hat (z. B. HTTPS dort neu eingerichtet). Sonst könnte sich ein anderer Rechner als „${n.name}“ ausgeben.`, 'Übernehmen')) return;
+      try { await api('PATCH', '/api/nodes/' + n.id, { repin: true }); toast('Zertifikat übernommen', 'ok'); setTimeout(loadNodes, 800); } catch (err) { toast(err.message, 'bad'); }
+    }
+    if (e.target.closest('[data-nd-ren]')) {
+      const name = await promptBox('Rechner umbenennen', 'Name', n.name, 'Speichern'); if (!name) return;
+      try { await api('PATCH', '/api/nodes/' + n.id, { name }); loadNodes(); loadServers(); } catch (err) { toast(err.message, 'bad'); }
+    }
+  });
+  $('#ndAdd').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#ndErr'));
+    const b = $('#ndAddBtn'); b.disabled = true;
+    try {
+      const r = await api('POST', '/api/nodes', { code: $('#ndCode').value.trim(), name: $('#ndName').value.trim() });
+      $('#ndCode').value = ''; $('#ndName').value = '';
+      toast(`${r.name} hinzugefügt (${r.servers} Server)`, 'ok');
+      setTimeout(() => { loadNodes(); loadServers(); }, 800);
+    } catch (err) { showErr($('#ndErr'), err.message); }
+    finally { b.disabled = false; }
+  });
+  $('#nkForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#nkErr'));
+    try {
+      const r = await api('POST', '/api/node/keys', { url: $('#nkUrl').value.trim(), label: $('#nkLabel').value.trim() });
+      $('#nkCode').textContent = r.code; $('#nkShow').hidden = false; loadNodes();
+    } catch (err) { showErr($('#nkErr'), err.message); }
+  });
+  $('#nkCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('#nkCode').textContent); toast('Kopiert', 'ok'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#nkCode')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Bitte mit Strg+C kopieren', 'bad'); }
+  });
+  $('#nkList').addEventListener('click', async e => {
+    const li = e.target.closest('li[data-kid]'); if (!li || !e.target.closest('[data-nk-del]')) return;
+    if (!await confirmBox('Kopplung entziehen?', 'Das andere Panel kann diesen Rechner danach nicht mehr steuern.', 'Entziehen')) return;
+    try { await api('DELETE', '/api/node/keys/' + li.dataset.kid); $('#nkShow').hidden = true; loadNodes(); } catch (err) { toast(err.message, 'bad'); }
+  });
 
   /* ---------------- Server anlegen ---------------- */
   let createPrefill = null;
@@ -677,7 +747,16 @@
   }
   $('#cSearch').addEventListener('input', () => { if (fillPicker()) fillCreate(); });
   $('#cSearch').addEventListener('keydown', e => { if (e.key === 'ArrowDown') { e.preventDefault(); $('#cTpl').focus(); } if (e.key === 'Enter') e.preventDefault(); });
+  async function fillNodes() {
+    let list = [];
+    try { list = await api('GET', '/api/nodes'); } catch (e) { /* egal */ }
+    S.nodes = list;
+    $('#cNodeWrap').hidden = !list.length;
+    $('#cNode').innerHTML = '<option value="">Dieser Rechner</option>' + list.map(n => `<option value="${esc(n.id)}"${n.online ? '' : ' disabled'}>${esc(n.name)}${n.online ? '' : ' (nicht erreichbar)'}</option>`).join('');
+  }
+  $('#cNode').addEventListener('change', () => fillCreate());
   function openCreate(prefill) {
+    fillNodes();
     createPrefill = prefill || null;
     $('#cSearch').value = '';
     fillPicker(prefill && prefill.template ? prefill.template : (S.tplById['minecraft-java'] ? 'minecraft-java' : S.tpls[0].id));
@@ -691,7 +770,8 @@
     const p = createPrefill && createPrefill.template === t.id ? createPrefill : null;
     $('#cName').value = p ? p.name : t.name;
     $('#cNotes').hidden = !t.notes; $('#cNotes').textContent = t.notes || '';
-    memRange($('#cMem'), $('#cMemV'), t.min_memory_mb, p && p.memory_mb ? p.memory_mb : t.memory_mb);
+    const node = (S.nodes || []).find(n => n.id === $('#cNode').value);
+    memRange($('#cMem'), $('#cMemV'), t.min_memory_mb, p && p.memory_mb ? p.memory_mb : t.memory_mb, node && node.host);
     $('#cVars').innerHTML = (t.vars || []).map(v => varField(v, p && p.vars && p.vars[v.key] != null && p.vars[v.key] !== '' ? String(p.vars[v.key]) : v.default, false)).join('');
   }
   $('#cTpl').addEventListener('change', fillCreate);
@@ -699,6 +779,7 @@
     e.preventDefault();
     const btn = $('#cSubmit'); btn.disabled = true; showErr($('#cErr'));
     const body = { template: $('#cTpl').value, name: $('#cName').value, memory_mb: +$('#cMem').value, vars: collectVars($('#cVars')), start: $('#cStart').checked, by_ai: !!createPrefill };
+    if ($('#cNode').value) body.node = $('#cNode').value;
     try {
       const s = await api('POST', '/api/servers', body);
       $('#dlgCreate').close();
@@ -763,7 +844,8 @@
   function openEdit(s) {
     editId = s.id; const t = S.tplById[s.template];
     $('#eName').value = s.name;
-    memRange($('#eMem'), $('#eMemV'), t ? t.min_memory_mb : 512, s.memory_mb);
+    const nd = s.node && (S.nodes || []).find(n => n.id === s.node);
+    memRange($('#eMem'), $('#eMemV'), t ? t.min_memory_mb : 512, s.memory_mb, nd && nd.host);
     $('#eVars').innerHTML = t ? (t.vars || []).map(v => varField(v, s.vars[v.key] != null ? s.vars[v.key] : v.default, true)).join('') : '';
     $('#eUpdWrap').hidden = !t || t.kind !== 'steam'; $('#eUpd').checked = !!s.update_on_start;
     showErr($('#eErr'));
@@ -797,7 +879,7 @@
 
   /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'backups', 'steam', 'panel'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -815,6 +897,7 @@
     if (sec === 'statusseite') return loadStatusPage();
     if (sec === 'discord') return loadDiscord();
     if (sec === 'speicher') { perfLoad($('#perfHost'), '_host'); return loadStorage(false); }
+    if (sec === 'rechner') return loadNodes();
     if (sec === 'backups') {
       try {
         const rc = await api('GET', '/api/remote');
@@ -3230,6 +3313,7 @@
   async function loadServers() {
     try {
       S.servers = await api('GET', '/api/servers'); S.loaded = true; renderAll();
+      if (S.servers.some(x => x.node) && (!S.nodesAt || Date.now() - S.nodesAt > 30000)) { S.nodesAt = Date.now(); api('GET', '/api/nodes').then(l => { S.nodes = l; }).catch(() => {}); }
       if (S.reconnect && S.consoleId === S.reconnect && !S.es) { const s = byId(S.reconnect); if (s && isOn(s)) { S.reconnect = null; connectConsole(s.id); } }
     } catch (e) { /* nächste Runde */ }
   }

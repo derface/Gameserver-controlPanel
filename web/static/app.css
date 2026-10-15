@@ -850,3 +850,13 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .sz{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .sz-h{margin:14px 0 4px;font-size:15px}
 .auth-lang{display:block;margin:14px auto 0;font-size:13px;opacity:.8}
+.nd-tbl td{vertical-align:top}
+.nd-act{text-align:right}
+.nd-act button{display:block;margin:0 0 6px auto}
+.nd-steps{margin:0 0 4px;padding-left:20px;line-height:1.6}
+.nk-show{border:1px solid var(--line);border-radius:12px;padding:12px}
+.nk-code{display:flex;gap:8px;align-items:center}
+.nk-code code{flex:1;word-break:break-all;font-size:12px;user-select:all}
+.nk-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.nk-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+@media (max-width:700px){.nd-tbl th:nth-child(3),.nd-tbl td:nth-child(3),.nd-tbl th:nth-child(5),.nd-tbl td:nth-child(5){display:none}.nd-act{white-space:normal}}

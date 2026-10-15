@@ -342,5 +342,57 @@
  [
   "gültig bis (.+)",
   "valid until {0}"
+ ],
+ [
+  "(.+?) hinzugefügt \\((\\d+) Server\\)",
+  "{0} added ({1} servers)"
+ ],
+ [
+  "„(.+?)“ verschwindet aus diesem Panel\\. Die Server dort laufen weiter und lassen sich im Panel des Rechners selbst verwalten\\. Den Kopplungscode dort am besten auch entziehen\\.",
+  "“{0}” disappears from this panel. The servers there keep running and can be managed in that machine's own panel. Best revoke the pairing code there too."
+ ],
+ [
+  "Nur bestätigen, wenn sich das Zertifikat von „(.+?)“ wirklich geändert hat \\(z\\. B\\. HTTPS dort neu eingerichtet\\)\\. Sonst könnte sich ein anderer Rechner als „(.+?)“ ausgeben\\.",
+  "Only confirm if the certificate of “{0}” really changed (e.g. HTTPS set up again there). Otherwise another machine could pose as “{1}”."
+ ],
+ [
+  "Version (.+?), hier (.+?)\\. Bitte beide gleich halten\\.",
+  "Version {0}, here {1}. Please keep both the same."
+ ],
+ [
+  "erzeugt (.+)",
+  "created {0}"
+ ],
+ [
+  "zuletzt benutzt (.+?) von (.+)",
+  "last used {0} from {1}"
+ ],
+ [
+  "zuletzt benutzt (.+)",
+  "last used {0}"
+ ],
+ [
+  "auf (.+)",
+  "on {0}"
+ ],
+ [
+  "Rechner „(.+?)“ antwortet nicht",
+  "Machine “{0}” does not answer"
+ ],
+ [
+  "Rechner „(.+?)“ nicht erreichbar: (.+)",
+  "Machine “{0}” not reachable: {1}"
+ ],
+ [
+  "Verbindung zu (.+?) klappt nicht: (.+)",
+  "Connection to {0} failed: {1}"
+ ],
+ [
+  "Zertifikat des Rechners hat sich geändert \\(erwartet (.+?), bekommen (.+?)\\)\\. Rechner entfernen und neu hinzufügen, wenn das so gewollt ist",
+  "The machine's certificate has changed (expected {0}, got {1}). Remove the machine and add it again if this is intended"
+ ],
+ [
+  "(.+?) von (.+?) \\(über (.+?)\\)",
+  "{0} by {1} (via {2})"
  ]
 ]
