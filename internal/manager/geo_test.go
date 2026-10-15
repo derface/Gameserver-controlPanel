@@ -90,3 +90,36 @@ func TestGeoSample(t *testing.T) {
 		t.Fatalf("counted while empty: %+v", v.Points)
 	}
 }
+
+// Enshrouded seen on the real VM: only queries arrive on the game ports,
+// the play traffic leaves the container towards the player or a relay.
+const ctSteamNet = `ipv4     2 udp      17 18 src=127.0.0.1 dst=127.0.0.1 sport=59465 dport=15637 src=127.0.0.1 dst=127.0.0.1 sport=15637 dport=59465 mark=0 zone=0 use=2
+ipv4     2 udp      17 12 src=58.11.25.195 dst=192.168.178.54 sport=5680 dport=15637 src=172.17.0.2 dst=58.11.25.195 sport=15637 dport=5680 mark=0 zone=0 use=2
+ipv4     2 udp      17 18 src=172.17.0.1 dst=172.17.0.2 sport=53517 dport=15637 src=172.17.0.2 dst=172.17.0.1 sport=15637 dport=53517 [ASSURED] mark=0 zone=0 use=2
+ipv4     2 udp      17 119 src=172.17.0.2 dst=81.0.7.7 sport=40001 dport=27036 src=81.0.7.7 dst=192.168.178.54 sport=27036 dport=40001 [ASSURED] mark=0 zone=0 use=2
+ipv4     2 udp      17 118 src=172.17.0.2 dst=155.133.226.71 sport=40002 dport=27028 src=155.133.226.71 dst=192.168.178.54 sport=27028 dport=40002 [ASSURED] mark=0 zone=0 use=2
+ipv4     2 udp      17 117 src=172.17.0.2 dst=192.168.178.30 sport=40003 dport=50000 src=192.168.178.30 dst=172.17.0.2 sport=50000 dport=40003 [ASSURED] mark=0 zone=0 use=2
+ipv4     2 udp      17 119 src=172.17.0.2 dst=1.1.1.1 sport=40004 dport=53 src=1.1.1.1 dst=192.168.178.54 sport=53 dport=40004 [ASSURED] mark=0 zone=0 use=2
+`
+
+func TestGeoOutbound(t *testing.T) {
+	m, _ := settingsMgr(t)
+	b, _ := os.ReadFile("../geoip/testdata/test.mmdb")
+	dir := filepath.Join(m.dataDir, "geo")
+	_ = os.MkdirAll(dir, 0o755)
+	_ = os.WriteFile(filepath.Join(dir, "custom.mmdb"), b, 0o644)
+	m.geo = geoip.New(dir)
+	ports := map[string][2]any{"udp/15636": {"ens", 1}, "udp/15637": {"ens", 1}, "ip/172.17.0.2": {"ens", 1}}
+	es := parseConntrack([]byte(ctSteamNet))
+	now := time.Now()
+	for i := 0; i < 5; i++ {
+		m.recordGeoSample(es, ports, now.Add(time.Duration(i)*geoEvery), 120)
+	}
+	v := m.Geo([]string{"ens"})
+	if len(v.Points) != 1 || v.Points[0].City != "Berlin" || v.Relay.Sessions != 1 || v.LAN.Sessions != 1 {
+		t.Fatalf("%+v", v)
+	}
+	if len(v.Debug) != 6 { // DNS is left out
+		t.Fatalf("debug %d: %v", len(v.Debug), v.Debug)
+	}
+}

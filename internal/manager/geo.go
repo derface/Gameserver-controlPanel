@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -33,6 +34,8 @@ const (
 type ctEntry struct {
 	proto   string
 	src     net.IP
+	dst     net.IP
+	sport   int
 	dport   int
 	timeout int
 	state   string
@@ -78,6 +81,10 @@ func parseConntrack(b []byte) []ctEntry {
 			switch k {
 			case "src":
 				e.src = net.ParseIP(v)
+			case "dst":
+				e.dst = net.ParseIP(v)
+			case "sport":
+				e.sport, _ = strconv.Atoi(v)
 			case "dport":
 				e.dport, _ = strconv.Atoi(v)
 			}
@@ -146,10 +153,12 @@ type geoTracker struct {
 	recent map[string]time.Time // ip|server -> last counted visit
 	source string
 	err    string
+	debug  map[string][]string // server -> what the last sample saw (admins)
+	cips   map[string][]string // container id -> its addresses
 }
 
 func newGeoTracker() *geoTracker {
-	return &geoTracker{conns: map[string]*geoConn{}, recent: map[string]time.Time{}}
+	return &geoTracker{conns: map[string]*geoConn{}, recent: map[string]time.Time{}, debug: map[string][]string{}, cips: map[string][]string{}}
 }
 
 // geoStat is the stored, address-free summary per place.
@@ -258,8 +267,61 @@ func (m *Manager) sampleGeo(ctx context.Context, now time.Time) {
 				}
 			}
 		}
+		// games on Steam networking open the connection from the server
+		// side (to the player or a Valve relay): find those by the
+		// container's own address
+		for _, ip := range m.containerIPs(ctx, sv.ContainerID) {
+			ports["ip/"+ip] = [2]any{sv.ID, pl}
+		}
 	}
 	m.recordGeoSample(entries, ports, now, udpStreamTimeout())
+}
+
+func (m *Manager) containerIPs(ctx context.Context, cid string) []string {
+	if cid == "" {
+		return nil
+	}
+	m.gt.mu.Lock()
+	ips, ok := m.gt.cips[cid]
+	m.gt.mu.Unlock()
+	if ok {
+		return ips
+	}
+	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	ips, err := m.dk.IPs(cctx, cid)
+	if err != nil {
+		return nil
+	}
+	m.gt.mu.Lock()
+	if len(m.gt.cips) > 100 {
+		m.gt.cips = map[string][]string{}
+	}
+	m.gt.cips[cid] = ips
+	m.gt.mu.Unlock()
+	return ips
+}
+
+var dockerNet = mustCIDR("172.16.0.0/12")
+
+func mustCIDR(s string) *net.IPNet {
+	_, n, _ := net.ParseCIDR(s)
+	return n
+}
+
+// match finds the server and the other side of a connection: either a
+// player connecting to a game port, or the server talking to a player or
+// relay by itself.
+func (e ctEntry) match(ports map[string][2]any) (t [2]any, peer net.IP, dir string, ok bool) {
+	if t, ok = ports[e.proto+"/"+strconv.Itoa(e.dport)]; ok {
+		return t, e.src, "rein", true
+	}
+	if e.proto == "udp" && e.src != nil && e.dst != nil {
+		if t, ok = ports["ip/"+e.src.String()]; ok && e.dport != 53 && e.dport != 123 {
+			return t, e.dst, "raus", true
+		}
+	}
+	return t, nil, "", false
 }
 
 // recordGeoSample updates the tracker with one connection table snapshot.
@@ -287,13 +349,34 @@ func (m *Manager) recordGeoSample(entries []ctEntry, ports map[string][2]any, no
 	g := m.gt
 	g.mu.Lock()
 	seen := map[string]bool{}
+	debug := map[string][]string{}
 	for _, e := range entries {
-		t, ok := ports[e.proto+"/"+strconv.Itoa(e.dport)]
-		if !ok || !e.busy(udpMax) {
+		t, peer, dir, ok := e.match(ports)
+		if !ok {
 			continue
 		}
 		id, players := t[0].(string), t[1].(int)
-		k := e.src.String() + "|" + id
+		busy := e.busy(udpMax)
+		internal := peer == nil || peer.IsLoopback() || dockerNet.Contains(peer)
+		if len(debug[id]) < 30 {
+			st := "kurz"
+			switch {
+			case internal:
+				st = "intern, zählt nicht"
+			case busy:
+				st = "aktiv"
+			}
+			kind := geoip.Kind(peer)
+			if kind == "" {
+				kind = "Internet"
+			}
+			debug[id] = append(debug[id], fmt.Sprintf("%s %s %s:%d → %s:%d · %s · Rest %ds · %s", e.proto, dir, e.src, e.sport, e.dst, e.dport, kind, e.timeout, st))
+		}
+		if !busy || internal {
+			continue
+		}
+		e.src = peer
+		k := peer.String() + "|" + id
 		if seen[k] {
 			continue // several ports of the same game: one player
 		}
@@ -331,6 +414,9 @@ func (m *Manager) recordGeoSample(entries []ctEntry, ports map[string][2]any, no
 			g.recent[k] = now
 		}
 	}
+	for id := range ports2ids(ports) {
+		g.debug[id] = debug[id]
+	}
 	for k, c := range g.conns {
 		if now.Sub(c.lastBusy) > 3*time.Minute || (c.busy == 0 && now.Sub(c.first) > 3*time.Minute) {
 			delete(g.conns, k)
@@ -365,6 +451,14 @@ func (m *Manager) recordGeoSample(entries []ctEntry, ports map[string][2]any, no
 		}
 		m.saveStats(id, s)
 	}
+}
+
+func ports2ids(ports map[string][2]any) map[string]bool {
+	out := map[string]bool{}
+	for _, t := range ports {
+		out[t[0].(string)] = true
+	}
+	return out
 }
 
 // GeoPoint is one place on the map.
@@ -413,6 +507,7 @@ type GeoView struct {
 	Relay     GeoCount     `json:"relay"`
 	Unknown   GeoCount     `json:"unknown"`
 	Live      []GeoLive    `json:"live"`
+	Debug     []string     `json:"debug,omitempty"` // admins: raw connections of the last sample
 	Total     int          `json:"total"`
 }
 
@@ -425,6 +520,9 @@ func (m *Manager) Geo(ids []string) GeoView {
 	}
 	m.gt.mu.Lock()
 	v.Source, v.SourceErr = m.gt.source, m.gt.err
+	for _, id := range ids {
+		v.Debug = append(v.Debug, m.gt.debug[id]...)
+	}
 	now := time.Now()
 	for k, c := range m.gt.conns {
 		_, id, _ := strings.Cut(k, "|")

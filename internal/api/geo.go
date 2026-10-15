@@ -44,6 +44,7 @@ func (a *API) geoView(r *http.Request, ids []string) manager.GeoView {
 	if userOf(r).Role != auth.Admin {
 		v.SourceErr = ""
 		v.DB.Err = ""
+		v.Debug = nil
 	}
 	return v
 }

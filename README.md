@@ -341,11 +341,14 @@ Das Panel zählt jede Minute die Spieler laufender Server (Steam-Abfrage oder Ko
 
 Im Reiter **Spieler** unter „Herkunft“ (einmal von einem Admin einschalten): eine Weltkarte, aus welchen Ländern und Städten Spieler verbinden, für einen Server oder alle zusammen, mit „Jetzt verbunden“ und einer Länderliste.
 
+- Viele Steam-Spiele (z. B. Enshrouded) bauen die Spielverbindung vom Server aus auf, zum Spieler oder zu einem Valve-Relay, über zufällige Ports. Das Panel erkennt auch diese an der Adresse des Server-Containers.
 - Das Panel liest alle 20 Sekunden die Verbindungstabelle des Kernels (`/proc/net/nf_conntrack` oder das Programm `conntrack`, das `install.sh` mitinstalliert) und ordnet Verbindungen den Spiel-Ports laufender Server zu. Gezählt wird eine Verbindung erst, wenn sie über eine Minute lang Daten schickt; Server-Browser-Abfragen und Port-Scanner fallen so heraus. Meldet das Spiel 0 Spieler, zählt nichts.
 - Den Ort schlägt das Panel lokal in der freien Datenbank **DB-IP Lite** nach (CC BY 4.0, wird beim Einschalten und dann monatlich geladen, gut 100 MB in `<data>/geo/`). Wer lieber MaxMind GeoLite2 nutzt, legt die Datei als `<data>/geo/custom.mmdb` ab.
 - Gespeichert werden nur Land, Stadt, Anzahl Besuche und Spielzeit, keine IP-Adressen. Wer innerhalb von 30 Minuten neu verbindet, zählt als derselbe Besuch.
 - Verbindungen aus dem eigenen Netz zählen als „Heimnetz“. Spiele, die über Valves Steam Datagram Relay laufen (z. B. teils Enshrouded, Palworld, Valheim mit Crossplay), zeigen nur einen Valve-Server; diese zählt das Panel getrennt als „über Steam-Relay“.
 - Die Orte sind ungefähr, oft die Stadt des Internetanbieters.
+
+- Admins sehen unter „Was das Panel gerade sieht“ die erkannten Verbindungen der letzten Abfrage, zur Fehlersuche ohne Kommandozeile.
 
 ## Lizenz
 

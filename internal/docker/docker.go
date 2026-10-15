@@ -482,3 +482,28 @@ func (c *Client) Exec(ctx context.Context, id string, cmd []string) (string, err
 	}
 	return out.String(), nil
 }
+
+// IPs returns the container's addresses in its Docker networks.
+func (c *Client) IPs(ctx context.Context, id string) ([]string, error) {
+	var out struct {
+		NetworkSettings struct {
+			IPAddress string `json:"IPAddress"`
+			Networks  map[string]struct {
+				IPAddress string `json:"IPAddress"`
+			} `json:"Networks"`
+		} `json:"NetworkSettings"`
+	}
+	if err := c.simple(ctx, "GET", "/containers/"+id+"/json", nil, nil, &out); err != nil {
+		return nil, err
+	}
+	var ips []string
+	if ip := out.NetworkSettings.IPAddress; ip != "" {
+		ips = append(ips, ip)
+	}
+	for _, n := range out.NetworkSettings.Networks {
+		if n.IPAddress != "" && n.IPAddress != out.NetworkSettings.IPAddress {
+			ips = append(ips, n.IPAddress)
+		}
+	}
+	return ips, nil
+}

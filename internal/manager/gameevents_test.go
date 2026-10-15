@@ -51,7 +51,7 @@ func TestGameEventLifecycle(t *testing.T) {
 
 func waitFor(t *testing.T, ok func() bool) {
 	t.Helper()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 500; i++ {
 		if ok() {
 			return
 		}

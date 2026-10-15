@@ -1780,6 +1780,7 @@
     if (v.relay.sessions) extra.push(`${v.relay.sessions}× über Steam-Relay (Ort verborgen, das Spiel leitet über Valve-Server)`);
     if (v.unknown.sessions) extra.push(`${v.unknown.sessions}× Ort unbekannt`);
     $('#geoExtra').textContent = extra.join(' · ');
+    $('#geoDebug').textContent = (v.debug || []).length ? v.debug.join('\n') : 'Gerade keine Verbindungen zu diesem Server. Läuft er, und spielt jemand?';
   }
   function geoApply() {
     if (!GEO.svg || !GEO.vb) return;
