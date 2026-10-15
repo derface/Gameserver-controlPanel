@@ -73,7 +73,15 @@ steam_repair() {
   done
   if [ -n "$code" ]; then
     echo "[panel] SteamCMD meldet ${code}: Download-Stand von App ${app} wird zurückgesetzt"
-    rm -f "${dir}/steamapps/appmanifest_${app}.acf" 2>/dev/null || true
+    # SteamCMD leaves StateFlags "6" in the manifest after a failed job and
+    # then stops at once on every later run ("progress: 0.00 (0 / 0)").
+    # Every manifest that is not "fully installed" (4) is moved aside.
+    for m in "${dir}"/steamapps/appmanifest_*.acf; do
+      [ -f "$m" ] || continue
+      if [ "$m" = "${dir}/steamapps/appmanifest_${app}.acf" ] || ! grep -qE '"StateFlags"[[:space:]]+"4"' "$m"; then
+        mv -f "$m" "$m.bak" 2>/dev/null || true
+      fi
+    done
     rm -rf "${dir}/steamapps/downloading/${app}" "${dir}/steamapps/downloading/state_${app}"* "${dir}/steamapps/temp/${app}" 2>/dev/null || true
     VALIDATE="validate"
   fi
