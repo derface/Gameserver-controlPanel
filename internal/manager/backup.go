@@ -24,9 +24,10 @@ const (
 	KindManual  = "manuell"
 	KindAuto    = "auto"
 	KindRestore = "vor-wiederherstellung"
+	KindSeason  = "saison" // never pruned
 )
 
-var backupName = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(manuell|auto|vor-wiederherstellung)\.tar\.gz$`)
+var backupName = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}_(manuell|auto|vor-wiederherstellung|saison)\.tar\.gz$`)
 
 type BackupInfo struct {
 	Name    string    `json:"name"`

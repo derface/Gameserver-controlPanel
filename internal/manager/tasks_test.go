@@ -177,8 +177,13 @@ func TestTaskConditionsValidate(t *testing.T) {
 		t.Fatalf("Bedingungen bei Backup nicht entfernt: %v %+v", err, tk)
 	}
 	tk = store.Task{Action: "update", At: "04:00", OnlyIfUpdate: true}
-	if ValidateTask(&tk, mc) == nil && mc.Kind != "steam" {
-		t.Fatal("Update-Prüfung bei Nicht-Steam-Spiel angenommen")
+	if ValidateTask(&tk, mc) != nil {
+		t.Fatal("Update-Prüfung (Mods) bei Minecraft abgelehnt")
+	}
+	tr, _ := tpls.Get("terraria")
+	tk = store.Task{Action: "update", At: "04:00", OnlyIfUpdate: true}
+	if tr.ID != "" && tr.Kind != "steam" && ValidateTask(&tk, tr) == nil {
+		t.Fatal("Update-Prüfung bei Spiel ohne Steam und Mods angenommen")
 	}
 	tk = store.Task{Action: "restart", At: "04:00", WhenEmpty: true, MaxWaitMin: 7}
 	if ValidateTask(&tk, vh) == nil {

@@ -16,6 +16,10 @@
 <main>
   <p id="msg" class="muted">Lädt …</p>
   <div id="list" class="list"></div>
+  <section id="players" class="events" hidden>
+    <div class="ev-head"><h2>Spieler</h2><span class="muted small" id="plSum"></span></div>
+    <div class="ptbl-wrap"><table class="ptbl"><thead><tr><th>Spieler</th><th>Spielzeit</th><th>Am liebsten auf</th><th>Dabei seit</th><th>Zuletzt</th></tr></thead><tbody id="plRows"></tbody></table></div>
+  </section>
   <section id="events" class="events" hidden>
     <div class="ev-head"><h2>Kommende Events</h2><a id="cal" class="btn" href="#" hidden>Im Kalender abonnieren</a></div>
     <ul id="evList"></ul>

@@ -47,3 +47,16 @@ footer a{color:inherit}
 #evList li.now{border-color:color-mix(in srgb,var(--accent) 60%,var(--line))}
 .when{font-size:13px}
 .small{font-size:12.5px}
+details.mods{border-top:1px solid var(--line);padding-top:6px}
+details.mods summary{cursor:pointer;font-size:14px;font-weight:600}
+.mods-body{margin-top:6px;display:flex;flex-direction:column;gap:8px}
+.modl{margin:0;padding-left:18px;font-size:13.5px;max-height:240px;overflow:auto}
+.modl a{color:inherit}
+.btn.primary{align-self:flex-start}
+.ptbl-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.ptbl{width:100%;border-collapse:collapse;font-size:14px}
+.ptbl th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ptbl td{padding:8px 12px;border-top:1px solid var(--line);white-space:nowrap}
+.ptbl tr:first-child td{border-top:0}
+.ptbl i.on{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
+.season{margin:0;font-size:13.5px}

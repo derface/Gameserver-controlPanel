@@ -370,6 +370,31 @@ Im Server-Menü „⋯“ → **Einladungslink**: eine Seite ohne Anmeldung mit 
 
 Unter Einstellungen → Statusseite lässt sich ein Kalender-Link erzeugen (iCalendar). Er enthält die geplanten Events und Wartungen der angezeigten Server, wöchentliche Events als Serie, und aktualisiert sich stündlich. Die Statusseite zeigt „Kommende Events“ und einen Knopf zum Abonnieren, außerdem pro Server den Online-Verlauf der letzten 30 Tage.
 
+## Mod-Paket für Mitspieler
+
+Statusseite und Einladungslinks zeigen pro Server die Mods, die Spieler selbst brauchen:
+- **Minecraft:** Die Jars in `mods/` werden über ihre Prüfsumme bei Modrinth erkannt. Reine Server-Mods lässt die Liste weg, optionale sind markiert.
+- **Valheim:** BepInEx-Plugins.
+- **Steam Workshop:** Links zum Abonnieren.
+
+Unter Einstellungen → Statusseite lässt sich zusätzlich der Download als ZIP erlauben (höchstens zwei Downloads gleichzeitig).
+
+## Mod-Updates
+
+Alle 6 Stunden prüft das Panel Workshop-Mods (Steam) und Minecraft-Mods/-Plugins (Modrinth, passend zu Loader und Minecraft-Version) auf neue Versionen. Neue Updates meldet es einmal über die Benachrichtigungen. Der Reiter Mods zeigt sie mit „Jetzt prüfen“. Eine Neustart- oder Update-Aufgabe mit „Nur wenn es ein Update gibt (Spiel oder Mods)“ spielt sie nachts ein. Mods aus der Modrinth-Liste des Servers lädt der Minecraft-Container beim Start selbst in der neuen Version.
+
+## Whitelist über Discord
+
+Unter Einstellungen → Discord-Bot: eine Rolle und die Server mit Whitelist (z. B. Minecraft) wählen. Mitglieder mit der Rolle tragen sich mit `/whitelist spielername:Name` ein. Ein Name gehört genau einem Discord-Konto, ein neuer Name ersetzt den alten. Alle 30 Minuten prüft das Panel die Rollen: Wer die Rolle verliert oder den Discord-Server verlässt, fliegt von der Whitelist. Gestoppte Server bekommen die Änderungen beim nächsten Start. Die Liste der Verknüpfungen steht in den Einstellungen und lässt sich dort bereinigen.
+
+## Spielerliste auf der Statusseite
+
+Auf Wunsch (Einstellungen → Statusseite) zeigt die Statusseite die Spieler aller angezeigten Server: Spielzeit, Lieblingsserver, dabei seit, zuletzt online. Das funktioniert nur bei Spielen, die Namen verraten.
+
+## Saisons
+
+Im Reiter Backups → **Neue Saison** wird die aktuelle Welt als Saison-Archiv gesichert. Dieses Backup wird nie automatisch gelöscht. Danach werden nur die gewählten Ordner zurückgesetzt; das Panel schlägt die Spielstand-Ordner selbst vor, Einstellungen und Mods bleiben. Zur Sicherheit muss man den Servernamen eintippen. Mit Termin warnt das Panel die Spieler 60, 10 und 1 Minute vorher. War das Panel zum Termin mehr als 6 Stunden aus, fällt die Saison aus, statt überraschend zu löschen. Die Ruhmeshalle mit den Top 3 jeder Saison steht im Reiter Backups und auf der Statusseite, und die Welt einer alten Saison lässt sich zurückholen.
+
 ## Lizenz
 
 Bytewise Panel ist freie Software unter der **GNU Affero General Public License v3.0** (`LICENSE`). Du darfst es kostenlos nutzen, verändern und weitergeben. Wer eine veränderte Fassung anderen über das Netz anbietet, muss deren Quellcode ebenfalls offenlegen (AGPL §13); das Panel verlinkt dazu unter Einstellungen → Panel & Updates auf den Quellcode. Fremdbestandteile: `internal/thirdparty/acme` (BSD), `web/static/vendor/qrcode.js` und `three.js` (MIT), Vorlagen-Daten aus LinuxGSM und AMPTemplates (MIT).

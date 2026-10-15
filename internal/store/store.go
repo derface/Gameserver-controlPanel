@@ -73,6 +73,7 @@ type Server struct {
 	NoRouter    bool              `json:"no_router,omitempty"` // do not open its ports in the router
 	Maintenance *Maintenance      `json:"maintenance,omitempty"`
 	Invite      *Invite           `json:"invite,omitempty"`
+	Seasons     *SeasonState      `json:"seasons,omitempty"`
 }
 
 // Task is a scheduled action of one server.
@@ -136,6 +137,8 @@ type Settings struct {
 	Status StatusConfig `json:"status"`
 	// Discord is the bot: slash commands and a self-updating status message.
 	Discord discord.Config `json:"discord"`
+	// DiscordLinks connect Discord users to player names (whitelist).
+	DiscordLinks []DiscordLink `json:"discord_links,omitempty"`
 	// Geo records where players connect from (place only, no addresses).
 	Geo bool `json:"geo,omitempty"`
 }
@@ -148,6 +151,50 @@ type Maintenance struct {
 	Note       string    `json:"note,omitempty"`
 	ClosePorts bool      `json:"close_ports,omitempty"` // close router ports: only the home network can join
 	By         string    `json:"by,omitempty"`
+}
+
+// DiscordLink is a Discord user who put their player name on the
+// whitelist with /whitelist.
+type DiscordLink struct {
+	User    string            `json:"user"`   // Discord user ID
+	Name    string            `json:"name"`   // Discord user name (display)
+	Player  string            `json:"player"` // "" = removed, entries are being cleaned up
+	Active  bool              `json:"active"` // has the role
+	Since   time.Time         `json:"since"`
+	Checked time.Time         `json:"checked"` // last role check
+	Applied map[string]string `json:"applied"` // server -> name on its whitelist
+	Note    string            `json:"note,omitempty"`
+}
+
+// SeasonState keeps the running season and the archive of old ones.
+type SeasonState struct {
+	Current Season      `json:"current"`
+	Past    []Season    `json:"past,omitempty"` // newest first
+	Wipe    []string    `json:"wipe,omitempty"` // folders reset last time
+	Plan    *SeasonPlan `json:"plan,omitempty"`
+}
+
+type Season struct {
+	N      int              `json:"n"`
+	Name   string           `json:"name"`
+	Start  time.Time        `json:"start"`
+	End    time.Time        `json:"end,omitempty"`
+	Backup string           `json:"backup,omitempty"` // archive of the world
+	Top    []SeasonPlayer   `json:"top,omitempty"`
+	Hours  float64          `json:"hours,omitempty"`
+	Base   map[string]int64 `json:"base,omitempty"` // play seconds per player at the start
+}
+
+type SeasonPlayer struct {
+	Name    string `json:"name"`
+	Seconds int64  `json:"seconds"`
+}
+
+type SeasonPlan struct {
+	At     time.Time `json:"at"`
+	Name   string    `json:"name"`
+	Wipe   []string  `json:"wipe"`
+	Warned int       `json:"warned,omitempty"`
 }
 
 // Invite is a public link for friends: address, how to join, a note.
@@ -171,6 +218,10 @@ type StatusConfig struct {
 	ShowNames bool   `json:"show_names"` // show who is online
 	// CalToken is the key in the calendar feed URL (empty: no feed).
 	CalToken string `json:"cal_token,omitempty"`
+	// ShowPlayers shows a player list with play times on the page.
+	ShowPlayers bool `json:"show_players,omitempty"`
+	// ModDownload lets friends download the client mods as a zip.
+	ModDownload bool `json:"mod_download,omitempty"`
 	// HideUptime hides the 30-day online history on the page.
 	HideUptime bool                    `json:"hide_uptime,omitempty"`
 	Servers    map[string]StatusServer `json:"servers,omitempty"`

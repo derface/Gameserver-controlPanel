@@ -478,6 +478,20 @@ func (m *Manager) ModList(ctx context.Context, id string) (ModInventory, error) 
 		}
 	}
 
+	if pu := m.PendingModUpdates(id); pu != nil {
+		for _, u := range pu.List {
+			if u.File == "" {
+				continue
+			}
+			for i := range inv.Mods {
+				e := &inv.Mods[i]
+				if e.Path != "" && filepath.Base(e.Path) == u.File {
+					e.UpdateHint = true
+					e.Note = strings.TrimSpace("Neue Version " + u.To + " bei Modrinth (installiert " + u.From + "). " + u.Note)
+				}
+			}
+		}
+	}
 	m.modStates(ctx, sv, &inv)
 	for k := range src {
 		inv.Sources = append(inv.Sources, k)

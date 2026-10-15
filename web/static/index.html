@@ -185,6 +185,10 @@
   </section>
 
   <section class="mg-pane" id="paneMods" role="tabpanel" aria-labelledby="tabMods" hidden>
+    <div class="mu-box" id="muBox" hidden>
+      <div class="ml-head"><h2>Mod-Updates</h2><span class="small muted" id="muWhen"></span><button type="button" class="btn-line" id="muCheck">Jetzt prüfen</button></div>
+      <div id="muList"></div>
+    </div>
     <div class="ml-head"><h2>Installiert und geladen</h2><button type="button" class="btn-line" id="mlReload">Neu einlesen</button></div>
     <p class="small muted" id="mlInfo"></p>
     <div id="mlList" class="ml-list"></div>
@@ -218,6 +222,12 @@
   </section>
 
   <section class="mg-pane" id="paneBackups" role="tabpanel" aria-labelledby="tabBackups" hidden>
+    <section class="sz" id="szBox" aria-labelledby="hSz">
+      <div class="ml-head"><h2 id="hSz">Saison</h2><span class="small muted" id="szSub"></span><button type="button" class="btn-line admin-only" id="szNew">Neue Saison …</button></div>
+      <p class="small" id="szNow"></p>
+      <div class="maint-bar" id="szPlan" hidden><span id="szPlanText"></span><button type="button" class="btn-line small admin-only" id="szPlanDel">Plan löschen</button></div>
+      <div id="szPast"></div>
+    </section>
     <div class="bk-top">
       <button type="button" class="btn-accent" id="bkNow">Backup jetzt erstellen</button>
       <p class="small muted" id="bkScope"></p>
@@ -303,7 +313,7 @@
       <div class="tk-cond" id="tkCond">
         <label class="check" id="tkEmptyWrap"><input type="checkbox" id="tkEmpty"> Nur wenn niemand spielt, sonst warten, höchstens
           <select id="tkMaxWait" aria-label="Höchstens warten"><option value="30">30 Min.</option><option value="60">1 Std.</option><option value="120" selected>2 Std.</option><option value="240">4 Std.</option><option value="480">8 Std.</option></select></label>
-        <label class="check" id="tkIfUpdWrap"><input type="checkbox" id="tkIfUpd"> Nur wenn es ein Update gibt</label>
+        <label class="check" id="tkIfUpdWrap"><input type="checkbox" id="tkIfUpd"> Nur wenn es ein Update gibt (Spiel oder Mods)</label>
         <label class="check" id="tkBackupWrap"><input type="checkbox" id="tkBackup"> Vorher Backup</label>
       </div>
       <button type="submit" class="btn-accent">Hinzufügen</button>
@@ -618,6 +628,8 @@
     <label class="field"><span>Eigene Adresse <em class="muted">optional</em></span><input id="spHost" placeholder="status.meine-domain.de" spellcheck="false"><small>Unter dieser Domain zeigt das Panel nur die Statusseite, die Anmeldung ist dort nicht erreichbar. Domain wie beim Panel per Reverse Proxy auf diesen Rechner leiten.</small></label>
     <label class="check"><input type="checkbox" id="spNames"> Namen der Spieler zeigen, die gerade online sind</label>
     <label class="check"><input type="checkbox" id="spUptime"> Online-Verlauf der letzten 30 Tage zeigen</label>
+    <label class="check"><input type="checkbox" id="spPlayers"> Spielerliste mit Spielzeiten zeigen (nur Spiele, die Namen verraten)</label>
+    <label class="check"><input type="checkbox" id="spModDl"> Mitspieler können die Client-Mods als Paket herunterladen (Statusseite und Einladungslinks)</label>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zeigen</th><th>Server</th><th>Hinweis für Mitspieler</th></tr></thead><tbody id="spRows"></tbody></table></div>
     <div class="sp-cal">
       <h3>Kalender-Abo für Events</h3>
@@ -654,6 +666,11 @@
     <label class="field"><span>Rollen, die starten und stoppen dürfen</span><input id="dcRoles" spellcheck="false" placeholder="Rollen-IDs, mit Komma getrennt"></label>
     <label class="field"><span>Einzelne Personen, die starten und stoppen dürfen</span><input id="dcUsers" spellcheck="false" placeholder="Nutzer-IDs, mit Komma getrennt"></label>
     <fieldset class="nt-kinds"><legend>Server, die der Bot zeigt und steuern darf</legend><div id="dcServers"></div></fieldset>
+    <h3 class="dc-h">Whitelist über Discord</h3>
+    <p class="small muted">Mitglieder mit dieser Rolle tragen sich mit <code>/whitelist spielername:Name</code> selbst auf die Whitelist ein. Verlieren sie die Rolle oder verlassen den Discord-Server, nimmt das Panel sie wieder herunter (Prüfung alle 30 Minuten). Server, die gerade aus sind, bekommen die Einträge beim nächsten Start. Braucht die Server-ID oben.</p>
+    <label class="field"><span>Rolle für die Whitelist</span><input id="dcWLRole" inputmode="numeric" spellcheck="false" placeholder="Rollen-ID, z. B. „Mitspieler“"></label>
+    <fieldset class="nt-kinds"><legend>Whitelist auf diesen Servern</legend><div id="dcWLServers"></div></fieldset>
+    <div id="dcLinks"></div>
     <p class="small" id="dcState"></p>
     <p class="err" id="dcErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="dcTest">Statusnachricht jetzt senden</button><button type="submit" class="btn-accent">Speichern</button></div>
@@ -850,6 +867,19 @@
     </div>
     <p class="err" id="ivErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" data-close>Schließen</button><button type="submit" class="btn-accent" id="ivSave">Link erstellen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgSeason" class="dlg">
+  <form id="szForm" novalidate>
+    <div class="dlg-head"><h2>Neue Saison</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <p class="small muted">Die aktuelle Welt wird als Saison-Archiv gesichert (wird nie automatisch gelöscht) und kommt mit ihrer Bestenliste in die Ruhmeshalle. Danach werden die gewählten Ordner gelöscht, das Spiel legt beim nächsten Start eine neue Welt an. Einstellungen und Mods bleiben.</p>
+    <label class="field"><span>Name der neuen Saison</span><input id="szName" maxlength="60" placeholder="z. B. Saison 2: Frühling"></label>
+    <label class="field"><span>Wann</span><input id="szAt" type="datetime-local"><small>Leer lassen für sofort. Mit Termin warnt das Panel die Spieler 60, 10 und 1 Minute vorher.</small></label>
+    <fieldset class="nt-kinds"><legend>Diese Ordner werden zurückgesetzt</legend><div id="szWipe"></div></fieldset>
+    <label class="field"><span>Zur Sicherheit: Servernamen eintippen</span><input id="szConfirm" autocomplete="off"></label>
+    <p class="err" id="szErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-danger" id="szOk">Neue Saison starten</button></div>
   </form>
 </dialog>
 

@@ -28,6 +28,7 @@ func (a *API) routesDiscord(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/discord", a.need(auth.Admin, a.discordGet))
 	mux.HandleFunc("PUT /api/discord", a.need(auth.Admin, a.discordPut))
 	mux.HandleFunc("POST /api/discord/test", a.need(auth.Admin, a.discordTest))
+	a.routesDiscordWL(mux)
 }
 
 func (a *API) discordCfg() discord.Config {
@@ -86,6 +87,13 @@ func (a *API) discordPut(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	in.Servers = ok
+	var wl []string
+	for _, id := range in.WLServers {
+		if a.Mgr.CanWhitelist(id) && !slices.Contains(wl, id) {
+			wl = append(wl, id)
+		}
+	}
+	in.WLServers = wl
 	// a new channel needs a new message
 	in.MessageID, in.Registered = cur.MessageID, cur.Registered
 	if in.Channel != cur.Channel || in.Token != cur.Token {
@@ -112,6 +120,7 @@ func (a *API) discordPut(w http.ResponseWriter, r *http.Request) {
 	dc.hash, dc.lastErr = "", "" // send the status message at the next tick
 	dc.Unlock()
 	go a.discordTick(context.Background(), true)
+	go a.wlSync(context.Background(), false)
 	c := in
 	c.Token = mask(c.Token)
 	writeJSON(w, 200, map[string]any{"config": c, "note": note})
@@ -229,12 +238,24 @@ var dc struct {
 func (a *API) RunDiscord(ctx context.Context) {
 	t := time.NewTicker(time.Minute)
 	defer t.Stop()
+	// new panel versions may bring new commands
+	if c := a.discordCfg(); c.Ready() && discord.Fingerprint(c) != c.Registered {
+		cctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		if discord.Register(cctx, c) == nil {
+			_ = a.Store.Update(func(d *store.Data) error { d.Settings.Discord.Registered = discord.Fingerprint(c); return nil })
+		}
+		cancel()
+	}
+	n := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-t.C:
 			_ = a.discordTick(ctx, false)
+			if n++; n%5 == 0 {
+				a.wlSync(ctx, false)
+			}
 		}
 	}
 }
@@ -357,6 +378,9 @@ func findServer(list []publicServer, q string) (publicServer, bool) {
 }
 
 func (a *API) discordCommand(c discord.Config, in discord.Interaction) map[string]any {
+	if in.Data.Name == "whitelist" {
+		return a.wlCommand(c, in)
+	}
 	q, _ := in.Opt("server")
 	if in.Data.Name == "status" {
 		// asking the game servers for player names can take longer than the

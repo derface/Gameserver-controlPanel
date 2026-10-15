@@ -342,3 +342,61 @@ func (m *Manager) Insights() []map[string]string {
 
 // deNum formats one decimal the German way (0,3).
 func deNum(f float64) string { return strings.Replace(fmt.Sprintf("%.1f", f), ".", ",", 1) }
+
+// PlayerTotal sums a player over several servers (public profiles).
+type PlayerTotal struct {
+	Name     string    `json:"name"`
+	Seconds  int64     `json:"seconds"`
+	Sessions int       `json:"sessions"`
+	First    time.Time `json:"first"`
+	Last     time.Time `json:"last"`
+	Fav      string    `json:"fav"` // server with the most time
+	Servers  int       `json:"servers"`
+	Online   bool      `json:"online,omitempty"`
+}
+
+// PlayerTotals returns the players of the given servers, most time first.
+// names maps server id to its display name.
+func (m *Manager) PlayerTotals(names map[string]string, limit int) []PlayerTotal {
+	statsMu.Lock()
+	type acc struct {
+		PlayerTotal
+		best int64
+	}
+	all := map[string]*acc{}
+	for id, sname := range names {
+		s := m.loadStats(id)
+		for n, p := range s.Players {
+			a := all[strings.ToLower(n)]
+			if a == nil {
+				a = &acc{PlayerTotal: PlayerTotal{Name: n, First: p.First}}
+				all[strings.ToLower(n)] = a
+			}
+			a.Seconds += p.Seconds
+			a.Sessions += p.Sessions
+			a.Servers++
+			if p.First.Before(a.First) {
+				a.First = p.First
+			}
+			if p.Last.After(a.Last) {
+				a.Last = p.Last
+			}
+			if p.Seconds > a.best {
+				a.best, a.Fav = p.Seconds, sname
+			}
+			if _, on := s.Online[n]; on && time.Since(p.Last) < 3*time.Minute {
+				a.Online = true
+			}
+		}
+	}
+	statsMu.Unlock()
+	out := make([]PlayerTotal, 0, len(all))
+	for _, a := range all {
+		out = append(out, a.PlayerTotal)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Seconds > out[j].Seconds })
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
+	return out
+}

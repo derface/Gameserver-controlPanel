@@ -848,7 +848,7 @@
     showErr($('#spErr'));
     let r; try { r = await api('GET', '/api/status-page'); } catch (e) { showErr($('#spErr'), e.message); return; }
     const c = r.config || {};
-    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime;
+    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime; $('#spModDl').checked = !!c.mod_download; $('#spPlayers').checked = !!c.show_players;
     spCal(c.cal_token, c.host);
     $('#spLink').href = c.host ? 'https://' + c.host + '/' : '/status'; $('#spLink').textContent = c.host ? c.host : location.host + '/status';
     $('#spRows').innerHTML = r.servers.length ? r.servers.map(x => `<tr data-id="${esc(x.id)}"><td><input type="checkbox" class="sp-show" ${x.show ? 'checked' : ''} aria-label="${esc(x.name)} zeigen"></td>
@@ -860,7 +860,7 @@
     const servers = {};
     $$('#spRows tr[data-id]').forEach(tr => { servers[tr.dataset.id] = { show: $('.sp-show', tr).checked, note: $('.sp-note', tr).value }; });
     try {
-      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, servers });
+      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, mod_download: $('#spModDl').checked, show_players: $('#spPlayers').checked, servers });
       toast('Statusseite gespeichert', 'ok'); loadStatusPage();
     } catch (err) { showErr($('#spErr'), err.message); }
   });
@@ -874,16 +874,35 @@
     $('#dcEndpoint').textContent = r.endpoint;
     $('#dcServers').innerHTML = r.servers.length ? r.servers.map(x => `<label class="check"><input type="checkbox" value="${esc(x.id)}" ${x.allowed ? 'checked' : ''}> ${esc(x.name)} <span class="muted small">${esc(x.game)}</span></label>`).join('')
       : '<p class="small muted">Noch keine Server.</p>';
+    $('#dcWLRole').value = c.wl_role || '';
+    loadWL(c.wl_servers || []);
     const st = r.state || {}, ok = st.last_update && !String(st.last_update).startsWith('0001');
     $('#dcState').innerHTML = st.last_error ? `<span class="bad">Statusnachricht: ${esc(st.last_error)}</span>`
       : ok ? 'Statusnachricht zuletzt aktualisiert: ' + esc(fmtDate(st.last_update)) : c.channel ? '' : '<span class="muted">Ohne Kanal gibt es keine Statusnachricht, die Befehle gehen trotzdem.</span>';
   }
+  async function loadWL(chosen) {
+    let r; try { r = await api('GET', '/api/discord/links'); } catch (e) { return; }
+    $('#dcWLServers').innerHTML = r.servers.length ? r.servers.map(x => `<label class="check"><input type="checkbox" value="${esc(x.id)}" ${chosen.includes(x.id) ? 'checked' : ''}> ${esc(x.name)}</label>`).join('')
+      : '<p class="small muted">Keiner deiner Server hat eine Whitelist, die das Panel bedienen kann (z. B. Minecraft, Project Zomboid).</p>';
+    const name = id => { const s = byId(id); return s ? s.name : id; };
+    $('#dcLinks').innerHTML = r.links.length ? `<h4>Eingetragen (${r.links.length})</h4><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Discord</th><th>Spielername</th><th>Status</th><th><span class="sr">Aktionen</span></th></tr></thead><tbody>${r.links.map(l => {
+      const applied = Object.entries(l.applied || {}).map(([id]) => name(id));
+      const st = !l.player ? 'wird entfernt' : l.active ? (applied.length ? 'auf ' + applied.join(', ') : 'wartet auf Serverstart') : 'Rolle fehlt';
+      return `<tr><td>${esc(l.name || l.user)}</td><td class="mono">${esc(l.player || '–')}</td><td class="small">${esc(st)}${l.note ? `<br><span class="muted">${esc(l.note)}</span>` : ''}</td>
+        <td>${l.player ? `<button type="button" class="linkbtn small danger" data-unlink="${esc(l.user)}">Entfernen</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>` : '';
+  }
+  $('#dcLinks').addEventListener('click', async e => {
+    const b = e.target.closest('[data-unlink]'); if (!b) return;
+    if (!await confirmBox('Von der Whitelist nehmen?', 'Der Spieler wird auf allen Servern von der Whitelist entfernt (bei gestoppten Servern beim nächsten Start).', 'Entfernen')) return;
+    try { await api('DELETE', `/api/discord/links/${encodeURIComponent(b.dataset.unlink)}`); toast('Wird entfernt', 'ok'); setTimeout(() => loadWL($$('#dcWLServers input:checked').map(x => x.value)), 1500); } catch (err) { toast(err.message, 'bad'); }
+  });
   const idList = v => v.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
   $('#dcForm').addEventListener('submit', async e => {
     e.preventDefault(); showErr($('#dcErr'));
     try {
       const r = await api('PUT', '/api/discord', { app_id: $('#dcApp').value, public_key: $('#dcKey').value, token: $('#dcToken').value, guild_id: $('#dcGuild').value, channel: $('#dcChannel').value,
-        roles: idList($('#dcRoles').value), users: idList($('#dcUsers').value), servers: $$('#dcServers input:checked').map(x => x.value) });
+        roles: idList($('#dcRoles').value), users: idList($('#dcUsers').value), servers: $$('#dcServers input:checked').map(x => x.value),
+        wl_role: $('#dcWLRole').value, wl_servers: $$('#dcWLServers input:checked').map(x => x.value) });
       toast(r.note || 'Discord-Bot gespeichert', /aber/.test(r.note || '') ? 'bad' : 'ok'); setTimeout(loadDiscord, 1500);
     } catch (err) { showErr($('#dcErr'), err.message); }
   });
@@ -1688,7 +1707,7 @@
 
   /* ---------------- Server verwalten: Backups + Dateien ---------------- */
   const MG = { id: null, tab: 'backups', path: '', edit: null, dirty: false, busy: false };
-  const KIND = { manuell: 'Manuell', auto: 'Automatisch', 'vor-wiederherstellung': 'Vor Wiederherstellung' };
+  const KIND = { manuell: 'Manuell', auto: 'Automatisch', 'vor-wiederherstellung': 'Vor Wiederherstellung', saison: 'Saison-Archiv' };
   $('#bkAt').innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${String(h).padStart(2, '0')}:00 Uhr</option>`).join('');
 
   function openManage(id, tab) { select(id, tab); }
@@ -1709,7 +1728,7 @@
       ['mdTitle', 'mdInfo', 'mdInstalled', 'mdSearchForm', 'mdResults'].forEach(x => { $('#' + x).hidden = !mr; });
       if (!mr) { $('#mdBar').hidden = true; $('#mdMore').hidden = true; }
       $('#wsBox').hidden = !(WS.info[MG.id] && WS.info[MG.id].available);
-      loadModList(); if (mr) loadMods(); loadWorkshopInfo();
+      loadModList(); loadModUpdates(false); if (mr) loadMods(); loadWorkshopInfo();
     }
     else if (tab === 'backups') loadBackups();
     else if (tab === 'players') loadPlayers();
@@ -1821,6 +1840,53 @@
     try { await api('DELETE', `/api/servers/${IV_ID}/invite`); ivShow({ invite: null }); $('#ivNote').value = ''; toast('Link gelöscht', 'ok'); loadServers(); } catch (e) { showErr($('#ivErr'), e.message); }
   });
   $('#ivCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#ivUrl').value); toast('Link kopiert', 'ok'); } catch (e) { $('#ivUrl').select(); } });
+  /* ---------------- Saisons ---------------- */
+  const SZ = { v: null };
+  const hrs = s => Math.round(s / 3600) + ' Std.';
+  async function loadSeasons(id) {
+    let v; try { v = await api('GET', `/api/servers/${id}/seasons`); } catch (e) { return; }
+    if (MG.id !== id) return;
+    SZ.v = v; const c = v.current;
+    $('#szSub').textContent = `${c.name} · seit ${new Date(c.start).toLocaleDateString('de-DE')}`;
+    $('#szNow').innerHTML = v.standings.length ? `Bisher ${Math.round(v.hours)} Std. gespielt. Vorne: ${v.standings.slice(0, 3).map(p => `<b>${esc(p.name)}</b> ${hrs(p.seconds)}`).join(', ')}` : '<span class="muted">In dieser Saison wurde noch nicht gespielt (Spielzeiten gibt es, wenn das Spiel Namen verrät).</span>';
+    $('#szPlan').hidden = !v.plan;
+    if (v.plan) $('#szPlanText').textContent = `Geplant: neue Saison „${v.plan.name}“ am ${fmtDate(v.plan.at)} · zurückgesetzt wird ${v.plan.wipe.join(', ')}`;
+    $('#szPast').innerHTML = v.past.length ? `<h3 class="sz-h">Ruhmeshalle</h3>` + v.past.map(p => `<div class="ml-item"><span class="ml-st ml-muted">#${p.n}</span><div class="ml-t"><b>${esc(p.name)}</b>
+      <span class="small muted">${new Date(p.start).toLocaleDateString('de-DE')} bis ${new Date(p.end).toLocaleDateString('de-DE')} · ${Math.round(p.hours)} Std. gespielt</span>
+      ${p.top && p.top.length ? `<p class="small">${p.top.slice(0, 3).map((t, i) => ['🥇', '🥈', '🥉'][i] + ' ' + esc(t.name) + ' ' + hrs(t.seconds)).join(' · ')}</p>` : ''}</div>
+      ${p.backup ? `<button type="button" class="btn-line sm admin-only" data-sz-restore="${esc(p.backup)}" data-name="${esc(p.name)}">Welt zurückholen</button>` : ''}</div>`).join('') : '';
+  }
+  $('#szNew').addEventListener('click', () => {
+    const v = SZ.v; if (!v) return;
+    const c = v.current;
+    $('#szName').value = `Saison ${c.n + 1}`; $('#szAt').value = ''; $('#szConfirm').value = ''; showErr($('#szErr'));
+    const pre = new Set(v.candidates);
+    const opts = [...v.candidates, ...v.roots.filter(r => !pre.has(r))];
+    $('#szWipe').innerHTML = opts.length ? opts.map(p => `<label class="check"><input type="checkbox" value="${esc(p)}" ${pre.has(p) ? 'checked' : ''}> <span class="mono">${esc(p)}</span>${pre.has(p) ? ' <span class="muted small">(Spielstand erkannt)</span>' : ''}</label>`).join('')
+      : '<p class="small muted">Es gibt noch keine Spieldaten. Starte den Server einmal.</p>';
+    $('#szConfirm').placeholder = byId(MG.id) ? byId(MG.id).name : '';
+    $('#dlgSeason').showModal();
+  });
+  $('#szForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#szErr'));
+    const wipe = $$('#szWipe input:checked').map(x => x.value);
+    if (!wipe.length) return showErr($('#szErr'), 'Bitte mindestens einen Ordner wählen.');
+    const at = $('#szAt').value ? new Date($('#szAt').value) : null;
+    const body = { name: $('#szName').value, wipe, confirm: $('#szConfirm').value };
+    try {
+      if (at) { await api('PUT', `/api/servers/${MG.id}/seasons/plan`, { ...body, at: at.toISOString() }); toast('Neue Saison geplant', 'ok'); }
+      else { await api('POST', `/api/servers/${MG.id}/seasons`, body); toast('Neue Saison wird vorbereitet', 'ok'); loadServers(); }
+      $('#dlgSeason').close(); setTimeout(() => loadSeasons(MG.id), 1500);
+    } catch (err) { showErr($('#szErr'), err.message); }
+  });
+  $('#szPlanDel').addEventListener('click', async () => {
+    try { await api('PUT', `/api/servers/${MG.id}/seasons/plan`, { at: '0001-01-01T00:00:00Z' }); loadSeasons(MG.id); } catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#szPast').addEventListener('click', async e => {
+    const b = e.target.closest('[data-sz-restore]'); if (!b) return;
+    if (!await confirmBox('Welt von „' + b.dataset.name + '“ zurückholen?', 'Der aktuelle Stand wird vorher gesichert. Der Server startet danach mit der alten Welt.', 'Zurückholen')) return;
+    try { await api('POST', `/api/servers/${MG.id}/backups/${encodeURIComponent(b.dataset.szRestore)}/restore`); toast('Wiederherstellung läuft'); loadServers(); } catch (err) { toast(err.message, 'bad'); }
+  });
   /* ---------------- Leistungsverlauf ---------------- */
   // One component for a server or the host: CPU, RAM and players as three
   // stacked charts on a shared time axis with one crosshair.
@@ -2393,6 +2459,20 @@
     }).join('');
   }
   $('#mlReload').addEventListener('click', loadModList);
+  async function loadModUpdates(check) {
+    const id = MG.id, b = $('#muCheck');
+    if (check) { b.disabled = true; b.textContent = 'Prüfe …'; }
+    let u; try { u = await api('GET', `/api/servers/${id}/mod-updates${check ? '?check=1' : ''}`); } catch (e) { if (check) { b.disabled = false; b.textContent = 'Jetzt prüfen'; } return; }
+    b.disabled = false; b.textContent = 'Jetzt prüfen';
+    if (MG.id !== id) return;
+    const list = u.list || [];
+    $('#muBox').hidden = !list.length && !check && !u.error;
+    $('#muWhen').textContent = u.at && !u.at.startsWith('0001') ? 'geprüft ' + fmtWhen(u.at) : '';
+    $('#muList').innerHTML = (u.error ? `<p class="small bad">${esc(u.error)}</p>` : '') + (list.length ? list.map(x => `<div class="ml-item"><span class="ml-st ml-warn">Update</span><div class="ml-t"><b>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}</b>
+      <span class="small muted">${esc(x.source)}${x.from || x.to ? ' · ' + esc(x.from || '?') + ' → ' + esc(x.to || 'neu') : ''}</span>${x.note ? `<p class="small">${esc(x.note)}</p>` : ''}</div></div>`).join('')
+      : '<p class="small muted">Alle Mods sind aktuell.</p>') + (list.length ? '<p class="small muted">Tipp: Eine Neustart-Aufgabe mit „Nur wenn es ein Update gibt“ spielt sie nachts automatisch ein.</p>' : '');
+  }
+  $('#muCheck').addEventListener('click', () => loadModUpdates(true));
   /* ---------------- Steam Workshop ---------------- */
   const WS = { loaded: {}, info: {}, ai: false, q: '', page: 1, items: [], b42: null, busy: false };
   const wsGeneric = () => { const i = WS.info[MG.id]; return !!(i && i.mode !== 'zomboid'); };
@@ -2694,7 +2774,7 @@
     $('#tkAtWrap').hidden = k === 'every'; $('#tkEveryWrap').hidden = k !== 'every'; $('#tkDays').hidden = k !== 'days';
     const warnable = ['restart', 'update', 'stop'].includes(a);
     $('#tkEmptyWrap').hidden = !warnable || !d.can_query;
-    $('#tkIfUpdWrap').hidden = !['restart', 'update'].includes(a) || !d.can_check_update;
+    $('#tkIfUpdWrap').hidden = !['restart', 'update'].includes(a) || !(d.can_check_update || d.can_mod_check);
     $('#tkBackupWrap').hidden = !warnable || !d.can_backup;
     $('#tkCond').hidden = $('#tkEmptyWrap').hidden && $('#tkIfUpdWrap').hidden && $('#tkBackupWrap').hidden;
     $('#tkWarnWrap').hidden = !warnable || !d.can_broadcast;
@@ -2750,6 +2830,7 @@
   // Backups
   async function loadBackups() {
     const id = MG.id;
+    loadSeasons(id);
     let d;
     try { d = await api('GET', `/api/servers/${id}/backups`); } catch (e) { toast(e.message, 'bad'); return; }
     if (MG.id !== id) return;

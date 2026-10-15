@@ -34,6 +34,10 @@ type Config struct {
 	// Status message that the panel keeps up to date.
 	Channel   string `json:"channel,omitempty"`
 	MessageID string `json:"message_id,omitempty"`
+	// Whitelist: members with this role may put their player name on the
+	// whitelist of these servers with /whitelist.
+	WLRole    string   `json:"wl_role,omitempty"`
+	WLServers []string `json:"wl_servers,omitempty"`
 	// Registered is a fingerprint of the last command registration.
 	Registered string `json:"registered,omitempty"`
 }
@@ -52,7 +56,11 @@ func (c *Config) Validate() error {
 			return errors.New("Der Public Key ist 64 Zeichen lang (0-9, a-f)")
 		}
 	}
-	for _, s := range []string{c.GuildID, c.Channel} {
+	c.WLRole = strings.Trim(strings.TrimSpace(c.WLRole), "<@&>")
+	if c.WLRole != "" && c.GuildID == "" {
+		return errors.New("Für die Whitelist bitte auch die Server-ID eintragen")
+	}
+	for _, s := range []string{c.GuildID, c.Channel, c.WLRole} {
 		if s != "" && !snowflake.MatchString(s) {
 			return errors.New("Server-ID und Kanal-ID bestehen nur aus Ziffern (Rechtsklick → ID kopieren)")
 		}
@@ -262,6 +270,8 @@ func Commands() []map[string]any {
 		{"name": "start", "description": "Startet einen Gameserver", "options": srv(true)},
 		{"name": "stop", "description": "Stoppt einen Gameserver", "options": srv(true)},
 		{"name": "restart", "description": "Startet einen Gameserver neu", "options": srv(true)},
+		{"name": "whitelist", "description": "Trägt deinen Spielernamen auf die Whitelist der Gameserver ein", "dm_permission": false,
+			"options": []map[string]any{{"type": 3, "name": "spielername", "description": "Dein Name im Spiel", "required": true, "min_length": 2, "max_length": 32}}},
 	}
 }
 
@@ -311,4 +321,23 @@ func FollowUp(ctx context.Context, appID, token, text string) error {
 func FollowUpEmbed(ctx context.Context, appID, token string, e Embed) error {
 	_, err := call(ctx, "", "PATCH", "/webhooks/"+appID+"/"+token+"/messages/@original", map[string]any{"embeds": []Embed{e}, "allowed_mentions": map[string]any{"parse": []string{}}})
 	return err
+}
+
+// MemberRoles returns the roles of a member of the guild; ok=false when the
+// user is not (or no longer) on the server.
+func MemberRoles(ctx context.Context, c Config, user string) (roles []string, ok bool, err error) {
+	out, err := call(ctx, c.Token, "GET", "/guilds/"+c.GuildID+"/members/"+user, nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "Unknown Member") || strings.Contains(err.Error(), "Unknown User") {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	var m struct {
+		Roles []string `json:"roles"`
+	}
+	if err := json.Unmarshal(out, &m); err != nil {
+		return nil, false, err
+	}
+	return m.Roles, true, nil
 }

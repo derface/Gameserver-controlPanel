@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"math"
 	"net"
 	"net/http"
@@ -29,6 +30,49 @@ func (a *API) statusCfg() store.StatusConfig {
 	return c
 }
 
+type publicSeason struct {
+	N     int        `json:"n"`
+	Name  string     `json:"name"`
+	Since time.Time  `json:"since"`
+	Next  *time.Time `json:"next,omitempty"` // planned new season
+	Fame  []fame     `json:"fame,omitempty"` // past seasons, newest first
+}
+
+type fame struct {
+	N     int       `json:"n"`
+	Name  string    `json:"name"`
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
+	Hours float64   `json:"hours"`
+	Top   []string  `json:"top"` // "Name (12 Std.)"
+}
+
+func seasonOf(sv store.Server) *publicSeason {
+	ss := sv.Seasons
+	if ss == nil || (len(ss.Past) == 0 && ss.Plan == nil) {
+		return nil
+	}
+	p := &publicSeason{N: ss.Current.N, Name: ss.Current.Name, Since: ss.Current.Start}
+	if ss.Plan != nil {
+		t := ss.Plan.At
+		p.Next = &t
+	}
+	for i, s := range ss.Past {
+		if i == 5 {
+			break
+		}
+		f := fame{N: s.N, Name: s.Name, Start: s.Start, End: s.End, Hours: math.Round(s.Hours*10) / 10}
+		for j, t := range s.Top {
+			if j == 3 {
+				break
+			}
+			f.Top = append(f.Top, fmt.Sprintf("%s (%d Std.)", t.Name, (t.Seconds+1800)/3600))
+		}
+		p.Fame = append(p.Fame, f)
+	}
+	return p
+}
+
 type publicServer struct {
 	ID        string   `json:"-"`
 	Name      string   `json:"name"`
@@ -44,8 +88,11 @@ type publicServer struct {
 	Hint      string   `json:"hint,omitempty"`
 	Note      string   `json:"note,omitempty"`
 	// last 30 days: [share online 0..100, crashes] per day, oldest first
-	Uptime    [][2]int `json:"uptime,omitempty"`
-	UptimePct *float64 `json:"uptime_pct,omitempty"`
+	Uptime    [][2]int      `json:"uptime,omitempty"`
+	UptimePct *float64      `json:"uptime_pct,omitempty"`
+	Key       string        `json:"key,omitempty"`  // for /api/public/mods
+	Mods      int           `json:"mods,omitempty"` // client mods (from the cache)
+	Season    *publicSeason `json:"season,omitempty"`
 }
 
 var statusCache struct {
@@ -93,6 +140,15 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 		e, ok := c.Servers[id]
 		return ok && e.Show, e.Note
 	}, c.ShowNames, host)
+	for i := range list {
+		list[i].Key = "s-" + list[i].ID
+		if sv, ok := a.Store.Server(list[i].ID); ok {
+			list[i].Season = seasonOf(sv)
+		}
+		if cm, ok := a.Mgr.ClientModsCached(list[i].ID); ok {
+			list[i].Mods = len(cm.Mods)
+		}
+	}
 	if !c.HideUptime {
 		for i := range list {
 			days, pct := a.Mgr.UptimeCached(list[i].ID)
@@ -134,8 +190,16 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 	if c.CalToken != "" {
 		cal = "/api/public/calendar/" + c.CalToken + ".ics"
 	}
-	statusCache.body[k] = map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now(),
+	body := map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now(),
 		"events": a.publicEvents(shown, 14*24*time.Hour), "calendar": cal}
+	if c.ShowPlayers {
+		names := map[string]string{}
+		for _, sv := range shown {
+			names[sv.ID] = sv.Name
+		}
+		body["players"] = a.Mgr.PlayerTotals(names, 50)
+	}
+	statusCache.body[k] = body
 	statusCache.at[k] = time.Now()
 	writeJSON(w, 200, statusCache.body[k])
 }

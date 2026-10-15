@@ -33,6 +33,7 @@ type Project struct {
 	Author      string   `json:"author,omitempty"`
 	Categories  []string `json:"categories,omitempty"`
 	ServerSide  string   `json:"server_side,omitempty"`
+	ClientSide  string   `json:"client_side,omitempty"`
 }
 
 // Target describes what fits a server: mods for a loader or plugins.
@@ -149,13 +150,14 @@ func Lookup(ctx context.Context, slugs []string) ([]Project, error) {
 		IconURL     string `json:"icon_url"`
 		Downloads   int    `json:"downloads"`
 		ServerSide  string `json:"server_side"`
+		ClientSide  string `json:"client_side"`
 	}
 	if err := get(ctx, "/projects", url.Values{"ids": {string(ids)}}, &res); err != nil {
 		return nil, err
 	}
 	out := make([]Project, 0, len(res))
 	for _, p := range res {
-		out = append(out, Project{ID: p.ID, Slug: p.Slug, Title: p.Title, Description: p.Description, Icon: safeIcon(p.IconURL), Downloads: p.Downloads, ServerSide: p.ServerSide})
+		out = append(out, Project{ID: p.ID, Slug: p.Slug, Title: p.Title, Description: p.Description, Icon: safeIcon(p.IconURL), Downloads: p.Downloads, ServerSide: p.ServerSide, ClientSide: p.ClientSide})
 	}
 	return out, nil
 }

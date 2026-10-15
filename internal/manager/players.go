@@ -526,3 +526,17 @@ func LANIP() string {
 	lanCache.ip, lanCache.at = ip.String(), time.Now()
 	return lanCache.ip
 }
+
+// CanWhitelist says whether the panel can put names on this server's
+// whitelist (the server must run for it).
+func (m *Manager) CanWhitelist(id string) bool {
+	_, tpl, err := m.get(id)
+	if err != nil {
+		return false
+	}
+	p := profileFor(tpl)
+	return p != nil && p.Actions["whitelist_add"] != "" && p.Actions["whitelist_remove"] != ""
+}
+
+// IsUp reports whether the server is running and ready.
+func (m *Manager) IsUp(id string) bool { return m.isUp(id) }

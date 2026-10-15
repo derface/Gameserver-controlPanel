@@ -845,3 +845,7 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .iv-qr{width:180px;max-width:100%;margin:4px 0 8px}
 .iv-qr svg{display:block;width:100%;height:auto;background:#fff;border-radius:8px}
 .sp-cal{margin-top:18px}.sp-cal h3{margin:0 0 4px}
+.mu-box{margin-bottom:22px}
+.dc-h{margin:22px 0 4px}#dcLinks h4{margin:14px 0 6px}
+.sz{margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.sz-h{margin:14px 0 4px;font-size:15px}

@@ -25,7 +25,17 @@
       ${s.lan_address ? `<div class="join lan"><span class="lanl">Du bist im selben Heimnetz, nimm diese Adresse:</span><code>${esc(s.lan_address)}</code><button type="button" data-copy="${esc(s.lan_address)}">Kopieren</button></div>` : ''}
       ${s.hint ? `<p class="hint">${esc(s.hint)}</p>` : ''}
       ${s.state === 'aus' ? '<p class="hint">Der Server ist gerade aus. Frag in eurer Gruppe, wer ihn starten kann, oder schau später nochmal vorbei.</p>' : ''}`;
+    try {
+      const r = await fetch('/api/public/mods/' + encodeURIComponent(tok)); const m = await r.json();
+      if (r.ok && (m.mods || []).length) {
+        $('#card').insertAdjacentHTML('beforeend', `<h2 class="inv-h">Mods (${m.mods.length})</h2>` + modList(m));
+      }
+    } catch (e) { /* ohne Mods */ }
     if (d.status) { $('#statusLink').href = d.status; $('#statusLink').hidden = false; $('#sep').hidden = false; }
+  }
+  function modList(m) {
+    const items = (m.mods || []).map(x => `<li>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name)}${x.version ? ` <span class="muted">${esc(x.version)}</span>` : ''}${x.need === 'optional' ? ' <span class="muted">(optional)</span>' : ''}</li>`).join('');
+    return `${m.note ? `<p class="hint">${esc(m.note)}</p>` : ''}<ul class="modl">${items}</ul>${m.download ? `<a class="btn primary" href="${esc(m.download)}">Mod-Paket herunterladen (.zip)</a>` : ''}`;
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest('[data-copy]'); if (!b) return;

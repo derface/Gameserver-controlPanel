@@ -925,6 +925,7 @@ func (m *Manager) Run(ctx context.Context) {
 	go m.runRouter(ctx)
 	go m.runStats(ctx)
 	go m.runGeo(ctx)
+	go m.runModUpdates(ctx)
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {

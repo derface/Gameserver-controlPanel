@@ -107,6 +107,8 @@ func (a *API) Handler() http.Handler {
 	a.routesMaintenance(mux)
 	a.routesInvite(mux)
 	a.routesCalendar(mux)
+	a.routesModpack(mux)
+	a.routesSeasons(mux)
 	mux.HandleFunc("GET /api/notify", a.need(auth.Admin, a.notifyGet))
 	mux.HandleFunc("PUT /api/notify", a.need(auth.Admin, a.notifyPut))
 	mux.HandleFunc("POST /api/notify/test", a.need(auth.Admin, a.notifyTest))

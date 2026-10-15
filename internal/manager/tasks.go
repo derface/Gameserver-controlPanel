@@ -93,7 +93,9 @@ func ValidateTask(t *store.Task, tpl templates.Template) error {
 		t.OnlyIfUpdate = false
 	}
 	if t.OnlyIfUpdate && tpl.Kind != "steam" {
-		return errors.New("Die Update-Prüfung gibt es nur für Steam-Spiele")
+		if !isMinecraft(tpl) {
+			return errors.New("Die Update-Prüfung gibt es nur für Steam-Spiele und Minecraft mit Mods oder Plugins")
+		}
 	}
 	if t.WhenEmpty && (tpl.Query == nil || tpl.Query.Type == "") {
 		return errors.New("Dieses Spiel meldet keine Spielerzahl, „nur wenn niemand spielt“ geht hier nicht")
@@ -178,6 +180,7 @@ func (m *Manager) runTasks(ctx context.Context) {
 		case <-tick.C:
 		}
 		m.checkMaintenance(time.Now())
+		m.checkSeasons(time.Now())
 		m.checkTasks(ctx, time.Now())
 		m.checkEvents(ctx, time.Now())
 	}
@@ -277,18 +280,33 @@ func (m *Manager) runConditional(ctx context.Context, id string, t store.Task, s
 	}
 	var notes []string
 	if t.OnlyIfUpdate {
-		st, err := m.CheckUpdate(ctx, id)
-		switch {
-		case err != nil:
-			notes = append(notes, "Update-Prüfung fehlgeschlagen ("+err.Error()+"), trotzdem ausgeführt")
-		case st.Error != "":
-			notes = append(notes, "Update-Prüfung: "+st.Error+", trotzdem ausgeführt")
-		case !st.Available:
-			m.finishTask(id, t.ID, sched, "übersprungen: kein Update (Build "+st.Installed+")")
+		// game update (Steam) or mod updates (Workshop, Modrinth)
+		mu := m.CheckModUpdates(ctx, id)
+		modNote := ""
+		if n := len(mu.List); n > 0 {
+			modNote = fmt.Sprintf("%d Mod-Update%s", n, map[bool]string{true: "", false: "s"}[n == 1])
+		}
+		_, tpl, _ := m.get(id)
+		if tpl.Kind == "steam" {
+			st, err := m.CheckUpdate(ctx, id)
+			switch {
+			case err != nil:
+				notes = append(notes, "Update-Prüfung fehlgeschlagen ("+err.Error()+"), trotzdem ausgeführt")
+			case st.Error != "":
+				notes = append(notes, "Update-Prüfung: "+st.Error+", trotzdem ausgeführt")
+			case !st.Available && modNote == "":
+				m.finishTask(id, t.ID, sched, "übersprungen: kein Update (Build "+st.Installed+")")
+				return
+			case st.Available:
+				notes = append(notes, "Update "+st.Installed+" → "+st.Latest)
+				m.EventKind(id, "info", "update", fmt.Sprintf("Neue Version bei Steam (Build %s, installiert %s)", st.Latest, st.Installed))
+			}
+		} else if modNote == "" {
+			m.finishTask(id, t.ID, sched, "übersprungen: keine Mod-Updates")
 			return
-		default:
-			notes = append(notes, "Update "+st.Installed+" → "+st.Latest)
-			m.EventKind(id, "info", "update", fmt.Sprintf("Neue Version bei Steam (Build %s, installiert %s)", st.Latest, st.Installed))
+		}
+		if modNote != "" {
+			notes = append(notes, modNote)
 		}
 	}
 	if t.WhenEmpty && m.isUp(id) {
@@ -535,6 +553,7 @@ type TaskView struct {
 	CanUpdate    bool        `json:"can_update"`
 	CanBackup    bool        `json:"can_backup"`
 	CanCheck     bool        `json:"can_check_update"` // Steam: compare builds
+	CanModCheck  bool        `json:"can_mod_check"`    // Minecraft: Modrinth versions
 	Installed    string      `json:"installed_build,omitempty"`
 	UpdateOnRun  bool        `json:"update_on_run"`
 	Events       []Event     `json:"events"`
@@ -553,7 +572,7 @@ func (m *Manager) Tasks(id string) (TaskView, error) {
 	}
 	v := TaskView{Watch: sv.Watch, CanBroadcast: tpl.Broadcast != "", CanQuery: tpl.Query != nil && tpl.Query.Type != "",
 		CanUpdate: tpl.Kind == "steam" || tpl.Image != "", Events: m.Events(id), Tasks: []TaskInfo{},
-		CanBackup: true, CanCheck: tpl.Kind == "steam", UpdateOnRun: sv.UpdateOnRun}
+		CanBackup: true, CanCheck: tpl.Kind == "steam", CanModCheck: isMinecraft(tpl), UpdateOnRun: sv.UpdateOnRun}
 	if tpl.Kind == "steam" {
 		v.Installed = m.installedBuild(id, tpl)
 	}
