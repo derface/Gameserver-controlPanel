@@ -350,6 +350,26 @@ Im Reiter **Spieler** unter „Herkunft“ (einmal von einem Admin einschalten):
 
 - Admins sehen unter „Was das Panel gerade sieht“ die erkannten Verbindungen der letzten Abfrage, zur Fehlersuche ohne Kommandozeile.
 
+## Leistungsverlauf
+
+Das Panel schreibt jede Minute CPU, RAM, Spielerzahl und Zustand jedes Servers mit (Dateien pro Tag unter `<data>/history/`, 30 Tage). Im Reiter **Verlauf** stehen drei Diagramme für 24 Stunden, 7 oder 30 Tage mit gemeinsamem Fadenkreuz, graue Flächen für „Server war aus“, rote Striche für Fehler. Darüber Hinweise, etwa wenn der RAM lange über 90 % voll war oder die CPU mit Spielern am Limit läuft. Die Auslastung des ganzen Rechners steht unter Einstellungen → Speicher & Auslastung.
+
+## Speicherplatz
+
+**Einstellungen → Speicher & Auslastung**: freier Platz, was jeder Server belegt (Spiel und Welt, Backups), Reste gelöschter Server zum Wegräumen und Docker-Images, die kein Server mehr nutzt, sowie Bau-Zwischenstände, beides mit einem Klick löschbar. Wird der Platz knapp (unter 10 % oder 10 GB), meldet das Panel das über die Benachrichtigungen.
+
+## Wartungsmodus
+
+Im Server-Menü „⋯“ → **Wartungsmodus**: mit Ende (oder offen) und Hinweis. Solange er läuft, pausieren geplante Aufgaben, Events und der Absturz-Wächter, Statusseite und Discord zeigen „Wartung“, Discord-Befehle für den Server sind gesperrt, und Spieler im Spiel bekommen eine Nachricht. Auf Wunsch schließt das Panel die Ports im Router, sodass nur noch das Heimnetz herankommt.
+
+## Einladungslink
+
+Im Server-Menü „⋯“ → **Einladungslink**: eine Seite ohne Anmeldung mit Adresse, Anleitung zum Beitreten, deinem Hinweis und QR-Code. Wer den Link hat, kann sie öffnen; ein neuer Link macht den alten ungültig. Mit eigener Statusseiten-Domain zeigt der Link auf diese Domain.
+
+## Kalender-Abo
+
+Unter Einstellungen → Statusseite lässt sich ein Kalender-Link erzeugen (iCalendar). Er enthält die geplanten Events und Wartungen der angezeigten Server, wöchentliche Events als Serie, und aktualisiert sich stündlich. Die Statusseite zeigt „Kommende Events“ und einen Knopf zum Abonnieren, außerdem pro Server den Online-Verlauf der letzten 30 Tage.
+
 ## Lizenz
 
 Bytewise Panel ist freie Software unter der **GNU Affero General Public License v3.0** (`LICENSE`). Du darfst es kostenlos nutzen, verändern und weitergeben. Wer eine veränderte Fassung anderen über das Netz anbietet, muss deren Quellcode ebenfalls offenlegen (AGPL §13); das Panel verlinkt dazu unter Einstellungen → Panel & Updates auf den Quellcode. Fremdbestandteile: `internal/thirdparty/acme` (BSD), `web/static/vendor/qrcode.js` und `three.js` (MIT), Vorlagen-Daten aus LinuxGSM und AMPTemplates (MIT).

@@ -177,6 +177,7 @@ func (m *Manager) runTasks(ctx context.Context) {
 			return
 		case <-tick.C:
 		}
+		m.checkMaintenance(time.Now())
 		m.checkTasks(ctx, time.Now())
 		m.checkEvents(ctx, time.Now())
 	}
@@ -198,6 +199,10 @@ func (m *Manager) checkTasks(ctx context.Context, now time.Time) {
 			m.mu.RUnlock()
 			if running {
 				continue // still waiting (players online) or warning
+			}
+			if sv.InMaintenance(now) && !now.Before(sched) {
+				m.finishTask(sv.ID, t.ID, sched, "übersprungen (Wartung)")
+				continue
 			}
 			if now.Sub(sched) > missedAfter {
 				// the panel was off: skip, but remember so it is not retried

@@ -134,6 +134,8 @@
           <div class="menu" role="menu">
             <button type="button" role="menuitem" data-sv="edit">Name, RAM, Startoptionen</button>
             <button type="button" role="menuitem" data-sv="settings-tab">Spiel-Einstellungen</button>
+            <button type="button" role="menuitem" data-sv="maint" id="svMaintBtn">Wartungsmodus …</button>
+            <button type="button" role="menuitem" data-sv="invite">Einladungslink …</button>
             <button type="button" role="menuitem" class="admin-only" data-sv="router" id="svRouterBtn">Ports nicht im Router öffnen</button>
             <button type="button" role="menuitem" class="admin-only danger" data-sv="delete">Server löschen</button>
           </div>
@@ -143,6 +145,7 @@
       </div>
     </div>
     <p class="msg-line" id="svMsg" hidden></p>
+    <div class="maint-bar" id="svMaint" hidden><span id="svMaintText"></span><button type="button" class="btn-line small op-only" id="svMaintEnd">Wartung beenden</button></div>
     <nav class="tabs" role="tablist" aria-label="Bereich" id="svTabs">
       <button type="button" role="tab" id="tabConsole" data-tab="console">Konsole</button>
       <button type="button" role="tab" id="tabPlayers" data-tab="players">Spieler</button>
@@ -357,6 +360,8 @@
   </section>
 
   <section class="mg-pane" id="paneEvents" role="tabpanel" aria-labelledby="tabEvents" hidden>
+    <div class="perf" id="perfServer" data-perf></div>
+    <h3 class="ev-h">Ereignisse</h3>
     <ol class="ev-list" id="evList" aria-live="polite"></ol>
   </section>
   </section>
@@ -475,6 +480,7 @@
         <a href="#/einstellungen/benachrichtigungen" data-sec="benachrichtigungen">Benachrichtigungen</a>
         <a href="#/einstellungen/statusseite" data-sec="statusseite">Statusseite</a>
         <a href="#/einstellungen/discord" data-sec="discord">Discord-Bot</a>
+        <a href="#/einstellungen/speicher" data-sec="speicher">Speicher &amp; Auslastung</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
         <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
@@ -611,7 +617,17 @@
     <label class="field"><span>Hinweis oben <em class="muted">optional</em></span><textarea id="spNote" rows="2" maxlength="500" placeholder="z. B. Passwörter gibt es im Discord. Fragen an David."></textarea></label>
     <label class="field"><span>Eigene Adresse <em class="muted">optional</em></span><input id="spHost" placeholder="status.meine-domain.de" spellcheck="false"><small>Unter dieser Domain zeigt das Panel nur die Statusseite, die Anmeldung ist dort nicht erreichbar. Domain wie beim Panel per Reverse Proxy auf diesen Rechner leiten.</small></label>
     <label class="check"><input type="checkbox" id="spNames"> Namen der Spieler zeigen, die gerade online sind</label>
+    <label class="check"><input type="checkbox" id="spUptime"> Online-Verlauf der letzten 30 Tage zeigen</label>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zeigen</th><th>Server</th><th>Hinweis für Mitspieler</th></tr></thead><tbody id="spRows"></tbody></table></div>
+    <div class="sp-cal">
+      <h3>Kalender-Abo für Events</h3>
+      <p class="small muted">Geplante Events und Wartungen der angezeigten Server als Kalender, den Mitspieler in Google, Apple oder Outlook abonnieren können. Er aktualisiert sich von selbst. Die Statusseite zeigt den Link an.</p>
+      <div id="spCalOff"><button type="button" class="btn-line" id="spCalOn">Kalender-Link erstellen</button></div>
+      <div id="spCalHas" hidden>
+        <div class="join-row"><input id="spCalUrl" readonly aria-label="Kalender-Adresse"><button type="button" class="btn-line" id="spCalCopy">Kopieren</button></div>
+        <p class="small"><button type="button" class="linkbtn small" id="spCalRenew">Neuen Link erzeugen</button> · <button type="button" class="linkbtn small danger" id="spCalDel">Abo abschalten</button></p>
+      </div>
+    </div>
     <p class="err" id="spErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
@@ -642,6 +658,20 @@
     <p class="err" id="dcErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" id="dcTest">Statusnachricht jetzt senden</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
+  <div id="sgBlock" class="set-block admin-only" data-sec="speicher">
+    <h2>Speicher &amp; Auslastung</h2>
+    <div class="sg-disk"><div class="sg-bar" aria-hidden="true"><i id="sgUsed"></i></div><p class="small" id="sgDiskText"></p></div>
+    <div class="perf" id="perfHost" data-perf></div>
+    <h3>Was Platz belegt <span class="small muted" id="sgWhen"></span></h3>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Server</th><th class="num">Spiel und Welt</th><th class="num">Backups</th><th class="num">Zusammen</th></tr></thead><tbody id="sgRows"></tbody></table></div>
+    <div id="sgOrphans"></div>
+    <h3>Docker</h3>
+    <p class="small muted">Docker hebt Images älterer Spielversionen und Bau-Zwischenstände auf. Beides lässt sich gefahrlos löschen: Was ein Server braucht, lädt oder baut das Panel beim nächsten Start neu.</p>
+    <div id="sgDocker"></div>
+    <p class="small muted" id="sgPanel"></p>
+    <p class="err" id="sgErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="sgRefresh">Neu berechnen</button></div>
+  </div>
   <div id="upBlock" class="set-block admin-only" data-sec="panel">
     <h2>Panel &amp; Updates</h2>
     <p class="muted small">Bytewise Panel ist freie Software unter der <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL-3.0</a>: kostenlos, ohne Lizenzschlüssel, alle Funktionen frei. <a id="upSource" href="https://github.com/derface/Gameserver-controlPanel" target="_blank" rel="noopener">Quellcode</a></p>
@@ -793,6 +823,33 @@
     <label class="check"><input type="checkbox" id="geWeekly"> Jede Woche wiederholen</label>
     <p class="err" id="geErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="geOk">Event planen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgMaint" class="dlg small">
+  <form id="mtForm" novalidate>
+    <div class="dlg-head"><h2>Wartungsmodus</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <p class="small muted">Solange die Wartung läuft, pausieren geplante Aufgaben, Events und der Absturz-Wächter. Statusseite und Discord zeigen „Wartung“, Spieler im Spiel bekommen eine Nachricht.</p>
+    <label class="field"><span>Bis</span><input id="mtUntil" type="datetime-local"><small>Leer lassen, wenn du sie von Hand beenden willst.</small></label>
+    <label class="field"><span>Hinweis für Mitspieler <em class="muted">optional</em></span><input id="mtNote" maxlength="200" placeholder="z. B. Update auf die neue Version"></label>
+    <label class="check"><input type="checkbox" id="mtPorts"> Ports im Router schließen (nur aus dem Heimnetz erreichbar)</label>
+    <p class="err" id="mtErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent" id="mtOk">Wartung starten</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgInvite" class="dlg small">
+  <form id="ivForm" novalidate>
+    <div class="dlg-head"><h2>Einladungslink</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <p class="small muted">Eine Seite ohne Anmeldung für Freunde: Adresse, Anleitung zum Beitreten und dein Hinweis. Wer den Link hat, kann sie öffnen, sonst niemand.</p>
+    <label class="field"><span>Hinweis auf der Seite <em class="muted">optional</em></span><textarea id="ivNote" rows="2" maxlength="300" placeholder="z. B. Passwort gibt es bei David. Bitte zuerst die Mods installieren."></textarea></label>
+    <div id="ivHas" hidden>
+      <div class="join-row"><input id="ivUrl" readonly aria-label="Einladungslink"><button type="button" class="btn-line" id="ivCopy">Kopieren</button></div>
+      <div class="qr iv-qr" id="ivQR" aria-label="QR-Code des Einladungslinks"></div>
+      <p class="small"><a id="ivOpen" href="#" target="_blank" rel="noopener">Seite ansehen</a> · <button type="button" class="linkbtn small" id="ivRenew">Neuen Link erzeugen</button> · <button type="button" class="linkbtn small danger" id="ivDel">Link löschen</button></p>
+    </div>
+    <p class="err" id="ivErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Schließen</button><button type="submit" class="btn-accent" id="ivSave">Link erstellen</button></div>
   </form>
 </dialog>
 

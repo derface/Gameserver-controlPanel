@@ -37,9 +37,11 @@ type Manager struct {
 	tpls    *templates.Set
 	dataDir string
 	geo     *geoip.DB
-	gt      *geoTracker
-	Remote  func() (remote.Target, remote.Config)
-	up      uploads
+	// Host reports the machine's load (set by main) for the history.
+	Host   hostFunc
+	gt     *geoTracker
+	Remote func() (remote.Target, remote.Config)
+	up     uploads
 
 	buildMu   sync.Mutex
 	opMu      sync.Map // id -> *sync.Mutex
@@ -693,6 +695,7 @@ func (m *Manager) Delete(ctx context.Context, id string, wipe bool) error {
 	m.mu.Unlock()
 	m.dropEvents(id)
 	_ = os.Remove(m.statsFile(id))
+	_ = os.RemoveAll(m.historyDir(id))
 	return m.st.DeleteServer(id)
 }
 

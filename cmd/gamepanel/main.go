@@ -102,6 +102,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	mgr.Host = host.Get
 	go host.Run(ctx)
 	go mgr.Run(ctx)
 	go a.RunUpdateCheck(ctx)

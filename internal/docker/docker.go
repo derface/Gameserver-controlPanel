@@ -507,3 +507,95 @@ func (c *Client) IPs(ctx context.Context, id string) ([]string, error) {
 	}
 	return ips, nil
 }
+
+// DiskUsage sums what Docker keeps on disk.
+type DiskUsage struct {
+	Images       int64 `json:"images"`        // all image layers
+	UnusedImages int64 `json:"unused_images"` // images no container uses
+	BuildCache   int64 `json:"build_cache"`
+	Containers   int64 `json:"containers"` // writable layers
+	Volumes      int64 `json:"volumes"`
+}
+
+func (c *Client) DiskUsage(ctx context.Context) (DiskUsage, error) {
+	var raw struct {
+		LayersSize int64 `json:"LayersSize"`
+		Images     []struct {
+			Size       int64 `json:"Size"`
+			SharedSize int64 `json:"SharedSize"`
+			Containers int64 `json:"Containers"`
+		} `json:"Images"`
+		Containers []struct {
+			SizeRw int64 `json:"SizeRw"`
+		} `json:"Containers"`
+		Volumes []struct {
+			UsageData struct {
+				Size int64 `json:"Size"`
+			} `json:"UsageData"`
+		} `json:"Volumes"`
+		BuildCache []struct {
+			Size   int64 `json:"Size"`
+			Shared bool  `json:"Shared"`
+		} `json:"BuildCache"`
+	}
+	resp, err := c.do(ctx, c.lc, "GET", "/system/df", nil, nil)
+	if err != nil {
+		return DiskUsage{}, err
+	}
+	defer resp.Body.Close()
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		return DiskUsage{}, err
+	}
+	u := DiskUsage{Images: raw.LayersSize}
+	for _, im := range raw.Images {
+		if im.Containers == 0 {
+			sz := im.Size - im.SharedSize
+			if im.SharedSize < 0 {
+				sz = im.Size
+			}
+			u.UnusedImages += sz
+		}
+	}
+	for _, ct := range raw.Containers {
+		u.Containers += ct.SizeRw
+	}
+	for _, v := range raw.Volumes {
+		if v.UsageData.Size > 0 {
+			u.Volumes += v.UsageData.Size
+		}
+	}
+	for _, b := range raw.BuildCache {
+		if !b.Shared {
+			u.BuildCache += b.Size
+		}
+	}
+	return u, nil
+}
+
+// PruneImages removes images no container uses; PruneBuildCache the
+// build cache. Both return the bytes freed.
+func (c *Client) PruneImages(ctx context.Context) (int64, error) {
+	var out struct {
+		SpaceReclaimed int64 `json:"SpaceReclaimed"`
+	}
+	resp, err := c.do(ctx, c.lc, "POST", "/images/prune", url.Values{"filters": {`{"dangling":["false"]}`}}, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&out)
+	return out.SpaceReclaimed, err
+}
+
+func (c *Client) PruneBuildCache(ctx context.Context) (int64, error) {
+	var out struct {
+		SpaceReclaimed int64 `json:"SpaceReclaimed"`
+	}
+	resp, err := c.do(ctx, c.lc, "POST", "/build/prune", url.Values{"all": {"1"}}, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&out)
+	return out.SpaceReclaimed, err
+}

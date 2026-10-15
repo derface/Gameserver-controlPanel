@@ -1,6 +1,7 @@
 package api
 
 import (
+	"math"
 	"net"
 	"net/http"
 	"strings"
@@ -32,7 +33,8 @@ type publicServer struct {
 	ID        string   `json:"-"`
 	Name      string   `json:"name"`
 	Game      string   `json:"game"`
-	State     string   `json:"state"` // online | startet | aus | fehler
+	State     string   `json:"state"`           // online | startet | aus | fehler | wartung
+	Until     string   `json:"until,omitempty"` // maintenance end, RFC3339
 	Players   int      `json:"players"`
 	Max       int      `json:"max"`
 	Names     []string `json:"names,omitempty"`
@@ -41,6 +43,9 @@ type publicServer struct {
 	SteamLink string   `json:"steam_link,omitempty"`
 	Hint      string   `json:"hint,omitempty"`
 	Note      string   `json:"note,omitempty"`
+	// last 30 days: [share online 0..100, crashes] per day, oldest first
+	Uptime    [][2]int `json:"uptime,omitempty"`
+	UptimePct *float64 `json:"uptime_pct,omitempty"`
 }
 
 var statusCache struct {
@@ -88,6 +93,26 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 		e, ok := c.Servers[id]
 		return ok && e.Show, e.Note
 	}, c.ShowNames, host)
+	if !c.HideUptime {
+		for i := range list {
+			days, pct := a.Mgr.UptimeCached(list[i].ID)
+			known := false
+			for _, d := range days {
+				up := int(d.Up*100 + 0.5)
+				if d.Known == 0 {
+					up = -1 // no data that day
+				}
+				list[i].Uptime = append(list[i].Uptime, [2]int{up, d.Crashes})
+				known = known || d.Known > 0
+			}
+			if known {
+				p := math.Round(pct*10) / 10
+				list[i].UptimePct = &p
+			} else {
+				list[i].Uptime = nil
+			}
+		}
+	}
 	if lan := manager.LANIP(); k == 1 && lan != "" {
 		for i := range list {
 			if list[i].State == "online" {
@@ -99,7 +124,18 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 	if title == "" {
 		title = "Unsere Gameserver"
 	}
-	statusCache.body[k] = map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now()}
+	var shown []store.Server
+	for _, s := range list {
+		if sv, ok := a.Store.Server(s.ID); ok {
+			shown = append(shown, sv)
+		}
+	}
+	cal := ""
+	if c.CalToken != "" {
+		cal = "/api/public/calendar/" + c.CalToken + ".ics"
+	}
+	statusCache.body[k] = map[string]any{"title": title, "note": c.Note, "servers": list, "updated": time.Now(),
+		"events": a.publicEvents(shown, 14*24*time.Hour), "calendar": cal}
 	statusCache.at[k] = time.Now()
 	writeJSON(w, 200, statusCache.body[k])
 }
@@ -122,6 +158,17 @@ func (a *API) publicServers(pick func(id string) (bool, string), names bool, hos
 			p.State = "fehler"
 		default:
 			p.State = "aus"
+		}
+		if sv, ok := a.Store.Server(s.ID); ok && sv.InMaintenance(time.Now()) {
+			p.State = "wartung"
+			if !sv.Maintenance.Until.IsZero() {
+				p.Until = sv.Maintenance.Until.Format(time.RFC3339)
+			}
+			if sv.Maintenance.Note != "" {
+				p.Note = sv.Maintenance.Note
+			}
+			list = append(list, p)
+			continue
 		}
 		if p.State == "online" {
 			if names {
@@ -180,7 +227,11 @@ func (a *API) statusCfgPut(w http.ResponseWriter, r *http.Request) {
 		}
 		in.Servers[id] = e
 	}
-	_ = a.Store.Update(func(d *store.Data) error { d.Settings.Status = in; return nil })
+	_ = a.Store.Update(func(d *store.Data) error {
+		in.CalToken = d.Settings.Status.CalToken // changed only through its own call
+		d.Settings.Status = in
+		return nil
+	})
 	statusCache.Lock()
 	statusCache.body = [2]map[string]any{}
 	statusCache.Unlock()
@@ -197,18 +248,22 @@ func hostOnly(h string) string {
 // statusHost serves only the status page under its own host name, so the
 // panel's login is not reachable through it.
 func (a *API) statusHost(next http.Handler) http.Handler {
-	public := map[string]bool{"/status.html": true, "/status.js": true, "/status.css": true, "/api/public/status": true}
+	public := map[string]bool{"/status.html": true, "/status.js": true, "/status.css": true, "/api/public/status": true, "/invite.html": true, "/invite.js": true}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c := a.statusCfg()
 		if c.Enabled && c.Host != "" && strings.EqualFold(hostOnly(r.Host), c.Host) {
 			switch {
 			case r.URL.Path == "/" || r.URL.Path == "/status":
 				r.URL.Path = "/status.html"
-			case public[r.URL.Path] || strings.HasPrefix(r.URL.Path, "/img/"):
+			case strings.HasPrefix(r.URL.Path, "/invite/"):
+				r.URL.Path = "/invite.html"
+			case public[r.URL.Path] || strings.HasPrefix(r.URL.Path, "/img/") || strings.HasPrefix(r.URL.Path, "/api/public/"):
 			default:
 				http.NotFound(w, r)
 				return
 			}
+		} else if strings.HasPrefix(r.URL.Path, "/invite/") {
+			r.URL.Path = "/invite.html"
 		} else if r.URL.Path == "/status" {
 			if !c.Enabled {
 				http.NotFound(w, r)

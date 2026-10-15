@@ -381,6 +381,10 @@
     pw.classList.toggle('btn-accent', !on); pw.classList.toggle('btn-line', on);
     $('[data-sv="restart"]').disabled = !on || busy;
     const m = $('#svMsg'); m.hidden = !s.message; m.textContent = s.message || ''; m.classList.toggle('bad', s.status === 'error');
+    const mt = s.maintenance;
+    $('#svMaint').hidden = !mt;
+    if (mt) $('#svMaintText').textContent = '🛠 Wartung' + (mt.until && !mt.until.startsWith('0001') ? ' bis ' + fmtWhen(mt.until) : '') + (mt.note ? ': ' + mt.note : '') + (mt.close_ports ? ' · Ports geschlossen' : '') + ' · Aufgaben und Absturz-Wächter pausieren';
+    $('#svMaintBtn').textContent = mt ? 'Wartung ändern …' : 'Wartungsmodus …';
     $('#svRouterBtn').textContent = s.no_router ? 'Ports im Router öffnen' : 'Ports nicht im Router öffnen'; $('#svRouterBtn').hidden = !S.routerOn;
     const tpl = S.tplById[s.template];
     $('#tabMods').hidden = false;
@@ -407,6 +411,8 @@
     else if (a === 'power') togglePower(s);
     else if (a === 'restart') act(s, 'restart', 'Neustart ausgelöst');
     else if (a === 'edit') openEdit(s);
+    else if (a === 'maint') openMaint(s);
+    else if (a === 'invite') openInvite(s);
     else if (a === 'delete') openDelete(s);
   });
   document.addEventListener('click', async e => {
@@ -780,7 +786,7 @@
 
   /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'backups', 'steam', 'panel'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -797,6 +803,7 @@
     if (sec === 'benachrichtigungen') return loadNotify();
     if (sec === 'statusseite') return loadStatusPage();
     if (sec === 'discord') return loadDiscord();
+    if (sec === 'speicher') { perfLoad($('#perfHost'), '_host'); return loadStorage(false); }
     if (sec === 'backups') {
       try {
         const rc = await api('GET', '/api/remote');
@@ -841,7 +848,8 @@
     showErr($('#spErr'));
     let r; try { r = await api('GET', '/api/status-page'); } catch (e) { showErr($('#spErr'), e.message); return; }
     const c = r.config || {};
-    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names;
+    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime;
+    spCal(c.cal_token, c.host);
     $('#spLink').href = c.host ? 'https://' + c.host + '/' : '/status'; $('#spLink').textContent = c.host ? c.host : location.host + '/status';
     $('#spRows').innerHTML = r.servers.length ? r.servers.map(x => `<tr data-id="${esc(x.id)}"><td><input type="checkbox" class="sp-show" ${x.show ? 'checked' : ''} aria-label="${esc(x.name)} zeigen"></td>
       <td><b>${esc(x.name)}</b><br><span class="small muted">${esc(x.game)}</span></td><td><input class="sp-note" maxlength="200" value="${esc(x.note || '')}" placeholder="z. B. Passwort im Discord"></td></tr>`).join('')
@@ -852,7 +860,7 @@
     const servers = {};
     $$('#spRows tr[data-id]').forEach(tr => { servers[tr.dataset.id] = { show: $('.sp-show', tr).checked, note: $('.sp-note', tr).value }; });
     try {
-      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, servers });
+      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, servers });
       toast('Statusseite gespeichert', 'ok'); loadStatusPage();
     } catch (err) { showErr($('#spErr'), err.message); }
   });
@@ -884,6 +892,58 @@
     try { await api('POST', '/api/discord/test'); toast('Statusnachricht ist in Discord', 'ok'); loadDiscord(); } catch (err) { showErr($('#dcErr'), err.message); }
     b.disabled = false;
   });
+  /* ---------------- Speicherplatz ---------------- */
+  let sgTimer = null;
+  async function loadStorage(refresh) {
+    clearTimeout(sgTimer); showErr($('#sgErr'));
+    let v; try { v = await api('GET', '/api/storage' + (refresh ? '?refresh=1' : '')); } catch (e) { showErr($('#sgErr'), e.message); return; }
+    const used = v.total - v.free, pct = v.total ? used / v.total * 100 : 0;
+    $('#sgUsed').style.width = pct.toFixed(1) + '%'; $('#sgUsed').classList.toggle('warn', pct > 90);
+    $('#sgDiskText').innerHTML = v.total ? `<b>${fmtSize(v.free)} frei</b> von ${fmtSize(v.total)} (${Math.round(pct)} % belegt)` : '';
+    $('#sgWhen').textContent = v.busy ? 'wird gerade berechnet …' : v.at && !v.at.startsWith('0001') ? 'Stand ' + fmtWhen(v.at) : '';
+    const rows = v.servers || [];
+    $('#sgRows').innerHTML = rows.length ? rows.map(x => `<tr><td><a href="#/server/${encodeURIComponent(x.id)}/backups">${esc(x.name)}</a><br><span class="small muted">${esc(x.game || '')}</span></td>
+      <td class="num mono">${fmtSize(x.files)}</td><td class="num mono">${fmtSize(x.backups)}${x.n_backups ? `<br><span class="small muted">${x.n_backups} Dateien</span>` : ''}</td><td class="num mono"><b>${fmtSize(x.files + x.backups)}</b></td></tr>`).join('')
+      : `<tr class="empty"><td colspan="4">${v.busy ? 'Wird berechnet …' : 'Noch keine Server.'}</td></tr>`;
+    const orph = v.orphans || [];
+    $('#sgOrphans').innerHTML = orph.length ? `<h3>Reste gelöschter Server</h3><p class="small muted">Diese Ordner gehören zu Servern, die es nicht mehr gibt (beim Löschen wurden die Spieldaten behalten).</p>` +
+      orph.map(o => `<div class="sg-row"><span class="mono">${esc(o.id)}</span><span class="small muted">${o.files ? 'Spieldaten ' + fmtSize(o.files) : 'Backups ' + fmtSize(o.backups)}</span><button type="button" class="btn-line small" data-orphan="${esc(o.id)}" data-kind="${o.files ? 'servers' : 'backups'}">Löschen</button></div>`).join('') : '';
+    const d = v.docker;
+    $('#sgDocker').innerHTML = d ? `
+      <div class="sg-row"><span>Images insgesamt</span><span class="mono">${fmtSize(d.images)}</span><span></span></div>
+      <div class="sg-row"><span>davon von keinem Server benutzt</span><span class="mono">${fmtSize(d.unused_images)}</span><button type="button" class="btn-line small" data-prune="images" ${d.unused_images > 0 ? '' : 'disabled'}>Löschen</button></div>
+      <div class="sg-row"><span>Bau-Zwischenstände</span><span class="mono">${fmtSize(d.build_cache)}</span><button type="button" class="btn-line small" data-prune="cache" ${d.build_cache > 0 ? '' : 'disabled'}>Löschen</button></div>`
+      : `<p class="small muted">${esc(v.docker_error || (v.busy ? 'Wird berechnet …' : 'Keine Angaben.'))}</p>`;
+    $('#sgPanel').textContent = v.panel ? 'Daten des Panels selbst (Verläufe, Statistik, Ortsdatenbank): ' + fmtSize(v.panel) : '';
+    if (v.busy && R.page === 'settings') sgTimer = setTimeout(() => loadStorage(false), 3000);
+  }
+  $('#sgRefresh').addEventListener('click', () => loadStorage(true));
+  $('#sgBlock').addEventListener('click', async e => {
+    const pb = e.target.closest('[data-prune]'), ob = e.target.closest('[data-orphan]');
+    if (pb) {
+      const img = pb.dataset.prune === 'images';
+      if (!await confirmBox(img ? 'Unbenutzte Images löschen?' : 'Bau-Zwischenstände löschen?', img ? 'Images, die gerade kein Server benutzt, werden gelöscht. Braucht ein Server später eines davon, lädt das Panel es neu (das dauert beim ersten Start etwas länger).' : 'Das nächste Bauen eines Server-Images dauert dann etwas länger.', 'Löschen')) return;
+      pb.disabled = true; pb.textContent = 'Räume auf …';
+      try { const r = await api('POST', '/api/storage/prune', { what: pb.dataset.prune }); toast(fmtSize(r.freed) + ' freigegeben', 'ok'); } catch (err) { toast(err.message, 'bad'); }
+      loadStorage(false);
+    } else if (ob) {
+      if (!await confirmBox('Ordner löschen?', 'Die Daten des gelöschten Servers „' + ob.dataset.orphan + '“ werden endgültig entfernt.', 'Löschen')) return;
+      try { await api('DELETE', `/api/storage/orphan/${encodeURIComponent(ob.dataset.orphan)}?kind=${ob.dataset.kind}`); toast('Gelöscht', 'ok'); loadStorage(false); } catch (err) { toast(err.message, 'bad'); }
+    }
+  });
+  function spCal(tok, host) {
+    $('#spCalOff').hidden = !!tok; $('#spCalHas').hidden = !tok;
+    if (tok) $('#spCalUrl').value = (host ? 'https://' + host : location.origin) + '/api/public/calendar/' + tok + '.ics';
+    $('#spCalHas').dataset.host = host || '';
+  }
+  async function spCalSet(enabled, renew) {
+    try { const r = await api('PUT', '/api/status-page/calendar', { enabled, renew }); spCal(r.token, $('#spCalHas').dataset.host || $('#spHost').value.trim()); toast(enabled ? 'Kalender-Link bereit' : 'Kalender-Abo abgeschaltet', 'ok'); }
+    catch (e) { toast(e.message, 'bad'); }
+  }
+  $('#spCalOn').addEventListener('click', () => spCalSet(true, false));
+  $('#spCalRenew').addEventListener('click', async () => { if (await confirmBox('Neuen Kalender-Link erzeugen?', 'Wer den alten Link abonniert hat, bekommt danach keine Events mehr.', 'Neu erzeugen')) spCalSet(true, true); });
+  $('#spCalDel').addEventListener('click', () => spCalSet(false, false));
+  $('#spCalCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#spCalUrl').value); toast('Kopiert', 'ok'); } catch (e) { $('#spCalUrl').select(); } });
   async function loadNotify() {
     showErr($('#ntErr'));
     let r; try { r = await api('GET', '/api/notify'); } catch (e) { showErr($('#ntErr'), e.message); return; }
@@ -1714,6 +1774,181 @@
       `<tr><td>${p.online ? '<span class="dot on" aria-label="online"></span> ' : ''}<b>${esc(p.name)}</b></td><td class="mono small">${plDur(p.seconds)}</td><td class="mono small">${p.sessions}</td><td class="mono small">${esc(fmtWhen(p.last))}</td></tr>`).join('')}</tbody></table>`
       : `<p class="small muted">${v.has_names ? '' : 'Spielzeiten je Spieler gibt es, sobald das Spiel Namen verrät (Steam-Abfrage oder Minecraft).'}</p>`;
   }
+  /* ---------------- Wartungsmodus ---------------- */
+  let MT_ID = null;
+  function openMaint(s) {
+    MT_ID = s.id; const mt = s.maintenance || {};
+    $('#mtUntil').value = mt.until && !mt.until.startsWith('0001') ? toLocalInput(new Date(mt.until)) : toLocalInput(new Date(Date.now() + 2 * 3600e3));
+    $('#mtNote').value = mt.note || ''; $('#mtPorts').checked = !!mt.close_ports; $('#mtPorts').closest('label').hidden = !S.routerOn;
+    $('#mtOk').textContent = s.maintenance ? 'Speichern' : 'Wartung starten'; showErr($('#mtErr'));
+    $('#dlgMaint').showModal();
+  }
+  $('#mtForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#mtErr'));
+    const u = $('#mtUntil').value ? new Date($('#mtUntil').value) : null;
+    try {
+      await api('PUT', `/api/servers/${MT_ID}/maintenance`, { until: u ? u.toISOString() : '0001-01-01T00:00:00Z', note: $('#mtNote').value, close_ports: $('#mtPorts').checked });
+      $('#dlgMaint').close(); toast('Wartungsmodus ist an', 'ok'); loadServers();
+    } catch (err) { showErr($('#mtErr'), err.message); }
+  });
+  $('#svMaintEnd').addEventListener('click', async () => {
+    try { await api('DELETE', `/api/servers/${R.id}/maintenance`); toast('Wartung beendet', 'ok'); loadServers(); } catch (err) { toast(err.message, 'bad'); }
+  });
+  /* ---------------- Einladungslink ---------------- */
+  let IV_ID = null;
+  function ivShow(r) {
+    const inv = r.invite, has = !!inv;
+    $('#ivHas').hidden = !has; $('#ivSave').textContent = has ? 'Hinweis speichern' : 'Link erstellen';
+    if (!has) return;
+    $('#ivNote').value = inv.note || '';
+    const url = (r.base || location.origin) + '/invite/' + inv.token;
+    $('#ivUrl').value = url; $('#ivOpen').href = url;
+    try { const q = qrcode(0, 'M'); q.addData(url); q.make(); $('#ivQR').innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true, alt: 'QR-Code' }); } catch (e) { $('#ivQR').textContent = ''; }
+  }
+  async function openInvite(s) {
+    IV_ID = s.id; showErr($('#ivErr')); $('#ivNote').value = ''; $('#ivHas').hidden = true;
+    $('#dlgInvite').showModal();
+    try { ivShow(await api('GET', `/api/servers/${s.id}/invite`)); } catch (e) { showErr($('#ivErr'), e.message); }
+  }
+  async function ivPut(renew) {
+    showErr($('#ivErr'));
+    try { ivShow(await api('PUT', `/api/servers/${IV_ID}/invite`, { note: $('#ivNote').value, renew })); toast(renew ? 'Neuer Link erstellt, der alte gilt nicht mehr' : 'Gespeichert', 'ok'); loadServers(); }
+    catch (e) { showErr($('#ivErr'), e.message); }
+  }
+  $('#ivForm').addEventListener('submit', e => { e.preventDefault(); ivPut(false); });
+  $('#ivRenew').addEventListener('click', async () => { if (await confirmBox('Neuen Link erzeugen?', 'Der bisherige Link funktioniert danach nicht mehr.', 'Neu erzeugen')) ivPut(true); });
+  $('#ivDel').addEventListener('click', async () => {
+    try { await api('DELETE', `/api/servers/${IV_ID}/invite`); ivShow({ invite: null }); $('#ivNote').value = ''; toast('Link gelöscht', 'ok'); loadServers(); } catch (e) { showErr($('#ivErr'), e.message); }
+  });
+  $('#ivCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#ivUrl').value); toast('Link kopiert', 'ok'); } catch (e) { $('#ivUrl').select(); } });
+  /* ---------------- Leistungsverlauf ---------------- */
+  // One component for a server or the host: CPU, RAM and players as three
+  // stacked charts on a shared time axis with one crosshair.
+  const PERF = new WeakMap();
+  const SPANS = [['24h', '24 Std.'], ['7d', '7 Tage'], ['30d', '30 Tage']];
+  function perfLoad(box, id, force) {
+    let st = PERF.get(box);
+    if (!st) {
+      st = { span: '24h', id: null, at: 0 };
+      PERF.set(box, st);
+      box.innerHTML = `<div class="perf-head"><h3>${id === '_host' ? 'Auslastung des Rechners' : 'Leistung'}</h3><span class="small muted perf-peak"></span>
+        <div class="seg" role="group" aria-label="Zeitraum">${SPANS.map(([k, l]) => `<button type="button" data-span="${k}" aria-pressed="${k === st.span}">${l}</button>`).join('')}</div></div>
+        <ul class="insights perf-notes"></ul>
+        <div class="perf-charts">
+          <figure class="chart" data-k="cpu"><figcaption>CPU</figcaption><svg class="chart-svg" aria-hidden="true"></svg></figure>
+          <figure class="chart" data-k="mem"><figcaption>Arbeitsspeicher</figcaption><svg class="chart-svg" aria-hidden="true"></svg></figure>
+          ${id === '_host' ? '' : '<figure class="chart" data-k="pl"><figcaption>Spieler</figcaption><svg class="chart-svg" aria-hidden="true"></svg></figure>'}
+          <div class="chart-tip" hidden></div>
+        </div>
+        <p class="small muted perf-legend">Graue Flächen: Server war aus. Rote Striche: Fehler oder Absturz.</p>`;
+      box.querySelector('.seg').addEventListener('click', e => {
+        const b = e.target.closest('[data-span]'); if (!b) return;
+        st.span = b.dataset.span; box.querySelectorAll('[data-span]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+        perfLoad(box, st.id, true);
+      });
+      perfHover(box, st);
+      if (id === '_host') box.querySelector('.perf-legend').hidden = true;
+    }
+    if (!force && st.id === id && Date.now() - st.at < 60000) return;
+    st.id = id; st.at = Date.now();
+    const url = id === '_host' ? `/api/host/history?span=${st.span}` : `/api/servers/${id}/history?span=${st.span}`;
+    api('GET', url).then(v => { if (st.id === id) { st.v = v; perfDraw(box, st); } }).catch(() => {});
+  }
+  const gbTxt = mb => mb <= 0 ? '0' : mb >= 1024 ? (mb / 1024).toFixed(1).replace('.', ',') + ' GB' : Math.round(mb) + ' MB';
+  function perfTime(t, span) {
+    const d = new Date(t * 1000);
+    return span === '24h' ? d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  }
+  function perfDraw(box, st) {
+    const v = st.v, pts = v.points || [];
+    box.querySelector('.perf-notes').innerHTML = (v.notes || []).map(n => `<li>${esc(n)}</li>`).join('');
+    const pk = [];
+    if (v.peak.cpu) pk.push('Spitze CPU ' + Math.round(v.peak.cpu) + ' %');
+    if (v.peak.mem) pk.push('RAM ' + gbTxt(v.peak.mem));
+    if (v.peak.players) pk.push(v.peak.players + ' Spieler');
+    box.querySelector('.perf-peak').textContent = pk.join(' · ');
+    const limit = Math.max(0, ...pts.map(p => p.limit || 0));
+    const cfg = {
+      cpu: { get: p => p.cpu, max: Math.max(100, v.peak.cpu || 0), fmt: x => Math.round(x) + ' %' },
+      mem: { get: p => p.mem, max: Math.max(limit, v.peak.mem || 0, 1024), fmt: gbTxt, ref: limit, refLabel: 'Grenze ' + gbTxt(limit) },
+      pl: { get: p => p.players, max: Math.max(1, v.peak.players || 0), fmt: x => String(x), step: true }
+    };
+    box.querySelectorAll('figure.chart').forEach(fig => {
+      const c = cfg[fig.dataset.k], svg = fig.querySelector('svg');
+      const W = Math.max(200, svg.clientWidth || 600), H = 120, L = 46, R = 8, T = 10, B = 20;
+      const x = t => L + (t - v.from) / Math.max(1, v.to - v.from) * (W - L - R);
+      const y = val => T + (1 - val / c.max) * (H - T - B);
+      const bw = Math.max(1, x(v.from + v.step) - x(v.from));
+      let off = '', errs = '';
+      pts.forEach(p => {
+        if (p.k && p.up < 0.5 && st.id !== '_host') off += `<rect class="ch-off" x="${x(p.t).toFixed(1)}" y="${T}" width="${(bw + 1).toFixed(1)}" height="${H - T - B}"/>`;
+        if (p.err) errs += `<rect class="ch-err" x="${x(p.t).toFixed(1)}" y="${H - B - 3}" width="${Math.max(2, bw).toFixed(1)}" height="3"/>`;
+      });
+      // line segments broken at gaps
+      let d = '', area = '', seg = [];
+      const flush = () => {
+        if (seg.length) {
+          d += 'M' + seg.map(q => q.join(' ')).join('L');
+          area += `M${seg[0][0]} ${y(0)}L` + seg.map(q => q.join(' ')).join('L') + `L${seg[seg.length - 1][0]} ${y(0)}Z`;
+        }
+        seg = [];
+      };
+      pts.forEach(p => {
+        const val = c.get(p);
+        if (val == null) { flush(); return; }
+        const px = +x(p.t + v.step / 2).toFixed(1), py = +y(val).toFixed(1);
+        if (c.step && seg.length) seg.push([px, seg[seg.length - 1][1]]);
+        seg.push([px, py]);
+      });
+      flush();
+      const grid = [0, 0.5, 1].map(f => `<line class="ch-grid" x1="${L}" x2="${W - R}" y1="${y(c.max * f).toFixed(1)}" y2="${y(c.max * f).toFixed(1)}"/><text class="ch-ax" x="${L - 6}" y="${(y(c.max * f) + 4).toFixed(1)}" text-anchor="end">${esc(c.fmt(c.step ? Math.round(c.max * f) : c.max * f))}</text>`).join('');
+      const nt = W < 500 ? 3 : 4, narrow = W < 500;
+      const ticks = Array.from({ length: nt }, (_, i) => { const t = v.from + (v.to - v.from) * (i + 0.5) / nt; return `<text class="ch-ax" x="${x(t).toFixed(1)}" y="${H - 4}" text-anchor="middle">${esc(narrow && st.span !== '24h' ? new Date(t * 1000).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) : perfTime(t, st.span))}</text>`; }).join('');
+      const ref = c.ref ? `<line class="ch-ref" x1="${L}" x2="${W - R}" y1="${y(c.ref).toFixed(1)}" y2="${y(c.ref).toFixed(1)}"/><text class="ch-ax ch-reft" x="${W - R}" y="${(y(c.ref) - 4).toFixed(1)}" text-anchor="end">${esc(c.refLabel)}</text>` : '';
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('height', H);
+      svg.innerHTML = off + grid + ref + `<path class="ch-area" d="${area}"/><path class="ch-line" d="${d}"/>` + errs + ticks +
+        `<line class="ch-cross" y1="${T}" y2="${H - B}" hidden/><circle class="ch-dot" r="4" hidden/>`;
+      fig.dataset.empty = d ? '' : '1';
+      fig._geo = { x, y, L, R, W, c };
+    });
+  }
+  function perfHover(box, st) {
+    const tip = box.querySelector('.chart-tip'), wrap = box.querySelector('.perf-charts');
+    const hide = () => { tip.hidden = true; box.querySelectorAll('.ch-cross,.ch-dot').forEach(e => e.setAttribute('hidden', '')); };
+    wrap.addEventListener('pointerleave', hide);
+    wrap.addEventListener('pointermove', e => {
+      const fig = e.target.closest('figure.chart'); if (!fig || !st.v || !fig._geo) return;
+      const svg = fig.querySelector('svg'), r = svg.getBoundingClientRect(), g = fig._geo, v = st.v;
+      const sx = (e.clientX - r.left) / r.width * g.W;
+      if (sx < g.L || sx > g.W - g.R) { hide(); return; }
+      const i = Math.max(0, Math.min(v.points.length - 1, Math.floor((v.from + (sx - g.L) / (g.W - g.L - g.R) * (v.to - v.from) - v.from) / v.step)));
+      const p = v.points[i], cx = g.x(p.t + v.step / 2);
+      box.querySelectorAll('figure.chart').forEach(f => {
+        const s2 = f.querySelector('svg'), gg = f._geo; if (!gg) return;
+        const line = s2.querySelector('.ch-cross'), dot = s2.querySelector('.ch-dot');
+        line.setAttribute('x1', cx); line.setAttribute('x2', cx); line.removeAttribute('hidden');
+        const val = gg.c.get(p);
+        if (val != null) { dot.setAttribute('cx', cx); dot.setAttribute('cy', gg.y(val)); dot.removeAttribute('hidden'); } else dot.setAttribute('hidden', '');
+      });
+      const t0 = new Date(p.t * 1000), t1 = new Date((p.t + v.step) * 1000);
+      const when = st.span === '24h' ? `${t0.toLocaleDateString('de-DE', { weekday: 'short' })} ${t0.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}–${t1.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
+        : t0.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const rows = [];
+      if (!p.k) rows.push('<span class="muted">keine Daten</span>');
+      else {
+        if (st.id !== '_host' && p.up < 1) rows.push(p.up === 0 ? 'aus' : `lief ${Math.round(p.up * 100)} % der Zeit`);
+        if (p.cpu != null) rows.push('CPU <b>' + Math.round(p.cpu) + ' %</b>');
+        if (p.mem != null) rows.push('RAM <b>' + gbTxt(p.mem) + '</b>' + (p.mem_max > p.mem * 1.05 ? ` (Spitze ${gbTxt(p.mem_max)})` : ''));
+        if (p.players != null && st.id !== '_host') rows.push('Spieler <b>' + p.players + '</b>');
+        if (p.err) rows.push('<span class="bad">Fehler/Absturz</span>');
+      }
+      tip.innerHTML = `<span class="muted">${esc(when)}</span><br>${rows.join('<br>')}`;
+      const wr = wrap.getBoundingClientRect();
+      let left = e.clientX - wr.left + 14; if (left > wr.width - 190) left = e.clientX - wr.left - 190;
+      tip.style.left = left + 'px'; tip.style.top = (e.clientY - wr.top + 10) + 'px'; tip.hidden = false;
+    });
+  }
+  window.addEventListener('resize', () => { document.querySelectorAll('[data-perf]').forEach(b => { const st = PERF.get(b); if (st && st.v && b.offsetParent) perfDraw(b, st); }); });
   /* ---------------- Herkunftskarte ---------------- */
   const GEO = { svg: null, vb: null, data: null, forId: null, scope: 'one', fitted: false };
   const MAP_W = 1000, mercY = lat => Math.log(Math.tan(Math.PI / 4 + Math.max(-85, Math.min(85, lat)) * Math.PI / 360));
@@ -2345,7 +2580,7 @@
     if (MG.id !== id || MG.tab !== tab || R.page !== 'server') return;
     if (TK.forId !== id) { TK.checked = false; TK.forId = id; }
     TK.data = d;
-    if (tab === 'tasks') { renderTasks(); loadGameEvents(); } else renderEvents();
+    if (tab === 'tasks') { renderTasks(); loadGameEvents(); } else { renderEvents(); perfLoad($('#perfServer'), id); }
     TK.timer = setTimeout(loadTasks, 10000);
   }
   function renderEvents() {
@@ -2740,6 +2975,7 @@
       a.push({ label: 'Benachrichtigungen (Discord, ntfy)', hint: 'Panel', run: () => openSettings('benachrichtigungen') });
       a.push({ label: 'Statusseite für Mitspieler', hint: 'Panel', run: () => openSettings('statusseite') });
       a.push({ label: 'Discord-Bot einrichten', hint: 'Panel', run: () => openSettings('discord') });
+      a.push({ label: 'Speicherplatz und Auslastung', hint: 'Panel', run: () => openSettings('speicher') });
       a.push({ label: 'Steam-Konto', hint: 'Panel', run: () => openSettings('steam') });
       a.push({ label: 'Panel aktualisieren', hint: 'Panel', run: () => openSettings('panel') });
     }

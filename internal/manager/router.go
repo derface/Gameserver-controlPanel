@@ -132,7 +132,7 @@ func (m *Manager) SyncRouter(ctx context.Context) RouterState {
 	want := map[portKey]store.Server{}
 	if enabled {
 		for _, sv := range m.st.Servers() {
-			if sv.NoRouter || sv.CreatedBy == testCreator || !m.containerRunning(sv.ID) {
+			if sv.NoRouter || sv.CreatedBy == testCreator || !m.containerRunning(sv.ID) || (sv.InMaintenance(time.Now()) && sv.Maintenance.ClosePorts) {
 				continue
 			}
 			for _, p := range sv.Ports {

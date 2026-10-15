@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -150,12 +151,17 @@ func (a *API) discordServers(c discord.Config) []publicServer {
 	}, true, host)
 }
 
-var stateIcon = map[string]string{"online": "🟢", "startet": "🟡", "fehler": "🔴", "aus": "⚫"}
-var stateText = map[string]string{"online": "Online", "startet": "Startet", "fehler": "Fehler", "aus": "Aus"}
+var stateIcon = map[string]string{"online": "🟢", "startet": "🟡", "fehler": "🔴", "aus": "⚫", "wartung": "🛠️"}
+var stateText = map[string]string{"online": "Online", "startet": "Startet", "fehler": "Fehler", "aus": "Aus", "wartung": "Wartung"}
 
 func serverField(p publicServer, detail bool) discord.Field {
 	var b strings.Builder
 	b.WriteString(stateText[p.State])
+	if p.State == "wartung" && p.Until != "" {
+		if t, err := time.Parse(time.RFC3339, p.Until); err == nil {
+			b.WriteString(" bis <t:" + strconv.FormatInt(t.Unix(), 10) + ":t>")
+		}
+	}
 	if p.State == "online" {
 		if p.Max > 0 {
 			fmt.Fprintf(&b, " · %d/%d Spieler", p.Players, p.Max)
@@ -389,6 +395,8 @@ func (a *API) discordCommand(c discord.Config, in discord.Interaction) map[strin
 		return ephemeral("Diesen Server kenne ich nicht, oder er ist für Discord nicht freigegeben.")
 	}
 	switch {
+	case p.State == "wartung":
+		return ephemeral(p.Name + " ist gerade in Wartung. Bitte später nochmal.")
 	case in.Data.Name == "start" && p.State != "aus" && p.State != "fehler":
 		return ephemeral(p.Name + " läuft schon.")
 	case in.Data.Name == "stop" && p.State == "aus":

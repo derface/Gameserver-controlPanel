@@ -26,3 +26,24 @@ a.btn.primary{background:var(--accent);border-color:var(--accent);color:#111;fon
 footer{margin-top:30px;font-size:12px;text-align:center}
 .join.lan{align-items:center}
 .lanl{flex-basis:100%;font-size:13px;color:var(--muted)}
+.uptime{margin-top:6px;display:flex;flex-direction:column;gap:4px}
+.ubars{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;height:26px;align-items:end}
+.ubars i{display:block;height:100%;border-radius:2px;background:linear-gradient(to top,var(--ok) var(--h),color-mix(in srgb,var(--line) 80%,transparent) var(--h))}
+.ubars i.none{background:color-mix(in srgb,var(--line) 45%,transparent)}
+.ubars i.crash{box-shadow:inset 0 3px 0 var(--bad)}
+.ulabel{font-size:12px;color:var(--muted)}
+.state.wartung i{background:var(--warn)}
+body.invite{max-width:560px}
+.inv{gap:10px}
+.inv-h{font-size:15px!important;margin:8px 0 0!important}
+.inv-note{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line))}
+footer a{color:inherit}
+.events{margin-top:26px}
+.ev-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ev-head h2{margin:0;font-size:18px}
+.ev-head .btn{margin-left:auto}
+#evList{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+#evList li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px}
+#evList li.now{border-color:color-mix(in srgb,var(--accent) 60%,var(--line))}
+.when{font-size:13px}
+.small{font-size:12.5px}

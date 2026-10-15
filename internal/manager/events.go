@@ -13,6 +13,7 @@ type Event struct {
 	Time  time.Time `json:"time"`
 	Level string    `json:"level"` // info | warn | error
 	Text  string    `json:"text"`
+	Kind  string    `json:"kind,omitempty"` // crash, update, … (see notify kinds)
 }
 
 const maxEvents = 200
@@ -58,7 +59,7 @@ func (m *Manager) EventKind(id, level, kind, text string) {
 	}
 	m.ev.mu.Lock()
 	defer m.ev.mu.Unlock()
-	evs := append(m.loadEvents(id), Event{Time: time.Now(), Level: level, Text: text})
+	evs := append(m.loadEvents(id), Event{Time: time.Now(), Level: level, Text: text, Kind: kind})
 	if len(evs) > maxEvents {
 		evs = evs[len(evs)-maxEvents:]
 	}
@@ -91,4 +92,17 @@ func (m *Manager) dropEvents(id string) {
 		delete(m.ev.cache, id)
 	}
 	_ = os.Remove(m.eventFile(id))
+}
+
+// EventsSince returns the events of a server since t, oldest first.
+func (m *Manager) EventsSince(id string, t time.Time) []Event {
+	m.ev.mu.Lock()
+	defer m.ev.mu.Unlock()
+	var out []Event
+	for _, e := range m.loadEvents(id) {
+		if !e.Time.Before(t) {
+			out = append(out, e)
+		}
+	}
+	return out
 }

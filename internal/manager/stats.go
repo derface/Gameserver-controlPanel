@@ -134,6 +134,13 @@ func (m *Manager) runStats(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case now := <-t.C:
+			m.recordHistory(now)
+			if now.Minute() == 7 && now.Hour() == 4 {
+				m.pruneHistory(now)
+			}
+			if now.Minute() == 23 {
+				m.checkDisk()
+			}
 			for _, sv := range m.st.Servers() {
 				if sv.CreatedBy == testCreator || sv.ContainerID == "" {
 					continue

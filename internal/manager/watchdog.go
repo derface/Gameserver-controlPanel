@@ -73,6 +73,15 @@ func (m *Manager) recordCrash(sv store.Server, tpl templates.Template, l *live, 
 	}
 	l.crashes = append(keep, now)
 	switch {
+	case sv.InMaintenance(now):
+		// someone is working on it: no restarts, and stop Docker's own restart
+		m.EventKind(sv.ID, "warn", "", "Server "+why+" (Wartung, kein automatischer Neustart).")
+		go func(id, cid string, timeout int) {
+			m.expect(id)
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+			_ = m.dk.Stop(ctx, cid, timeout)
+		}(sv.ID, sv.ContainerID, tpl.StopTimeout)
 	case sv.Watch.NoAutoRestart:
 		m.EventKind(sv.ID, "error", "crash", "Server "+why+". Automatischer Neustart ist ausgeschaltet.")
 	case len(l.crashes) >= crashLimit:
@@ -94,7 +103,7 @@ func (m *Manager) recordCrash(sv store.Server, tpl templates.Template, l *live, 
 // hangCheck restarts a server that answered the player query in this run
 // but has not answered for a while.
 func (m *Manager) hangCheck(sv store.Server, l *live) {
-	if !sv.Watch.HangRestart || l.Phase != "running" || l.answeredAt.IsZero() {
+	if !sv.Watch.HangRestart || l.Phase != "running" || l.answeredAt.IsZero() || sv.InMaintenance(time.Now()) {
 		return
 	}
 	if l.answeredRun != l.State.StartedAt || l.hangRun == l.State.StartedAt {

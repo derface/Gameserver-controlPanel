@@ -71,6 +71,8 @@ type Server struct {
 	GameEvents  []GameEvent       `json:"game_events,omitempty"`
 	Watch       Watch             `json:"watch"`
 	NoRouter    bool              `json:"no_router,omitempty"` // do not open its ports in the router
+	Maintenance *Maintenance      `json:"maintenance,omitempty"`
+	Invite      *Invite           `json:"invite,omitempty"`
 }
 
 // Task is a scheduled action of one server.
@@ -138,14 +140,40 @@ type Settings struct {
 	Geo bool `json:"geo,omitempty"`
 }
 
+// Maintenance marks a server as being worked on: tasks and the crash
+// watchdog pause, the status page and Discord say so.
+type Maintenance struct {
+	Since      time.Time `json:"since"`
+	Until      time.Time `json:"until,omitempty"` // zero: until ended by hand
+	Note       string    `json:"note,omitempty"`
+	ClosePorts bool      `json:"close_ports,omitempty"` // close router ports: only the home network can join
+	By         string    `json:"by,omitempty"`
+}
+
+// Invite is a public link for friends: address, how to join, a note.
+type Invite struct {
+	Token   string    `json:"token"`
+	Note    string    `json:"note,omitempty"`
+	Created time.Time `json:"created"`
+}
+
+// InMaintenance reports whether the server is in maintenance at t.
+func (s Server) InMaintenance(t time.Time) bool {
+	return s.Maintenance != nil && (s.Maintenance.Until.IsZero() || t.Before(s.Maintenance.Until))
+}
+
 // StatusConfig configures the public status page (no login).
 type StatusConfig struct {
-	Enabled   bool                    `json:"enabled"`
-	Host      string                  `json:"host,omitempty"` // own host name, e.g. status.example.com
-	Title     string                  `json:"title,omitempty"`
-	Note      string                  `json:"note,omitempty"`
-	ShowNames bool                    `json:"show_names"` // show who is online
-	Servers   map[string]StatusServer `json:"servers,omitempty"`
+	Enabled   bool   `json:"enabled"`
+	Host      string `json:"host,omitempty"` // own host name, e.g. status.example.com
+	Title     string `json:"title,omitempty"`
+	Note      string `json:"note,omitempty"`
+	ShowNames bool   `json:"show_names"` // show who is online
+	// CalToken is the key in the calendar feed URL (empty: no feed).
+	CalToken string `json:"cal_token,omitempty"`
+	// HideUptime hides the 30-day online history on the page.
+	HideUptime bool                    `json:"hide_uptime,omitempty"`
+	Servers    map[string]StatusServer `json:"servers,omitempty"`
 }
 
 type StatusServer struct {
