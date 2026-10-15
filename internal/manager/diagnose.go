@@ -395,6 +395,12 @@ func rules(sv store.Server, tpl templates.Template, l *live, hist []loadSample, 
 	}
 	if x := has(`(?i)Error! App .* state is|No subscription|Missing configuration|Disk write failure`); x != "" {
 		out = append(out, "Steam-Download-Fehler: "+x)
+		if mm := steamStateRe.FindStringSubmatch(x); mm != nil {
+			out = append(out, "Bedeutung von "+mm[1]+" laut SteamCMD-Fehlerliste: "+SteamStateHint(mm[1]))
+		}
+	}
+	if x := has(`(?i)\[steam\] .*(timed out|timeout|resolve|failed|unauthor|denied)`); x != "" {
+		out = append(out, "Steams eigenes Protokoll (content_log) meldet: "+x)
 	}
 	if len(hist) >= 5 {
 		var hi, cpuHi int

@@ -18,7 +18,7 @@ import (
 
 // Bump the tag whenever the Dockerfile changes: containers built from an
 // older tag are recreated automatically on their next start.
-const SteamImage = "gamepanel/steam-runtime:11"
+const SteamImage = "gamepanel/steam-runtime:12"
 
 const steamDockerfile = `FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive LANG=en_US.UTF-8
@@ -57,6 +57,27 @@ steam() {
   fi
   return $rc
 }
+# After a failed SteamCMD run: show what Steam's own log says, and clear the
+# app's download state. "state is 0x6" often means a stuck manifest or a
+# half download; with them gone the next try starts clean.
+steam_repair() {
+  local app="$1" dir="$2"
+  local code
+  code=$(grep -oE "state is 0x[0-9a-fA-F]+" /tmp/gp-steamcmd.log | tail -1 | grep -oE "0x[0-9a-fA-F]+" || true)
+  for f in /opt/steamcmd/logs/content_log.txt "${HOME}/Steam/logs/content_log.txt" "${HOME}/.local/share/Steam/logs/content_log.txt"; do
+    if [ -f "$f" ]; then
+      echo "[panel] Steam-Protokoll (content_log, letzte Meldungen):"
+      grep -iE "error|fail|timeout|timed out|resolve|unauthor|denied|disk|space|write|connect" "$f" | tail -n 12 | sed 's/^/[steam] /' || true
+      break
+    fi
+  done
+  if [ -n "$code" ]; then
+    echo "[panel] SteamCMD meldet ${code}: Download-Stand von App ${app} wird zurückgesetzt"
+    rm -f "${dir}/steamapps/appmanifest_${app}.acf" 2>/dev/null || true
+    rm -rf "${dir}/steamapps/downloading/${app}" "${dir}/steamapps/downloading/state_${app}"* "${dir}/steamapps/temp/${app}" 2>/dev/null || true
+    VALIDATE="validate"
+  fi
+}
 # Install with "validate" only the first time. Updates run when the panel
 # started the server (it leaves /data/.gp-update-now), not when Docker
 # restarts it after a crash: otherwise every crash checks gigabytes again.
@@ -82,6 +103,7 @@ if [ -n "${NEED}" ]; then
       echo "[panel] SteamCMD: Basis-App ${GP_BASE_APP} nach ${GP_BASE_DIR}"
       mkdir -p "/data/server/${GP_BASE_DIR}"
       if ! steam ${PLATFORM} +force_install_dir "/data/server/${GP_BASE_DIR}" +login "${LOGIN}" +app_update "${GP_BASE_APP}" ${VALIDATE}; then
+        steam_repair "${GP_BASE_APP}" "/data/server/${GP_BASE_DIR}"
         echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"; sleep 10; continue
       fi
     fi
@@ -95,6 +117,8 @@ if [ -n "${NEED}" ]; then
         break
       fi
       echo "[panel] SteamCMD: Mod ${GP_MOD} fehlt noch"
+    else
+      steam_repair "${GP_APP_ID}" /data/server
     fi
     echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"
     sleep 10
