@@ -168,6 +168,7 @@
       <section class="lcd" id="konsole" aria-label="Konsole">
         <div class="lcd-head"><span id="conName">Konsole</span><span class="live" id="conLive" hidden><i></i>Live</span></div>
         <div class="lines" id="lines" data-noi18n></div>
+        <div class="macro-bar op-only" id="macroBar" hidden></div>
         <form class="lcd-in op-only" id="cmdForm">
           <span aria-hidden="true">›</span>
           <label class="sr" for="cmdInput">Befehl an den Server senden</label>
@@ -306,8 +307,9 @@
     </div>
     <form class="tk-form" id="tkForm">
       <label class="field"><span>Aktion</span>
-        <select id="tkAction"><option value="restart">Neustart</option><option value="update">Update</option><option value="backup">Backup</option><option value="command">Befehl senden</option><option value="stop">Stoppen</option><option value="start">Starten</option></select></label>
+        <select id="tkAction"><option value="restart">Neustart</option><option value="update">Update</option><option value="backup">Backup</option><option value="command">Befehl senden</option><option value="macro">Makro ausführen</option><option value="stop">Stoppen</option><option value="start">Starten</option></select></label>
       <label class="field tk-cmd" id="tkCmdWrap" hidden><span>Befehl</span><input id="tkCmd" maxlength="500" placeholder="z. B. save-all"></label>
+      <label class="field tk-cmd" id="tkMacroWrap" hidden><span>Makro</span><select id="tkMacro"></select></label>
       <label class="field"><span>Zeitplan</span>
         <select id="tkKind"><option value="daily">Täglich</option><option value="days">An bestimmten Tagen</option><option value="every">Alle … Stunden</option></select></label>
       <label class="field" id="tkAtWrap"><span>Uhrzeit</span><input id="tkAt" type="time" value="04:00" required></label>
@@ -642,6 +644,7 @@
     <label class="check"><input type="checkbox" id="spNames"> Namen der Spieler zeigen, die gerade online sind</label>
     <label class="check"><input type="checkbox" id="spUptime"> Online-Verlauf der letzten 30 Tage zeigen</label>
     <label class="check"><input type="checkbox" id="spPlayers"> Spielerliste mit Spielzeiten zeigen (nur Spiele, die Namen verraten)</label>
+    <label class="check"><input type="checkbox" id="spWishes"> Wunschliste: Mitspieler schlagen Spiele und Mods vor und stimmen ab</label>
     <label class="check"><input type="checkbox" id="spModDl"> Mitspieler können die Client-Mods als Paket herunterladen (Statusseite und Einladungslinks)</label>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zeigen</th><th>Server</th><th>Hinweis für Mitspieler</th></tr></thead><tbody id="spRows"></tbody></table></div>
     <div class="sp-cal">
@@ -656,6 +659,11 @@
     <p class="err" id="spErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
+  <div id="wiBlock" class="set-block admin-only" data-sec="statusseite">
+    <h2>Wünsche der Mitspieler</h2>
+    <p class="small muted">Ist die Wunschliste an, können Besucher der Statusseite Spiele, Mods oder anderes vorschlagen und dafür stimmen, ohne Anmeldung. Jede Adresse zählt pro Wunsch einmal; neue Wünsche sind auf drei pro Stunde und Adresse begrenzt. Was du hier als Stand und Antwort einträgst, sehen alle.</p>
+    <div id="wiList"></div>
+  </div>
   <form id="dcForm" class="set-block admin-only" data-sec="discord" autocomplete="off">
     <h2>Discord-Bot</h2>
     <p class="muted small">Ein eigener Bot für deinen Discord-Server: eine Statusnachricht, die sich selbst aktualisiert, und die Befehle <code>/status</code>, <code>/start</code>, <code>/stop</code> und <code>/restart</code>. <code>/status</code> darf jeder, starten und stoppen nur die Rollen und Personen unten.</p>
@@ -913,6 +921,17 @@
     </div>
     <p class="err" id="mvErr" role="alert" hidden></p>
     <div class="dlg-actions"><button type="button" class="btn-line" data-close id="mvClose">Abbrechen</button><button type="submit" class="btn-accent" id="mvOk">Umziehen</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlgMacros" class="dlg">
+  <form id="mcForm" novalidate>
+    <div class="dlg-head"><h2>Makros</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+    <p class="small muted">Gespeicherte Befehlsfolgen für die Konsole, ein Befehl pro Zeile. <span class="mono">warte 10</span> macht 10 Sekunden Pause, Zeilen mit <span class="mono">#</span> sind Kommentare. Makros lassen sich auch als Aufgabe planen.</p>
+    <div id="mcList" class="mc-list"></div>
+    <button type="button" class="btn-line" id="mcAdd">+ Neues Makro</button>
+    <p class="err" id="mcErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="btn-line" data-close>Abbrechen</button><button type="submit" class="btn-accent">Speichern</button></div>
   </form>
 </dialog>
 

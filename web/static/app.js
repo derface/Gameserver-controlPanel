@@ -595,6 +595,7 @@
     closeConsole();
     const s = byId(id); if (!s) return;
     S.consoleId = id;
+    loadMacros(id);
     $('#conName').textContent = 'Konsole';
     $('#lines').innerHTML = isOn(s) ? '' : '<div class="dim">Der Server ist gestoppt. Nach dem Start erscheint hier seine Ausgabe.</div>';
     $('#cmdInput').disabled = false;
@@ -615,6 +616,58 @@
       setTimeout(() => { const s = byId(id); if (S.consoleId === id && !S.es && s && isOn(s)) connectConsole(id); else if (S.consoleId === id && !S.es) S.reconnect = id; }, 4000);
     }
   }
+  /* ---------------- Makros ---------------- */
+  const MC = { id: null, list: [] };
+  async function loadMacros(id) {
+    let d; try { d = await api('GET', `/api/servers/${id}/macros`); } catch (e) { return; }
+    MC.id = id; MC.list = d.macros || [];
+    renderMacroBar();
+    if (MG.id === id && MG.tab === 'tasks' && TK.data) tkFormFields();
+  }
+  function renderMacroBar() {
+    const bar = $('#macroBar');
+    if (!can('operator') || MC.id !== S.consoleId) { bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.innerHTML = MC.list.map(m => `<button type="button" class="mc-run" data-mc-run="${esc(m.id)}" title="${esc(m.lines.join(' · '))}">▶ ${esc(m.name)}</button>`).join('') +
+      `<button type="button" class="mc-edit" data-mc-edit>${MC.list.length ? 'Makros …' : '+ Makro anlegen'}</button>`;
+  }
+  $('#macroBar').addEventListener('click', async e => {
+    if (e.target.closest('[data-mc-edit]')) { openMacros(); return; }
+    const b = e.target.closest('[data-mc-run]'); if (!b) return;
+    const m = MC.list.find(x => x.id === b.dataset.mcRun); if (!m) return;
+    b.disabled = true;
+    try { await api('POST', `/api/servers/${MC.id}/macros/${m.id}/run`); addLine('› Makro „' + m.name + '“ läuft', 'me'); }
+    catch (err) { toast(err.message, 'bad'); }
+    setTimeout(() => { b.disabled = false; }, 1500);
+  });
+  const macroExample = () => {
+    const s = byId(MC.id), t = s && S.tplById[s.template];
+    return t && /minecraft/i.test(t.id) ? 'say Das Event beginnt in 5 Minuten!\nwarte 300\nweather clear\ntime set day\nsay Los geht\'s!' : 'say Achtung, gleich geht es los\nwarte 30\nsave';
+  };
+  function macroItem(m) {
+    return `<div class="mc-item" data-id="${esc(m.id || '')}">
+      <div class="mc-head"><input class="mc-name" maxlength="40" placeholder="Name, z. B. Event-Start" value="${esc(m.name || '')}" aria-label="Name des Makros">
+      <button type="button" class="icon-btn mc-del" aria-label="Makro löschen" title="Löschen">${ICON.del}</button></div>
+      <textarea class="mc-lines mono" rows="5" spellcheck="false" placeholder="${esc(macroExample())}" aria-label="Befehle, einer pro Zeile" data-noi18n>${esc((m.lines || []).join('\n'))}</textarea></div>`;
+  }
+  function openMacros() {
+    $('#mcList').innerHTML = MC.list.length ? MC.list.map(macroItem).join('') : macroItem({});
+    showErr($('#mcErr'));
+    $('#dlgMacros').showModal();
+  }
+  $('#mcAdd').addEventListener('click', () => { $('#mcList').insertAdjacentHTML('beforeend', macroItem({})); $('#mcList').lastElementChild.querySelector('.mc-name').focus(); });
+  $('#mcList').addEventListener('click', e => { const b = e.target.closest('.mc-del'); if (b) b.closest('.mc-item').remove(); });
+  $('#mcForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#mcErr'));
+    const macros = $$('#mcList .mc-item').map(el => ({ id: el.dataset.id, name: el.querySelector('.mc-name').value, lines: el.querySelector('.mc-lines').value.split('\n') }))
+      .filter(m => m.name.trim() || m.lines.join('').trim());
+    try {
+      const d = await api('PUT', `/api/servers/${MC.id}/macros`, { macros });
+      MC.list = d.macros || []; renderMacroBar(); $('#dlgMacros').close(); toast('Makros gespeichert', 'ok');
+    } catch (err) { showErr($('#mcErr'), err.message); }
+  });
+  const macroName = id => { const m = MC.list.find(x => x.id === id); return m ? m.name : 'gelöschtes Makro'; };
+
   $('#cmdForm').addEventListener('submit', async e => {
     e.preventDefault();
     const inp = $('#cmdInput'), cmd = inp.value.trim(), id = S.consoleId;
@@ -1037,11 +1090,41 @@
     catch (err) { showErr($('#sErr'), err.message); }
     finally { b.disabled = false; b.textContent = 'Verbindung testen'; }
   });
+  /* Wunschliste */
+  const WISH_KIND = { spiel: 'Spiel', mod: 'Mod', sonstiges: 'Sonstiges' };
+  const WISH_STATE = { offen: 'Offen', geplant: 'Geplant', umgesetzt: 'Umgesetzt', abgelehnt: 'Abgelehnt' };
+  async function loadWishes() {
+    let d; try { d = await api('GET', '/api/wishes'); } catch (e) { return; }
+    renderWishes(d.wishes || []);
+  }
+  function renderWishes(list) {
+    $('#wiList').innerHTML = list.length ? `<div class="tbl-wrap"><table class="tbl wi-tbl"><thead><tr><th>Wunsch</th><th class="num">Stimmen</th><th>Stand</th><th>Antwort</th><th></th></tr></thead><tbody>${list.map(w => `<tr data-wid="${esc(w.id)}">
+      <td><b data-noi18n>${esc(w.title)}</b><br><span class="small muted">${esc(WISH_KIND[w.kind] || w.kind)}${w.by ? ' · von <span data-noi18n>' + esc(w.by) + '</span>' : ''} · ${esc(fmtWhen(w.created))}</span></td>
+      <td class="num mono">${w.votes}</td>
+      <td><select class="wi-state" aria-label="Stand">${Object.entries(WISH_STATE).map(([k, v]) => `<option value="${k}"${k === w.status ? ' selected' : ''}>${v}</option>`).join('')}</select></td>
+      <td><input class="wi-answer" maxlength="200" value="${esc(w.answer || '')}" placeholder="z. B. kommt nächstes Wochenende" aria-label="Antwort"></td>
+      <td><button type="button" class="icon-btn wi-del" aria-label="Wunsch löschen" title="Löschen">${ICON.del}</button></td></tr>`).join('')}</tbody></table></div>`
+      : '<p class="small muted">Noch keine Wünsche.</p>';
+  }
+  $('#wiList').addEventListener('change', async e => {
+    const tr = e.target.closest('tr[data-wid]'); if (!tr) return;
+    const body = e.target.classList.contains('wi-state') ? { status: e.target.value } : e.target.classList.contains('wi-answer') ? { answer: e.target.value } : null;
+    if (!body) return;
+    try { await api('PATCH', '/api/wishes/' + tr.dataset.wid, body); toast('Gespeichert', 'ok'); } catch (err) { toast(err.message, 'bad'); loadWishes(); }
+  });
+  $('#wiList').addEventListener('click', async e => {
+    const b = e.target.closest('.wi-del'); if (!b) return;
+    const tr = b.closest('tr[data-wid]');
+    if (!await confirmBox('Wunsch löschen?', 'Der Wunsch verschwindet samt Stimmen von der Statusseite.', 'Löschen')) return;
+    try { const d = await api('DELETE', '/api/wishes/' + tr.dataset.wid); renderWishes(d.wishes || []); } catch (err) { toast(err.message, 'bad'); }
+  });
+
   async function loadStatusPage() {
     showErr($('#spErr'));
     let r; try { r = await api('GET', '/api/status-page'); } catch (e) { showErr($('#spErr'), e.message); return; }
     const c = r.config || {};
-    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime; $('#spModDl').checked = !!c.mod_download; $('#spPlayers').checked = !!c.show_players;
+    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime; $('#spModDl').checked = !!c.mod_download; $('#spPlayers').checked = !!c.show_players; $('#spWishes').checked = !!c.wishes;
+    loadWishes();
     spCal(c.cal_token, c.host);
     $('#spLink').href = c.host ? 'https://' + c.host + '/' : '/status'; $('#spLink').textContent = c.host ? c.host : location.host + '/status';
     $('#spRows').innerHTML = r.servers.length ? r.servers.map(x => `<tr data-id="${esc(x.id)}"><td><input type="checkbox" class="sp-show" ${x.show ? 'checked' : ''} aria-label="${esc(x.name)} auf der Statusseite zeigen"></td>
@@ -1053,7 +1136,7 @@
     const servers = {};
     $$('#spRows tr[data-id]').forEach(tr => { servers[tr.dataset.id] = { show: $('.sp-show', tr).checked, note: $('.sp-note', tr).value }; });
     try {
-      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, mod_download: $('#spModDl').checked, show_players: $('#spPlayers').checked, servers });
+      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, mod_download: $('#spModDl').checked, show_players: $('#spPlayers').checked, wishes: $('#spWishes').checked, servers });
       toast('Statusseite gespeichert', 'ok'); loadStatusPage();
     } catch (err) { showErr($('#spErr'), err.message); }
   });
@@ -2855,6 +2938,7 @@
     try { d = await api('GET', `/api/servers/${id}/tasks`); } catch (e) { toast(e.message, 'bad'); return; }
     if (MG.id !== id || MG.tab !== tab || R.page !== 'server') return;
     if (TK.forId !== id) { TK.checked = false; TK.forId = id; }
+    if (MC.id !== id && tab === 'tasks') loadMacros(id);
     TK.data = d;
     if (tab === 'tasks') { renderTasks(); loadGameEvents(); } else { renderEvents(); perfLoad($('#perfServer'), id); }
     TK.timer = setTimeout(loadTasks, 10000);
@@ -2881,7 +2965,7 @@
     const tasks = d.tasks || [];
     renderSuggestions(tasks);
     $('#tkRows').innerHTML = tasks.length ? tasks.map((t, i) => {
-      const what = esc(t.label) + (t.command ? ` <span class="tk-cmdtxt">${esc(t.command)}</span>` : '') + tkTags(t);
+      const what = esc(t.label) + (t.command ? ` <span class="tk-cmdtxt">${esc(t.action === 'macro' ? macroName(t.command) : t.command)}</span>` : '') + tkTags(t);
       const res = t.last_result ? `<span class="tk-res small ${/^Fehler/.test(t.last_result) ? 'bad' : 'muted'}" title="${esc(t.last_result)}">${esc(t.last_result)}</span>` : '';
       return `<tr data-i="${i}"><td><input type="checkbox" class="tk-on" ${t.enabled ? 'checked' : ''} aria-label="Aufgabe aktiv"></td><td>${esc(schedText(t))}</td><td>${what}</td>
         <td class="mono small">${t.enabled ? esc(fmtWhen(t.next_run)) : 'aus'}</td><td><span class="mono small">${esc(fmtWhen(t.last_run))}</span>${res}</td>
@@ -2967,6 +3051,13 @@
   function tkFormFields() {
     const a = $('#tkAction').value, k = $('#tkKind').value, d = TK.data || {};
     $('#tkCmdWrap').hidden = a !== 'command';
+    $('#tkMacroWrap').hidden = a !== 'macro';
+    if (a === 'macro') {
+      const cur = $('#tkMacro').value, ok = MC.id === MG.id;
+      $('#tkMacro').innerHTML = ok && MC.list.length ? MC.list.map(m => `<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('') : '<option value="">Noch keine Makros (in der Konsole anlegen)</option>';
+      if (cur) $('#tkMacro').value = cur;
+      if (!ok) loadMacros(MG.id);
+    }
     $('#tkAtWrap').hidden = k === 'every'; $('#tkEveryWrap').hidden = k !== 'every'; $('#tkDays').hidden = k !== 'days';
     const warnable = ['restart', 'update', 'stop'].includes(a);
     $('#tkEmptyWrap').hidden = !warnable || !d.can_query;
@@ -2986,7 +3077,7 @@
   $('#tkForm').addEventListener('submit', async e => {
     e.preventDefault();
     const k = $('#tkKind').value, a = $('#tkAction').value;
-    const t = { action: a, command: $('#tkCmd').value, enabled: true, warn_min: $('#tkWarnWrap').hidden ? 0 : +$('#tkWarn').value,
+    const t = { action: a, command: a === 'macro' ? $('#tkMacro').value : $('#tkCmd').value, enabled: true, warn_min: $('#tkWarnWrap').hidden ? 0 : +$('#tkWarn').value,
       when_empty: !$('#tkEmptyWrap').hidden && $('#tkEmpty').checked, only_if_update: !$('#tkIfUpdWrap').hidden && $('#tkIfUpd').checked,
       backup_first: !$('#tkBackupWrap').hidden && $('#tkBackup').checked };
     if (t.when_empty) t.max_wait_min = +$('#tkMaxWait').value;

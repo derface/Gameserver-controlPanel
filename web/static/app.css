@@ -877,3 +877,12 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 #mvRun.done .mv-bar i{width:100%;animation:none}
 @keyframes mvslide{from{transform:translateX(-30%)}to{transform:translateX(220%)}}
 @media (prefers-reduced-motion:reduce){.mv-bar i{animation:none;width:100%;opacity:.5}}
+.macro-bar{display:flex;flex-wrap:wrap;gap:6px;padding:6px 10px;border-top:1px solid var(--line)}
+.macro-bar button{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:4px 10px;cursor:pointer}
+.macro-bar button:hover{border-color:var(--accent)}
+.macro-bar .mc-edit{color:var(--muted);border-style:dashed}
+.mc-list{display:flex;flex-direction:column;gap:12px;margin:10px 0}
+.mc-item{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.mc-head{display:flex;gap:8px;align-items:center}.mc-head .mc-name{flex:1}
+.mc-lines{width:100%;resize:vertical;min-height:90px}
+.wi-tbl td{vertical-align:top}.wi-tbl .wi-answer{width:100%;min-width:160px}

@@ -24,6 +24,18 @@
     <div class="ev-head"><h2>Kommende Events</h2><a id="cal" class="btn" href="#" hidden>Im Kalender abonnieren</a></div>
     <ul id="evList"></ul>
   </section>
+  <section id="wishes" class="events" hidden>
+    <div class="ev-head"><h2>Wünsche</h2><span class="muted small">Was soll als Nächstes kommen? Stimm ab oder wünsch dir was.</span></div>
+    <form id="wiForm" class="wi-form" autocomplete="off">
+      <input id="wiTitle" maxlength="80" placeholder="z. B. ein Satisfactory-Server" aria-label="Dein Wunsch" required>
+      <select id="wiKind" aria-label="Art"><option value="spiel">Spiel</option><option value="mod">Mod</option><option value="sonstiges">Sonstiges</option></select>
+      <input id="wiBy" maxlength="30" placeholder="Dein Name (optional)" aria-label="Dein Name">
+      <input id="wiWeb" name="website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+      <button class="btn primary" type="submit">Wünschen</button>
+    </form>
+    <p id="wiMsg" class="small" hidden></p>
+    <ul id="wiList" class="wi-list"></ul>
+  </section>
 </main>
 <footer class="muted">Aktualisiert sich von selbst · <span id="upd"></span> · betrieben mit Bytewise Panel</footer>
 <script src="i18n.js"></script>

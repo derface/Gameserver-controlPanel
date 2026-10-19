@@ -26,10 +26,11 @@ var Kinds = []struct{ Key, Label string }{
 	{"startstop", "Start und Stopp durch Benutzer"},
 	{"ai", "KI-Diagnosen"},
 	{"panel", "Neue Panel-Version"},
+	{"wish", "Neue Wünsche auf der Statusseite"},
 }
 
 // DefaultKinds are on when nothing was chosen yet.
-var DefaultKinds = []string{"crash", "error", "update", "event", "ai", "panel"}
+var DefaultKinds = []string{"crash", "error", "update", "event", "ai", "panel", "wish"}
 
 type Config struct {
 	Discord   string   `json:"discord,omitempty"`    // webhook URL

@@ -13,6 +13,7 @@
     } catch (e) { $('#msg').textContent = e.message; return; }
     document.title = d.title + ' · Status';
     $('#title').textContent = d.title;
+    if (window.gpWishes) window.gpWishes(!!d.wishes);
     $('#note').hidden = !d.note; $('#note').textContent = d.note || '';
     $('#msg').hidden = d.servers.length > 0;
     $('#msg').textContent = 'Gerade ist kein Server freigegeben.';
@@ -82,5 +83,47 @@
     const b = e.target.closest('[data-copy]'); if (!b) return;
     try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Kopiert'; setTimeout(() => { b.textContent = 'Kopieren'; }, 1500); } catch { /* ältere Browser: Text ist markierbar */ }
   });
-  load(); setInterval(() => { if (!document.hidden) load(); }, 20000);
+  // wish list
+  const WKIND = { spiel: 'Spiel', mod: 'Mod', sonstiges: 'Sonstiges' };
+  const WSTATE = { offen: '', geplant: 'Geplant', umgesetzt: 'Umgesetzt', abgelehnt: 'Abgelehnt' };
+  let wishesOn = false;
+  async function loadWishes() {
+    try {
+      const r = await fetch('/api/public/wishes', { cache: 'no-store' }); if (!r.ok) return;
+      const d = await r.json();
+      $('#wiList').innerHTML = (d.wishes || []).map(w => {
+        const closed = w.status === 'umgesetzt' || w.status === 'abgelehnt';
+        return `<li class="wi ${esc(w.status)}"><button type="button" class="vote${w.voted ? ' on' : ''}" data-vote="${esc(w.id)}" ${closed ? 'disabled' : ''} aria-pressed="${w.voted ? 'true' : 'false'}" aria-label="Dafür stimmen">▲<b>${w.votes}</b></button>
+          <div><span class="wt">${esc(w.title)}</span> <span class="muted small">${esc(WKIND[w.kind] || '')}${w.by ? ' · ' + esc(w.by) : ''}</span>${WSTATE[w.status] ? ` <span class="badge ${esc(w.status)}">${WSTATE[w.status]}</span>` : ''}
+          ${w.answer ? `<p class="small answer">${esc(w.answer)}</p>` : ''}</div></li>`;
+      }).join('') || '<li class="muted small">Noch keine Wünsche. Fang an!</li>';
+    } catch (e) { /* nächste Runde */ }
+  }
+  const wiMsg = (t, bad) => { const m = $('#wiMsg'); m.hidden = !t; m.textContent = t || ''; m.className = 'small' + (bad ? ' bad' : ''); };
+  $('#wiForm').addEventListener('submit', async e => {
+    e.preventDefault(); wiMsg('');
+    const b = e.target.querySelector('button'); b.disabled = true;
+    try {
+      const r = await fetch('/api/public/wishes', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: $('#wiTitle').value, kind: $('#wiKind').value, by: $('#wiBy').value, website: $('#wiWeb').value }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Hat nicht geklappt');
+      $('#wiTitle').value = ''; wiMsg('Danke! Dein Wunsch steht jetzt auf der Liste.'); loadWishes();
+    } catch (err) { wiMsg(err.message, true); }
+    b.disabled = false;
+  });
+  $('#wiList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-vote]'); if (!b) return;
+    b.disabled = true;
+    try {
+      const r = await fetch('/api/public/wishes/' + encodeURIComponent(b.dataset.vote) + '/vote', { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Hat nicht geklappt');
+      b.classList.toggle('on', d.voted); b.setAttribute('aria-pressed', d.voted ? 'true' : 'false'); b.querySelector('b').textContent = d.votes;
+    } catch (err) { wiMsg(err.message, true); }
+    b.disabled = false;
+  });
+  window.gpWishes = on => { $('#wishes').hidden = !on; if (on && !wishesOn) loadWishes(); wishesOn = on; };
+
+  load(); setInterval(() => { if (!document.hidden) { load(); if (wishesOn) loadWishes(); } }, 20000);
 })();

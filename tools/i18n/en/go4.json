@@ -53,5 +53,14 @@
  "Umgezogen, aber der alte Server ließ sich nicht entfernen (bitte von Hand löschen): %w": "Moved, but the old server could not be removed (please delete it by hand): %w",
  "Der Rechner des Servers hat Version %s, hier läuft %s. Bitte erst beide auf denselben Stand bringen": "The server's machine runs version %s, this one %s. Please bring both to the same version first",
  "Der Ziel-Rechner hat Version %s, hier läuft %s. Bitte erst beide auf denselben Stand bringen": "The target machine runs version %s, this one %s. Please bring both to the same version first",
- "Die Vorlage %s gibt es hier nicht. Ist das Panel hier auf demselben Stand?": "Template %s does not exist here. Is this panel on the same version?"
+ "Die Vorlage %s gibt es hier nicht. Ist das Panel hier auf demselben Stand?": "Template %s does not exist here. Is this panel on the same version?",
+ "Den Namen „%s“ gibt es zweimal": "The name “%s” appears twice",
+ "Makro „%s“ abgebrochen bei „%s“: %v": "Macro “%s” stopped at “%s”: %v",
+ "Makro „%s“ ausgeführt%s: %d Befehle": "Macro “%s” run%s: %d commands",
+ "„%s“ enthält keinen Befehl": "“%s” contains no command",
+ "„%s“ läuft gerade schon": "“%s” is already running",
+ "„%s“: Pausen dürfen 1 bis 600 Sekunden lang sein": "“%s”: pauses may be 1 to 600 seconds long",
+ "„%s“: alle Pausen zusammen höchstens 30 Minuten": "“%s”: all pauses together at most 30 minutes",
+ "„%s“: eine Zeile ist zu lang (höchstens 500 Zeichen)": "“%s”: a line is too long (at most 500 characters)",
+ "„%s“: höchstens 50 Zeilen": "“%s”: at most 50 lines"
 }

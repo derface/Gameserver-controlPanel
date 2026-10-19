@@ -26,6 +26,7 @@ var taskActions = map[string]string{
 	"backup":  "Backup",
 	"start":   "Starten",
 	"stop":    "Stoppen",
+	"macro":   "Makro",
 }
 
 // TaskLabel is the German name of an action.
@@ -43,7 +44,11 @@ func ValidateTask(t *store.Task, tpl templates.Template) error {
 		return errors.New("Unbekannte Aktion")
 	}
 	t.Command = strings.TrimSpace(strings.NewReplacer("\n", " ", "\r", " ").Replace(t.Command))
-	if t.Action == "command" {
+	if t.Action == "macro" {
+		if t.Command == "" {
+			return errors.New("Welches Makro?")
+		}
+	} else if t.Action == "command" {
 		if t.Command == "" {
 			return errors.New("Der Befehl fehlt")
 		}
@@ -459,6 +464,16 @@ func (m *Manager) RunTaskNow(ctx context.Context, id string, t store.Task) strin
 	case "command":
 		out, err = m.Command(actx, id, t.Command)
 		label += " „" + t.Command + "“"
+	case "macro":
+		sv, _ := m.st.Server(id)
+		if mc, ok := FindMacro(sv, t.Command); !ok {
+			err = errors.New("Das Makro gibt es nicht mehr")
+		} else if !m.isUp(id) {
+			err = errors.New("Der Server läuft nicht")
+		} else {
+			label += " „" + mc.Name + "“"
+			err = m.runMacro(actx, id, mc, "Aufgabe")
+		}
 	case "backup":
 		var b BackupInfo
 		b, err = m.CreateBackup(actx, id, KindAuto)

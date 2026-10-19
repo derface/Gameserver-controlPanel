@@ -60,3 +60,19 @@ details.mods summary{cursor:pointer;font-size:14px;font-weight:600}
 .ptbl tr:first-child td{border-top:0}
 .ptbl i.on{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
 .season{margin:0;font-size:13.5px}
+.wi-form{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.wi-form input,.wi-form select{font:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.wi-form #wiTitle{flex:2 1 240px}.wi-form #wiBy{flex:1 1 140px}
+.wi-form .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.wi-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.wi-list li.wi{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.wi-list li.umgesetzt,.wi-list li.abgelehnt{opacity:.7}
+.vote{display:flex;flex-direction:column;align-items:center;min-width:42px;font:inherit;font-size:12px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:10px;padding:4px 6px;cursor:pointer}
+.vote b{font-size:15px;color:var(--ink)}
+.vote.on{border-color:var(--accent);color:var(--accent)}
+.vote:disabled{cursor:default}
+.wt{font-weight:600}
+.badge{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.badge.geplant{border-color:var(--warn);color:var(--warn)}.badge.umgesetzt{border-color:var(--ok);color:var(--ok)}
+.answer{margin:4px 0 0;color:var(--muted)}
+#wiMsg.bad{color:var(--bad)}

@@ -171,6 +171,11 @@ func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 var actions = map[string]string{
 	"POST /api/servers":                             "Server angelegt",
 	"POST /api/node/keys":                           "Kopplungscode erzeugt",
+	"PUT /api/servers/{id}/macros":                  "Makros geändert",
+	"POST /api/servers/{id}/macros/{mid}/run":       "Makro ausgeführt",
+	"POST /api/move":                                "Server-Umzug gestartet",
+	"PATCH /api/wishes/{wid}":                       "Wunsch bearbeitet",
+	"DELETE /api/wishes/{wid}":                      "Wunsch gelöscht",
 	"DELETE /api/node/keys/{kid}":                   "Kopplung entzogen",
 	"POST /api/nodes":                               "Rechner hinzugefügt",
 	"PATCH /api/nodes/{nid}":                        "Rechner geändert",

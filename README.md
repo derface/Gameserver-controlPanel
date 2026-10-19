@@ -438,3 +438,11 @@ The panel is also available in English. It follows the browser language; under *
 Wie es funktioniert: Das Panel ist auf Deutsch geschrieben. `web/static/i18n.js` übersetzt die Seite beim Anzeigen mit einem Wörterbuch (`web/static/i18n/en.json`): ganze Texte, Muster für Texte mit Zahlen und Namen, bekannte Wendungen in längeren Texten. Texte aus den Spielvorlagen (Einstellungen, Hinweise) tauscht der Server aus, wenn der Browser Englisch anfragt (`X-Lang: en`); die AMP-Texte haben dafür ohnehin ihr englisches Original, die übrigen stehen in `internal/templates/en.json`. Konsole, Dateiinhalte und Namen bleiben wie sie sind. Was schon im Verlauf steht, bleibt in der Sprache, in der es geschrieben wurde; Nachrichten an Discord und im Spiel bleiben Deutsch.
 
 Übersetzungen pflegen: Quellen in `tools/i18n/en/*.json` (Deutsch → Englisch), danach `python3 tools/i18n/build.py`. Neue Texte aus dem Go-Code listet `go run ./tools/i18n/gostrings ./internal`.
+
+## Konsolen-Makros
+
+Unter der Konsole jedes Servers: gespeicherte Befehlsfolgen per Klick, z. B. „Event-Start“ (`say …`, `warte 300`, `weather clear`). Ein Befehl pro Zeile; `warte 10` (oder `wait 10`) macht eine Pause, Zeilen mit `#` sind Kommentare. Höchstens 30 Makros je Server, 50 Zeilen und 30 Minuten Pausen je Makro. Ein Makro läuft im Hintergrund weiter, auch wenn die Seite zu ist; im Verlauf steht, wer es gestartet hat. Unter Aufgaben gibt es die Aktion „Makro ausführen“ für feste Zeiten.
+
+## Wunschliste
+
+Unter Einstellungen → Statusseite einschaltbar: Besucher der Statusseite schlagen Spiele, Mods oder anderes vor und stimmen ab, ohne Anmeldung. Jede Adresse zählt je Wunsch einmal (gespeichert nur als Hash mit geheimem Salz), höchstens drei neue Wünsche pro Stunde und Adresse, ein unsichtbares Feld hält einfache Bots ab. Im Panel setzt der Admin den Stand (offen, geplant, umgesetzt, abgelehnt) und eine Antwort, die alle sehen. Neue Wünsche lassen sich über die Benachrichtigungen melden.

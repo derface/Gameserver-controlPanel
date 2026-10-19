@@ -157,7 +157,7 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 		cal = "/api/public/calendar/" + c.CalToken + ".ics"
 	}
 	body := map[string]any{"title": title, "note": c.Note, "servers": v.Servers, "updated": time.Now(),
-		"events": v.Events, "calendar": cal}
+		"events": v.Events, "calendar": cal, "wishes": c.Wishes}
 	if c.ShowPlayers {
 		body["players"] = v.Players
 	}

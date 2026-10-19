@@ -38,7 +38,9 @@ func TestGameEventLifecycle(t *testing.T) {
 		t.Fatalf("nicht zurückgesetzt: %s", b)
 	}
 	sv, _ := st.Server("en")
-	if d := sv.GameEvents[0].Start.Sub(ev.Start); d != 7*24*time.Hour {
+	// same wall clock a week later (across a DST switch that is 167 or 169 hours)
+	if !sv.GameEvents[0].Start.Equal(ev.Start.AddDate(0, 0, 7)) {
+		d := sv.GameEvents[0].Start.Sub(ev.Start)
 		t.Fatalf("nicht auf nächste Woche gelegt: %v", d)
 	}
 	if err := m.DeleteEvent(t.Context(), "en", ev.ID); err != nil {

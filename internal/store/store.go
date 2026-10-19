@@ -75,6 +75,29 @@ type Server struct {
 	Maintenance *Maintenance      `json:"maintenance,omitempty"`
 	Invite      *Invite           `json:"invite,omitempty"`
 	Seasons     *SeasonState      `json:"seasons,omitempty"`
+	Macros      []Macro           `json:"macros,omitempty"`
+}
+
+// Macro is a saved sequence of console commands. A line "warte 10" (or
+// "wait 10") pauses ten seconds; lines starting with # are comments.
+type Macro struct {
+	ID    string   `json:"id"`
+	Name  string   `json:"name"`
+	Lines []string `json:"lines"`
+}
+
+// Wish is something a player asked for on the status page.
+type Wish struct {
+	ID      string    `json:"id"`
+	Title   string    `json:"title"`
+	Kind    string    `json:"kind"` // spiel | mod | sonstiges
+	By      string    `json:"by,omitempty"`
+	Created time.Time `json:"created"`
+	Votes   int       `json:"votes"`
+	Voters  []string  `json:"voters,omitempty"` // hashes, so a visitor votes once
+	Status  string    `json:"status"`           // offen | geplant | umgesetzt | abgelehnt
+	Answer  string    `json:"answer,omitempty"` // reply of the admin
+	IP      string    `json:"ip,omitempty"`     // hash of the sender, for limits
 }
 
 // Task is a scheduled action of one server.
@@ -224,8 +247,10 @@ type StatusConfig struct {
 	// ModDownload lets friends download the client mods as a zip.
 	ModDownload bool `json:"mod_download,omitempty"`
 	// HideUptime hides the 30-day online history on the page.
-	HideUptime bool                    `json:"hide_uptime,omitempty"`
-	Servers    map[string]StatusServer `json:"servers,omitempty"`
+	HideUptime bool `json:"hide_uptime,omitempty"`
+	// Wishes shows the wish list where players suggest games and mods.
+	Wishes  bool                    `json:"wishes,omitempty"`
+	Servers map[string]StatusServer `json:"servers,omitempty"`
 }
 
 type StatusServer struct {
@@ -248,6 +273,8 @@ type Data struct {
 	Router   []RouterMap        `json:"router_maps,omitempty"`
 	Nodes    []Node             `json:"nodes,omitempty"`     // other machines this panel controls
 	NodeKeys []NodeKey          `json:"node_keys,omitempty"` // panels allowed to control this machine
+	Wishes   []Wish             `json:"wishes,omitempty"`    // wish list of the status page
+	WishSalt string             `json:"wish_salt,omitempty"`
 }
 
 // Node is another machine running Bytewise Panel that this panel controls.
