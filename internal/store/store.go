@@ -143,6 +143,7 @@ type Settings struct {
 	OllamaURL    string        `json:"ollama_url,omitempty"`
 	AIModel      string        `json:"ai_model,omitempty"`
 	PublicHost   string        `json:"public_host,omitempty"` // shown to players, e.g. play.example.com
+	WizardDone   bool          `json:"wizard_done,omitempty"` // setup wizard finished or skipped
 	SteamUser    string        `json:"steam_user,omitempty"`  // logged-in Steam account (the login itself is cached by SteamCMD)
 	Remote       remote.Config `json:"remote_backup"`
 	TLS          TLSConfig     `json:"tls"`

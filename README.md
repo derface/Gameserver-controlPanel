@@ -446,3 +446,11 @@ Unter der Konsole jedes Servers: gespeicherte Befehlsfolgen per Klick, z. B. „
 ## Wunschliste
 
 Unter Einstellungen → Statusseite einschaltbar: Besucher der Statusseite schlagen Spiele, Mods oder anderes vor und stimmen ab, ohne Anmeldung. Jede Adresse zählt je Wunsch einmal (gespeichert nur als Hash mit geheimem Salz), höchstens drei neue Wünsche pro Stunde und Adresse, ein unsichtbares Feld hält einfache Bots ab. Im Panel setzt der Admin den Stand (offen, geplant, umgesetzt, abgelehnt) und eine Antwort, die alle sehen. Neue Wünsche lassen sich über die Benachrichtigungen melden.
+
+## Einrichtungsassistent
+
+Nach dem ersten Admin-Konto führt ein Assistent durch Adresse für Mitspieler (eigene Domain, öffentliche IP oder nur Heimnetz), automatische Portfreigabe per UPnP, HTTPS (selbst signiert, Let's Encrypt oder später/Reverse Proxy) und den ersten Server (anlegen, mit KI planen oder aus AMP übernehmen). Er erscheint nur, solange es noch keinen Server gibt; erneut starten unter Einstellungen → Panel & Updates oder über die Suche (Strg K).
+
+## Hilfe im Panel
+
+Links unter „Hilfe“: Artikel zu den häufigen Fragen und Fehlern (Mitspieler kommen nicht rein, NAT-Loopback, SteamCMD-Codes, Steam-Konto, RAM und Abstürze, Ports, Docker, Backups, Mods, HTTPS, UPnP/FritzBox, mehrere Rechner, Discord, Statusseite, Aufgaben, Leistung, Updates), durchsuchbar, auf Deutsch und Englisch (`web/static/help.js`). Zeigt ein Server eine passende Fehlermeldung, steht darunter „Hilfe dazu“. Die Artikel sind auch über die Suche (Strg K) erreichbar.

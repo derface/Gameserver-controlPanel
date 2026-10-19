@@ -173,6 +173,7 @@ var actions = map[string]string{
 	"POST /api/node/keys":                           "Kopplungscode erzeugt",
 	"PUT /api/servers/{id}/macros":                  "Makros geändert",
 	"POST /api/servers/{id}/macros/{mid}/run":       "Makro ausgeführt",
+	"PUT /api/wizard":                               "Einrichtung geändert",
 	"POST /api/move":                                "Server-Umzug gestartet",
 	"PATCH /api/wishes/{wid}":                       "Wunsch bearbeitet",
 	"DELETE /api/wishes/{wid}":                      "Wunsch gelöscht",

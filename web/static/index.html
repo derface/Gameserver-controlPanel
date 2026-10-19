@@ -50,6 +50,7 @@
     <a href="#/protokoll" data-nav="audit" class="admin-only"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M9 7h3"/></svg><span>Protokoll</span></a>
     <a href="#/selbsttest" data-nav="test" class="admin-only"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 001.8 3h10.4a2 2 0 001.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg><span>Selbsttest</span><b class="cnt live" id="navTest" hidden>läuft</b></a>
     <a href="#/einstellungen" data-nav="settings"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Einstellungen</span></a>
+    <button type="button" class="nav-btn" id="openHelp"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.6"/><path d="M12 17h.01"/></svg><span>Hilfe</span></button>
   </nav>
   <div class="side-foot">
     <div class="prefs">
@@ -151,6 +152,7 @@
       </div>
     </div>
     <p class="msg-line" id="svMsg" hidden></p>
+    <button type="button" class="linkbtn small msg-help" id="svMsgHelp" hidden>Hilfe dazu</button>
     <div class="maint-bar" id="svMaint" hidden><span id="svMaintText"></span><button type="button" class="btn-line small op-only" id="svMaintEnd">Wartung beenden</button></div>
     <nav class="tabs" role="tablist" aria-label="Bereich" id="svTabs">
       <button type="button" role="tab" id="tabConsole" data-tab="console">Konsole</button>
@@ -752,7 +754,7 @@
     <p id="upStatus" class="small"></p>
     <div id="upNotes" class="up-notes" hidden></div>
     <p class="err" id="upErr" role="alert" hidden></p>
-    <div class="dlg-actions"><button type="button" class="btn-line" id="upCheck">Nach Updates suchen</button><button type="button" class="btn-accent" id="upGo" hidden>Jetzt aktualisieren</button></div>
+    <div class="dlg-actions"><button type="button" class="btn-line" id="wzOpen">Einrichtungsassistent</button><button type="button" class="btn-line" id="upCheck">Nach Updates suchen</button><button type="button" class="btn-accent" id="upGo" hidden>Jetzt aktualisieren</button></div>
   </div>
 
         <div class="set-block admin-only" data-sec="router" id="rtBlock">
@@ -935,6 +937,60 @@
   </form>
 </dialog>
 
+<dialog id="dlgHelp" class="dlg help-dlg">
+  <div class="dlg-head"><h2>Hilfe</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
+  <div class="help-wrap">
+    <div class="help-side">
+      <label class="sr" for="hlpQ">Hilfe durchsuchen</label>
+      <input id="hlpQ" type="search" placeholder="Suchen, z. B. Port, RAM, Steam" autocomplete="off">
+      <ul id="hlpList" class="help-list" data-noi18n></ul>
+    </div>
+    <article id="hlpArt" class="help-art" data-noi18n></article>
+  </div>
+</dialog>
+
+<dialog id="dlgWizard" class="dlg wiz">
+  <form id="wzForm" novalidate>
+    <div class="dlg-head"><h2 id="wzTitle">Willkommen</h2><ol class="wz-dots" id="wzDots" aria-hidden="true"></ol></div>
+    <section class="wz-step" data-t="Willkommen">
+      <p>Schön, dass du da bist. In wenigen Schritten ist alles bereit: Adresse für Mitspieler, Router, HTTPS und dein erster Server. Alles lässt sich später unter Einstellungen ändern.</p>
+      <label class="field" style="max-width:320px"><span>Sprache / Language</span>
+        <select id="wzLang" data-noi18n><option value="auto">Automatisch / Automatic</option><option value="de">Deutsch</option><option value="en">English</option></select></label>
+      <p class="note warn" id="wzDocker" hidden></p>
+    </section>
+    <section class="wz-step" data-t="Adresse für Mitspieler" hidden>
+      <p class="small muted">Diese Adresse sehen Mitspieler bei jedem Server, auf der Statusseite und in Einladungslinks.</p>
+      <label class="wz-opt"><input type="radio" name="wzAddr" value="domain"> <span><b>Eigene Domain</b><br><input id="wzDomain" placeholder="z. B. play.meine-domain.de" spellcheck="false"><br><small class="muted">Mit DynDNS (z. B. DuckDNS oder beim Domain-Anbieter) bleibt sie auch bei wechselnder IP gültig.</small></span></label>
+      <label class="wz-opt"><input type="radio" name="wzAddr" value="ip"> <span><b>Öffentliche IP</b> <span class="mono" id="wzIP">wird ermittelt …</span><br><small class="muted">Ändert sich bei den meisten Anschlüssen ab und zu.</small></span></label>
+      <label class="wz-opt"><input type="radio" name="wzAddr" value="lan"> <span><b>Nur im Heimnetz</b> <span class="mono" id="wzLan"></span><br><small class="muted">Für LAN-Partys oder zum Ausprobieren.</small></span></label>
+      <p class="small"><button type="button" class="linkbtn" data-help="reach">Mitspieler kommen nicht rein?</button></p>
+    </section>
+    <section class="wz-step" data-t="Router" hidden>
+      <label class="check"><input type="checkbox" id="wzUpnp"> Ports laufender Server automatisch im Router öffnen (UPnP)</label>
+      <p class="small muted">Das Panel öffnet beim Start eines Servers genau dessen Ports und schließt sie beim Stoppen wieder. Der Router muss UPnP erlauben; ohne UPnP trägst du die Ports von Hand im Router ein (sie stehen bei jedem Server).</p>
+      <p class="small"><button type="button" class="linkbtn" data-help="upnp">So geht das bei der FritzBox</button></p>
+    </section>
+    <section class="wz-step" data-t="HTTPS" hidden data-https>
+      <p class="small muted">Verschlüsselt die Verbindung zum Panel, damit niemand Passwörter mitlesen kann.</p>
+      <label class="wz-opt"><input type="radio" name="wzTls" value="self"> <span><b>Selbst signiert</b><br><small class="muted">Sofort verschlüsselt. Der Browser warnt einmal, dann „Trotzdem fortfahren“.</small></span></label>
+      <label class="wz-opt"><input type="radio" name="wzTls" value="acme"> <span><b>Let's Encrypt</b><br><small class="muted">Echtes Zertifikat für die eigene Domain aus Schritt 2. Braucht Port 80 und 443 im Router.</small></span></label>
+      <label class="wz-opt"><input type="radio" name="wzTls" value=""> <span><b>Später oder über einen Reverse Proxy</b><br><small class="muted">Bleibt bei HTTP. Traefik, nginx oder Caddy davor trägst du unter Einstellungen → HTTPS ein.</small></span></label>
+      <p class="small muted" id="wzTlsNote" hidden>Nach „Fertig“ lädt die Seite unter https:// neu.</p>
+    </section>
+    <section class="wz-step" data-t="Dein erster Server" hidden>
+      <p>Fast geschafft. Womit möchtest du anfangen?</p>
+      <div class="wz-first">
+        <button type="button" class="btn-accent" data-wz-first="create">Server anlegen</button>
+        <button type="button" class="btn-line" data-wz-first="ai">Mit KI planen</button>
+        <button type="button" class="btn-line" data-wz-first="amp">Aus AMP übernehmen</button>
+      </div>
+      <p class="small muted">Oder einfach „Fertig“ und später loslegen. Die Hilfe findest du jederzeit links unter „Hilfe“.</p>
+    </section>
+    <p class="err" id="wzErr" role="alert" hidden></p>
+    <div class="dlg-actions"><button type="button" class="linkbtn wz-skip" id="wzSkip">Später einrichten</button><button type="button" class="btn-line" id="wzBack">Zurück</button><button type="submit" class="btn-accent" id="wzNext">Weiter</button></div>
+  </form>
+</dialog>
+
 <dialog id="dlgMaint" class="dlg small">
   <form id="mtForm" novalidate>
     <div class="dlg-head"><h2>Wartungsmodus</h2><button type="button" class="icon-btn" data-close aria-label="Schließen">✕</button></div>
@@ -1003,6 +1059,7 @@
 <script src="i18n.js"></script>
 <script src="vendor/three.min.js"></script>
 <script src="vendor/qrcode.js"></script>
+<script src="help.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

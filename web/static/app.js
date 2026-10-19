@@ -394,6 +394,7 @@
     pw.classList.toggle('btn-accent', !on); pw.classList.toggle('btn-line', on);
     $('[data-sv="restart"]').disabled = !on || busy;
     const m = $('#svMsg'); m.hidden = !s.message; m.textContent = s.message || ''; m.classList.toggle('bad', s.status === 'error');
+    $('#svMsgHelp').hidden = !helpFor(s.message);
     const mt = s.maintenance;
     $('#svMaint').hidden = !mt;
     if (mt) $('#svMaintText').textContent = '🛠 Wartung' + (mt.until && !mt.until.startsWith('0001') ? ' bis ' + fmtWhen(mt.until) : '') + (mt.note ? ': ' + mt.note : '') + (mt.close_ports ? ' · Ports geschlossen' : '') + ' · Aufgaben und Absturz-Wächter pausieren';
@@ -616,6 +617,139 @@
       setTimeout(() => { const s = byId(id); if (S.consoleId === id && !S.es && s && isOn(s)) connectConsole(id); else if (S.consoleId === id && !S.es) S.reconnect = id; }, 4000);
     }
   }
+  /* ---------------- Hilfe ---------------- */
+  const HELP = window.GP_HELP || [];
+  const helpLang = () => (window.I18N && I18N.lang === 'en') ? 'en' : 'de';
+  const helpText = a => a[helpLang()] || a.de;
+  // the article that fits an error message, if any
+  const helpFor = text => { if (!text) return null; const a = HELP.find(x => x.match && x.match.test(text)); return a ? a.id : null; };
+  function renderHelpList(q) {
+    q = (q || '').trim().toLowerCase();
+    const list = HELP.filter(a => !q || (helpText(a).t + ' ' + a.tags + ' ' + helpText(a).b.replace(/<[^>]+>/g, ' ')).toLowerCase().includes(q));
+    $('#hlpList').innerHTML = list.map(a => `<li><button type="button" data-hlp="${esc(a.id)}">${esc(helpText(a).t)}</button></li>`).join('') ||
+      `<li class="muted small">${helpLang() === 'en' ? 'Nothing found.' : 'Nichts gefunden.'}</li>`;
+    return list;
+  }
+  function showHelp(id) {
+    const a = HELP.find(x => x.id === id) || HELP[0]; if (!a) return;
+    $('#hlpArt').innerHTML = `<h3>${esc(helpText(a).t)}</h3>${helpText(a).b}`;
+    $$('#hlpList [data-hlp]').forEach(b => b.setAttribute('aria-current', String(b.dataset.hlp === a.id)));
+  }
+  function openHelp(id) {
+    $('#hlpQ').value = '';
+    renderHelpList('');
+    showHelp(id || 'start');
+    if (!$('#dlgHelp').open) $('#dlgHelp').showModal();
+    if (!id) setTimeout(() => $('#hlpQ').focus(), 30);
+  }
+  $('#openHelp').addEventListener('click', () => { openHelp(); sideToggle(false); });
+  $('#hlpQ').addEventListener('input', () => { const l = renderHelpList($('#hlpQ').value); if (l.length) showHelp(l[0].id); });
+  $('#hlpList').addEventListener('click', e => { const b = e.target.closest('[data-hlp]'); if (b) showHelp(b.dataset.hlp); });
+  document.addEventListener('click', e => { const b = e.target.closest('[data-help]'); if (b) { e.preventDefault(); openHelp(b.dataset.help); } });
+  $('#svMsgHelp').addEventListener('click', () => { const s = byId(R.id); openHelp(helpFor(s && s.message)); });
+
+  /* ---------------- Einrichtungsassistent ---------------- */
+  const WZ = { step: 0, info: null, tls: '' };
+  const wzSteps = () => $$('#wzForm .wz-step').filter(st => !(st.hasAttribute('data-https') && WZ.info && !WZ.info.https_available));
+  async function checkWizard() {
+    let d; try { d = await api('GET', '/api/wizard'); } catch (e) { return; }
+    if (!d.done && !d.servers) openWizard(d);
+  }
+  async function openWizard(d) {
+    if (!d) { try { d = await api('GET', '/api/wizard'); } catch (e) { toast(e.message, 'bad'); return; } }
+    WZ.info = d; WZ.step = 0;
+    $('#wzLang').value = (window.I18N && I18N.choice) || 'auto';
+    $('#wzDocker').hidden = !d.docker_error;
+    $('#wzDocker').innerHTML = d.docker_error ? `Docker ist auf diesem Rechner nicht erreichbar, Server lassen sich so nicht starten. <button type="button" class="linkbtn" data-help="docker">Was tun?</button>` : '';
+    $('#wzLan').textContent = d.lan_ip || '';
+    const host = d.public_host || '';
+    const isIP = /^[\d.]+$/.test(host);
+    $('#wzDomain').value = host && !isIP ? host : '';
+    const pick = !host ? 'ip' : host === d.lan_ip ? 'lan' : isIP ? 'ip' : 'domain';
+    $$('[name=wzAddr]').forEach(r => { r.checked = r.value === pick; });
+    $('#wzUpnp').checked = d.upnp || !d.done;
+    WZ.tls = d.https || '';
+    $$('[name=wzTls]').forEach(r => { r.checked = r.value === WZ.tls; });
+    $('#wzIP').textContent = 'wird ermittelt …';
+    api('POST', '/api/wizard/public-ip').then(r => { WZ.ip = r.ip; $('#wzIP').textContent = r.ip; }).catch(() => { $('#wzIP').textContent = '(nicht ermittelbar)'; });
+    wzShow();
+    if (!$('#dlgWizard').open) $('#dlgWizard').showModal();
+  }
+  function wzShow() {
+    const steps = wzSteps(), all = $$('#wzForm .wz-step');
+    all.forEach(st => { st.hidden = st !== steps[WZ.step]; });
+    $('#wzTitle').textContent = steps[WZ.step].dataset.t;
+    $('#wzDots').innerHTML = steps.map((_, i) => `<li class="${i === WZ.step ? 'on' : i < WZ.step ? 'done' : ''}"></li>`).join('');
+    $('#wzBack').hidden = WZ.step === 0;
+    $('#wzNext').textContent = WZ.step === steps.length - 1 ? 'Fertig' : 'Weiter';
+    $('#wzTlsNote').hidden = !($$('[name=wzTls]').find(r => r.checked) || {}).value;
+    showErr($('#wzErr'));
+  }
+  $$('[name=wzTls]').forEach(r => r.addEventListener('change', () => { $('#wzTlsNote').hidden = !r.value; }));
+  $('#wzDomain').addEventListener('focus', () => { $$('[name=wzAddr]').forEach(r => { r.checked = r.value === 'domain'; }); });
+  $('#wzBack').addEventListener('click', () => { if (WZ.step > 0) { WZ.step--; wzShow(); } });
+  $('#wzSkip').addEventListener('click', async () => {
+    try { await api('PUT', '/api/wizard', { done: true }); } catch (e) { /* egal */ }
+    $('#dlgWizard').close();
+  });
+  $('#wzLang').addEventListener('change', () => { if (window.I18N && $('#wzLang').value !== I18N.choice) I18N.set($('#wzLang').value); });
+  async function wzSave(step) {
+    const t = step.dataset.t;
+    if (t === 'Adresse für Mitspieler') {
+      const how = ($$('[name=wzAddr]').find(r => r.checked) || {}).value;
+      const host = how === 'domain' ? $('#wzDomain').value.trim() : how === 'ip' ? (WZ.ip || '') : (WZ.info.lan_ip || '');
+      if (how === 'domain' && !host) throw new Error('Bitte die Domain eintragen oder eine andere Möglichkeit wählen.');
+      const d = await api('PUT', '/api/wizard', { public_host: host });
+      WZ.info.public_host = d.public_host;
+      if (S.settings) S.settings.public_host = d.public_host;
+    }
+    if (t === 'Router' && $('#wzUpnp').checked !== !!WZ.info.upnp) {
+      WZ.info.upnp = $('#wzUpnp').checked;
+      api('PUT', '/api/router', { enabled: WZ.info.upnp }).then(r => { S.routerOn = WZ.info.upnp; if (r && r.error) toast(r.error, 'bad'); }).catch(e => toast(e.message, 'bad'));
+    }
+  }
+  async function wzFinish(then) {
+    const tls = ($$('[name=wzTls]').find(r => r.checked) || {}).value || '';
+    await api('PUT', '/api/wizard', { done: true });
+    if (WZ.info.https_available && tls !== WZ.tls) {
+      const body = { mode: tls };
+      if (tls === 'acme') body.domain = /^[\d.]+$/.test(WZ.info.public_host || '') ? '' : WZ.info.public_host;
+      if (tls === 'acme' && !body.domain) throw new Error('Für Let\'s Encrypt braucht es eine eigene Domain (Schritt 2).');
+      await api('PUT', '/api/https', body);
+      if (tls && location.protocol === 'http:') {
+        $('#dlgWizard').close();
+        toast('HTTPS ist an. Die Seite lädt gleich unter https:// neu.', 'ok');
+        setTimeout(() => { location.href = 'https://' + location.host + location.pathname; }, 2000);
+        return;
+      }
+    }
+    $('#dlgWizard').close();
+    if (then) then();
+    else toast('Fertig eingerichtet. Viel Spaß!', 'ok');
+  }
+  $('#wzForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const steps = wzSteps(), b = $('#wzNext'); b.disabled = true;
+    try {
+      await wzSave(steps[WZ.step]);
+      if (WZ.step < steps.length - 1) { WZ.step++; wzShow(); }
+      else await wzFinish();
+    } catch (err) { showErr($('#wzErr'), err.message); }
+    b.disabled = false;
+  });
+  $('#wzForm').addEventListener('click', async e => {
+    const b = e.target.closest('[data-wz-first]'); if (!b) return;
+    const what = b.dataset.wzFirst;
+    try {
+      await wzFinish(() => {
+        if (what === 'create') openCreate();
+        else if (what === 'ai') { go('#/ki'); setTimeout(() => $('#askInput').focus(), 50); }
+        else openAmp();
+      });
+    } catch (err) { showErr($('#wzErr'), err.message); }
+  });
+  $('#wzOpen').addEventListener('click', () => openWizard());
+
   /* ---------------- Makros ---------------- */
   const MC = { id: null, list: [] };
   async function loadMacros(id) {
@@ -3347,6 +3481,8 @@
       a.push({ label: 'Steam-Konto', hint: 'Panel', run: () => openSettings('steam') });
       a.push({ label: 'Panel aktualisieren', hint: 'Panel', run: () => openSettings('panel') });
     }
+    HELP.forEach(h => a.push({ label: helpText(h).t, hint: 'Hilfe', run: () => openHelp(h.id) }));
+    if (can('admin')) a.push({ label: 'Einrichtungsassistent', hint: 'Panel', run: () => openWizard() });
     a.push({ label: isDark() ? 'Helles Design' : 'Dunkles Design', hint: 'Ansicht', run: toggleTheme });
     a.push({ label: motion ? 'Animationen reduzieren' : 'Animationen einschalten', hint: 'Ansicht', run: toggleMotion });
     return a;
@@ -3534,7 +3670,7 @@
     const vis = fn => () => { if (!document.hidden) fn(); };
     timers.push(setInterval(vis(loadServers), 2500), setInterval(vis(loadHost), 2000), setInterval(vis(loadState), 30000));
     route();
-    if (can('admin')) { pollTest(); api('GET', '/api/router').then(r => { S.routerOn = r.enabled; }).catch(() => {}); api('GET', '/api/nodes').then(l => { S.nodes = l; S.nodesAt = Date.now(); renderFleet(); }).catch(() => {}); }
+    if (can('admin')) { checkWizard(); pollTest(); api('GET', '/api/router').then(r => { S.routerOn = r.enabled; }).catch(() => {}); api('GET', '/api/nodes').then(l => { S.nodes = l; S.nodesAt = Date.now(); renderFleet(); }).catch(() => {}); }
   }
   async function boot() {
     let st;

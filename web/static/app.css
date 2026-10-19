@@ -886,3 +886,31 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .mc-head{display:flex;gap:8px;align-items:center}.mc-head .mc-name{flex:1}
 .mc-lines{width:100%;resize:vertical;min-height:90px}
 .wi-tbl td{vertical-align:top}.wi-tbl .wi-answer{width:100%;min-width:160px}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;font:inherit;color:inherit;text-align:left;padding:10px 12px;border-radius:10px;cursor:pointer;opacity:.85}
+.nav-btn:hover{background:var(--panel);opacity:1}
+.msg-help{margin:-6px 0 10px}
+.help-dlg{width:min(960px,96vw)}
+.help-wrap{display:grid;grid-template-columns:260px 1fr;gap:18px;min-height:420px}
+.help-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.help-list{list-style:none;margin:0;padding:0;overflow:auto;max-height:60vh}
+.help-list button{display:block;width:100%;text-align:left;background:none;border:0;font:inherit;color:inherit;padding:7px 10px;border-radius:8px;cursor:pointer}
+.help-list button:hover{background:var(--panel)}
+.help-list button[aria-current=true]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--ink);font-weight:600}
+.help-art{overflow:auto;max-height:65vh;line-height:1.6}
+.help-art h3{margin:0 0 8px;font-size:18px}
+.help-art pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;font-size:12.5px}
+.help-art li{margin:4px 0}
+@media (max-width:700px){.help-wrap{grid-template-columns:1fr}.help-list{max-height:180px}}
+.wiz{width:min(620px,96vw)}
+.wiz .dlg-head{align-items:center}
+.wz-dots{display:flex;gap:6px;list-style:none;margin:0 0 0 auto;padding:0}
+.wz-dots li{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.wz-dots li.on{background:var(--accent)}.wz-dots li.done{background:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.wz-step{display:flex;flex-direction:column;gap:10px;min-height:220px}
+.wz-opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}
+.wz-opt:has(input:checked){border-color:var(--accent)}
+.wz-opt input[type=radio]{margin-top:4px}
+.wz-opt input:not([type]){margin:6px 0 2px;width:100%}
+.wz-first{display:flex;flex-wrap:wrap;gap:10px}
+.wz-skip{margin-right:auto}
+.wz-opt input:not([type]){background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;color:var(--ink);font:inherit;box-sizing:border-box}
