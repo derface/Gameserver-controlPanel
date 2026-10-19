@@ -11,7 +11,7 @@
   "Höchstens 20 Webhooks": "At most 20 webhooks",
   "Höchstens 50 API-Schlüssel": "At most 50 API keys",
   "Keiner der gewählten Server existiert": "None of the chosen servers exists",
-  "Rolle: Bediener oder Zuschauer": "Role: operator or viewer",
+  "Rolle: Betreiber oder Zuschauer": "Role: operator or viewer",
   "Spieler kommen und gehen": "Players join and leave",
   "Server-Status geändert (startet, läuft, gestoppt, Fehler)": "Server status changed (starting, running, stopped, error)",
   "Test fehlgeschlagen: %s": "Test failed: %s",

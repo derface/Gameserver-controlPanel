@@ -772,7 +772,7 @@ const APIKeyPrefix = "gpk_"
 // optionally only for some servers. The key is returned once.
 func (a *Auth) NewAPIKey(name, role string, servers []string, by string) (string, store.APIKey, error) {
 	if role != Operator && role != Viewer {
-		return "", store.APIKey{}, errors.New("Rolle: Bediener oder Zuschauer")
+		return "", store.APIKey{}, errors.New("Rolle: Betreiber oder Zuschauer")
 	}
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {

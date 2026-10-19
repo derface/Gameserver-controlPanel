@@ -474,5 +474,29 @@
  [
   "Wiederholungen zusammengefasst \\((\\d+)\\)",
   "Repeated lines folded ({0})"
+ ],
+ [
+  "Standard: (.+)",
+  "Default: {0}"
+ ],
+ [
+  "im Spiel: „(.+)“",
+  "in game: “{0}”"
+ ],
+ [
+  "Zusammengefasst: (\\d+)",
+  "Folded: {0}"
+ ],
+ [
+  "(\\d+)/(\\d+) Server aktiv",
+  "{0}/{1} servers active"
+ ],
+ [
+  "Täglich (\\d\\d:\\d\\d)",
+  "Daily {0}"
+ ],
+ [
+  "Täglich zur ruhigsten Zeit neu starten(, .+)",
+  "Restart daily at the quietest time{0}"
  ]
 ]

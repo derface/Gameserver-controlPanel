@@ -284,7 +284,7 @@ sudo systemctl start docker</pre>
     de: { t: 'API-Schlüssel und Webhooks', b: `
 <p>Unter Einstellungen → API &amp; Webhooks.</p>
 <ul>
-<li><b>API-Schlüssel</b> erlauben Skripten und Home Assistant, Server zu starten, zu stoppen oder Befehle zu schicken. Sie haben Bediener- oder Zuschauer-Rechte, nie Admin-Rechte, und lassen sich auf einzelne Server begrenzen. Der Schlüssel wird nur einmal angezeigt; gespeichert ist nur eine Prüfsumme.</li>
+<li><b>API-Schlüssel</b> erlauben Skripten und Home Assistant, Server zu starten, zu stoppen oder Befehle zu schicken. Sie haben Betreiber- oder Zuschauer-Rechte, nie Admin-Rechte, und lassen sich auf einzelne Server begrenzen. Der Schlüssel wird nur einmal angezeigt; gespeichert ist nur eine Prüfsumme.</li>
 <li>Aufruf: <code>curl -X POST -H "Authorization: Bearer gpk_…" https://panel/api/servers/ID/start</code>. Weitere Beispiele stehen unter „So benutzt du die API“.</li>
 <li><b>Webhooks</b> ruft das Panel bei Ereignissen auf: Status geändert, Spieler kommen und gehen, Absturz, Backup, Update und mehr. Discord- und Slack-Adressen bekommen eine fertige Nachricht, alle anderen JSON mit Signatur.</li>
 <li>Mit „Testen“ siehst du sofort, ob die Adresse erreichbar ist. Schlägt ein Aufruf fehl, versucht das Panel es nach 10 und 60 Sekunden erneut.</li>

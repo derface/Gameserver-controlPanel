@@ -383,7 +383,7 @@
     if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
     const on = isOn(s), busy = !!S.pending[s.id] || s.status === 'preparing';
     const set = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h = html; } };
-    $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '') + (s.node_name ? ' · auf ' + s.node_name : '') + (s.game_name && s.game_name.toLowerCase() !== s.name.toLowerCase() ? ' · im Spiel: „' + s.game_name + '“' : '');
+    $('#svGame').textContent = [s.template_name, s.category, s.node_name ? 'auf ' + s.node_name : '', s.game_name && s.game_name.toLowerCase() !== s.name.toLowerCase() ? 'im Spiel: „' + s.game_name + '“' : ''].filter(Boolean).join(' · ');
     $('#svName').textContent = s.name;
     const port = s.join_port || (s.ports && s.ports[0] ? s.ports[0].host : '');
     set($('#svMeta'), `<span class="pill ${esc(s.status)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
@@ -505,7 +505,7 @@
         <button class="power" type="button" aria-pressed="${on}" aria-label="${esc(s.name)} ${on ? 'ausschalten' : 'einschalten'}" ${busy ? 'disabled' : ''}><span></span></button></div>
         ${s.message ? `<p class="msg-line ${s.status === 'error' ? 'bad' : ''}">${esc(s.message)}</p>` : ''}`;
     }
-    return `<div class="mod-top"><span class="mono game">${s.created_by === 'selbsttest' ? 'Selbsttest · ' : ''}${esc(s.template_name)}${s.node_name ? ' · ' + esc(s.node_name) : ''} · ${esc(portList(s))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
+    return `<div class="mod-top"><span class="mono game">${esc([s.created_by === 'selbsttest' ? 'Selbsttest' : '', s.template_name, s.node_name, portList(s)].filter(Boolean).join(' · '))}</span><span class="st mono"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span></div>
       <h3>${esc(s.name)}</h3>${body}`;
   }
   const SF = { q: '', f: '' };
@@ -587,7 +587,7 @@
   function foldBtn() {
     const b = $('#conFold'); if (!b) return;
     b.setAttribute('aria-pressed', String(CF.on));
-    b.textContent = CF.on ? (CF.hidden ? `Wiederholungen zusammengefasst (${CF.hidden})` : 'Wiederholungen zusammenfassen') : 'Alle Zeilen zeigen';
+    b.textContent = CF.on ? (CF.hidden ? `Zusammengefasst: ${CF.hidden}` : 'Wiederholungen zusammenfassen') : 'Alle Zeilen';
   }
   function foldLine(box, text) {
     const k = foldKey(text);
@@ -610,6 +610,7 @@
   }
   function addLine(text, cls) {
     const box = $('#lines');
+    $('#conEmpty').hidden = true;
     const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     if (!cls && CF.on && foldLine(box, text)) { if (nearBottom) box.scrollTop = box.scrollHeight; return; }
     const d = document.createElement('div');
@@ -629,12 +630,14 @@
     S.consoleId = id;
     loadMacros(id);
     $('#conName').textContent = 'Konsole';
-    $('#lines').innerHTML = isOn(s) ? '' : '<div class="dim">Der Server ist gestoppt. Nach dem Start erscheint hier seine Ausgabe.</div>';
+    $('#lines').innerHTML = '';
+    $('#conEmpty').hidden = isOn(s);
     CF.hidden = 0; foldBtn();
     $('#cmdInput').disabled = false;
     $('#cmdInput').placeholder = s.console === 'exec' ? 'Befehl senden (z. B. list)' : 'Befehl senden';
     connectConsole(id);
   }
+  $('#conStart').addEventListener('click', () => { const s = byId(S.consoleId); if (s) { togglePower(s); $('#conEmpty').hidden = true; } });
   $('#conFold').addEventListener('click', () => {
     CF.on = !CF.on;
     try { localStorage.setItem('gp-con-fold', CF.on ? '1' : '0'); } catch (e) { /* egal */ }
@@ -897,7 +900,7 @@
     setV('vCpu', Math.round(h.cpu_percent) + '<small>% · ' + h.cores + ' Kerne</small>');
     setV('vRam', (h.mem_used_mb / 1024).toFixed(1).replace('.', DEC) + '<small> / ' + (h.mem_total_mb / 1024).toFixed(0) + ' GB</small>');
     setV('vDisk', Math.round(h.disk_used_gb) + '<small> / ' + Math.round(h.disk_total_gb) + ' GB</small>');
-    setV('vRun', pl + '<small> · ' + run + ' von ' + S.servers.length + ' Servern aktiv</small>');
+    setV('vRun', pl + '<small> · ' + run + '/' + S.servers.length + ' Server aktiv</small>');
     drawSparks();
   }
   function drawSpark(id, arr, lo, hi) {
@@ -1034,7 +1037,7 @@
     let k, w;
     try { [k, w] = await Promise.all([api('GET', '/api/apikeys'), api('GET', '/api/webhooks')]); } catch (e) { toast(e.message, 'bad'); return; }
     IK.keys = k.keys || []; IK.hooks = w.webhooks || []; IK.events = w.events || [];
-    $('#ikList').innerHTML = IK.keys.length ? `<ul class="nk-list">${IK.keys.map(x => `<li data-ik="${esc(x.id)}"><span><b data-noi18n>${esc(x.name)}</b> <span class="mono small">${esc(x.hint)}</span><br><span class="small muted">${x.role === 'operator' ? 'Bediener' : 'Zuschauer'} · ${esc(srvNames(x.servers))} · erstellt ${esc(fmtWhen(x.created))}${x.last_used && !String(x.last_used).startsWith('0001') ? ' · zuletzt benutzt ' + esc(fmtWhen(x.last_used)) + (x.last_from ? ' von ' + esc(x.last_from) : '') : ' · noch nicht benutzt'}</span></span><button type="button" class="btn-line sm" data-ik-del>Löschen</button></li>`).join('')}</ul>` : '<p class="small muted">Noch keine API-Schlüssel.</p>';
+    $('#ikList').innerHTML = IK.keys.length ? `<ul class="nk-list">${IK.keys.map(x => `<li data-ik="${esc(x.id)}"><span><b data-noi18n>${esc(x.name)}</b> <span class="mono small">${esc(x.hint)}</span><br><span class="small muted">${x.role === 'operator' ? 'Betreiber' : 'Zuschauer'} · ${esc(srvNames(x.servers))} · erstellt ${esc(fmtWhen(x.created))}${x.last_used && !String(x.last_used).startsWith('0001') ? ' · zuletzt benutzt ' + esc(fmtWhen(x.last_used)) + (x.last_from ? ' von ' + esc(x.last_from) : '') : ' · noch nicht benutzt'}</span></span><button type="button" class="btn-line sm" data-ik-del>Löschen</button></li>`).join('')}</ul>` : '<p class="small muted">Noch keine API-Schlüssel.</p>';
     if (!$('#ikServers').children.length || !$('#ikForm').contains(document.activeElement)) srvChecks($('#ikServers'), []);
     renderHooks();
     if (!IK.edit) whFill(null);
@@ -2107,6 +2110,8 @@ rest_command:
       lock.innerHTML = `<span>${esc(msg)}</span><button class="btn-line" type="button">Einstellungen öffnen</button>`;
       lock.querySelector('button').onclick = () => openSettings('ki');
     } else if (lock) lock.remove();
+    if (msg) { $('#coreState').textContent = 'Nicht eingerichtet'; $('#ki').dataset.state = 'off'; }
+    else if ($('#ki').dataset.state === 'off') setCore('idle');
     if (!msg && !$('#chat').children.length) addMsg('KI', 'Sag mir, was für einen Server du willst oder was ich an einem vorhandenen ändern soll. Ich mache einen Vorschlag, und du gibst ihn frei.');
     const first = (S.servers || [])[0], chip = $('#chipChange');
     if (first && !chip) $('#chips').insertAdjacentHTML('afterbegin', `<button type="button" id="chipChange">${esc(first.name)}: mehr Spieler und schneller leveln</button>`);
@@ -2278,6 +2283,9 @@ rest_command:
     if (!['console', 'players', 'settings', 'mods', 'backups', 'files', 'tasks', 'events'].includes(tab)) tab = 'console';
     MG.tab = tab;
     $$('#svTabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    const cur = $(`#svTabs button[data-tab="${tab}"]`), bar = $('#svTabs');
+    if (cur && bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: cur.offsetLeft - (bar.clientWidth - cur.offsetWidth) / 2, behavior: motion ? 'smooth' : 'auto' });
+    tabFade();
     const panes = { console: 'paneConsole', players: 'panePlayers', backups: 'paneBackups', files: 'paneFiles', tasks: 'paneTasks', events: 'paneEvents', settings: 'paneSettings', mods: 'paneMods' };
     Object.entries(panes).forEach(([k, id]) => { $('#' + id).hidden = k !== tab; });
     clearTimeout(TK.timer);
@@ -2296,6 +2304,14 @@ rest_command:
     else if (tab === 'files') loadFiles(MG.path);
     else loadTasks();
   }
+  // fade at the edge that has more tabs to scroll to (phones)
+  function tabFade() {
+    const bar = $('#svTabs');
+    bar.classList.toggle('more-r', bar.scrollLeft + bar.clientWidth < bar.scrollWidth - 4);
+    bar.classList.toggle('more-l', bar.scrollLeft > 4);
+  }
+  $('#svTabs').addEventListener('scroll', tabFade, { passive: true });
+  addEventListener('resize', tabFade);
   $('#svTabs').addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (b) select(MG.id, b.dataset.tab); });
 
   /* ---------------- Spieler ---------------- */
@@ -2764,6 +2780,8 @@ rest_command:
         <div class="st-head"><label for="${o.id}">${esc(o.label)}</label><input type="checkbox" role="switch" class="tgl" id="${o.id}" ${o.attrs} ${o.value === 'true' ? 'checked' : ''}></div>${help}<p class="st-cond" hidden></p></div>`;
     }
     let input;
+    // an empty field uses the game's default: say which
+    const dflt = o.default != null && String(o.default) !== '' && !/\{\{/.test(o.default) ? ` placeholder="Standard: ${esc(String(o.default))}"` : '';
     if (o.type === 'select') {
       const opts = o.options.map((x, i) => `<option value="${esc(x)}" ${x === o.value ? 'selected' : ''}>${esc((o.labels && o.labels[i]) || x)}</option>`);
       if (o.value && !o.options.includes(o.value)) opts.unshift(`<option value="${esc(o.value)}" selected>${esc(o.value)}</option>`);
@@ -2772,9 +2790,9 @@ rest_command:
       const set = o.value === '••••••';
       input = `<input id="${o.id}" ${o.attrs} type="password" value="" placeholder="${set ? 'gesetzt, bleibt unverändert' : 'leer'}" autocomplete="new-password">`;
     } else if (o.type === 'number') {
-      input = `<input id="${o.id}" ${o.attrs} type="number" step="any" inputmode="decimal" value="${esc(o.value)}"${o.min != null ? ` min="${o.min}"` : ''}${o.max != null ? ` max="${o.max}"` : ''}>`;
+      input = `<input id="${o.id}" ${o.attrs} type="number" step="any" inputmode="decimal" value="${esc(o.value)}"${o.min != null ? ` min="${o.min}"` : ''}${o.max != null ? ` max="${o.max}"` : ''}${dflt}>`;
     } else {
-      input = `<input id="${o.id}" ${o.attrs} type="text" value="${esc(o.value)}" maxlength="300" autocomplete="off"${o.type === 'list' ? ' placeholder="Durch Komma getrennt"' : ''}>`;
+      input = `<input id="${o.id}" ${o.attrs} type="text" value="${esc(o.value)}" maxlength="300" autocomplete="off"${dflt || (o.type === 'list' ? ' placeholder="Durch Komma getrennt"' : '')}>`;
     }
     const unit = o.unit ? `<span class="st-unit" aria-hidden="true">${esc(o.unit)}</span>` : '';
     return `<div class="st-card" data-g="${esc(o.group)}" data-q="${q}" data-f="${o.file}"${when}>${tag}
@@ -2787,7 +2805,7 @@ rest_command:
   }
   function varCard(v) {
     const id = 'stv_' + v.key, type = v.type === 'bool' ? 'bool' : v.type === 'select' ? 'select' : v.type === 'secret' ? 'secret' : v.type === 'number' ? 'number' : 'text';
-    return stCard({ id, attrs: `data-var="${esc(v.key)}"`, label: v.label + (v.required ? ' *' : ''), help: v.help, type, value: v.value, options: v.options || [], labels: v.labels, key: v.key, group: v.group || 'Start', file: 'v' });
+    return stCard({ id, attrs: `data-var="${esc(v.key)}"`, label: v.label + (v.required ? ' *' : ''), help: v.help, type, value: v.value, default: v.default, options: v.options || [], labels: v.labels, key: v.key, group: v.group || 'Start', file: 'v' });
   }
   async function loadSettings() {
     const id = MG.id;
@@ -3804,10 +3822,19 @@ rest_command:
       const st = await api('GET', '/api/state');
       if (st.update) { S.update = st.update; } renderVersion();
       if (st.role && st.role !== S.role) { S.role = st.role; document.body.dataset.role = S.role; renderAll(); }
-      const ban = $('#dockerBanner');
-      ban.hidden = !st.docker_error;
-      if (st.docker_error) ban.textContent = 'Docker ist nicht erreichbar. Läuft der Docker-Dienst? Prüfen mit: sudo systemctl status docker. (' + st.docker_error + ')';
+      dockerBanner(st.docker_error);
     } catch (e) { /* egal */ }
+  }
+  // short, calm notice; the technical error only on request
+  function dockerBanner(err) {
+    const ban = $('#dockerBanner');
+    ban.hidden = !err;
+    if (!err) { ban.dataset.err = ''; return; }
+    if (ban.dataset.err === err) return; // keep "Details" open between polls
+    ban.dataset.err = err;
+    ban.innerHTML = `<span class="ban-ic" aria-hidden="true">!</span><div class="ban-txt"><b>Docker ist nicht erreichbar.</b> Server lassen sich gerade nicht starten oder stoppen. Meist läuft der Docker-Dienst nicht.
+      <details><summary>Technische Details</summary><code class="mono" data-noi18n>${esc(err)}</code><span class="small">Prüfen mit <code class="mono" data-noi18n>sudo systemctl status docker</code></span></details></div>
+      <button type="button" class="btn-line sm" data-help="docker">Was tun?</button>`;
   }
   function stopApp() { timers.forEach(clearInterval); timers = []; closeConsole(); R.page = null; }
   async function startApp() {
@@ -3836,8 +3863,7 @@ rest_command:
     $('#meAvatar').textContent = (st.user || '?').slice(0, 1).toUpperCase();
     if (st.setup_needed) { showAuth('setup'); return; }
     if (!st.user) { showAuth('login'); return; }
-    const ban = $('#dockerBanner'); ban.hidden = !st.docker_error;
-    if (st.docker_error) ban.textContent = 'Docker ist nicht erreichbar. Läuft der Docker-Dienst? Prüfen mit: sudo systemctl status docker. (' + st.docker_error + ')';
+    dockerBanner(st.docker_error);
     await startApp();
   }
 

@@ -457,7 +457,7 @@ Links unter „Hilfe“: Artikel zu den häufigen Fragen und Fehlern (Mitspieler
 
 ## API-Schlüssel und Webhooks
 
-Unter Einstellungen → API & Webhooks. **API-Schlüssel** (`gpk_…`) erlauben Skripten, Home Assistant, n8n oder Stream-Deck-Tasten, die vorhandene API zu nutzen: `Authorization: Bearer gpk_…`, z. B. `POST /api/servers/{id}/start|stop|restart|update|command`, `GET /api/servers/{id}`. Ein Schlüssel hat Bediener- oder Zuschauer-Rechte (nie Admin), optional nur für bestimmte Server; gespeichert wird nur sein SHA-256. Für Server auf weiteren Rechnern gehen die Aufrufe auch über das Hauptpanel.
+Unter Einstellungen → API & Webhooks. **API-Schlüssel** (`gpk_…`) erlauben Skripten, Home Assistant, n8n oder Stream-Deck-Tasten, die vorhandene API zu nutzen: `Authorization: Bearer gpk_…`, z. B. `POST /api/servers/{id}/start|stop|restart|update|command`, `GET /api/servers/{id}`. Ein Schlüssel hat Betreiber- oder Zuschauer-Rechte (nie Admin), optional nur für bestimmte Server; gespeichert wird nur sein SHA-256. Für Server auf weiteren Rechnern gehen die Aufrufe auch über das Hauptpanel.
 
 **Webhooks**: Bei Ereignissen (Status geändert, Spieler kommen und gehen, Absturz, Fehler, Update, Aufgabe, Backup, Start/Stopp, Event, KI-Diagnose, Panel-Version, Wunsch) sendet das Panel ein POST mit JSON (`event`, `kind`, `time`, `server`, `level`, `text`, `data`) und der Kopfzeile `X-Bytewise-Signature: sha256=<HMAC des Rohtexts>`. Discord- und Slack-Webhook-Adressen bekommen ihr eigenes Nachrichtenformat. Fehlgeschlagene Aufrufe werden nach 10 und 60 Sekunden wiederholt; „Testen“ prüft die Adresse sofort.
 

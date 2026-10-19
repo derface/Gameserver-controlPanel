@@ -170,6 +170,7 @@
       <section class="lcd" id="konsole" aria-label="Konsole">
         <div class="lcd-head"><span id="conName">Konsole</span><button type="button" class="con-fold" id="conFold" aria-pressed="true" title="Gleichartige Zeilen, die sich nur in Zahlen oder Uhrzeit unterscheiden, als eine Zeile mit Zähler zeigen">Wiederholungen zusammenfassen</button><span class="live" id="conLive" hidden><i></i>Live</span></div>
         <div class="lines" id="lines" data-noi18n></div>
+        <div class="con-empty" id="conEmpty" hidden><b>Der Server ist gestoppt</b><span>Nach dem Start erscheint hier live seine Ausgabe.</span><button type="button" class="btn-accent op-only" id="conStart">Server starten</button></div>
         <div class="macro-bar op-only" id="macroBar" hidden></div>
         <form class="lcd-in op-only" id="cmdForm">
           <span aria-hidden="true">›</span>
@@ -753,12 +754,12 @@
   </div>
   <div id="ikBlock" class="set-block admin-only" data-sec="schnittstellen">
     <h2>API-Schlüssel</h2>
-    <p class="muted small">Damit steuern eigene Skripte, Home Assistant, n8n oder Stream-Deck-Tasten deine Server, ohne Passwort. Ein Schlüssel hat die Rechte eines Bedieners (starten, stoppen, Befehle, Backups) oder eines Zuschauers (nur lesen), auf Wunsch nur für bestimmte Server. Admin-Rechte bekommt ein Schlüssel nie.</p>
+    <p class="muted small">Damit steuern eigene Skripte, Home Assistant, n8n oder Stream-Deck-Tasten deine Server, ohne Passwort. Ein Schlüssel hat die Rechte eines Betreibers (starten, stoppen, Befehle, Backups) oder eines Zuschauers (nur lesen), auf Wunsch nur für bestimmte Server. Admin-Rechte bekommt ein Schlüssel nie.</p>
     <div id="ikList"></div>
     <form id="ikForm" autocomplete="off">
       <div class="vars">
         <label class="field"><span>Name</span><input id="ikName" maxlength="40" placeholder="z. B. Home Assistant" required></label>
-        <label class="field"><span>Rechte</span><select id="ikRole"><option value="operator">Bediener: starten, stoppen, Befehle</option><option value="viewer">Zuschauer: nur lesen</option></select></label>
+        <label class="field"><span>Rechte</span><select id="ikRole"><option value="operator">Betreiber: starten, stoppen, Befehle</option><option value="viewer">Zuschauer: nur lesen</option></select></label>
       </div>
       <fieldset class="ik-servers"><legend class="small">Server <span class="muted">(keiner gewählt = alle)</span></legend><div id="ikServers" class="ik-srv"></div></fieldset>
       <p class="err" id="ikErr" role="alert" hidden></p>
