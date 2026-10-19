@@ -369,6 +369,8 @@ func (a *Auth) EndSessions(user, keepTok string) int {
 func (a *Auth) Current(r *http.Request) (store.User, bool) {
 	if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer "+NodeKeyPrefix) {
 		return a.nodeUser(r, strings.TrimPrefix(h, "Bearer "))
+	} else if strings.HasPrefix(h, "Bearer "+APIKeyPrefix) {
+		return a.apiUser(r, strings.TrimPrefix(h, "Bearer "))
 	}
 	c, err := r.Cookie(CookieName)
 	if err != nil || c.Value == "" {
@@ -761,4 +763,61 @@ func (a *Auth) nodeUser(r *http.Request, key string) (store.User, bool) {
 		name = who + " (über " + label + ")"
 	}
 	return store.User{Name: name, Role: Admin, Created: time.Now(), ViaNode: true}, true
+}
+
+// APIKeyPrefix starts every key for scripts and home automation.
+const APIKeyPrefix = "gpk_"
+
+// NewAPIKey creates a key with the rights of role (operator or viewer),
+// optionally only for some servers. The key is returned once.
+func (a *Auth) NewAPIKey(name, role string, servers []string, by string) (string, store.APIKey, error) {
+	if role != Operator && role != Viewer {
+		return "", store.APIKey{}, errors.New("Rolle: Bediener oder Zuschauer")
+	}
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", store.APIKey{}, err
+	}
+	key := APIKeyPrefix + base64.RawURLEncoding.EncodeToString(b)
+	id := make([]byte, 4)
+	_, _ = rand.Read(id)
+	k := store.APIKey{ID: hex.EncodeToString(id), Name: name, Hash: tokenKey(key), Hint: key[:8] + "…", Role: role,
+		Servers: servers, Created: time.Now(), By: by}
+	err := a.st.Update(func(d *store.Data) error {
+		if len(d.APIKeys) >= 50 {
+			return errors.New("Höchstens 50 API-Schlüssel")
+		}
+		d.APIKeys = append(d.APIKeys, k)
+		return nil
+	})
+	return key, k, err
+}
+
+// apiUser turns an API key into a user with the key's role and servers.
+func (a *Auth) apiUser(r *http.Request, key string) (store.User, bool) {
+	h := tokenKey(key)
+	var k store.APIKey
+	found := false
+	a.st.Read(func(d *store.Data) {
+		for _, x := range d.APIKeys {
+			if subtle.ConstantTimeCompare([]byte(x.Hash), []byte(h)) == 1 {
+				k, found = x, true
+				k.Servers = append([]string(nil), x.Servers...)
+			}
+		}
+	})
+	if !found {
+		return store.User{}, false
+	}
+	if time.Since(k.LastUsed) > time.Minute {
+		_ = a.st.Update(func(d *store.Data) error {
+			for i := range d.APIKeys {
+				if d.APIKeys[i].Hash == h {
+					d.APIKeys[i].LastUsed, d.APIKeys[i].LastFrom = time.Now(), ClientIP(r)
+				}
+			}
+			return nil
+		})
+	}
+	return store.User{Name: "API: " + k.Name, Role: k.Role, Servers: k.Servers, Created: k.Created, ViaKey: true}, true
 }

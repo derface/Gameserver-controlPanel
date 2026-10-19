@@ -454,3 +454,21 @@ Nach dem ersten Admin-Konto führt ein Assistent durch Adresse für Mitspieler (
 ## Hilfe im Panel
 
 Links unter „Hilfe“: Artikel zu den häufigen Fragen und Fehlern (Mitspieler kommen nicht rein, NAT-Loopback, SteamCMD-Codes, Steam-Konto, RAM und Abstürze, Ports, Docker, Backups, Mods, HTTPS, UPnP/FritzBox, mehrere Rechner, Discord, Statusseite, Aufgaben, Leistung, Updates), durchsuchbar, auf Deutsch und Englisch (`web/static/help.js`). Zeigt ein Server eine passende Fehlermeldung, steht darunter „Hilfe dazu“. Die Artikel sind auch über die Suche (Strg K) erreichbar.
+
+## API-Schlüssel und Webhooks
+
+Unter Einstellungen → API & Webhooks. **API-Schlüssel** (`gpk_…`) erlauben Skripten, Home Assistant, n8n oder Stream-Deck-Tasten, die vorhandene API zu nutzen: `Authorization: Bearer gpk_…`, z. B. `POST /api/servers/{id}/start|stop|restart|update|command`, `GET /api/servers/{id}`. Ein Schlüssel hat Bediener- oder Zuschauer-Rechte (nie Admin), optional nur für bestimmte Server; gespeichert wird nur sein SHA-256. Für Server auf weiteren Rechnern gehen die Aufrufe auch über das Hauptpanel.
+
+**Webhooks**: Bei Ereignissen (Status geändert, Spieler kommen und gehen, Absturz, Fehler, Update, Aufgabe, Backup, Start/Stopp, Event, KI-Diagnose, Panel-Version, Wunsch) sendet das Panel ein POST mit JSON (`event`, `kind`, `time`, `server`, `level`, `text`, `data`) und der Kopfzeile `X-Bytewise-Signature: sha256=<HMAC des Rohtexts>`. Discord- und Slack-Webhook-Adressen bekommen ihr eigenes Nachrichtenformat. Fehlgeschlagene Aufrufe werden nach 10 und 60 Sekunden wiederholt; „Testen“ prüft die Adresse sofort.
+
+## Aufgaben zur ruhigsten Zeit
+
+Tägliche oder wöchentliche Aufgaben können statt einer festen Uhrzeit „zur ruhigsten Zeit“ laufen: in der Stunde, in der in den letzten 30 Tagen am wenigsten Spieler online waren (aus der Spieler-Statistik, ab 7 Tagen Daten; bis dahin gilt die eingetragene Uhrzeit, die bei gleich ruhigen Stunden auch bevorzugt wird). Die Stunde wird einmal am Tag berechnet, eine Aufgabe läuft höchstens einmal pro Tag.
+
+## Servername aus dem Spiel
+
+Das Panel liest bei der Spielerabfrage den Namen, unter dem der Server in der Serverliste des Spiels erscheint (Steam-Abfrage, Minecraft Java/Bedrock), und zeigt ihn in den Server-Details und auf der Statusseite („In der Serverliste im Spiel: …“), wenn er vom Panel-Namen abweicht. Auf der Statusseite abschaltbar.
+
+## KI-Prüfung: bekannte harmlose Meldungen
+
+Spielvorlagen können Konsolenzeilen als bekannt harmlos markieren (`harmless_log`, z. B. bei Enshrouded `[ecss] Could not add component` und `[tracking]`). Sie gehen gekennzeichnet an die KI und zählen nicht als Fehler. Die Befunde der Prüfung tragen eine Stufe (in Ordnung, Hinweis, Problem) mit passendem Symbol.

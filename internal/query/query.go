@@ -11,12 +11,16 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"regexp"
+	"strings"
 	"time"
 )
 
 type Result struct {
 	Players int
 	Max     int
+	Name    string // server name as the game shows it in its server list
+	Map     string
 }
 
 const timeout = 1500 * time.Millisecond
@@ -62,7 +66,15 @@ func parseInfo(b []byte) (Result, error) {
 	if _, err := r.ReadByte(); err != nil { // protocol
 		return Result{}, err
 	}
-	for i := 0; i < 4; i++ { // name, map, folder, game
+	name, err := readString(r)
+	if err != nil {
+		return Result{}, err
+	}
+	mapName, err := readString(r)
+	if err != nil {
+		return Result{}, err
+	}
+	for i := 0; i < 2; i++ { // folder, game
 		if err := skipString(r); err != nil {
 			return Result{}, err
 		}
@@ -76,7 +88,42 @@ func parseInfo(b []byte) (Result, error) {
 	if err1 != nil || err2 != nil {
 		return Result{}, errors.New("a2s: Spielerzahl fehlt")
 	}
-	return Result{Players: int(players), Max: int(max)}, nil
+	return Result{Players: int(players), Max: int(max), Name: CleanName(name), Map: CleanName(mapName)}, nil
+}
+
+func readString(r *bytes.Reader) (string, error) {
+	var b []byte
+	for {
+		c, err := r.ReadByte()
+		if err != nil {
+			return "", err
+		}
+		if c == 0 {
+			return string(b), nil
+		}
+		if len(b) < 512 {
+			b = append(b, c)
+		}
+	}
+}
+
+var reColor = regexp.MustCompile(`§.|\^[0-9]|<color[^>]*>|</color>|<[biu]>|</[biu]>`)
+
+// CleanName removes colour codes and control characters and keeps one
+// line of at most 100 characters.
+func CleanName(s string) string {
+	s = strings.ToValidUTF8(s, "")
+	s = reColor.ReplaceAllString(s, "")
+	s = strings.Join(strings.Fields(strings.Map(func(c rune) rune {
+		if c < 32 || c == 127 {
+			return ' '
+		}
+		return c
+	}, s)), " ")
+	if r := []rune(s); len(r) > 100 {
+		s = string(r[:100])
+	}
+	return s
 }
 
 func skipString(r *bytes.Reader) error {
@@ -134,11 +181,41 @@ func Minecraft(host string, port int) (Result, error) {
 			Online int `json:"online"`
 			Max    int `json:"max"`
 		} `json:"players"`
+		Description json.RawMessage `json:"description"`
 	}
 	if err := json.Unmarshal(js, &st); err != nil {
 		return Result{}, err
 	}
-	return Result{Players: st.Players.Online, Max: st.Players.Max}, nil
+	return Result{Players: st.Players.Online, Max: st.Players.Max, Name: CleanName(chatText(st.Description))}, nil
+}
+
+// chatText flattens a Minecraft text component (string, object with
+// text/extra, or array) to plain text.
+func chatText(raw json.RawMessage) string {
+	var str string
+	if json.Unmarshal(raw, &str) == nil {
+		return str
+	}
+	var arr []json.RawMessage
+	if json.Unmarshal(raw, &arr) == nil {
+		var b strings.Builder
+		for _, x := range arr {
+			b.WriteString(chatText(x))
+		}
+		return b.String()
+	}
+	var obj struct {
+		Text  string            `json:"text"`
+		Extra []json.RawMessage `json:"extra"`
+	}
+	if json.Unmarshal(raw, &obj) == nil {
+		b := obj.Text
+		for _, x := range obj.Extra {
+			b += chatText(x)
+		}
+		return b
+	}
+	return ""
 }
 
 type byteReader struct{ r io.Reader }

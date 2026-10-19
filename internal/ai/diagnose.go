@@ -28,6 +28,7 @@ type DiagFinding struct {
 	Title    string `json:"title"`
 	Detail   string `json:"detail"`
 	Evidence string `json:"evidence,omitempty"`
+	Level    string `json:"level,omitempty"` // ok | info | problem
 }
 
 // DiagAction is a proposal. Kinds the panel can carry out with one click:
@@ -55,11 +56,14 @@ Du bekommst Fakten, Regel-Treffer des Panels, den Verlauf und relevante Konsolen
 Finde heraus, ob etwas nicht stimmt (Abstürze, zu wenig RAM, hohe Last, Hänger, Fehler beim Start, Mods, Ports, Updates) und was hilft.
 Antworte AUSSCHLIESSLICH mit einem JSON-Objekt:
 {"severity":"ok|hinweis|warnung|kritisch","summary":"<1-2 Sätze auf Deutsch, für Laien verständlich>",
- "findings":[{"title":"<kurz>","detail":"<1-3 Sätze>","evidence":"<eine Logzeile oder Zahl als Beleg, optional>"}],
+ "findings":[{"level":"ok|info|problem","title":"<kurz>","detail":"<1-3 Sätze>","evidence":"<eine Logzeile oder Zahl als Beleg, optional>"}],
  "actions":[{"title":"<kurz, Imperativ>","why":"<1 Satz>","kind":"memory|restart|update|var|manual","memory_mb":<zahl, nur bei memory>,"key":"<nur bei var>","value":"<nur bei var>"}]}
 Regeln:
 - Stütze dich nur auf die gelieferten Daten. Rate nicht; wenn die Daten nicht reichen, sag das im summary und schlage vor, was man prüfen kann.
 - Ist alles in Ordnung, severity "ok", höchstens ein Hinweis, keine unnötigen Aktionen.
+- level je finding: "ok" für etwas, das gut aussieht (z. B. Ressourcen im grünen Bereich), "info" für Auffälliges ohne Folgen, "problem" für echte Fehler.
+- Zeilen im Abschnitt "Bekannt harmlos" sind bei diesem Spiel normal: keine findings, keine Aktionen dafür, und sie heben die severity nicht an.
+- Viele Spiele schreiben Warnungen, die nichts bedeuten. Nur weil eine Zeile "error" oder "could not" enthält, ist sie kein Problem; entscheidend ist, ob der Server läuft, Spieler verbinden können und ob es Abstürze gibt. Keine Neustarts oder Prüfungen empfehlen, wenn nichts kaputt ist.
 - Häufige Ursachen: "Killed"/OOM oder RAM dauerhaft nahe am Limit → kind "memory" mit realistischem Wert (höchstens der freie RAM des Rechners plus die bisherige Zuweisung); Java-Heap (-Xmx) zu groß für den Container; Mods, die beim Laden Fehler werfen → kind "manual" mit Mod-Namen; Steam-Download-Fehler → kind "update"; Port belegt ("address already in use") → kind "manual".
 - kind "var" nur mit einem key aus der Liste der änderbaren Startwerte und einem erlaubten Wert.
 - Höchstens 4 findings und 4 actions. Deutsch, sachlich, keine Floskeln.
@@ -107,6 +111,16 @@ func Diagnose(ctx context.Context, s store.Settings, in DiagInput) (Diagnosis, e
 	}
 	if len(d.Findings) > 4 {
 		d.Findings = d.Findings[:4]
+	}
+	for i := range d.Findings {
+		switch d.Findings[i].Level {
+		case "ok", "info", "problem":
+		default:
+			d.Findings[i].Level = map[string]string{"ok": "ok", "hinweis": "info"}[d.Severity]
+			if d.Findings[i].Level == "" {
+				d.Findings[i].Level = "problem"
+			}
+		}
 	}
 	if len(d.Actions) > 4 {
 		d.Actions = d.Actions[:4]

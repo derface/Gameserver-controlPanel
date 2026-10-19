@@ -40,7 +40,7 @@ func TestA2S(t *testing.T) {
 		}
 	}()
 	r, err := A2S("127.0.0.1", pc.LocalAddr().(*net.UDPAddr).Port)
-	if err != nil || r.Players != 3 || r.Max != 10 {
+	if err != nil || r.Players != 3 || r.Max != 10 || r.Name != "Mein Server" || r.Map != "Midgard" {
 		t.Fatalf("A2S = %+v, %v", r, err)
 	}
 }
@@ -62,7 +62,7 @@ func TestMinecraft(t *testing.T) {
 		c.Read(make([]byte, n))
 		readVarInt(br) // status request length + id
 		br.ReadByte()
-		js := `{"version":{"name":"26.3"},"players":{"max":20,"online":2}}`
+		js := `{"version":{"name":"26.3"},"players":{"max":20,"online":2},"description":{"text":"§aDavids ","extra":[{"text":"Welt"},"\n§7Willkommen"]}}`
 		var body bytes.Buffer
 		body.WriteByte(0)
 		writeVarInt(&body, len(js))
@@ -73,7 +73,7 @@ func TestMinecraft(t *testing.T) {
 		c.Write(out.Bytes())
 	}()
 	r, err := Minecraft("127.0.0.1", ln.Addr().(*net.TCPAddr).Port)
-	if err != nil || r.Players != 2 || r.Max != 20 {
+	if err != nil || r.Players != 2 || r.Max != 20 || r.Name != "Davids Welt Willkommen" {
 		t.Fatalf("Minecraft = %+v, %v", r, err)
 	}
 }

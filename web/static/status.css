@@ -11,6 +11,7 @@ h1{margin:0;font-size:26px;letter-spacing:-.01em}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
 .card h2{margin:0;font-size:18px}
 .game{font-size:13px;color:var(--muted)}
+.gname{margin:4px 0 0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}.gname b{color:var(--ink);font-weight:600}
 .state{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
 .state i{width:10px;height:10px;border-radius:50%;background:var(--muted)}
 .state.online i{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 25%,transparent)}

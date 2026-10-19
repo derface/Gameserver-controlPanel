@@ -267,14 +267,35 @@ sudo systemctl start docker</pre>
     de: { t: 'Aufgaben und Makros', b: `
 <ul>
 <li><b>Aufgaben</b> (Reiter Aufgaben): Neustart, Update, Backup, Befehl oder Makro zu festen Zeiten, auf Wunsch nur wenn niemand spielt, mit Vorwarnung und Backup vorher.</li>
+<li><b>Zur ruhigsten Zeit:</b> Statt einer festen Uhrzeit wählt das Panel die Stunde, in der in den letzten 30 Tagen am wenigsten los war. Dafür braucht es mindestens 7 Tage Spieler-Statistik, bis dahin gilt die eingetragene Uhrzeit. Die Stunde wird einmal am Tag neu berechnet.</li>
 <li><b>Makros</b> (unter der Konsole): gespeicherte Befehlsfolgen, <code>warte 10</code> macht eine Pause.</li>
 <li><b>Events</b>: Einstellungen für eine begrenzte Zeit ändern (z. B. doppelte XP am Wochenende), danach stellt das Panel die alten Werte wieder her.</li>
 </ul>` },
     en: { t: 'Tasks and macros', b: `
 <ul>
 <li><b>Tasks</b> (Tasks tab): restart, update, backup, command or macro at fixed times, optionally only when nobody plays, with warning and backup first.</li>
+<li><b>At the quietest time:</b> instead of a fixed time the panel picks the hour with the fewest players over the last 30 days. It needs at least 7 days of player statistics; until then the entered time applies. The hour is recalculated once a day.</li>
 <li><b>Macros</b> (below the console): saved command sequences, <code>wait 10</code> pauses.</li>
 <li><b>Events</b>: change settings for a limited time (e.g. double XP at the weekend); afterwards the panel restores the old values.</li>
+</ul>` }
+  },
+  {
+    id: 'api', tags: 'api schlüssel key webhook home assistant n8n stream deck skript automatisierung',
+    de: { t: 'API-Schlüssel und Webhooks', b: `
+<p>Unter Einstellungen → API &amp; Webhooks.</p>
+<ul>
+<li><b>API-Schlüssel</b> erlauben Skripten und Home Assistant, Server zu starten, zu stoppen oder Befehle zu schicken. Sie haben Bediener- oder Zuschauer-Rechte, nie Admin-Rechte, und lassen sich auf einzelne Server begrenzen. Der Schlüssel wird nur einmal angezeigt; gespeichert ist nur eine Prüfsumme.</li>
+<li>Aufruf: <code>curl -X POST -H "Authorization: Bearer gpk_…" https://panel/api/servers/ID/start</code>. Weitere Beispiele stehen unter „So benutzt du die API“.</li>
+<li><b>Webhooks</b> ruft das Panel bei Ereignissen auf: Status geändert, Spieler kommen und gehen, Absturz, Backup, Update und mehr. Discord- und Slack-Adressen bekommen eine fertige Nachricht, alle anderen JSON mit Signatur.</li>
+<li>Mit „Testen“ siehst du sofort, ob die Adresse erreichbar ist. Schlägt ein Aufruf fehl, versucht das Panel es nach 10 und 60 Sekunden erneut.</li>
+</ul>` },
+    en: { t: 'API keys and webhooks', b: `
+<p>Under Settings → API &amp; Webhooks.</p>
+<ul>
+<li><b>API keys</b> let scripts and Home Assistant start or stop servers or send commands. They have operator or viewer rights, never admin rights, and can be limited to some servers. The key is shown once; only a checksum is stored.</li>
+<li>Call: <code>curl -X POST -H "Authorization: Bearer gpk_…" https://panel/api/servers/ID/start</code>. More examples under “How to use the API”.</li>
+<li><b>Webhooks</b> are called on events: status changed, players join and leave, crash, backup, update and more. Discord and Slack URLs get a ready message, all others JSON with a signature.</li>
+<li>“Test” shows right away whether the URL is reachable. If a call fails, the panel retries after 10 and 60 seconds.</li>
 </ul>` }
   },
   {

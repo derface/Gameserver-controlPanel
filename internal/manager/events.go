@@ -56,6 +56,7 @@ func (m *Manager) Event(id, level, text string) {
 func (m *Manager) EventKind(id, level, kind, text string) {
 	if kind != "" {
 		m.notifyEvent(id, level, kind, text)
+		m.webhook(kind, "server."+kind, id, level, text, nil)
 	}
 	m.ev.mu.Lock()
 	defer m.ev.mu.Unlock()

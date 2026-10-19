@@ -77,8 +77,9 @@ type publicServer struct {
 	ID        string   `json:"-"`
 	Name      string   `json:"name"`
 	Game      string   `json:"game"`
-	State     string   `json:"state"`           // online | startet | aus | fehler | wartung
-	Until     string   `json:"until,omitempty"` // maintenance end, RFC3339
+	GameName  string   `json:"game_name,omitempty"` // as shown in the game's server list
+	State     string   `json:"state"`               // online | startet | aus | fehler | wartung
+	Until     string   `json:"until,omitempty"`     // maintenance end, RFC3339
 	Players   int      `json:"players"`
 	Max       int      `json:"max"`
 	Names     []string `json:"names,omitempty"`
@@ -136,7 +137,7 @@ func (a *API) publicStatus(w http.ResponseWriter, r *http.Request) {
 			host = ""
 		}
 	}
-	o := pubOpts{Notes: map[string]string{}, Names: c.ShowNames, Host: host, LAN: k == 1, Uptime: !c.HideUptime,
+	o := pubOpts{Notes: map[string]string{}, Names: c.ShowNames, Host: host, LAN: k == 1, Uptime: !c.HideUptime, GameNames: !c.HideGameNames,
 		Players: c.ShowPlayers, Horizon: 14 * 24 * time.Hour}
 	for id, e := range c.Servers {
 		if e.Show {
@@ -177,6 +178,8 @@ type pubOpts struct {
 	Players bool              `json:"players"`
 	Horizon time.Duration     `json:"horizon"` // events up to this far ahead; 0 = none
 	Mods    bool              `json:"mods"`
+	// GameNames shows the name the game reports for the server.
+	GameNames bool `json:"game_names"`
 }
 
 type pubView struct {
@@ -193,6 +196,9 @@ func (a *API) localPublic(o pubOpts) pubView {
 		return ok, note
 	}, o.Names, o.Host)
 	for i := range v.Servers {
+		if !o.GameNames {
+			v.Servers[i].GameName = ""
+		}
 		if sv, ok := a.Store.Server(v.Servers[i].ID); ok {
 			v.Servers[i].Season = seasonOf(sv)
 		}
@@ -255,6 +261,9 @@ func (a *API) publicServers(pick func(id string) (bool, string), names bool, hos
 			continue
 		}
 		p := publicServer{ID: s.ID, Name: s.Name, Game: s.TemplateName, Players: max(s.Players, 0), Max: s.MaxPlayers, Note: note, State: publicState(s)}
+		if s.GameName != "" && !strings.EqualFold(s.GameName, s.Name) {
+			p.GameName = s.GameName
+		}
 		if sv, ok := a.Store.Server(s.ID); ok && sv.InMaintenance(time.Now()) {
 			p.State = "wartung"
 			if !sv.Maintenance.Until.IsZero() {

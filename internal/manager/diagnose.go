@@ -134,7 +134,9 @@ var (
 	reEmail   = regexp.MustCompile(`[\w.+-]+@[\w-]+\.[\w.-]+`)
 	reBad     = regexp.MustCompile(`(?i)\b(error|err|fatal|exception|panic|crash|failed|failure|killed|oom|out of memory|outofmemory|segmentation fault|sigsegv|sigabrt|abort|warn|warning|cannot|could not|unable|denied|not found|timed? ?out|address already in use|missing)\b`)
 	reNoise   = regexp.MustCompile(`(?i)duplicate texture|shader|^\s*$`)
-	reDigits  = regexp.MustCompile(`\d+`)
+	// lines that look like errors in many games but mean nothing
+	reHarmless = regexp.MustCompile(`(?i)^fixme:|gameoverlayrenderer\.so|breakpad|setting breakpad minidump`)
+	reDigits   = regexp.MustCompile(`\d+`)
 )
 
 func redact(s string, secrets []string) string {
@@ -155,13 +157,24 @@ func redact(s string, secrets []string) string {
 }
 
 // logExcerpt keeps error-like lines (deduplicated) and the last lines.
-func logExcerpt(lines []string, secrets []string) (string, []string) {
+func logExcerpt(lines []string, secrets []string, harmless ...*regexp.Regexp) (string, []string) {
 	type agg struct {
 		line string
 		n    int
 	}
-	var bad []*agg
+	var bad, known []*agg
 	seen := map[string]*agg{}
+	isHarmless := func(l string) bool {
+		if reHarmless.MatchString(l) {
+			return true
+		}
+		for _, re := range harmless {
+			if re != nil && re.MatchString(l) {
+				return true
+			}
+		}
+		return false
+	}
 	for _, l := range lines {
 		if reNoise.MatchString(l) || !reBad.MatchString(l) {
 			continue
@@ -173,7 +186,14 @@ func logExcerpt(lines []string, secrets []string) (string, []string) {
 		}
 		a := &agg{line: l, n: 1}
 		seen[key] = a
-		bad = append(bad, a)
+		if isHarmless(l) {
+			known = append(known, a)
+		} else {
+			bad = append(bad, a)
+		}
+	}
+	if len(known) > 8 {
+		known = known[len(known)-8:]
 	}
 	if len(bad) > 60 {
 		bad = bad[len(bad)-60:]
@@ -185,6 +205,19 @@ func logExcerpt(lines []string, secrets []string) (string, []string) {
 			l := a.line
 			if len(l) > 300 {
 				l = l[:300] + "…"
+			}
+			if a.n > 1 {
+				l += fmt.Sprintf("   (×%d)", a.n)
+			}
+			b.WriteString(l + "\n")
+		}
+	}
+	if len(known) > 0 {
+		b.WriteString("[Bekannt harmlos – bei diesem Spiel normal, kein Fehler]\n")
+		for _, a := range known {
+			l := a.line
+			if len(l) > 200 {
+				l = l[:200] + "…"
 			}
 			if a.n > 1 {
 				l += fmt.Sprintf("   (×%d)", a.n)
@@ -358,7 +391,13 @@ func (m *Manager) diagInput(ctx context.Context, id, trigger string) (ai.DiagInp
 		rc.Close()
 	}
 	var badLines []string
-	in.Log, badLines = logExcerpt(lines, secrets)
+	var harmless []*regexp.Regexp
+	for _, h := range tpl.HarmlessLog {
+		if re, err := regexp.Compile(h); err == nil {
+			harmless = append(harmless, re)
+		}
+	}
+	in.Log, badLines = logExcerpt(lines, secrets, harmless...)
 	in.Findings = rules(sv, tpl, l, hist, evs, badLines, avail, free, total)
 	return in, sv, tpl, nil
 }

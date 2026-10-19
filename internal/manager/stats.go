@@ -75,7 +75,8 @@ func (m *Manager) saveStats(id string, s *serverStats) {
 }
 
 // recordPlayers adds one minute sample. names may be nil (game tells none).
-func (m *Manager) recordPlayers(id string, now time.Time, count int, names []string) {
+// It returns who joined and who left since the last sample.
+func (m *Manager) recordPlayers(id string, now time.Time, count int, names []string) (joined, left []string) {
 	statsMu.Lock()
 	defer statsMu.Unlock()
 	s := m.loadStats(id)
@@ -112,6 +113,7 @@ func (m *Manager) recordPlayers(id string, now time.Time, count int, names []str
 			if _, on := s.Online[n]; !on {
 				p.Sessions++
 				s.Online[n] = now
+				joined = append(joined, n)
 			}
 			p.Seconds += 60
 			p.Last = now
@@ -119,10 +121,12 @@ func (m *Manager) recordPlayers(id string, now time.Time, count int, names []str
 		for n := range s.Online {
 			if !seen[n] {
 				delete(s.Online, n)
+				left = append(left, n)
 			}
 		}
 	}
 	m.saveStats(id, s)
+	return joined, left
 }
 
 // runStats samples all running servers once a minute.
@@ -199,7 +203,13 @@ func (m *Manager) sampleStats(ctx context.Context, sv store.Server, now time.Tim
 	if count < 0 {
 		return // nothing known about players
 	}
-	m.recordPlayers(sv.ID, now, count, names)
+	joined, left := m.recordPlayers(sv.ID, now, count, names)
+	for _, n := range joined {
+		m.webhook("players", "player.join", sv.ID, "info", n+" ist dem Server beigetreten", map[string]any{"player": n, "online": count})
+	}
+	for _, n := range left {
+		m.webhook("players", "player.leave", sv.ID, "info", n+" hat den Server verlassen", map[string]any{"player": n, "online": count})
+	}
 }
 
 // StatsView is what the statistics section shows.
@@ -300,7 +310,7 @@ func (m *Manager) Stats(id string) (StatsView, error) {
 				v.Insights = append(v.Insights, fmt.Sprintf("Am ruhigsten ist es um %02d:00 Uhr (im Schnitt %s Spieler). Gut für Neustarts und Updates.", best, deNum(bestAvg)))
 			}
 			for _, t := range sv.Tasks {
-				if !t.Enabled || t.EveryHours > 0 || (t.Action != "restart" && t.Action != "update") {
+				if !t.Enabled || t.EveryHours > 0 || t.Quiet || (t.Action != "restart" && t.Action != "update") {
 					continue
 				}
 				var hh int

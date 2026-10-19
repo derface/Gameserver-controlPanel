@@ -383,7 +383,7 @@
     if (!s) { if (S.loaded) { toast('Diesen Server gibt es nicht (mehr).', 'bad'); go('#/server'); } return; }
     const on = isOn(s), busy = !!S.pending[s.id] || s.status === 'preparing';
     const set = (el, html) => { if (el._h !== html) { el.innerHTML = html; el._h = html; } };
-    $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '') + (s.node_name ? ' · auf ' + s.node_name : '');
+    $('#svGame').textContent = s.template_name + (s.category ? ' · ' + s.category : '') + (s.node_name ? ' · auf ' + s.node_name : '') + (s.game_name && s.game_name.toLowerCase() !== s.name.toLowerCase() ? ' · im Spiel: „' + s.game_name + '“' : '');
     $('#svName').textContent = s.name;
     const port = s.join_port || (s.ports && s.ports[0] ? s.ports[0].host : '');
     set($('#svMeta'), `<span class="pill ${esc(s.status)}"><span class="dot" style="background:var(${stInfo(s).t})"></span>${esc(statusLabel(s))}</span>
@@ -509,7 +509,7 @@
       <h3>${esc(s.name)}</h3>${body}`;
   }
   const SF = { q: '', f: '' };
-  const matches = s => (!SF.q || (s.name + ' ' + s.template_name + ' ' + (s.node_name || '')).toLowerCase().includes(SF.q)) && (!SF.f || (SF.f === 'on' ? isOn(s) : !isOn(s)));
+  const matches = s => (!SF.q || (s.name + ' ' + s.template_name + ' ' + (s.node_name || '') + ' ' + (s.game_name || '')).toLowerCase().includes(SF.q)) && (!SF.f || (SF.f === 'on' ? isOn(s) : !isOn(s)));
   function renderCards() {
     const box = $('#mods');
     const list = S.servers.filter(matches);
@@ -984,6 +984,116 @@
     try { await navigator.clipboard.writeText($('#nkCode').textContent); toast('Kopiert', 'ok'); }
     catch (e) { const r = document.createRange(); r.selectNodeContents($('#nkCode')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Bitte mit Strg+C kopieren', 'bad'); }
   });
+  /* ---- API-Schlüssel & Webhooks ---- */
+  const IK = { keys: [], hooks: [], events: [], edit: null };
+  const srvChecks = (box, sel) => {
+    const list = (S.servers || []).filter(x => x.created_by !== 'selbsttest');
+    box.innerHTML = list.length ? list.map(x => `<label><input type="checkbox" value="${esc(x.id)}" ${sel && sel.includes(x.id) ? 'checked' : ''}><span data-noi18n>${esc(x.name)}</span></label>`).join('') : '<span class="small muted">Noch keine Server.</span>';
+  };
+  const checked = box => $$('input:checked', box).map(x => x.value);
+  const srvNames = ids => ids && ids.length ? ids.map(id => { const x = byId(id); return x ? x.name : id; }).join(', ') : 'alle Server';
+  async function loadIntegrations() {
+    let k, w;
+    try { [k, w] = await Promise.all([api('GET', '/api/apikeys'), api('GET', '/api/webhooks')]); } catch (e) { toast(e.message, 'bad'); return; }
+    IK.keys = k.keys || []; IK.hooks = w.webhooks || []; IK.events = w.events || [];
+    $('#ikList').innerHTML = IK.keys.length ? `<ul class="nk-list">${IK.keys.map(x => `<li data-ik="${esc(x.id)}"><span><b data-noi18n>${esc(x.name)}</b> <span class="mono small">${esc(x.hint)}</span><br><span class="small muted">${x.role === 'operator' ? 'Bediener' : 'Zuschauer'} · ${esc(srvNames(x.servers))} · erstellt ${esc(fmtWhen(x.created))}${x.last_used && !String(x.last_used).startsWith('0001') ? ' · zuletzt benutzt ' + esc(fmtWhen(x.last_used)) + (x.last_from ? ' von ' + esc(x.last_from) : '') : ' · noch nicht benutzt'}</span></span><button type="button" class="btn-line sm" data-ik-del>Löschen</button></li>`).join('')}</ul>` : '<p class="small muted">Noch keine API-Schlüssel.</p>';
+    if (!$('#ikServers').children.length || !$('#ikForm').contains(document.activeElement)) srvChecks($('#ikServers'), []);
+    renderHooks();
+    if (!IK.edit) whFill(null);
+    const sid = (S.servers && S.servers[0] && S.servers[0].id) || 'SERVER-ID';
+    const en = !LOC.startsWith('de');
+    $('#ikExamples').textContent = `# ${en ? 'Start a server (stop, restart, update work the same)' : 'Server starten (stop, restart, update genauso)'}
+curl -X POST -H "Authorization: Bearer gpk_…" ${location.origin}/api/servers/${sid}/start
+
+# ${en ? 'Send a console command' : 'Befehl in die Konsole schicken'}
+curl -X POST -H "Authorization: Bearer gpk_…" -d '{"command":"say ${en ? 'Hello' : 'Hallo'}"}' ${location.origin}/api/servers/${sid}/command
+
+# ${en ? 'Read state and player count' : 'Zustand und Spielerzahl abfragen'}
+curl -H "Authorization: Bearer gpk_…" ${location.origin}/api/servers/${sid}
+
+# Home Assistant (configuration.yaml)
+rest_command:
+  gameserver_start:
+    url: "${location.origin}/api/servers/${sid}/start"
+    method: post
+    headers:
+      Authorization: "Bearer gpk_…"`;
+  }
+  function renderHooks() {
+    const evLabel = k => (IK.events.find(e => e.key === k) || { label: k }).label;
+    $('#whList').innerHTML = IK.hooks.length ? IK.hooks.map(h => {
+      const last = h.last_at && !String(h.last_at).startsWith('0001')
+        ? (h.last_err ? `<span class="bad-txt">Fehler ${esc(fmtWhen(h.last_at))}: ${esc(h.last_err)}</span>${h.fails > 1 ? ` <span class="muted">(${h.fails}× hintereinander)</span>` : ''}` : `<span class="on-ok">Zuletzt erfolgreich ${esc(fmtWhen(h.last_at))}</span>`)
+        : '<span class="muted">Noch nicht aufgerufen</span>';
+      return `<div class="wh-item${h.enabled ? '' : ' off'}" data-wh="${esc(h.id)}">
+        <label class="check" title="Aktiv"><input type="checkbox" data-wh-on ${h.enabled ? 'checked' : ''} aria-label="Webhook aktiv"></label>
+        <div class="wh-main"><b data-noi18n>${esc(h.name)}</b><br><span class="mono small" data-noi18n>${esc(h.url)}</span>
+          <div class="small muted">${esc(h.events.map(evLabel).join(' · '))} · ${esc(srvNames(h.servers))}</div>
+          <div class="small">${last}</div>
+          <details class="wh-secret small"><summary>Signatur-Schlüssel</summary><code class="mono" data-noi18n>${esc(h.secret)}</code></details></div>
+        <div class="wh-act"><button type="button" class="btn-line sm" data-wh-test>Testen</button><button type="button" class="btn-line sm" data-wh-edit>Bearbeiten</button><button type="button" class="btn-line sm" data-wh-del>Löschen</button></div></div>`;
+    }).join('') : '<p class="small muted">Noch keine Webhooks.</p>';
+  }
+  function whFill(h) {
+    IK.edit = h ? h.id : null;
+    $('#whFormTitle').textContent = h ? 'Webhook bearbeiten' : 'Webhook hinzufügen';
+    $('#whSave').textContent = h ? 'Speichern' : 'Hinzufügen';
+    $('#whCancel').hidden = !h;
+    $('#whName').value = h ? h.name : ''; $('#whUrl').value = h ? h.url : '';
+    const sel = h ? h.events : ['status', 'crash'];
+    $('#whEvents').innerHTML = IK.events.map(e => `<label><input type="checkbox" value="${esc(e.key)}" ${sel.includes(e.key) ? 'checked' : ''}>${esc(e.label)}</label>`).join('');
+    srvChecks($('#whServers'), h ? h.servers : []);
+    showErr($('#whErr'));
+  }
+  $('#ikForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#ikErr'));
+    try {
+      const r = await api('POST', '/api/apikeys', { name: $('#ikName').value, role: $('#ikRole').value, servers: checked($('#ikServers')) });
+      $('#ikKey').textContent = r.key; $('#ikShow').hidden = false; $('#ikName').value = '';
+      srvChecks($('#ikServers'), []); loadIntegrations();
+    } catch (err) { showErr($('#ikErr'), err.message); }
+  });
+  $('#ikCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText($('#ikKey').textContent); toast('Kopiert', 'ok'); }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('#ikKey')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Bitte mit Strg+C kopieren', 'bad'); }
+  });
+  $('#ikList').addEventListener('click', async e => {
+    const li = e.target.closest('li[data-ik]'); if (!li || !e.target.closest('[data-ik-del]')) return;
+    const k = IK.keys.find(x => x.id === li.dataset.ik); if (!k) return;
+    if (!await confirmBox('API-Schlüssel löschen?', `Was „${k.name}“ benutzt, kann das Panel danach nicht mehr steuern.`, 'Löschen')) return;
+    try { await api('DELETE', '/api/apikeys/' + k.id); $('#ikShow').hidden = true; toast('Schlüssel gelöscht', 'ok'); loadIntegrations(); } catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#whForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#whErr'));
+    const body = { name: $('#whName').value, url: $('#whUrl').value, events: checked($('#whEvents')), servers: checked($('#whServers')) };
+    try {
+      if (IK.edit) { const h = IK.hooks.find(x => x.id === IK.edit); body.enabled = h ? h.enabled : true; await api('PUT', '/api/webhooks/' + IK.edit, body); toast('Gespeichert', 'ok'); }
+      else { await api('POST', '/api/webhooks', body); toast('Webhook angelegt. Tipp: einmal „Testen“ drücken.', 'ok'); }
+      IK.edit = null; loadIntegrations();
+    } catch (err) { showErr($('#whErr'), err.message); }
+  });
+  $('#whCancel').addEventListener('click', () => whFill(null));
+  $('#whList').addEventListener('click', async e => {
+    const it = e.target.closest('[data-wh]'); if (!it) return;
+    const h = IK.hooks.find(x => x.id === it.dataset.wh); if (!h) return;
+    if (e.target.closest('[data-wh-edit]')) { whFill(h); $('#whForm').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (e.target.closest('[data-wh-del]')) {
+      if (!await confirmBox('Webhook löschen?', `„${h.name}“ wird nicht mehr aufgerufen.`, 'Löschen')) return;
+      try { await api('DELETE', '/api/webhooks/' + h.id); if (IK.edit === h.id) IK.edit = null; loadIntegrations(); } catch (err) { toast(err.message, 'bad'); }
+      return;
+    }
+    const tb = e.target.closest('[data-wh-test]');
+    if (tb) {
+      tb.disabled = true; tb.textContent = 'Sende …';
+      try { await api('POST', `/api/webhooks/${h.id}/test`); toast('Test angekommen', 'ok'); } catch (err) { toast(err.message, 'bad'); }
+      loadIntegrations();
+    }
+  });
+  $('#whList').addEventListener('change', async e => {
+    if (!e.target.matches('[data-wh-on]')) return;
+    const h = IK.hooks.find(x => x.id === e.target.closest('[data-wh]').dataset.wh); if (!h) return;
+    try { await api('PUT', '/api/webhooks/' + h.id, { name: h.name, url: h.url, events: h.events, servers: h.servers || [], enabled: e.target.checked }); loadIntegrations(); } catch (err) { toast(err.message, 'bad'); loadIntegrations(); }
+  });
   $('#nkList').addEventListener('click', async e => {
     const li = e.target.closest('li[data-kid]'); if (!li || !e.target.closest('[data-nk-del]')) return;
     if (!await confirmBox('Kopplung entziehen?', 'Das andere Panel kann diesen Rechner danach nicht mehr steuern.', 'Entziehen')) return;
@@ -1165,7 +1275,7 @@
 
   /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'backups', 'steam', 'panel'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'schnittstellen', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -1184,6 +1294,7 @@
     if (sec === 'discord') return loadDiscord();
     if (sec === 'speicher') { perfLoad($('#perfHost'), '_host'); return loadStorage(false); }
     if (sec === 'rechner') return loadNodes();
+    if (sec === 'schnittstellen') { IK.edit = null; $('#ikShow').hidden = true; return loadIntegrations(); }
     if (sec === 'backups') {
       try {
         const rc = await api('GET', '/api/remote');
@@ -1257,7 +1368,7 @@
     showErr($('#spErr'));
     let r; try { r = await api('GET', '/api/status-page'); } catch (e) { showErr($('#spErr'), e.message); return; }
     const c = r.config || {};
-    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime; $('#spModDl').checked = !!c.mod_download; $('#spPlayers').checked = !!c.show_players; $('#spWishes').checked = !!c.wishes;
+    $('#spOn').checked = !!c.enabled; $('#spTitle').value = c.title || ''; $('#spNote').value = c.note || ''; $('#spHost').value = c.host || ''; $('#spNames').checked = !!c.show_names; $('#spUptime').checked = !c.hide_uptime; $('#spGameNames').checked = !c.hide_game_names; $('#spModDl').checked = !!c.mod_download; $('#spPlayers').checked = !!c.show_players; $('#spWishes').checked = !!c.wishes;
     loadWishes();
     spCal(c.cal_token, c.host);
     $('#spLink').href = c.host ? 'https://' + c.host + '/' : '/status'; $('#spLink').textContent = c.host ? c.host : location.host + '/status';
@@ -1270,7 +1381,7 @@
     const servers = {};
     $$('#spRows tr[data-id]').forEach(tr => { servers[tr.dataset.id] = { show: $('.sp-show', tr).checked, note: $('.sp-note', tr).value }; });
     try {
-      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, mod_download: $('#spModDl').checked, show_players: $('#spPlayers').checked, wishes: $('#spWishes').checked, servers });
+      await api('PUT', '/api/status-page', { enabled: $('#spOn').checked, title: $('#spTitle').value, note: $('#spNote').value, host: $('#spHost').value, show_names: $('#spNames').checked, hide_uptime: !$('#spUptime').checked, hide_game_names: !$('#spGameNames').checked, mod_download: $('#spModDl').checked, show_players: $('#spPlayers').checked, wishes: $('#spWishes').checked, servers });
       toast('Statusseite gespeichert', 'ok'); loadStatusPage();
     } catch (err) { showErr($('#spErr'), err.message); }
   });
@@ -1805,7 +1916,9 @@
     const d = DG.list[0]; if (!d) return;
     const [cls, ic, head] = SEV[d.severity] || SEV.hinweis;
     const when = new Date(d.time).toLocaleString(LOC, { dateStyle: 'short', timeStyle: 'short' });
-    const finds = (d.findings || []).map(f => `<li class="rc-${cls === 'ok' ? 'ok' : 'warn'}"><span class="rc-ic" aria-hidden="true">${cls === 'ok' ? '✓' : '!'}</span><div><b>${esc(f.title)}</b><span>${esc(f.detail)}</span>${f.evidence ? `<code class="mono dg-ev">${esc(f.evidence)}</code>` : ''}</div></li>`).join('');
+    const lvl = f => f.level || (cls === 'ok' ? 'ok' : 'problem');
+    const LV = { ok: ['ok', '✓'], info: ['info', 'i'], problem: ['warn', '!'] };
+    const finds = (d.findings || []).map(f => { const [c, i] = LV[lvl(f)] || LV.problem; return `<li class="rc-${c}"><span class="rc-ic" aria-hidden="true">${i}</span><div><b>${esc(f.title)}</b><span>${esc(f.detail)}</span>${f.evidence ? `<code class="mono dg-ev">${esc(f.evidence)}</code>` : ''}</div></li>`; }).join('');
     const acts = (d.actions || []).map((a, i) => `<li><div><b>${esc(a.title)}</b><span>${esc(a.why)}${a.kind === 'var' ? ` <span class="mono">${esc(a.key)} = ${esc(a.value)}</span>` : ''}</span></div>${actionBtn(a, i)}</li>`).join('');
     const older = DG.list.slice(1).map(o => `<li><span class="muted small">${esc(new Date(o.time).toLocaleString(LOC, { dateStyle: 'short', timeStyle: 'short' }))}${o.trigger ? ' · ' + esc(o.trigger) : ''}</span><br>${esc((SEV[o.severity] || SEV.hinweis)[2])}: ${esc(o.summary)}</li>`).join('');
     $('#dgBody').innerHTML = `<div class="rc-verdict rc-${cls}"><span class="rc-ic big" aria-hidden="true">${ic}</span><div><b>${esc(head)}</b><span>${esc(d.summary)}</span></div></div>
@@ -3065,7 +3178,8 @@
     return t.toLocaleDateString(LOC, { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' ' + hm;
   };
   const schedText = t => t.every_hours ? (t.every_hours === 1 ? 'Stündlich' : `Alle ${t.every_hours} Stunden`)
-    : (t.days && t.days.length ? t.days.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map(d => DAYS[d]).join(', ') : 'Täglich') + ' ' + t.at;
+    : (t.days && t.days.length ? t.days.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map(d => DAYS[d]).join(', ') : 'Täglich') + ' '
+      + (t.quiet ? (t.quiet_at ? `zur ruhigsten Zeit (zurzeit ${t.quiet_at})` : `zur ruhigsten Zeit (noch zu wenig Daten, bis dahin ${t.at})`) : t.at);
   async function loadTasks() {
     const id = MG.id, tab = MG.tab;
     let d;
@@ -3149,8 +3263,8 @@
   // ready-made tasks that fit this game; hidden once a similar one exists
   function suggestions() {
     const d = TK.data || {}, q = d.can_query, b = d.can_backup, out = [];
-    if (d.can_update) out.push({ key: 'nightly', text: 'Nachts neu starten' + (d.can_check_update && d.update_on_run ? ' mit Update' : '') + (q ? ', nur wenn leer' : '') + (b ? ', vorher Backup' : ''),
-      task: { action: 'restart', at: '04:00', enabled: true, when_empty: !!q, max_wait_min: q ? 120 : 0, backup_first: !!b, warn_min: d.can_broadcast ? 5 : 0 },
+    if (d.can_update) out.push({ key: 'nightly', text: (q ? 'Täglich zur ruhigsten Zeit neu starten' : 'Nachts neu starten') + (d.can_check_update && d.update_on_run ? ' mit Update' : '') + (q ? ', nur wenn leer' : '') + (b ? ', vorher Backup' : ''),
+      task: { action: 'restart', at: '04:00', quiet: !!q, enabled: true, when_empty: !!q, max_wait_min: q ? 120 : 0, backup_first: !!b, warn_min: d.can_broadcast ? 5 : 0 },
       has: t => t.action === 'restart' && !t.every_hours });
     if (d.can_check_update) out.push({ key: 'upd', text: 'Updates einspielen, sobald es welche gibt' + (q ? ' (wenn niemand spielt)' : ''),
       task: { action: 'update', every_hours: 1, enabled: true, only_if_update: true, when_empty: !!q, max_wait_min: q ? 240 : 0, backup_first: !!b, warn_min: d.can_broadcast ? 5 : 0 },
@@ -3193,6 +3307,7 @@
       if (!ok) loadMacros(MG.id);
     }
     $('#tkAtWrap').hidden = k === 'every'; $('#tkEveryWrap').hidden = k !== 'every'; $('#tkDays').hidden = k !== 'days';
+    $('#tkQuietWrap').hidden = k === 'every' || !d.can_query;
     const warnable = ['restart', 'update', 'stop'].includes(a);
     $('#tkEmptyWrap').hidden = !warnable || !d.can_query;
     $('#tkIfUpdWrap').hidden = !['restart', 'update'].includes(a) || !(d.can_check_update || d.can_mod_check);
@@ -3207,7 +3322,7 @@
     catch (e) { toast(e.message, 'bad'); loadTasks(); return false; }
   }
   const plainTasks = () => (TK.data.tasks || []).map(t => ({ id: t.id, action: t.action, command: t.command, at: t.at, days: t.days, every_hours: t.every_hours, warn_min: t.warn_min, enabled: t.enabled,
-    when_empty: t.when_empty, max_wait_min: t.max_wait_min, only_if_update: t.only_if_update, backup_first: t.backup_first }));
+    when_empty: t.when_empty, max_wait_min: t.max_wait_min, only_if_update: t.only_if_update, backup_first: t.backup_first, quiet: t.quiet }));
   $('#tkForm').addEventListener('submit', async e => {
     e.preventDefault();
     const k = $('#tkKind').value, a = $('#tkAction').value;
@@ -3215,7 +3330,7 @@
       when_empty: !$('#tkEmptyWrap').hidden && $('#tkEmpty').checked, only_if_update: !$('#tkIfUpdWrap').hidden && $('#tkIfUpd').checked,
       backup_first: !$('#tkBackupWrap').hidden && $('#tkBackup').checked };
     if (t.when_empty) t.max_wait_min = +$('#tkMaxWait').value;
-    if (k === 'every') t.every_hours = +$('#tkEvery').value; else t.at = $('#tkAt').value;
+    if (k === 'every') t.every_hours = +$('#tkEvery').value; else { t.at = $('#tkAt').value; t.quiet = !$('#tkQuietWrap').hidden && $('#tkQuiet').checked; }
     if (k === 'days') {
       t.days = $$('#tkDays input:checked').map(x => +x.value);
       if (!t.days.length) { toast('Bitte mindestens einen Tag wählen', 'bad'); return; }

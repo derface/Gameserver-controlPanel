@@ -914,3 +914,20 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .wz-first{display:flex;flex-wrap:wrap;gap:10px}
 .wz-skip{margin-right:auto}
 .wz-opt input:not([type]){background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;color:var(--ink);font:inherit;box-sizing:border-box}
+
+/* API & Webhooks */
+.ik-servers{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:10px 0}
+.ik-srv{display:flex;flex-wrap:wrap;gap:6px 14px}
+.ik-srv label{display:flex;gap:6px;align-items:center;font-size:13px}
+.ik-help{margin-top:12px}
+.ik-help summary{cursor:pointer;font-size:13px}
+.ik-pre{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;overflow:auto;white-space:pre;max-width:100%}
+.ik-h2{margin-top:28px}
+.wh-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 14px}
+.wh-item{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.wh-item.off{opacity:.6}
+.wh-main{flex:1;min-width:200px}
+.wh-main .mono{word-break:break-all}
+.wh-act{display:flex;gap:6px;flex-wrap:wrap}
+.wh-secret{margin-top:4px}
+.wh-secret code{word-break:break-all;user-select:all}

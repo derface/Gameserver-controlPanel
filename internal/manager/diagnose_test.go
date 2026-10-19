@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -107,4 +108,22 @@ func TestDiagnoseWithFakeAI(t *testing.T) {
 		t.Fatalf("%+v", got)
 	}
 	var _ ai.Diagnosis = d
+}
+
+func TestLogExcerptHarmless(t *testing.T) {
+	lines := []string{
+		"[ecss] Could not add component 'Gravity' to entity 12",
+		"[ecss] Could not add component 'Gravity' to entity 13",
+		"[tracking] Post Request returned an HTTP error: 502 Bad Gateway",
+		"fixme:ntdll:NtQuerySystemInformation info_class SYSTEM_PERFORMANCE_INFORMATION",
+		"[Session] 'HostOnline' (up)!",
+		"ERROR: failed to load savegame",
+	}
+	out, bad := logExcerpt(lines, nil, regexp.MustCompile(`\[ecss\] Could not add component`), regexp.MustCompile(`\[tracking\]`))
+	if len(bad) != 1 || !strings.Contains(bad[0], "savegame") {
+		t.Fatalf("%v", bad)
+	}
+	if !strings.Contains(out, "[Bekannt harmlos") || !strings.Contains(out, "(×2)") {
+		t.Fatal(out)
+	}
 }

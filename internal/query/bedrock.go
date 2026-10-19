@@ -63,7 +63,7 @@ func parsePong(b []byte) (Result, error) {
 	if err1 != nil || err2 != nil {
 		return Result{}, errors.New("bedrock: Spielerzahl unlesbar")
 	}
-	return Result{Players: p, Max: mx}, nil
+	return Result{Players: p, Max: mx, Name: CleanName(f[1])}, nil
 }
 
 // Ask runs the query of the given type ("a2s", "minecraft", "bedrock").

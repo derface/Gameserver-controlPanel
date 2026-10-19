@@ -1,0 +1,20 @@
+{
+  "API-Schlüssel erstellt": "API key created",
+  "API-Schlüssel gelöscht": "API key deleted",
+  "Webhook angelegt": "Webhook added",
+  "Webhook geändert": "Webhook changed",
+  "Webhook gelöscht": "Webhook deleted",
+  "Webhook getestet": "Webhook tested",
+  "Bitte eine Adresse mit http:// oder https:// angeben": "Please enter a URL starting with http:// or https://",
+  "Bitte mindestens ein Ereignis wählen": "Please choose at least one event",
+  "Der Name ist zu lang (höchstens 40 Zeichen)": "The name is too long (40 characters at most)",
+  "Höchstens 20 Webhooks": "At most 20 webhooks",
+  "Höchstens 50 API-Schlüssel": "At most 50 API keys",
+  "Keiner der gewählten Server existiert": "None of the chosen servers exists",
+  "Rolle: Bediener oder Zuschauer": "Role: operator or viewer",
+  "Spieler kommen und gehen": "Players join and leave",
+  "Server-Status geändert (startet, läuft, gestoppt, Fehler)": "Server status changed (starting, running, stopped, error)",
+  "Test fehlgeschlagen: %s": "Test failed: %s",
+  "Zugangsdaten gehören nicht in die Adresse": "Credentials do not belong in the URL",
+  "Bitte einen Namen angeben, z. B. „Home Assistant“": "Please enter a name, e.g. “Home Assistant”"
+}

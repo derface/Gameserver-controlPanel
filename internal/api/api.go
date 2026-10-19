@@ -110,6 +110,7 @@ func (a *API) Handler() http.Handler {
 	a.routesMacros(mux)
 	a.routesWizard(mux)
 	a.routesWishes(mux)
+	a.routesIntegrations(mux)
 	a.routesGameEvents(mux)
 	a.routesDiscord(mux)
 	a.routesGeo(mux)

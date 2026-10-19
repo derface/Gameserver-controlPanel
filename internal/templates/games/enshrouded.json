@@ -35,6 +35,10 @@
   "min_memory_mb": 6144,
   "console": "stdin",
   "ready": "HostOnline",
+  "harmless_log": [
+    "\\[ecss\\] Could not add component",
+    "\\[tracking\\]"
+  ],
   "query": {
     "type": "a2s",
     "port": 1

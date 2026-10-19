@@ -107,7 +107,10 @@ var auditGET = map[string]bool{
 // that server. Changing requests are written to the protocol.
 func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet && r.Header.Get("X-Panel") != "1" {
+		// X-Panel guards browser sessions against CSRF; a request with a
+		// key in the Authorization header cannot come from a foreign page.
+		bearer := strings.HasPrefix(r.Header.Get("Authorization"), "Bearer "+auth.APIKeyPrefix)
+		if r.Method != http.MethodGet && !bearer && r.Header.Get("X-Panel") != "1" {
 			fail(w, http.StatusForbidden, errors.New("Anfrage abgelehnt"))
 			return
 		}
@@ -171,6 +174,12 @@ func (a *API) need(role string, h http.HandlerFunc) http.HandlerFunc {
 var actions = map[string]string{
 	"POST /api/servers":                             "Server angelegt",
 	"POST /api/node/keys":                           "Kopplungscode erzeugt",
+	"POST /api/apikeys":                             "API-Schlüssel erstellt",
+	"DELETE /api/apikeys/{kid}":                     "API-Schlüssel gelöscht",
+	"POST /api/webhooks":                            "Webhook angelegt",
+	"PUT /api/webhooks/{wid}":                       "Webhook geändert",
+	"DELETE /api/webhooks/{wid}":                    "Webhook gelöscht",
+	"POST /api/webhooks/{wid}/test":                 "Webhook getestet",
 	"PUT /api/servers/{id}/macros":                  "Makros geändert",
 	"POST /api/servers/{id}/macros/{mid}/run":       "Makro ausgeführt",
 	"PUT /api/wizard":                               "Einrichtung geändert",

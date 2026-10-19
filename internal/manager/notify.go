@@ -36,6 +36,7 @@ func (m *Manager) notifyEvent(id, level, kind, text string) {
 
 // NotifyPanel sends a message that is not about one server.
 func (m *Manager) NotifyPanel(kind, level, title, text string) {
+	m.webhook(kind, "panel."+kind, "", level, title+": "+text, nil)
 	c := m.notifyCfg()
 	if !c.Enabled() || !c.Wants(kind) || !notifyLimit.Allow("panel|"+text, 12*time.Hour) {
 		return

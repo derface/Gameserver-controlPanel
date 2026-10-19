@@ -19,6 +19,7 @@
     $('#msg').textContent = 'Gerade ist kein Server freigegeben.';
     $('#list').innerHTML = d.servers.map(s => `<article class="card">
       <h2>${esc(s.name)}</h2><span class="game">${esc(s.game)}</span>
+      ${s.game_name ? `<p class="gname">In der Serverliste im Spiel: <b data-noi18n>${esc(s.game_name)}</b></p>` : ''}
       <span class="state ${s.state}"><i></i>${LABEL[s.state] || s.state}${s.until ? ' bis ' + esc(new Date(s.until).toLocaleString(LOC, { weekday: 'short', hour: '2-digit', minute: '2-digit' })) : ''}${s.state === 'online' ? ` · ${s.players}${s.max ? ' / ' + s.max : ''} Spieler` : ''}</span>
       ${s.names && s.names.length ? `<ul class="names">${s.names.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
       ${s.address ? `<div class="join"><code>${esc(s.address)}</code><button type="button" data-copy="${esc(s.address)}">Kopieren</button>${s.steam_link ? `<a class="btn primary" href="${esc(s.steam_link)}">Beitreten</a>` : ''}</div>` : ''}

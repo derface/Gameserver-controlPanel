@@ -62,7 +62,7 @@ func ValidateTask(t *store.Task, tpl templates.Template) error {
 		if t.EveryHours > 168 {
 			return errors.New("Höchstens alle 168 Stunden")
 		}
-		t.At, t.Days = "", nil
+		t.At, t.Days, t.Quiet = "", nil, false
 	} else {
 		if !hhmm.MatchString(t.At) {
 			return errors.New("Uhrzeit bitte als HH:MM angeben")
@@ -197,7 +197,7 @@ func (m *Manager) checkTasks(ctx context.Context, now time.Time) {
 			if !t.Enabled {
 				continue
 			}
-			sched := NextRun(t)
+			sched := m.nextRunFor(sv.ID, t)
 			if sched.IsZero() {
 				continue
 			}
@@ -578,6 +578,8 @@ type TaskInfo struct {
 	store.Task
 	Label   string    `json:"label"`
 	NextRun time.Time `json:"next_run,omitempty"`
+	// for "quietest time": the hour used now, or empty while data is missing
+	QuietAt string `json:"quiet_at,omitempty"`
 }
 
 func (m *Manager) Tasks(id string) (TaskView, error) {
@@ -592,7 +594,13 @@ func (m *Manager) Tasks(id string) (TaskView, error) {
 		v.Installed = m.installedBuild(id, tpl)
 	}
 	for _, t := range sv.Tasks {
-		v.Tasks = append(v.Tasks, TaskInfo{Task: t, Label: TaskLabel(t.Action), NextRun: NextRun(t)})
+		ti := TaskInfo{Task: t, Label: TaskLabel(t.Action), NextRun: m.nextRunFor(id, t)}
+		if t.Quiet && t.EveryHours == 0 {
+			if e, ok := m.effectiveOK(id, t); ok {
+				ti.QuietAt = e.At
+			}
+		}
+		v.Tasks = append(v.Tasks, ti)
 	}
 	return v, nil
 }
@@ -622,7 +630,7 @@ func (m *Manager) SetTasks(id string, in []store.Task) error {
 		for _, t := range in {
 			if o, ok := old[t.ID]; ok && t.ID != "" {
 				t.Created, t.LastRun, t.LastResult = o.Created, o.LastRun, o.LastResult
-				if o.At != t.At || o.EveryHours != t.EveryHours || !sameDays(o.Days, t.Days) || (!o.Enabled && t.Enabled) {
+				if o.At != t.At || o.EveryHours != t.EveryHours || o.Quiet != t.Quiet || !sameDays(o.Days, t.Days) || (!o.Enabled && t.Enabled) {
 					// new schedule: count from now, not from the old last run
 					t.Created, t.LastRun = time.Now(), time.Time{}
 				}

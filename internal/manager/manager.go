@@ -79,6 +79,7 @@ type live struct {
 	UpdatedAt time.Time
 	Players   int // -1 = unknown
 	MaxPl     int
+	GameName  string // server name the game reports (kept while offline)
 	queriedAt time.Time
 
 	// watchdog
@@ -105,8 +106,9 @@ type Info struct {
 	CPUCores     float64      `json:"cpu_cores"` // cores busy right now
 	CPULimit     float64      `json:"cpu_limit"` // cores it may use
 	MemMB        float64      `json:"mem_mb"`
-	Players      int          `json:"players"`     // -1 = unbekannt
-	MaxPlayers   int          `json:"max_players"` // 0 = unbekannt
+	Players      int          `json:"players"`             // -1 = unbekannt
+	MaxPlayers   int          `json:"max_players"`         // 0 = unbekannt
+	GameName     string       `json:"game_name,omitempty"` // name in the game's server list
 	Notes        string       `json:"notes,omitempty"`
 	DataDir      string       `json:"data_dir"`
 	Router       []RouterPort `json:"router,omitempty"` // automatic port forwarding
@@ -778,7 +780,7 @@ func (m *Manager) refresh(id string) {
 	l.Players = -1
 	if prev != nil {
 		l.readyFor = prev.readyFor
-		l.Players, l.MaxPl, l.queriedAt = prev.Players, prev.MaxPl, prev.queriedAt
+		l.Players, l.MaxPl, l.queriedAt, l.GameName = prev.Players, prev.MaxPl, prev.queriedAt, prev.GameName
 		l.crashes, l.countedRun = prev.crashes, prev.countedRun
 		l.answeredAt, l.answeredRun, l.hangRun = prev.answeredAt, prev.answeredRun, prev.hangRun
 	}
@@ -818,6 +820,9 @@ func (m *Manager) refresh(id string) {
 	}
 	if err == nil {
 		m.recordSample(sv, l)
+	}
+	if prev != nil && sv.CreatedBy != testCreator {
+		m.hookStatus(id, prev.Phase, l.Phase, l.Msg)
 	}
 	m.mu.Lock()
 	m.live[id] = l
@@ -936,7 +941,14 @@ func (m *Manager) queryPlayers(sv store.Server, tpl templates.Template, l *live)
 		l.Players, l.MaxPl = -1, 0
 		return
 	}
+	if l.Players >= 0 && r.Players != l.Players && sv.CreatedBy != testCreator {
+		m.webhook("players", "players.count", sv.ID, "info", fmt.Sprintf("%d Spieler online", r.Players),
+			map[string]any{"online": r.Players, "before": l.Players, "max": r.Max})
+	}
 	l.Players, l.MaxPl = r.Players, r.Max
+	if r.Name != "" {
+		l.GameName = r.Name
+	}
 	l.answeredAt, l.answeredRun = time.Now(), l.State.StartedAt
 }
 
@@ -1006,6 +1018,7 @@ func (m *Manager) Info(sv store.Server) Info {
 		in.CPU = l.Stats.CPUPercent / m.cores(sv)
 		in.CPULimit = m.cores(sv)
 		in.Players, in.MaxPlayers = l.Players, l.MaxPl
+		in.GameName = l.GameName
 		if l.Phase != "running" {
 			in.Players, in.MaxPlayers = -1, 0
 		}

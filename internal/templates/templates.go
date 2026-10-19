@@ -263,6 +263,9 @@ type Template struct {
 	DataUID     int               `json:"data_uid,omitempty"`  // owner of the server folder (default 1000)
 	Cmd         []string          `json:"cmd,omitempty"`       // arguments for image servers
 	LogFile     string            `json:"log_file,omitempty"`  // steam: game writes here instead of stdout
+	// Console lines (regex) that look like errors but are known to be
+	// harmless for this game; the diagnosis tells the AI so.
+	HarmlessLog []string `json:"harmless_log,omitempty"`
 
 	// Settings shown as a form; values live in the game's config files.
 	Config []ConfigFile `json:"config,omitempty"`

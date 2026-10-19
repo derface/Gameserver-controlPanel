@@ -315,6 +315,7 @@
       <label class="field"><span>Zeitplan</span>
         <select id="tkKind"><option value="daily">Täglich</option><option value="days">An bestimmten Tagen</option><option value="every">Alle … Stunden</option></select></label>
       <label class="field" id="tkAtWrap"><span>Uhrzeit</span><input id="tkAt" type="time" value="04:00" required></label>
+      <label class="check tk-quiet" id="tkQuietWrap"><input type="checkbox" id="tkQuiet"> Zur ruhigsten Zeit <span class="muted small">(die Stunde mit den wenigsten Spielern, aus der Statistik; bis dahin die Uhrzeit)</span></label>
       <label class="field" id="tkEveryWrap" hidden><span>Abstand</span>
         <select id="tkEvery"><option>1</option><option>2</option><option>3</option><option>4</option><option selected>6</option><option>8</option><option>12</option><option>24</option></select></label>
       <fieldset class="tk-days" id="tkDays" hidden><legend class="sr">Wochentage</legend></fieldset>
@@ -502,6 +503,7 @@
         <a href="#/einstellungen/discord" data-sec="discord">Discord-Bot</a>
         <a href="#/einstellungen/speicher" data-sec="speicher">Speicher &amp; Auslastung</a>
         <a href="#/einstellungen/rechner" data-sec="rechner">Mehrere Rechner</a>
+        <a href="#/einstellungen/schnittstellen" data-sec="schnittstellen">API &amp; Webhooks</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
         <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
@@ -645,6 +647,7 @@
     <label class="field"><span>Eigene Adresse <em class="muted">optional</em></span><input id="spHost" placeholder="status.meine-domain.de" spellcheck="false"><small>Unter dieser Domain zeigt das Panel nur die Statusseite, die Anmeldung ist dort nicht erreichbar. Domain wie beim Panel per Reverse Proxy auf diesen Rechner leiten.</small></label>
     <label class="check"><input type="checkbox" id="spNames"> Namen der Spieler zeigen, die gerade online sind</label>
     <label class="check"><input type="checkbox" id="spUptime"> Online-Verlauf der letzten 30 Tage zeigen</label>
+    <label class="check"><input type="checkbox" id="spGameNames"> Servernamen aus dem Spiel zeigen (so finden Spieler den Server in der Serverliste)</label>
     <label class="check"><input type="checkbox" id="spPlayers"> Spielerliste mit Spielzeiten zeigen (nur Spiele, die Namen verraten)</label>
     <label class="check"><input type="checkbox" id="spWishes"> Wunschliste: Mitspieler schlagen Spiele und Mods vor und stimmen ab</label>
     <label class="check"><input type="checkbox" id="spModDl"> Mitspieler können die Client-Mods als Paket herunterladen (Statusseite und Einladungslinks)</label>
@@ -747,6 +750,59 @@
       </div>
       <ul class="nk-list" id="nkList"></ul>
     </div>
+  </div>
+  <div id="ikBlock" class="set-block admin-only" data-sec="schnittstellen">
+    <h2>API-Schlüssel</h2>
+    <p class="muted small">Damit steuern eigene Skripte, Home Assistant, n8n oder Stream-Deck-Tasten deine Server, ohne Passwort. Ein Schlüssel hat die Rechte eines Bedieners (starten, stoppen, Befehle, Backups) oder eines Zuschauers (nur lesen), auf Wunsch nur für bestimmte Server. Admin-Rechte bekommt ein Schlüssel nie.</p>
+    <div id="ikList"></div>
+    <form id="ikForm" autocomplete="off">
+      <div class="vars">
+        <label class="field"><span>Name</span><input id="ikName" maxlength="40" placeholder="z. B. Home Assistant" required></label>
+        <label class="field"><span>Rechte</span><select id="ikRole"><option value="operator">Bediener: starten, stoppen, Befehle</option><option value="viewer">Zuschauer: nur lesen</option></select></label>
+      </div>
+      <fieldset class="ik-servers"><legend class="small">Server <span class="muted">(keiner gewählt = alle)</span></legend><div id="ikServers" class="ik-srv"></div></fieldset>
+      <p class="err" id="ikErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="submit" class="btn-accent">Schlüssel erstellen</button></div>
+    </form>
+    <div id="ikShow" class="nk-show" hidden>
+      <p class="small"><b>Dein neuer API-Schlüssel</b> (nur jetzt sichtbar, gut aufheben):</p>
+      <div class="nk-code"><code id="ikKey" data-noi18n></code><button type="button" class="btn-line" id="ikCopy">Kopieren</button></div>
+    </div>
+    <details class="ik-help">
+      <summary>So benutzt du die API</summary>
+      <p class="small">Den Schlüssel als <code>Authorization: Bearer …</code> mitschicken. Die Server-ID steht in der Adresszeile, wenn du einen Server öffnest.</p>
+      <pre class="mono small ik-pre" data-noi18n id="ikExamples"></pre>
+    </details>
+
+    <h2 class="ik-h2">Webhooks</h2>
+    <p class="muted small">Bei Ereignissen ruft das Panel eine Adresse auf (HTTP POST mit JSON), z. B. einen Home-Assistant- oder n8n-Webhook. Discord- und Slack-Webhook-Adressen bekommen gleich eine lesbare Nachricht. Jeder Aufruf ist mit dem Signatur-Schlüssel unterschrieben (Kopfzeile <code>X-Bytewise-Signature</code>, HMAC-SHA256).</p>
+    <div id="whList" class="wh-list"></div>
+    <form id="whForm" autocomplete="off">
+      <h3 id="whFormTitle">Webhook hinzufügen</h3>
+      <div class="vars">
+        <label class="field"><span>Name</span><input id="whName" maxlength="40" placeholder="z. B. Home Assistant"></label>
+        <label class="field full"><span>Adresse</span><input id="whUrl" type="url" placeholder="https://…" spellcheck="false" required></label>
+      </div>
+      <fieldset class="ik-servers"><legend class="small">Bei diesen Ereignissen</legend><div id="whEvents" class="ik-srv"></div></fieldset>
+      <fieldset class="ik-servers"><legend class="small">Server <span class="muted">(keiner gewählt = alle)</span></legend><div id="whServers" class="ik-srv"></div></fieldset>
+      <p class="err" id="whErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="button" class="btn-line" id="whCancel" hidden>Abbrechen</button><button type="submit" class="btn-accent" id="whSave">Hinzufügen</button></div>
+    </form>
+    <details class="ik-help">
+      <summary>Was im JSON steht</summary>
+      <pre class="mono small ik-pre" data-noi18n>{
+  "event": "player.join",
+  "kind": "players",
+  "time": "2026-10-19T18:02:11Z",
+  "panel": "gameserver",
+  "server": { "id": "3780b4de", "name": "Enshrouded", "game": "Enshrouded" },
+  "level": "info",
+  "text": "Bjorn ist dem Server beigetreten",
+  "data": { "player": "Bjorn", "online": 3 }
+}</pre>
+      <p class="small">Weitere Ereignisse: <code>server.status</code> (data: from, to), <code>players.count</code> (online, before, max), <code>player.leave</code>, <code>server.crash</code>, <code>server.backup</code>, <code>server.update</code>, <code>server.task</code>, <code>server.startstop</code>, <code>server.event</code>, <code>server.ai</code>, <code>server.error</code>, <code>panel.panel</code>, <code>panel.wish</code>. Prüfen: HMAC-SHA256 des Rohtexts mit dem Signatur-Schlüssel, als <code>sha256=&lt;hex&gt;</code>.</p>
+      <p class="small muted">Webhooks und Schlüssel gelten für diesen Rechner. Für Server auf weiteren Rechnern legst du Webhooks im Panel des jeweiligen Rechners an; API-Aufrufe für diese Server gehen auch über dieses Panel.</p>
+    </details>
   </div>
   <div id="upBlock" class="set-block admin-only" data-sec="panel">
     <h2>Panel &amp; Updates</h2>

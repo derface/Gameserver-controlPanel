@@ -220,3 +220,31 @@ func TestTaskWaitsUntilEmpty(t *testing.T) {
 		t.Fatalf("Ergebnis: %q", sv.Tasks[0].LastResult)
 	}
 }
+
+func TestQuietFrom(t *testing.T) {
+	loc := time.FixedZone("x", 2*3600)
+	now := time.Date(2026, 10, 19, 12, 0, 0, 0, loc)
+	var hours []hourBucket
+	for d := 1; d <= 10; d++ {
+		for h := 0; h < 24; h++ {
+			ts := time.Date(2026, 10, 19-d, h, 0, 0, 0, loc)
+			p := 3
+			switch h {
+			case 3, 4, 5:
+				p = 0 // empty at night
+			case 6:
+				p = 1
+			}
+			hours = append(hours, hourBucket{H: ts.Unix(), Sum: p * 60, N: 60, Max: p})
+		}
+	}
+	if e := quietFrom(hours, now, 4); e.hour != 4 {
+		t.Fatalf("preferred quiet hour kept: %+v", e)
+	}
+	if e := quietFrom(hours, now, 20); e.hour != 3 {
+		t.Fatalf("closest quiet hour to 20: %+v", e)
+	}
+	if e := quietFrom(hours[len(hours)-24*3:], now, 4); e.hour != -1 {
+		t.Fatalf("too few days: %+v", e)
+	}
+}

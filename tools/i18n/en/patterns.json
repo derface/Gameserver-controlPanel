@@ -442,5 +442,33 @@
  [
   "(.+?) · von (.+?) · (.+)",
   "{0} · by {1} · {2}"
+ ],
+ [
+  "morgen (.+)",
+  "tomorrow {0}"
+ ],
+ [
+  "erstellt (.+)",
+  "created {0}"
+ ],
+ [
+  "Zuletzt erfolgreich (.+)",
+  "Last successful {0}"
+ ],
+ [
+  "Fehler (heute|gestern|morgen|\\S+ \\d\\d\\.\\d\\d\\.) (\\d\\d:\\d\\d): (.+)",
+  "Error {0} {1}: {2}"
+ ],
+ [
+  "(.+?) zur ruhigsten Zeit \\(zurzeit (.+)\\)",
+  "{0} at the quietest time (currently {1})"
+ ],
+ [
+  "(.+?) zur ruhigsten Zeit \\(noch zu wenig Daten, bis dahin (.+)\\)",
+  "{0} at the quietest time (not enough data yet, until then {1})"
+ ],
+ [
+  "(.+?) im Spiel: „(.+)“",
+  "{0} in game: “{1}”"
  ]
 ]

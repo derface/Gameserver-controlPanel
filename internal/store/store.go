@@ -29,6 +29,7 @@ type User struct {
 	Recovery  []string  `json:"recovery,omitempty"`  // sha256 of the unused recovery codes
 	LastLogin time.Time `json:"last_login,omitempty"`
 	ViaNode   bool      `json:"-"` // request from another panel with a node key
+	ViaKey    bool      `json:"-"` // request from a script with an API key
 }
 
 // Session is stored under the sha256 of its token, so a leaked panel.json
@@ -118,6 +119,9 @@ type Task struct {
 	MaxWaitMin   int  `json:"max_wait_min,omitempty"`   // … at most this long, then run anyway
 	OnlyIfUpdate bool `json:"only_if_update,omitempty"` // skip when Steam has no newer build
 	BackupFirst  bool `json:"backup_first,omitempty"`   // make a backup before the action
+	// Quiet runs the task in the hour with the fewest players (from the
+	// player statistics); At is used until enough data exists.
+	Quiet bool `json:"quiet,omitempty"`
 }
 
 // Watch configures the crash and hang watchdog.
@@ -250,8 +254,10 @@ type StatusConfig struct {
 	// HideUptime hides the 30-day online history on the page.
 	HideUptime bool `json:"hide_uptime,omitempty"`
 	// Wishes shows the wish list where players suggest games and mods.
-	Wishes  bool                    `json:"wishes,omitempty"`
-	Servers map[string]StatusServer `json:"servers,omitempty"`
+	Wishes bool `json:"wishes,omitempty"`
+	// HideGameNames hides the server name the game itself reports.
+	HideGameNames bool                    `json:"hide_game_names,omitempty"`
+	Servers       map[string]StatusServer `json:"servers,omitempty"`
 }
 
 type StatusServer struct {
@@ -276,6 +282,39 @@ type Data struct {
 	NodeKeys []NodeKey          `json:"node_keys,omitempty"` // panels allowed to control this machine
 	Wishes   []Wish             `json:"wishes,omitempty"`    // wish list of the status page
 	WishSalt string             `json:"wish_salt,omitempty"`
+	APIKeys  []APIKey           `json:"api_keys,omitempty"` // keys for scripts, Home Assistant, Stream Deck …
+	Webhooks []Webhook          `json:"webhooks,omitempty"` // URLs called on events
+}
+
+// APIKey lets a script use the panel's API with the rights of a role.
+// Only the sha256 of the key is stored.
+type APIKey struct {
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	Hash     string    `json:"hash"`
+	Hint     string    `json:"hint"`              // first characters, to tell keys apart
+	Role     string    `json:"role"`              // operator | viewer
+	Servers  []string  `json:"servers,omitempty"` // only these servers (empty = all)
+	Created  time.Time `json:"created"`
+	By       string    `json:"by,omitempty"`
+	LastUsed time.Time `json:"last_used,omitempty"`
+	LastFrom string    `json:"last_from,omitempty"`
+}
+
+// Webhook is a URL the panel calls (HTTP POST with JSON) on events.
+type Webhook struct {
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	URL      string    `json:"url"`
+	Secret   string    `json:"secret"`            // HMAC-SHA256 key for the signature header
+	Events   []string  `json:"events"`            // kinds, see manager.WebhookEvents
+	Servers  []string  `json:"servers,omitempty"` // only these servers (empty = all)
+	Enabled  bool      `json:"enabled"`
+	Created  time.Time `json:"created"`
+	LastAt   time.Time `json:"last_at,omitempty"`
+	LastCode int       `json:"last_code,omitempty"`
+	LastErr  string    `json:"last_err,omitempty"`
+	Fails    int       `json:"fails,omitempty"` // failed calls in a row
 }
 
 // Node is another machine running Bytewise Panel that this panel controls.
