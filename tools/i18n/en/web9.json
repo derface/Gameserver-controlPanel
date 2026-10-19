@@ -55,5 +55,10 @@
   "Backups erstellt": "Backups created",
   "Spiel-Updates": "Game updates",
   "KI-Diagnosen": "AI diagnoses",
-  "Neue Panel-Version": "New panel version"
+  "Neue Panel-Version": "New panel version",
+  "Wiederholungen zusammenfassen": "Fold repeated lines",
+  "Alle Zeilen zeigen": "Showing all lines",
+  "Gleichartige Zeilen, die sich nur in Zahlen oder Uhrzeit unterscheiden, als eine Zeile mit Zähler zeigen": "Show similar lines that differ only in numbers or time as one line with a counter",
+  "Neue Wiederholungen werden zusammengefasst": "New repeated lines are folded",
+  "Neue Zeilen erscheinen wieder einzeln": "New lines appear one by one again"
 }

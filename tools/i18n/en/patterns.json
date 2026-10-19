@@ -470,5 +470,9 @@
  [
   "(.+?) im Spiel: „(.+)“",
   "{0} in game: “{1}”"
+ ],
+ [
+  "Wiederholungen zusammengefasst \\((\\d+)\\)",
+  "Repeated lines folded ({0})"
  ]
 ]

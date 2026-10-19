@@ -579,11 +579,42 @@
   function renderAll() { renderCards(); renderHomeList(); syncLand(); if (R.page === 'server') renderServerPage(); trackAI(); }
 
   /* ---------------- Konsole ---------------- */
+  // Log-Flut: a line that differs from one of the last few only in numbers,
+  // times or ids is not added again; that line counts up instead (×56).
+  const CF = { on: true, hidden: 0 };
+  try { CF.on = localStorage.getItem('gp-con-fold') !== '0'; } catch (e) { /* egal */ }
+  const foldKey = t => t.replace(/\b[0-9a-f]{6,}\b/gi, 'h').replace(/\d+/g, '#').replace(/\s+/g, ' ').trim().toLowerCase();
+  function foldBtn() {
+    const b = $('#conFold'); if (!b) return;
+    b.setAttribute('aria-pressed', String(CF.on));
+    b.textContent = CF.on ? (CF.hidden ? `Wiederholungen zusammengefasst (${CF.hidden})` : 'Wiederholungen zusammenfassen') : 'Alle Zeilen zeigen';
+  }
+  function foldLine(box, text) {
+    const k = foldKey(text);
+    if (k.length < 4) return false;
+    const kids = box.children;
+    for (let i = kids.length - 1; i >= Math.max(0, kids.length - 6); i--) {
+      const d = kids[i];
+      if (d.dataset.k !== k) continue;
+      const n = (+d.dataset.n || 1) + 1;
+      d.dataset.n = n;
+      let b = d.querySelector('.rep');
+      if (!b) { b = document.createElement('span'); b.className = 'rep'; d.appendChild(b); }
+      b.textContent = '×' + n;
+      const now = new Date();
+      b.title = (helpLang() === 'en' ? `${n - 1} similar lines folded, last at ${now.toLocaleTimeString(LOC)}:\n` : `${n - 1} gleichartige Zeilen zusammengefasst, zuletzt ${now.toLocaleTimeString(LOC)}:\n`) + text;
+      CF.hidden++; foldBtn();
+      return true;
+    }
+    return false;
+  }
   function addLine(text, cls) {
     const box = $('#lines');
     const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+    if (!cls && CF.on && foldLine(box, text)) { if (nearBottom) box.scrollTop = box.scrollHeight; return; }
     const d = document.createElement('div');
     d.textContent = text;
+    if (!cls) d.dataset.k = foldKey(text);
     if (cls) d.className = cls;
     else if (/\[panel\]/i.test(text)) d.className = 'g';
     else if (/warn|error|exception|fehl/i.test(text)) d.className = 'w';
@@ -599,10 +630,17 @@
     loadMacros(id);
     $('#conName').textContent = 'Konsole';
     $('#lines').innerHTML = isOn(s) ? '' : '<div class="dim">Der Server ist gestoppt. Nach dem Start erscheint hier seine Ausgabe.</div>';
+    CF.hidden = 0; foldBtn();
     $('#cmdInput').disabled = false;
     $('#cmdInput').placeholder = s.console === 'exec' ? 'Befehl senden (z. B. list)' : 'Befehl senden';
     connectConsole(id);
   }
+  $('#conFold').addEventListener('click', () => {
+    CF.on = !CF.on;
+    try { localStorage.setItem('gp-con-fold', CF.on ? '1' : '0'); } catch (e) { /* egal */ }
+    foldBtn();
+    toast(CF.on ? 'Neue Wiederholungen werden zusammengefasst' : 'Neue Zeilen erscheinen wieder einzeln', 'ok');
+  });
   function connectConsole(id) {
     if (S.consoleId !== id) return;
     const es = new EventSource(`/api/servers/${id}/console`);

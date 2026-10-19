@@ -223,6 +223,13 @@ type HostConfig struct {
 	NanoCPUs      int64                    `json:"NanoCpus,omitempty"`
 	RestartPolicy RestartPolicy            `json:"RestartPolicy"`
 	Init          bool                     `json:"Init,omitempty"`
+	LogConfig     *LogConfig               `json:"LogConfig,omitempty"`
+}
+
+// LogConfig limits how much console output Docker keeps on disk.
+type LogConfig struct {
+	Type   string            `json:"Type"`
+	Config map[string]string `json:"Config,omitempty"`
 }
 
 type ContainerConfig struct {

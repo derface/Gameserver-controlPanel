@@ -452,7 +452,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 		hostPorts[i] = p.Host
 	}
 	cfg := docker.ContainerConfig{
-		Labels:      map[string]string{"gamepanel.id": sv.ID, "gamepanel.template": tpl.ID},
+		Labels:      map[string]string{"gamepanel.id": sv.ID, "gamepanel.template": tpl.ID, "gamepanel.logs": logLimitTag},
 		OpenStdin:   true,
 		StopTimeout: tpl.StopTimeout,
 		StopSignal:  tpl.StopSignal,
@@ -461,6 +461,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			PortBindings:  map[string][]docker.PortBinding{},
 			Memory:        int64(sv.MemoryMB) * 1024 * 1024,
 			RestartPolicy: restartPolicy(sv),
+			LogConfig:     serverLogConfig(),
 		},
 		ExposedPorts: map[string]struct{}{},
 	}
@@ -674,11 +675,25 @@ func (m *Manager) Restart(ctx context.Context, id string) error {
 // older runtime image than the current one.
 func (m *Manager) outdated(ctx context.Context, sv store.Server) bool {
 	tpl, ok := m.tpls.Get(sv.Template)
-	if !ok || tpl.Kind != "steam" || sv.ContainerID == "" {
+	if !ok || sv.ContainerID == "" {
 		return false
 	}
 	img, labels, err := m.dk.InspectLabels(ctx, sv.ContainerID)
-	return err == nil && img != "" && (img != SteamImageFor(tpl) || labels["gamepanel.script"] != runScriptHash)
+	if err != nil || img == "" {
+		return false
+	}
+	if labels["gamepanel.logs"] != logLimitTag {
+		return true // from before the log limit: the console log could fill the disk
+	}
+	return tpl.Kind == "steam" && (img != SteamImageFor(tpl) || labels["gamepanel.script"] != runScriptHash)
+}
+
+// Docker keeps at most 3 × 20 MB of console output per server. Without a
+// limit a game that floods its console fills the disk over weeks.
+const logLimitTag = "20m-3"
+
+func serverLogConfig() *docker.LogConfig {
+	return &docker.LogConfig{Type: "json-file", Config: map[string]string{"max-size": "20m", "max-file": "3"}}
 }
 
 // Recreate rebuilds the container with the current settings (keeps data).

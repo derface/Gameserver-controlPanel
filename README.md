@@ -472,3 +472,8 @@ Das Panel liest bei der Spielerabfrage den Namen, unter dem der Server in der Se
 ## KI-Prüfung: bekannte harmlose Meldungen
 
 Spielvorlagen können Konsolenzeilen als bekannt harmlos markieren (`harmless_log`, z. B. bei Enshrouded `[ecss] Could not add component` und `[tracking]`). Sie gehen gekennzeichnet an die KI und zählen nicht als Fehler. Die Befunde der Prüfung tragen eine Stufe (in Ordnung, Hinweis, Problem) mit passendem Symbol.
+
+## Log-Flut
+
+- **Konsole:** Zeilen, die sich nur in Zahlen, Uhrzeiten oder IDs von einer der letzten sechs Zeilen unterscheiden, erscheinen nicht erneut; die vorhandene Zeile zählt hoch (×56, Tooltip mit der letzten Fassung und Uhrzeit). Abschaltbar über den Knopf im Konsolenkopf (wird im Browser gemerkt).
+- **Platte:** Docker behält je Server höchstens 3 × 20 MB Konsolenausgabe (`json-file`, `max-size`/`max-file`). Container von vor v0.40 werden beim nächsten Start oder Neustart einmal neu angelegt (Daten bleiben).
