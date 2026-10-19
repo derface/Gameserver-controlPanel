@@ -1,0 +1,11 @@
+name: Idea / Idee
+description: Suggest an improvement / Verbesserung vorschlagen
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help you? / Was würde dir helfen?
+      description: Describe the situation, not only the solution. / Beschreib die Situation, nicht nur die Lösung.
+    validations:
+      required: true

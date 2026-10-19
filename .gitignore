@@ -1,8 +1,17 @@
-# Geheimer Schlüssel zum Erstellen von Lizenzen – NIEMALS committen
-licgen-private.key
-*.key
-dev-license-*.txt
-
+# Build-Ausgaben und Testdaten
 dist/
 devdata/
 *.tmp
+
+# Schlüssel und Zertifikate gehören nie ins Repo
+*.key
+*.pem
+
+# Python-Hilfsskripte
+__pycache__/
+*.pyc
+
+# Editoren / Betriebssystem
+.idea/
+.vscode/
+.DS_Store

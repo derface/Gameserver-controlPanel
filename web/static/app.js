@@ -406,7 +406,7 @@
     // settings that wait for the first start reload once the status moves on
     if (MG.tab === 'settings' && GS.data && GS.status !== s.status && GS.data.files.some(f => !f.editable) && !document.activeElement.closest('#stForm')) loadSettings();
     set($('#svInfo'), `<h2>Details</h2><dl class="kv one">
-        <div><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}${s.join_hint ? `<span class="small muted join-hint">${esc(s.join_hint)}</span>` : ''}${S.lanIP && port && S.lanIP !== addr() ? `<span class="small muted join-hint">Aus dem Heimnetz: ${esc(S.lanIP)}:${port}</span>` : ''}</dd></div>
+        <div class="stack"><dt>Adresse für Spieler</dt><dd>${port ? esc(addr()) + ':' + port : '–'}${s.join_hint ? `<span class="small muted join-hint">${esc(s.join_hint)}</span>` : ''}${S.lanIP && port && S.lanIP !== addr() ? `<span class="small muted join-hint">Aus dem Heimnetz: ${esc(S.lanIP)}:${port}</span>` : ''}</dd></div>
         <div><dt>Ports</dt><dd>${esc(portList(s)) || '–'}</dd></div>
         <div><dt>Arbeitsspeicher</dt><dd>${s.status === 'running' ? gb(s.mem_mb) + ' von ' : ''}${gb(s.memory_mb)} GB</dd></div>
         <div><dt>CPU</dt><dd>${s.status === 'running' ? Math.round(s.cpu) + ' %' + (s.cpu_limit ? `<br><span class="small muted">${esc(cpuTip(s))}</span>` : '') : '–'}</dd></div>
@@ -1886,12 +1886,12 @@ rest_command:
   /* ---------------- Router & Ports ---------------- */
   function routerRow(s) {
     const r = s.router || [];
-    if (s.no_router) return S.routerOn ? '<div><dt>Von außen</dt><dd class="muted">Ports werden für diesen Server nicht automatisch geöffnet</dd></div>' : '';
+    if (s.no_router) return S.routerOn ? '<div class="stack"><dt>Von außen</dt><dd class="muted">Ports werden für diesen Server nicht automatisch geöffnet</dd></div>' : '';
     if (!r.length) return '';
     const bad = r.filter(p => !p.ok);
     const list = r.map(p => p.proto + ' ' + p.port).join(', ');
-    if (!bad.length) return `<div><dt>Von außen</dt><dd><span class="on-ok">Ports offen</span><br><span class="small muted">${esc(list)}</span></dd></div>`;
-    return `<div><dt>Von außen</dt><dd><span class="bad-txt">${bad.length} von ${r.length} Ports nicht offen</span><br><span class="small">${esc(bad[0].error || '')}</span></dd></div>`;
+    if (!bad.length) return `<div class="stack"><dt>Von außen</dt><dd><span class="on-ok">Ports offen</span><br><span class="small muted">${esc(list)}</span></dd></div>`;
+    return `<div class="stack"><dt>Von außen</dt><dd><span class="bad-txt">${bad.length} von ${r.length} Ports nicht offen</span><br><span class="small">${esc(bad[0].error || '')}</span></dd></div>`;
   }
   /* ---------------- Erreichbarkeit von außen ---------------- */
   const RC = { id: null, busy: false };

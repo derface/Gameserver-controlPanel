@@ -977,3 +977,5 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 /* Details: Beschriftung bleibt einzeilig, lange Werte brechen rechts um */
 .kv.one dt{flex-shrink:0;white-space:nowrap}
 .kv.one dd{min-width:0}
+.kv.one div.stack{display:block}
+.kv.one .stack dd{text-align:left;margin-top:2px}

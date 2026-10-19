@@ -17,13 +17,24 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
-      - name: Prüfen
+      - name: Test
         run: go vet ./... && go test ./...
-      - name: Bauen
+      - name: Build
+        run: make dist VERSION=${{ github.ref_name }}
+      - name: Release notes from CHANGELOG.md
         run: |
-          make dist VERSION=${{ github.ref_name }}
-          cd dist && sha256sum gamepanel-linux-* install.sh > SHA256SUMS
-      - name: Release anlegen
+          awk -v t="## ${GITHUB_REF_NAME} " 'index($0,t)==1{on=1;next} /^## /{if(on)exit} on' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then echo "Siehe CHANGELOG.md" > notes.md; fi
+          cat >> notes.md <<'TXT'
+
+          **Install / Installieren**
+          ```bash
+          curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | sudo bash
+          ```
+          Existing installations update under Settings → Panel & Updates. / Vorhandene Installationen aktualisieren sich unter Einstellungen → Panel & Updates.
+          TXT
+          sed -i 's/^          //' notes.md
+      - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ github.ref_name }}" dist/* --generate-notes
+        run: gh release create "${{ github.ref_name }}" dist/* --title "${{ github.ref_name }}" --notes-file notes.md

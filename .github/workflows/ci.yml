@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Vet and test
+        run: go vet ./... && go test ./...
+      - name: Check JavaScript syntax
+        run: for f in web/static/*.js; do node --check "$f"; done
+      - name: Translations build
+        run: python3 tools/i18n/build.py --check
