@@ -302,7 +302,7 @@ Die KI versteht das auch: „Mach am Wochenende ein Highrate-Event auf Enshroude
 
 ## Statusseite für Mitspieler
 
-**Einstellungen → Statusseite**: eine Seite ohne Anmeldung unter `/status` mit den ausgewählten Servern, wer spielt, Adresse, Beitreten-Knopf (Steam-Spiele) und einem Hinweis pro Server (z. B. „Passwort im Discord“). Passwörter oder Einstellungen stehen dort nie. Mit einer eigenen Adresse (z. B. `status.bytewise-it.de`, per Reverse Proxy auf das Panel geleitet) zeigt das Panel unter dieser Domain nur die Statusseite; Anmeldung und API sind dort nicht erreichbar.
+**Einstellungen → Statusseite**: eine Seite ohne Anmeldung unter `/status` mit den ausgewählten Servern, wer spielt, Adresse, Beitreten-Knopf (Steam-Spiele) und einem Hinweis pro Server (z. B. „Passwort im Discord“). Passwörter oder Einstellungen stehen dort nie. Mit einer eigenen Adresse (z. B. `status.example.com`, per Reverse Proxy auf das Panel geleitet) zeigt das Panel unter dieser Domain nur die Statusseite; Anmeldung und API sind dort nicht erreichbar.
 
 ## Discord-Bot
 
