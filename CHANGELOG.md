@@ -2,6 +2,11 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.1.0 – 2026-10-20
+
+- **Handy-Widget** (Android, KWGT): kompakte Übersicht aller Server unter `/api/widget` mit Status, Spielern, CPU und RAM sowie fertigen Textzeilen; Einrichtung mit Vorschau und Formeln zum Kopieren unter Einstellungen → API & Webhooks. Schlüssel im Link nur mit Leserechten. / Phone widget for Android (KWGT).
+- **Als App installierbar** (Web-App-Manifest, Service Worker) mit **Push-Nachrichten** je Gerät und Auswahl der Ereignisse (Abstürze, Fehler, Updates, Spieler kommen, Status …) und der Zahl der Server mit Problemen auf dem App-Symbol. Verschlüsselung nach RFC 8291, VAPID nach RFC 8292, ohne Fremdbibliothek. / Installable app with push notifications and app badge.
+
 ## v1.0.0 – 2026-10-19
 
 Erste öffentliche Version. / First public release.

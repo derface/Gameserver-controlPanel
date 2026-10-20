@@ -16,5 +16,15 @@
   "Server-Status geändert (startet, läuft, gestoppt, Fehler)": "Server status changed (starting, running, stopped, error)",
   "Test fehlgeschlagen: %s": "Test failed: %s",
   "Zugangsdaten gehören nicht in die Adresse": "Credentials do not belong in the URL",
-  "Bitte einen Namen angeben, z. B. „Home Assistant“": "Please enter a name, e.g. “Home Assistant”"
+  "Bitte einen Namen angeben, z. B. „Home Assistant“": "Please enter a name, e.g. “Home Assistant”",
+  "Höchstens 10 Geräte pro Benutzer": "At most 10 devices per user",
+  "Push auf einem Gerät ausgeschaltet": "Push turned off on a device",
+  "Push auf einem Gerät eingeschaltet": "Push turned on on a device",
+  "Push gibt es nur für angemeldete Benutzer": "Push is only available for logged-in users",
+  "Push-Auswahl geändert": "Push selection changed",
+  "Push-Dienst nicht erreichbar (%v)": "Push service not reachable (%v)",
+  "ungültige Push-Adresse": "invalid push address",
+  "ungültiger Push-Schlüssel": "invalid push key",
+  "ungültiges Push-Geheimnis": "invalid push secret",
+  "Test: Push-Nachrichten kommen auf diesem Gerät an.": "Test: push messages arrive on this device."
 }

@@ -979,3 +979,19 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .kv.one dd{min-width:0}
 .kv.one div.stack{display:block}
 .kv.one .stack dd{text-align:left;margin-top:2px}
+
+/* Handy-Widget */
+.wg-grid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:18px;align-items:start;margin:10px 0 6px}
+@media (max-width:760px){.wg-grid{grid-template-columns:minmax(0,1fr)}}
+.wg-card{background:#101110;color:#ECE8E0;border-radius:22px;padding:14px 16px;font-size:12.5px;line-height:1.55;box-shadow:0 10px 30px -14px rgba(0,0,0,.6);border:1px solid #2A2B28}
+.wg-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+.wg-top b{font-size:13px}.wg-top span{color:#8F8A80}
+.wg-card ul{list-style:none;margin:0;padding:0}
+.wg-card li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wg-card li.wg-aus{color:#8F8A80}.wg-card li.wg-fehler{color:#FF7A6B}
+.wg-host{display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid #2A2B28;color:#A8A399}
+.wg-side .btn-accent{margin-bottom:10px}
+.wg-steps{padding-left:18px;margin:10px 0}
+.wg-steps li{margin:3px 0}
+.wg-formulas{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.wg-f .nk-code code{font-size:11.5px}

@@ -6,6 +6,11 @@
 <title>Bytewise Panel</title>
 <link rel="icon" type="image/png" sizes="32x32" href="img/icon-32.png">
 <link rel="apple-touch-icon" href="img/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111210">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bytewise">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="app.css">
@@ -539,6 +544,19 @@
         <button type="button" class="btn-accent" id="tfOn">Einrichten</button>
       </div>
     </div>
+    <div class="sec2" id="puBlock">
+      <h4>Push-Nachrichten auf diesem Gerät</h4>
+      <p class="small muted">Meldet sich am Handy oder im Browser, auch wenn das Panel geschlossen ist: Abstürze, Fehler, Updates, auf Wunsch auch wenn jemand einen Server betritt. Auf dem App-Symbol steht die Zahl der Server mit einem Problem.</p>
+      <p id="puStatus" class="small"></p>
+      <div id="puKinds" class="ik-srv pu-kinds" hidden></div>
+      <div class="dlg-actions">
+        <button type="button" class="btn-line" id="puInstall" hidden>Als App installieren</button>
+        <button type="button" class="btn-line" id="puOff" hidden>Ausschalten</button>
+        <button type="button" class="btn-line" id="puTest" hidden>Test senden</button>
+        <button type="button" class="btn-accent" id="puOn" hidden>Auf diesem Gerät einschalten</button>
+      </div>
+      <ul class="nk-list" id="puOthers"></ul>
+    </div>
     <div class="sec2">
       <h4>Angemeldete Geräte</h4>
       <p class="small muted" id="sessLine"></p>
@@ -774,6 +792,23 @@
       <p class="small">Den Schlüssel als <code>Authorization: Bearer …</code> mitschicken. Die Server-ID steht in der Adresszeile, wenn du einen Server öffnest.</p>
       <pre class="mono small ik-pre" data-noi18n id="ikExamples"></pre>
     </details>
+
+    <h2 class="ik-h2">Handy-Widget</h2>
+    <p class="muted small">Alle Server mit Status, Spielern, CPU und RAM als Widget auf dem Android-Homescreen, mit der kostenlosen App <b>KWGT</b>. Das Panel erstellt dafür einen eigenen Schlüssel nur mit Leserechten.</p>
+    <div class="wg-grid">
+      <div class="wg-prev" id="wgPrev" aria-label="Vorschau des Widgets" data-noi18n></div>
+      <div class="wg-side">
+        <button type="button" class="btn-accent" id="wgCreate">Widget einrichten</button>
+        <div id="wgShow" hidden>
+          <label class="field"><span>Adresse, unter der das Handy das Panel erreicht</span><input id="wgBase" spellcheck="false" inputmode="url"><small>Für unterwegs deine öffentliche Adresse, z. B. https://panel.meine-domain.de</small></label>
+          <p class="small"><b>Dein Widget-Link</b> (nur jetzt sichtbar; enthält den Schlüssel, nicht weitergeben):</p>
+          <div class="nk-code"><code id="wgUrl" data-noi18n></code><button type="button" class="btn-line" data-wg-copy="url">Kopieren</button></div>
+          <ol class="small wg-steps" id="wgSteps" data-noi18n></ol>
+          <div class="wg-formulas" id="wgFormulas"></div>
+          <p class="small muted" id="wgNote" data-noi18n></p>
+        </div>
+      </div>
+    </div>
 
     <h2 class="ik-h2">Webhooks</h2>
     <p class="muted small">Bei Ereignissen ruft das Panel eine Adresse auf (HTTP POST mit JSON), z. B. einen Home-Assistant- oder n8n-Webhook. Discord- und Slack-Webhook-Adressen bekommen gleich eine lesbare Nachricht. Jeder Aufruf ist mit dem Signatur-Schlüssel unterschrieben (Kopfzeile <code>X-Bytewise-Signature</code>, HMAC-SHA256).</p>

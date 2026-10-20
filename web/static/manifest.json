@@ -1,0 +1,14 @@
+{
+  "name": "Bytewise Panel",
+  "short_name": "Bytewise",
+  "description": "Game server panel",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111210",
+  "theme_color": "#111210",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

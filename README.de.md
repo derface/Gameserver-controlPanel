@@ -37,6 +37,7 @@ Gameserver für Freunde heißt meist: SSH, Portfreigaben, Update-Skripte und vie
 | **Spieler** | Online-Liste, Kick/Bann/Whitelist/OP wo das Spiel es kann, Spielzeit-Statistik, Karte, von wo Spieler verbinden. |
 | **Mehrere Rechner** | Weitere Rechner koppeln und alle Server von einem Panel aus verwalten; Server zwischen Rechnern umziehen. |
 | **Sicherheit** | Rollen (Admin, Betreiber, Zuschauer) je Server, Zwei-Faktor-Anmeldung, Protokoll, HTTPS (selbst signiert, Let's Encrypt, eigenes Zertifikat oder Reverse Proxy). |
+| **Handy** | Als App installierbar, Push-Nachrichten je Gerät (Abstürze, Updates, Spieler kommen), Zahl der Probleme auf dem App-Symbol, Android-Widget über KWGT. |
 | **Automatisierung** | API-Schlüssel für Skripte und Home Assistant, signierte Webhooks (Status, Spieler, Abstürze, Backups …), Benachrichtigungen über Discord oder ntfy. |
 | **Sprachen** | Deutsch und Englisch, je Benutzer umschaltbar. |
 

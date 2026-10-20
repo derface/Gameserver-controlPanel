@@ -111,6 +111,8 @@ func (a *API) Handler() http.Handler {
 	a.routesWizard(mux)
 	a.routesWishes(mux)
 	a.routesIntegrations(mux)
+	a.routesWidget(mux)
+	a.routesPush(mux)
 	a.routesGameEvents(mux)
 	a.routesDiscord(mux)
 	a.routesGeo(mux)

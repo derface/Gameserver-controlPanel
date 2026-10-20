@@ -37,6 +37,7 @@ Running game servers for friends usually means SSH, port forwarding, update scri
 | **Players** | Online list, kick/ban/whitelist/op where the game supports it, play time statistics, map of where players connect from. |
 | **Multiple machines** | Pair more machines and manage all servers from one panel; move servers between machines. |
 | **Security** | Roles (admin, operator, viewer) per server, two-factor login, audit log, HTTPS (self-signed, Let's Encrypt, own certificate or reverse proxy). |
+| **Phone** | Installable as an app, push notifications per device (crashes, updates, players joining), problem count on the app icon, Android home screen widget via KWGT. |
 | **Automation** | API keys for scripts and Home Assistant, signed webhooks (status, players, crashes, backups …), notifications via Discord or ntfy. |
 | **Languages** | English and German, switchable per user. |
 

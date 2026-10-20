@@ -1060,6 +1060,65 @@ rest_command:
     headers:
       Authorization: "Bearer gpk_…"`;
   }
+  /* ---- Handy-Widget (KWGT) ---- */
+  const WG = { url: '', key: '' };
+  async function wgPreview() {
+    let d; try { d = await api('GET', '/api/widget' + (LOC.startsWith('de') ? '' : '?lang=en')); } catch (e) { return; }
+    $('#wgPrev').innerHTML = `<div class="wg-card"><div class="wg-top"><b>${esc(d.title)}</b><span>${esc(d.updated)}</span></div>
+      <ul>${(d.servers || []).slice(0, 6).map(x => `<li class="wg-${esc(x.state)}">${esc(x.line)}</li>`).join('') || '<li>–</li>'}</ul>
+      <div class="wg-host"><span>CPU ${d.host_cpu}%</span><span>RAM ${d.host_ram}%</span><span>${LOC.startsWith('de') ? 'Platte' : 'Disk'} ${d.host_disk}%</span></div></div>`;
+  }
+  function wgHelp() {
+    const de = LOC.startsWith('de');
+    $('#wgSteps').innerHTML = (de ? [
+      '<b>KWGT</b> aus dem Play Store installieren.',
+      'Auf dem Homescreen lange drücken → <b>Widgets</b> → <b>KWGT</b> wählen und ablegen (z. B. 4×2).',
+      'Auf das leere Widget tippen → <b>Neu erstellen</b> → unten <b>+</b> → <b>Text</b>.',
+      'Beim Text auf das Feld <b>Text</b> tippen, den Inhalt löschen und eine der Formeln unten einfügen. Speichern (Diskette oben).'
+    ] : [
+      'Install <b>KWGT</b> from the Play Store.',
+      'Long-press the home screen → <b>Widgets</b> → <b>KWGT</b> and place it (e.g. 4×2).',
+      'Tap the empty widget → <b>Create</b> → <b>+</b> at the bottom → <b>Text</b>.',
+      'In the text item tap <b>Text</b>, clear it and paste one of the formulas below. Save (disk icon at the top).'
+    ]).map(x => `<li>${x}</li>`).join('');
+    $('#wgNote').innerHTML = de
+      ? 'Das Handy muss das Panel unter dieser Adresse erreichen, unterwegs also über deine öffentliche Adresse. KWGT akzeptiert keine selbst signierten Zertifikate: entweder Let\'s Encrypt bzw. eigener Reverse Proxy, oder im Heimnetz <code>http://</code>. Wie oft KWGT neu lädt, stellst du in KWGT unter Einstellungen → Aktualisierungsintervall ein.'
+      : 'The phone must reach the panel at this address, so on the go via your public address. KWGT does not accept self-signed certificates: use Let\'s Encrypt or your own reverse proxy, or <code>http://</code> at home. How often KWGT reloads is set in KWGT under Settings → Update interval.';
+  }
+  function wgFormulas(url) {
+    wgHelp();
+    const f = p => `$wg("${url}", json, "${p}")$`;
+    const de = LOC.startsWith('de');
+    const rows = [
+      [de ? 'Überschrift (laufend, Spieler)' : 'Title (running, players)', f('.title')],
+      [de ? 'Alle Server, eine Zeile je Server' : 'All servers, one line each', f('.text')],
+      [de ? 'Nur der erste Server (für eigene Layouts: [1], [2] …)' : 'First server only (own layouts: [1], [2] …)', f('.servers[0].line')],
+      [de ? 'Auslastung des Rechners' : 'Machine load', `CPU ${f('.host_cpu')}% · RAM ${f('.host_ram')}%`],
+      [de ? 'Stand (Uhrzeit)' : 'Updated (time)', f('.updated')],
+    ];
+    $('#wgFormulas').innerHTML = rows.map(([t, v], i) => `<div class="wg-f"><span class="small">${esc(t)}</span><div class="nk-code"><code class="mono" data-noi18n>${esc(v)}</code><button type="button" class="btn-line sm" data-wg-copy="${i}">Kopieren</button></div></div>`).join('');
+  }
+  $('#wgCreate').addEventListener('click', async () => {
+    try {
+      const r = await api('POST', '/api/apikeys', { name: 'Handy-Widget', role: 'viewer', servers: [] });
+      WG.key = r.key;
+      $('#wgBase').value = location.origin;
+      wgUpdate(); $('#wgShow').hidden = false; $('#wgCreate').textContent = 'Neuen Widget-Link erstellen';
+      loadIntegrations();
+    } catch (err) { toast(err.message, 'bad'); }
+  });
+  function wgUpdate() {
+    const base = ($('#wgBase').value.trim() || location.origin).replace(/\/+$/, '');
+    WG.url = `${base}/api/widget?key=${WG.key}` + (LOC.startsWith('de') ? '' : '&lang=en');
+    $('#wgUrl').textContent = WG.url; wgFormulas(WG.url);
+  }
+  $('#wgBase').addEventListener('input', wgUpdate);
+  $('#wgShow').addEventListener('click', async e => {
+    const b = e.target.closest('[data-wg-copy]'); if (!b) return;
+    const txt = b.dataset.wgCopy === 'url' ? WG.url : b.previousElementSibling.textContent;
+    try { await navigator.clipboard.writeText(txt); toast('Kopiert', 'ok'); }
+    catch (err) { const r = document.createRange(); r.selectNodeContents(b.previousElementSibling); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Bitte mit Strg+C kopieren', 'bad'); }
+  });
   function renderHooks() {
     const evLabel = k => (IK.events.find(e => e.key === k) || { label: k }).label;
     $('#whList').innerHTML = IK.hooks.length ? IK.hooks.map(h => {
@@ -1335,7 +1394,7 @@ rest_command:
     if (sec === 'discord') return loadDiscord();
     if (sec === 'speicher') { perfLoad($('#perfHost'), '_host'); return loadStorage(false); }
     if (sec === 'rechner') return loadNodes();
-    if (sec === 'schnittstellen') { IK.edit = null; $('#ikShow').hidden = true; return loadIntegrations(); }
+    if (sec === 'schnittstellen') { IK.edit = null; $('#ikShow').hidden = true; $('#wgShow').hidden = true; $('#wgCreate').textContent = 'Widget einrichten'; wgPreview(); return loadIntegrations(); }
     if (sec === 'backups') {
       try {
         const rc = await api('GET', '/api/remote');
@@ -1641,7 +1700,83 @@ rest_command:
 
   /* ---------------- Mein Konto ---------------- */
   const fmtLogin = d => d && !String(d).startsWith('0001') ? fmtDate(d) : 'noch nie';
+  /* ---------------- App & Push ---------------- */
+  const PU = { reg: null, data: null, sub: null, install: null };
+  const pushOK = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  async function swReady() {
+    if (!('serviceWorker' in navigator) || !isSecureContext) return null;
+    if (!PU.reg) { try { PU.reg = await navigator.serviceWorker.register('/sw.js'); } catch (e) { return null; } }
+    return PU.reg;
+  }
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); PU.install = e; const b = $('#puInstall'); if (b) b.hidden = false; });
+  $('#puInstall').addEventListener('click', async () => { if (!PU.install) return; PU.install.prompt(); try { await PU.install.userChoice; } catch (e) { /* egal */ } PU.install = null; $('#puInstall').hidden = true; });
+  // number on the app icon: servers with a problem
+  function updateBadge() {
+    if (!navigator.setAppBadge) return;
+    const n = (S.servers || []).filter(x => x.status === 'error').length;
+    (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+  }
+  const deviceName = () => {
+    const ua = navigator.userAgent;
+    const os = /Android/.test(ua) ? 'Android' : isIOS ? (/iPad/.test(ua) ? 'iPad' : 'iPhone') : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Gerät';
+    const br = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '';
+    return os + (standalone() ? ' (App)' : br ? ' · ' + br : '');
+  };
+  const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const fromB64u = s => { const b = atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+  async function loadPush() {
+    const st = $('#puStatus'), on = $('#puOn'), off = $('#puOff'), test = $('#puTest'), kinds = $('#puKinds');
+    on.hidden = off.hidden = test.hidden = kinds.hidden = true; $('#puInstall').hidden = !PU.install;
+    try { PU.data = await api('GET', '/api/push'); } catch (e) { st.textContent = e.message; return; }
+    const reg = await swReady();
+    PU.sub = reg && pushOK() ? await reg.pushManager.getSubscription().catch(() => null) : null;
+    const mine = PU.sub && PU.data.subs.find(x => x.endpoint === PU.sub.endpoint);
+    if (!isSecureContext) st.innerHTML = 'Push braucht HTTPS mit einem gültigen Zertifikat (z. B. Let’s Encrypt). Über <code>http://</code> oder mit einem selbst signierten Zertifikat erlaubt der Browser es nicht.';
+    else if (!pushOK()) st.innerHTML = isIOS && !standalone() ? 'Auf dem iPhone/iPad zuerst das Panel auf den Home-Bildschirm legen (Teilen → <b>Zum Home-Bildschirm</b>) und dann von dort öffnen. Danach geht es hier weiter.' : 'Dieser Browser kann keine Push-Nachrichten empfangen.';
+    else if (!reg) st.textContent = 'Der Browser hat den Hintergrunddienst abgelehnt. Bei einem selbst signierten Zertifikat ist das normal; Push braucht ein gültiges Zertifikat.';
+    else if (Notification.permission === 'denied') st.textContent = 'Benachrichtigungen sind für diese Seite blockiert. In den Browser- bzw. App-Einstellungen wieder erlauben.';
+    else if (mine) {
+      st.innerHTML = `<span class="on-ok">Eingeschaltet</span> auf diesem Gerät (${esc(mine.device)}).` + (mine.last_err ? ` <span class="bad-txt">Letzter Fehler: ${esc(mine.last_err)}</span>` : '');
+      off.hidden = test.hidden = false; kinds.hidden = false;
+      kinds.innerHTML = PU.data.kinds.map(k => `<label><input type="checkbox" value="${esc(k.key)}" ${mine.kinds.includes(k.key) ? 'checked' : ''}>${esc(k.label)}</label>`).join('');
+      kinds.dataset.pid = mine.id;
+    } else { st.textContent = 'Auf diesem Gerät ausgeschaltet.'; on.hidden = false; }
+    const others = PU.data.subs.filter(x => !mine || x.id !== mine.id);
+    $('#puOthers').innerHTML = others.map(x => `<li data-pid="${esc(x.id)}"><span><b>${esc(x.device)}</b> <span class="small muted">· seit ${esc(fmtWhen(x.created))}${x.last_ok && !String(x.last_ok).startsWith('0001') ? ' · zuletzt zugestellt ' + esc(fmtWhen(x.last_ok)) : ''}</span></span><button type="button" class="btn-line sm" data-pu-del>Entfernen</button></li>`).join('');
+  }
+  $('#puOn').addEventListener('click', async () => {
+    const b = $('#puOn'); b.disabled = true;
+    try {
+      const reg = await swReady(); if (!reg) throw new Error('Hintergrunddienst nicht verfügbar');
+      if (await Notification.requestPermission() !== 'granted') throw new Error('Benachrichtigungen wurden nicht erlaubt');
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: fromB64u(PU.data.public_key) });
+      await api('POST', '/api/push', { endpoint: sub.endpoint, p256dh: b64u(sub.getKey('p256dh')), auth: b64u(sub.getKey('auth')), device: deviceName() });
+      toast('Push-Nachrichten eingeschaltet', 'ok');
+    } catch (err) { toast(err.message, 'bad'); }
+    b.disabled = false; loadPush();
+  });
+  $('#puOff').addEventListener('click', async () => {
+    const pid = $('#puKinds').dataset.pid;
+    try { if (PU.sub) await PU.sub.unsubscribe(); if (pid) await api('DELETE', '/api/push/' + pid); toast('Ausgeschaltet', 'ok'); } catch (err) { toast(err.message, 'bad'); }
+    loadPush();
+  });
+  $('#puTest').addEventListener('click', async () => {
+    const b = $('#puTest'); b.disabled = true;
+    try { await api('POST', `/api/push/${$('#puKinds').dataset.pid}/test`); toast('Gesendet, gleich sollte die Nachricht kommen', 'ok'); } catch (err) { toast(err.message, 'bad'); }
+    b.disabled = false; loadPush();
+  });
+  $('#puKinds').addEventListener('change', async () => {
+    const pid = $('#puKinds').dataset.pid;
+    try { await api('PATCH', '/api/push/' + pid, { kinds: $$('#puKinds input:checked').map(x => x.value) }); toast('Gespeichert', 'ok'); } catch (err) { toast(err.message, 'bad'); }
+  });
+  $('#puOthers').addEventListener('click', async e => {
+    const li = e.target.closest('li[data-pid]'); if (!li || !e.target.closest('[data-pu-del]')) return;
+    try { await api('DELETE', '/api/push/' + li.dataset.pid); loadPush(); } catch (err) { toast(err.message, 'bad'); }
+  });
   async function loadMe() {
+    loadPush();
     showErr($('#pwErr')); $('#pwOld').value = ''; $('#pwNew').value = ''; $('#pwNew2').value = ''; $('#pwUser').value = S.user;
     let me;
     try { me = await api('GET', '/api/me'); } catch (e) { return; }
@@ -3809,7 +3944,7 @@ rest_command:
   let timers = [];
   async function loadServers() {
     try {
-      S.servers = await api('GET', '/api/servers'); S.loaded = true; renderAll();
+      S.servers = await api('GET', '/api/servers'); S.loaded = true; renderAll(); updateBadge();
       if ((S.servers.some(x => x.node) || (S.nodes && S.nodes.length)) && (!S.nodesAt || Date.now() - S.nodesAt > 10000)) { S.nodesAt = Date.now(); api('GET', '/api/nodes').then(l => { S.nodes = l; renderFleet(); }).catch(() => {}); }
       if (S.reconnect && S.consoleId === S.reconnect && !S.es) { const s = byId(S.reconnect); if (s && isOn(s)) { S.reconnect = null; connectConsole(s.id); } }
     } catch (e) { /* nächste Runde */ }
@@ -3838,6 +3973,7 @@ rest_command:
   }
   function stopApp() { timers.forEach(clearInterval); timers = []; closeConsole(); R.page = null; }
   async function startApp() {
+    swReady();
     $('#auth').hidden = true; $('#app').hidden = false;
     const [tpls, set] = await Promise.all([api('GET', '/api/templates'), can('admin') ? api('GET', '/api/settings') : Promise.resolve({ settings: { public_host: S.publicHost } })]);
     S.tpls = tpls; S.tplById = Object.fromEntries(tpls.map(t => [t.id, t])); S.settings = set.settings;

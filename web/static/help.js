@@ -299,6 +299,23 @@ sudo systemctl start docker</pre>
 </ul>` }
   },
   {
+    id: 'phone', tags: 'handy app widget kwgt push benachrichtigung homescreen pwa android iphone phone notification',
+    de: { t: 'Am Handy: App, Push und Widget', b: `
+<ul>
+<li><b>Als App:</b> Android/Chrome bietet „Als App installieren“ an (oder Menü → <i>App installieren</i>). iPhone: Teilen → <b>Zum Home-Bildschirm</b>. Das Panel öffnet sich dann ohne Browserleiste.</li>
+<li><b>Push-Nachrichten:</b> Mein Konto → „Push-Nachrichten auf diesem Gerät“ → einschalten und auswählen, was gemeldet wird. Auf dem iPhone geht das nur in der App vom Home-Bildschirm. Braucht HTTPS mit gültigem Zertifikat (Let's Encrypt oder Reverse Proxy).</li>
+<li><b>Zahl auf dem App-Symbol:</b> Server mit einem Problem.</li>
+<li><b>Widget (Android):</b> Einstellungen → API &amp; Webhooks → „Handy-Widget“. Das Panel erstellt einen Schlüssel nur mit Leserechten und zeigt fertige Formeln für die App KWGT.</li>
+</ul>` },
+    en: { t: 'On your phone: app, push and widget', b: `
+<ul>
+<li><b>As an app:</b> Android/Chrome offers “Install app” (or menu → <i>Install app</i>). iPhone: Share → <b>Add to Home Screen</b>. The panel then opens without the browser bar.</li>
+<li><b>Push messages:</b> My account → “Push messages on this device” → turn on and choose what to report. On iPhone this only works in the app from the home screen. Needs HTTPS with a valid certificate (Let's Encrypt or a reverse proxy).</li>
+<li><b>Number on the app icon:</b> servers with a problem.</li>
+<li><b>Widget (Android):</b> Settings → API &amp; Webhooks → “Phone widget”. The panel creates a read-only key and shows ready formulas for the KWGT app.</li>
+</ul>` }
+  },
+  {
     id: 'performance', tags: 'cpu leistung langsam lag bad performance proxmox kerne',
     match: /Bad Performance/i,
     de: { t: 'Leistung und CPU-Anzeige', b: `

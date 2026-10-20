@@ -282,8 +282,30 @@ type Data struct {
 	NodeKeys []NodeKey          `json:"node_keys,omitempty"` // panels allowed to control this machine
 	Wishes   []Wish             `json:"wishes,omitempty"`    // wish list of the status page
 	WishSalt string             `json:"wish_salt,omitempty"`
-	APIKeys  []APIKey           `json:"api_keys,omitempty"` // keys for scripts, Home Assistant, Stream Deck …
-	Webhooks []Webhook          `json:"webhooks,omitempty"` // URLs called on events
+	APIKeys  []APIKey           `json:"api_keys,omitempty"`  // keys for scripts, Home Assistant, Stream Deck …
+	Webhooks []Webhook          `json:"webhooks,omitempty"`  // URLs called on events
+	PushKeys PushKeys           `json:"push_keys,omitempty"` // VAPID key pair for web push
+	PushSubs []PushSub          `json:"push_subs,omitempty"` // devices that get push messages
+}
+
+// PushKeys is the panel's VAPID key pair (base64url).
+type PushKeys struct {
+	Private string `json:"private,omitempty"`
+	Public  string `json:"public,omitempty"`
+}
+
+// PushSub is one browser or installed app of a user that gets push messages.
+type PushSub struct {
+	ID       string    `json:"id"`
+	User     string    `json:"user"`
+	Device   string    `json:"device"`
+	Endpoint string    `json:"endpoint"`
+	P256dh   string    `json:"p256dh"`
+	Auth     string    `json:"auth"`
+	Kinds    []string  `json:"kinds"`
+	Created  time.Time `json:"created"`
+	LastOK   time.Time `json:"last_ok,omitempty"`
+	LastErr  string    `json:"last_err,omitempty"`
 }
 
 // APIKey lets a script use the panel's API with the rights of a role.
