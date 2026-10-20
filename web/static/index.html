@@ -510,6 +510,7 @@
         <a href="#/einstellungen/speicher" data-sec="speicher">Speicher &amp; Auslastung</a>
         <a href="#/einstellungen/rechner" data-sec="rechner">Mehrere Rechner</a>
         <a href="#/einstellungen/schnittstellen" data-sec="schnittstellen">API &amp; Webhooks</a>
+        <a href="#/einstellungen/smarthome" data-sec="smarthome">Smart Home</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
         <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
@@ -839,6 +840,57 @@
       <p class="small">Weitere Ereignisse: <code>server.status</code> (data: from, to), <code>players.count</code> (online, before, max), <code>player.leave</code>, <code>server.crash</code>, <code>server.backup</code>, <code>server.update</code>, <code>server.task</code>, <code>server.startstop</code>, <code>server.event</code>, <code>server.ai</code>, <code>server.error</code>, <code>panel.panel</code>, <code>panel.wish</code>. Prüfen: HMAC-SHA256 des Rohtexts mit dem Signatur-Schlüssel, als <code>sha256=&lt;hex&gt;</code>.</p>
       <p class="small muted">Webhooks und Schlüssel gelten für diesen Rechner. Für Server auf weiteren Rechnern legst du Webhooks im Panel des jeweiligen Rechners an; API-Aufrufe für diese Server gehen auch über dieses Panel.</p>
     </details>
+  </div>
+  <div id="shBlock" class="set-block admin-only" data-sec="smarthome">
+    <h2>Smart Home</h2>
+    <p class="muted small">Lampen und Lautsprecher reagieren auf dein Panel: Die Wohnzimmerlampe blinkt grün, wenn ein Freund online kommt, leuchtet rot bei einem Absturz, und Alexa sagt an: „Bjorn ist jetzt auf Valheim“. Direkt mit Philips Hue oder über Home Assistant (damit auch Alexa, Google, Sonos, IKEA, Shelly und alles andere).</p>
+    <div class="sh-conn">
+      <div class="sh-card">
+        <h3>Philips Hue</h3>
+        <p class="small" id="shHueState"></p>
+        <div id="shHuePair">
+          <label class="field"><span>IP-Adresse der Hue-Bridge</span><input id="shHueIP" placeholder="z. B. 192.168.1.40" spellcheck="false"></label>
+          <p class="small muted">Erst den runden Knopf oben auf der Bridge drücken, dann innerhalb von 30 Sekunden auf „Koppeln“.</p>
+          <div class="dlg-actions"><button type="button" class="btn-line" id="shHueFind">Bridge suchen</button><button type="button" class="btn-accent" id="shHueGo">Koppeln</button></div>
+        </div>
+        <div class="dlg-actions" id="shHueDone" hidden><button type="button" class="btn-line" id="shHueDel">Entkoppeln</button></div>
+      </div>
+      <div class="sh-card">
+        <h3>Home Assistant</h3>
+        <p class="small" id="shHAState"></p>
+        <label class="field"><span>Adresse</span><input id="shHAUrl" placeholder="http://homeassistant.local:8123" spellcheck="false"></label>
+        <label class="field"><span>Langlebiges Zugriffstoken</span><input id="shHAToken" type="password" autocomplete="off" spellcheck="false"><small>In Home Assistant: Profil (unten links) → Sicherheit → Langlebige Zugriffstoken → Token erstellen.</small></label>
+        <div class="dlg-actions"><button type="button" class="btn-line" id="shHADel" hidden>Trennen</button><button type="button" class="btn-accent" id="shHAGo">Verbinden und prüfen</button></div>
+      </div>
+    </div>
+    <h3 class="ik-h2">Regeln</h3>
+    <div class="tk-sugg" id="shSugg"><span class="small muted">Vorschläge:</span><div class="tk-sugg-list" id="shSuggList"></div></div>
+    <div id="shRules" class="wh-list"></div>
+    <form id="shForm" autocomplete="off" class="sh-form">
+      <h4 id="shFormTitle">Regel hinzufügen</h4>
+      <div class="vars">
+        <label class="field"><span>Wenn</span><select id="shTrig"></select></label>
+        <label class="field"><span>Dann</span><select id="shAct">
+          <option value="hue_light">Hue-Lampe leuchten lassen</option>
+          <option value="ha_light">Lampe über Home Assistant</option>
+          <option value="ha_announce">Ansage (Alexa, Lautsprecher, Handy)</option>
+          <option value="ha_service">Home-Assistant-Dienst aufrufen</option>
+        </select></label>
+      </div>
+      <fieldset class="ik-servers" id="shTargetsWrap"><legend class="small" id="shTargetsLabel">Lampen</legend><div id="shTargets" class="ik-srv"></div></fieldset>
+      <div class="vars" id="shLightOpts">
+        <label class="field"><span>Farbe</span><select id="shColor"><option value="green">Grün</option><option value="red">Rot</option><option value="blue">Blau</option><option value="yellow">Gelb</option><option value="orange">Orange</option><option value="purple">Lila</option><option value="white">Weiß</option></select></label>
+        <label class="field"><span>Wie</span><select id="shEffect"><option value="blink">Kurz aufleuchten, dann wie vorher</option><option value="pulse">Pulsieren (ca. 8 Sekunden), dann wie vorher</option><option value="stay">Farbe bleibt</option></select></label>
+      </div>
+      <div class="vars" id="shSvcOpts">
+        <label class="field full" id="shSvcWrap"><span>Dienst</span><input id="shSvc" list="shSvcList" spellcheck="false" placeholder="z. B. notify.alexa_media_kueche, tts.speak oder script.party"><datalist id="shSvcList"></datalist></label>
+        <label class="field full" id="shMsgWrap"><span>Text</span><input id="shMsg" maxlength="300"><small>Platzhalter: {{player}} {{server}} {{game}} {{text}}</small></label>
+        <label class="field full" id="shDataWrap"><span>Zusatzdaten (JSON, optional)</span><textarea id="shData" rows="3" class="mono" spellcheck="false" placeholder='{"message": "{{player}} ist online"}'></textarea></label>
+      </div>
+      <fieldset class="ik-servers"><legend class="small">Nur für diese Server <span class="muted">(keiner gewählt = alle)</span></legend><div id="shServers" class="ik-srv"></div></fieldset>
+      <p class="err" id="shErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="button" class="btn-line" id="shCancel" hidden>Abbrechen</button><button type="submit" class="btn-accent" id="shSave">Hinzufügen</button></div>
+    </form>
   </div>
   <div id="upBlock" class="set-block admin-only" data-sec="panel">
     <h2>Panel &amp; Updates</h2>

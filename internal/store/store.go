@@ -286,6 +286,35 @@ type Data struct {
 	Webhooks []Webhook          `json:"webhooks,omitempty"`  // URLs called on events
 	PushKeys PushKeys           `json:"push_keys,omitempty"` // VAPID key pair for web push
 	PushSubs []PushSub          `json:"push_subs,omitempty"` // devices that get push messages
+	Smart    SmartHome          `json:"smart_home,omitempty"`
+}
+
+// SmartHome connects Philips Hue and Home Assistant to panel events.
+type SmartHome struct {
+	HueBridge string      `json:"hue_bridge,omitempty"` // IP or host of the Hue bridge
+	HueUser   string      `json:"hue_user,omitempty"`   // app key from pairing
+	HAURL     string      `json:"ha_url,omitempty"`     // e.g. http://homeassistant.local:8123
+	HAToken   string      `json:"ha_token,omitempty"`   // long-lived access token
+	Rules     []SmartRule `json:"rules,omitempty"`
+}
+
+// SmartRule: when Trigger happens (optionally only on some servers), do Action.
+type SmartRule struct {
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	Trigger string   `json:"trigger"` // join | leave | online | offline | crash | error | update | backup | wish | event
+	Servers []string `json:"servers,omitempty"`
+	Enabled bool     `json:"enabled"`
+	// Action: hue_light | ha_light | ha_announce | ha_service
+	Action  string    `json:"action"`
+	Targets []string  `json:"targets,omitempty"` // Hue light ids or HA entity ids
+	Color   string    `json:"color,omitempty"`   // red | green | blue | yellow | orange | purple | white
+	Effect  string    `json:"effect,omitempty"`  // blink | pulse | stay
+	Service string    `json:"service,omitempty"` // HA: notify.alexa_media_kueche, tts.speak, script.x …
+	Message string    `json:"message,omitempty"` // template: {{text}} {{server}} {{player}} {{game}}
+	Data    string    `json:"data,omitempty"`    // HA: extra JSON for ha_service
+	LastAt  time.Time `json:"last_at,omitempty"`
+	LastErr string    `json:"last_err,omitempty"`
 }
 
 // PushKeys is the panel's VAPID key pair (base64url).

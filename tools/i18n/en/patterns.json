@@ -498,5 +498,29 @@
  [
   "Täglich zur ruhigsten Zeit neu starten(, .+)",
   "Restart daily at the quietest time{0}"
+ ],
+ [
+  "Fehler (.+?): (.+)",
+  "Error {0}: {1}"
+ ],
+ [
+  "Gekoppelt mit (.+)",
+  "Paired with {0}"
+ ],
+ [
+  "Bridge gefunden: (.+)",
+  "Bridge found: {0}"
+ ],
+ [
+  "(\\d+) Lampen",
+  "{0} lamps"
+ ],
+ [
+  "(\\d+) Geräte und Dienste",
+  "{0} devices and services"
+ ],
+ [
+  "zuletzt (heute|gestern|morgen) (.+)",
+  "last {0} {1}"
  ]
 ]

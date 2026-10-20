@@ -2,6 +2,10 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.2.0 – 2026-10-20
+
+- **Smart Home**: Philips Hue (lokale Bridge, Koppeln per Knopfdruck) und Home Assistant (Lampen, Alexa- und Lautsprecher-Ansagen, Handy-Benachrichtigungen, beliebige Dienste) reagieren per Regel auf Ereignisse: Spieler kommt oder geht, Server online oder gestoppt, Absturz, Fehler, Update, Backup, Event, Wunsch. Lampen kehren nach Blinken/Pulsieren in den vorherigen Zustand zurück. / Smart home: Hue and Home Assistant rules.
+
 ## v1.1.0 – 2026-10-20
 
 - **Handy-Widget** (Android, KWGT): kompakte Übersicht aller Server unter `/api/widget` mit Status, Spielern, CPU und RAM sowie fertigen Textzeilen; Einrichtung mit Vorschau und Formeln zum Kopieren unter Einstellungen → API & Webhooks. Schlüssel im Link nur mit Leserechten. / Phone widget for Android (KWGT).

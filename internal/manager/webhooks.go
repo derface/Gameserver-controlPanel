@@ -112,6 +112,7 @@ func ValidateWebhook(h *store.Webhook) error {
 // webhook sends an event to every webhook that wants it.
 func (m *Manager) webhook(kind, event, serverID, level, text string, data map[string]any) {
 	m.pushEvent(kind, event, serverID, level, text)
+	m.smartEvent(kind, event, serverID, text, data)
 	var hooks []store.Webhook
 	m.st.Read(func(d *store.Data) {
 		for _, h := range d.Webhooks {

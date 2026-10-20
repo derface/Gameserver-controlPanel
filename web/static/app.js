@@ -1060,6 +1060,138 @@ rest_command:
     headers:
       Authorization: "Bearer gpk_…"`;
   }
+  /* ---------------- Smart Home ---------------- */
+  const SH = { d: null, dev: { hue: [], ha: [] }, edit: null };
+  const SH_COLORS = { green: 'Grün', red: 'Rot', blue: 'Blau', yellow: 'Gelb', orange: 'Orange', purple: 'Lila', white: 'Weiß' };
+  const SH_ACT = { hue_light: 'Hue-Lampe', ha_light: 'Lampe (Home Assistant)', ha_announce: 'Ansage', ha_service: 'Dienst' };
+  const shMsgDefault = t => ({ join: '{{player}} ist jetzt auf {{server}}', leave: '{{player}} hat {{server}} verlassen', online: '{{server}} ist online', offline: '{{server}} wurde gestoppt', crash: 'Achtung, {{server}} ist abgestürzt', update: '{{server}} wurde aktualisiert', backup: 'Backup von {{server}} fertig', wish: 'Neuer Wunsch: {{text}}' }[t] || '{{text}}');
+  async function loadSmart() {
+    try { SH.d = await api('GET', '/api/smarthome'); } catch (e) { toast(e.message, 'bad'); return; }
+    renderSmart();
+    if (SH.d.hue.paired || SH.d.ha.token_set) {
+      try { SH.dev = await api('GET', '/api/smarthome/devices'); } catch (e) { SH.dev = { hue: [], ha: [] }; }
+      renderSmart();
+    }
+  }
+  function renderSmart() {
+    const d = SH.d, dev = SH.dev || {};
+    $('#shHueState').innerHTML = d.hue.paired ? `<span class="on-ok">Gekoppelt</span> mit ${esc(d.hue.bridge)}${dev.hue && dev.hue.length ? ` · ${dev.hue.length} Lampen` : ''}${dev.hue_error ? ` <span class="bad-txt">${esc(dev.hue_error)}</span>` : ''}` : '<span class="muted">Nicht verbunden.</span>';
+    $('#shHuePair').hidden = d.hue.paired; $('#shHueDone').hidden = !d.hue.paired;
+    $('#shHAState').innerHTML = d.ha.token_set ? `<span class="on-ok">Verbunden</span> mit ${esc(d.ha.url)}${dev.ha && dev.ha.length ? ` · ${dev.ha.length} Geräte und Dienste` : ''}${dev.ha_error ? ` <span class="bad-txt">${esc(dev.ha_error)}</span>` : ''}` : '<span class="muted">Nicht verbunden.</span>';
+    if (document.activeElement !== $('#shHAUrl')) $('#shHAUrl').value = d.ha.url || '';
+    $('#shHAToken').placeholder = d.ha.token_set ? 'gesetzt, bleibt unverändert' : '';
+    $('#shHADel').hidden = !d.ha.token_set;
+    const trig = k => (d.triggers.find(x => x.key === k) || { label: k }).label;
+    if (!$('#shTrig').options.length) $('#shTrig').innerHTML = d.triggers.map(t => `<option value="${esc(t.key)}">${esc(t.label)}</option>`).join('');
+    const nameOf = id => { const x = [...(dev.hue || []), ...(dev.ha || [])].find(l => l.id === id); return x ? x.name : id; };
+    $('#shRules').innerHTML = d.rules.length ? d.rules.map(r => {
+      const human = t => String(t || '').replace(/\{\{player\}\}/g, '‹Spieler›').replace(/\{\{server\}\}/g, '‹Server›').replace(/\{\{game\}\}/g, '‹Spiel›').replace(/\{\{text\}\}/g, '‹Meldung›');
+      const what = r.action === 'ha_announce' ? `${SH_ACT[r.action]} über ${r.service.replace(/^notify\./, '')}: „${human(r.message)}“` : r.action === 'ha_service' ? `${SH_ACT[r.action]} ${r.service}` : `${SH_ACT[r.action]} ${(r.targets || []).map(nameOf).join(', ')} ${(SH_COLORS[r.color] || '').toLowerCase()}`;
+      const last = r.last_at && !String(r.last_at).startsWith('0001') ? (r.last_err ? `<span class="bad-txt">Fehler ${esc(fmtWhen(r.last_at))}: ${esc(r.last_err)}</span>` : `<span class="muted">zuletzt ${esc(fmtWhen(r.last_at))}</span>`) : '<span class="muted">noch nicht ausgelöst</span>';
+      return `<div class="wh-item${r.enabled ? '' : ' off'}" data-sh="${esc(r.id)}"><label class="check" title="Aktiv"><input type="checkbox" data-sh-on ${r.enabled ? 'checked' : ''} aria-label="Regel aktiv"></label>
+        <div class="wh-main"><b>${esc(trig(r.trigger))}</b> → ${esc(what)}<div class="small muted">${esc(srvNames(r.servers))}</div><div class="small">${last}</div></div>
+        <div class="wh-act"><button type="button" class="btn-line sm" data-sh-test>Testen</button><button type="button" class="btn-line sm" data-sh-edit>Bearbeiten</button><button type="button" class="btn-line sm" data-sh-del>Löschen</button></div></div>`;
+    }).join('') : '<p class="small muted">Noch keine Regeln.</p>';
+    const sugg = [];
+    const hueL = (dev.hue || [])[0], haL = (dev.ha || []).find(x => x.kind === 'light'), alexa = (dev.ha || []).find(x => x.kind === 'notify' && /alexa_media/.test(x.id));
+    const lamp = hueL ? { action: 'hue_light', targets: [hueL.id] } : haL ? { action: 'ha_light', targets: [haL.id] } : null;
+    if (lamp) {
+      sugg.push({ t: 'Lampe blinkt grün, wenn jemand beitritt', r: { ...lamp, trigger: 'join', color: 'green', effect: 'blink' } });
+      sugg.push({ t: 'Lampe pulsiert rot bei Absturz', r: { ...lamp, trigger: 'crash', color: 'red', effect: 'pulse' } });
+    }
+    if (alexa) sugg.push({ t: 'Alexa sagt an, wer online kommt', r: { action: 'ha_announce', service: alexa.id, trigger: 'join', message: shMsgDefault('join') } });
+    const has = x => d.rules.some(r => r.trigger === x.r.trigger && r.action === x.r.action);
+    sugg.splice(0, sugg.length, ...sugg.filter(x => !has(x)));
+    $('#shSugg').hidden = !sugg.length;
+    $('#shSuggList').innerHTML = sugg.map((x, i) => `<button type="button" class="tk-sugg-btn" data-shs="${i}">+ ${esc(x.t)}</button>`).join('');
+    SH.sugg = sugg;
+    shFormFields();
+  }
+  function shFormFields(keepTargets) {
+    const a = $('#shAct').value, dev = SH.dev || {};
+    const light = a === 'hue_light' || a === 'ha_light';
+    $('#shLightOpts').hidden = !light;
+    $('#shSvcWrap').hidden = a === 'hue_light' || a === 'ha_light';
+    $('#shMsgWrap').hidden = a !== 'ha_announce';
+    $('#shDataWrap').hidden = a !== 'ha_service';
+    let opts = [];
+    if (a === 'hue_light') opts = dev.hue || [];
+    else if (a === 'ha_light') opts = (dev.ha || []).filter(x => x.kind === 'light');
+    else if (a === 'ha_announce') opts = $('#shSvc').value === 'tts.speak' ? (dev.ha || []).filter(x => x.kind === 'tts' || x.kind === 'media_player') : [];
+    else opts = (dev.ha || []).filter(x => x.kind !== 'notify');
+    const sel = keepTargets || $$('#shTargets input:checked').map(x => x.value);
+    $('#shTargetsWrap').hidden = !opts.length && a !== 'hue_light' && a !== 'ha_light';
+    $('#shTargetsLabel').textContent = a === 'ha_announce' ? 'Sprachausgabe und Lautsprecher' : a === 'ha_service' ? 'Ziele (optional)' : 'Lampen';
+    $('#shTargets').innerHTML = opts.length ? opts.map(x => `<label><input type="checkbox" value="${esc(x.id)}" ${sel.includes(x.id) ? 'checked' : ''}>${esc(x.name)}</label>`).join('')
+      : `<span class="small muted">${a === 'hue_light' ? 'Erst oben die Hue-Bridge koppeln.' : 'Erst oben Home Assistant verbinden.'}</span>`;
+    const svc = (dev.ha || []).filter(x => x.kind === 'notify').map(x => x.id);
+    $('#shSvcList').innerHTML = (a === 'ha_announce' ? ['tts.speak', ...svc] : []).map(x => `<option value="${esc(x)}">`).join('');
+  }
+  function shFill(r) {
+    SH.edit = r && r.id ? r.id : null;
+    $('#shFormTitle').textContent = SH.edit ? 'Regel bearbeiten' : 'Regel hinzufügen';
+    $('#shSave').textContent = SH.edit ? 'Speichern' : 'Hinzufügen'; $('#shCancel').hidden = !SH.edit;
+    r = r || {};
+    $('#shTrig').value = r.trigger || 'join'; $('#shAct').value = r.action || (SH.d.hue.paired ? 'hue_light' : 'ha_light');
+    $('#shColor').value = r.color || 'green'; $('#shEffect').value = r.effect || 'blink';
+    $('#shSvc').value = r.service || ''; $('#shMsg').value = r.message || shMsgDefault($('#shTrig').value); $('#shData').value = r.data || '';
+    srvChecks($('#shServers'), r.servers || []);
+    shFormFields(r.targets || []); showErr($('#shErr'));
+  }
+  const shPlain = () => SH.d.rules.map(r => ({ ...r }));
+  async function shSave(rules, ok) {
+    try { SH.d = await api('PUT', '/api/smarthome/rules', { rules }); renderSmart(); if (ok) toast(ok, 'ok'); return true; }
+    catch (err) { showErr($('#shErr'), err.message); toast(err.message, 'bad'); return false; }
+  }
+  $('#shAct').addEventListener('change', () => shFormFields());
+  $('#shSvc').addEventListener('change', () => shFormFields());
+  const SH_DEFAULTS = ['join', 'leave', 'online', 'offline', 'crash', 'update', 'backup', 'wish', ''].map(shMsgDefault);
+  $('#shTrig').addEventListener('change', () => { const m = $('#shMsg'); if (!m.value || SH_DEFAULTS.includes(m.value)) m.value = shMsgDefault($('#shTrig').value); });
+  $('#shForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#shErr'));
+    const a = $('#shAct').value;
+    const r = { id: SH.edit || '', name: '', trigger: $('#shTrig').value, action: a, enabled: true, targets: $$('#shTargets input:checked').map(x => x.value), servers: checked($('#shServers')),
+      color: $('#shColor').value, effect: $('#shEffect').value, service: $('#shSvc').value.trim(), message: $('#shMsg').value, data: $('#shData').value };
+    const list = shPlain();
+    if (SH.edit) { const i = list.findIndex(x => x.id === SH.edit); r.enabled = list[i].enabled; list[i] = r; } else list.push(r);
+    if (await shSave(list, SH.edit ? 'Gespeichert' : 'Regel angelegt. Mit „Testen“ siehst du sofort, ob es klappt.')) shFill(null);
+  });
+  $('#shCancel').addEventListener('click', () => shFill(null));
+  $('#shSuggList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-shs]'); if (!b) return;
+    const x = SH.sugg[+b.dataset.shs];
+    await shSave(shPlain().concat([{ id: '', name: '', enabled: true, servers: [], ...x.r }]), 'Regel angelegt');
+  });
+  $('#shRules').addEventListener('click', async e => {
+    const it = e.target.closest('[data-sh]'); if (!it) return;
+    const r = SH.d.rules.find(x => x.id === it.dataset.sh); if (!r) return;
+    if (e.target.closest('[data-sh-edit]')) { shFill(r); $('#shForm').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (e.target.closest('[data-sh-del]')) { if (await confirmBox('Regel löschen?', '', 'Löschen')) shSave(shPlain().filter(x => x.id !== r.id)); return; }
+    const tb = e.target.closest('[data-sh-test]');
+    if (tb) { tb.disabled = true; try { await api('POST', `/api/smarthome/rules/${r.id}/test`); toast('Ausgelöst', 'ok'); } catch (err) { toast(err.message, 'bad'); } tb.disabled = false; loadSmart(); }
+  });
+  $('#shRules').addEventListener('change', e => {
+    if (!e.target.matches('[data-sh-on]')) return;
+    const list = shPlain(); const r = list.find(x => x.id === e.target.closest('[data-sh]').dataset.sh); r.enabled = e.target.checked; shSave(list);
+  });
+  $('#shHueFind').addEventListener('click', async () => {
+    const b = $('#shHueFind'); b.disabled = true;
+    try { const r = await api('POST', '/api/smarthome/hue/discover'); if (r.bridges.length) { $('#shHueIP').value = r.bridges[0]; toast('Bridge gefunden: ' + r.bridges[0], 'ok'); } else toast('Keine Bridge gefunden, bitte die IP von Hand eintragen', 'bad'); } catch (err) { toast(err.message, 'bad'); }
+    b.disabled = false;
+  });
+  $('#shHueGo').addEventListener('click', async () => {
+    const b = $('#shHueGo'); b.disabled = true;
+    try { SH.d = await api('POST', '/api/smarthome/hue/pair', { bridge: $('#shHueIP').value }); toast('Hue-Bridge gekoppelt', 'ok'); loadSmart(); } catch (err) { toast(err.message, 'bad'); }
+    b.disabled = false;
+  });
+  $('#shHueDel').addEventListener('click', async () => { if (await confirmBox('Hue-Bridge entkoppeln?', 'Regeln mit Hue-Lampen tun danach nichts mehr.', 'Entkoppeln')) { SH.d = await api('DELETE', '/api/smarthome/hue'); loadSmart(); } });
+  $('#shHAGo').addEventListener('click', async () => {
+    const b = $('#shHAGo'); b.disabled = true;
+    try { SH.d = await api('PUT', '/api/smarthome/ha', { url: $('#shHAUrl').value, token: $('#shHAToken').value }); $('#shHAToken').value = ''; toast('Home Assistant verbunden', 'ok'); loadSmart(); } catch (err) { toast(err.message, 'bad'); }
+    b.disabled = false;
+  });
+  $('#shHADel').addEventListener('click', async () => { if (await confirmBox('Home Assistant trennen?', 'Regeln mit Home Assistant tun danach nichts mehr.', 'Trennen')) { SH.d = await api('DELETE', '/api/smarthome/ha'); loadSmart(); } });
+
   /* ---- Handy-Widget (KWGT) ---- */
   const WG = { url: '', key: '' };
   async function wgPreview() {
@@ -1375,7 +1507,7 @@ rest_command:
 
   /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'schnittstellen', 'backups', 'steam', 'panel'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'schnittstellen', 'smarthome', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -1394,6 +1526,7 @@ rest_command:
     if (sec === 'discord') return loadDiscord();
     if (sec === 'speicher') { perfLoad($('#perfHost'), '_host'); return loadStorage(false); }
     if (sec === 'rechner') return loadNodes();
+    if (sec === 'smarthome') { SH.edit = null; await loadSmart(); if (SH.d) shFill(null); return; }
     if (sec === 'schnittstellen') { IK.edit = null; $('#ikShow').hidden = true; $('#wgShow').hidden = true; $('#wgCreate').textContent = 'Widget einrichten'; wgPreview(); return loadIntegrations(); }
     if (sec === 'backups') {
       try {

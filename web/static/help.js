@@ -316,6 +316,25 @@ sudo systemctl start docker</pre>
 </ul>` }
   },
   {
+    id: 'smarthome', tags: 'smart home hue home assistant alexa lampe licht ansage lautsprecher',
+    de: { t: 'Smart Home: Hue, Home Assistant, Alexa', b: `
+<p>Unter Einstellungen → Smart Home.</p>
+<ul>
+<li><b>Philips Hue:</b> IP der Bridge eintragen (oder „Bridge suchen“), den runden Knopf auf der Bridge drücken, dann „Koppeln“.</li>
+<li><b>Home Assistant:</b> Adresse und ein langlebiges Zugriffstoken (Profil → Sicherheit). Darüber gehen auch Alexa (Integration „Alexa Media Player“, Dienst <code>notify.alexa_media_…</code>), Google/Sonos-Lautsprecher (<code>tts.speak</code>) und die Home-Assistant-App aufs Handy (<code>notify.mobile_app_…</code>).</li>
+<li><b>Regeln:</b> „Wenn Spieler beitritt → Lampe blinkt grün“, „Wenn Absturz → Lampe pulsiert rot“, „Wenn Spieler beitritt → Alexa sagt ‚{{player}} ist jetzt auf {{server}}‘“. Mit „Testen“ sofort ausprobieren.</li>
+<li>Nach Blinken oder Pulsieren gehen die Lampen wieder in den vorherigen Zustand.</li>
+</ul>` },
+    en: { t: 'Smart home: Hue, Home Assistant, Alexa', b: `
+<p>Under Settings → Smart home.</p>
+<ul>
+<li><b>Philips Hue:</b> enter the bridge IP (or “Find bridge”), press the round button on the bridge, then “Pair”.</li>
+<li><b>Home Assistant:</b> address and a long-lived access token (Profile → Security). This also covers Alexa (“Alexa Media Player” integration, service <code>notify.alexa_media_…</code>), Google/Sonos speakers (<code>tts.speak</code>) and the Home Assistant app on your phone (<code>notify.mobile_app_…</code>).</li>
+<li><b>Rules:</b> “When a player joins → lamp flashes green”, “On a crash → lamp pulses red”, “When a player joins → Alexa says ‘{{player}} is now on {{server}}’”. Try them with “Test”.</li>
+<li>After flashing or pulsing, the lamps return to their previous state.</li>
+</ul>` }
+  },
+  {
     id: 'performance', tags: 'cpu leistung langsam lag bad performance proxmox kerne',
     match: /Bad Performance/i,
     de: { t: 'Leistung und CPU-Anzeige', b: `

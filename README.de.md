@@ -37,6 +37,7 @@ Gameserver für Freunde heißt meist: SSH, Portfreigaben, Update-Skripte und vie
 | **Spieler** | Online-Liste, Kick/Bann/Whitelist/OP wo das Spiel es kann, Spielzeit-Statistik, Karte, von wo Spieler verbinden. |
 | **Mehrere Rechner** | Weitere Rechner koppeln und alle Server von einem Panel aus verwalten; Server zwischen Rechnern umziehen. |
 | **Sicherheit** | Rollen (Admin, Betreiber, Zuschauer) je Server, Zwei-Faktor-Anmeldung, Protokoll, HTTPS (selbst signiert, Let's Encrypt, eigenes Zertifikat oder Reverse Proxy). |
+| **Smart Home** | Philips Hue und Home Assistant reagieren auf Ereignisse: Lampe blinkt grün, wenn ein Freund beitritt, pulsiert rot bei einem Absturz, Alexa oder ein Lautsprecher sagt an, wer online ist. |
 | **Handy** | Als App installierbar, Push-Nachrichten je Gerät (Abstürze, Updates, Spieler kommen), Zahl der Probleme auf dem App-Symbol, Android-Widget über KWGT. |
 | **Automatisierung** | API-Schlüssel für Skripte und Home Assistant, signierte Webhooks (Status, Spieler, Abstürze, Backups …), Benachrichtigungen über Discord oder ntfy. |
 | **Sprachen** | Deutsch und Englisch, je Benutzer umschaltbar. |
