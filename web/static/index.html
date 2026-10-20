@@ -517,6 +517,7 @@
         <a href="#/einstellungen/rechner" data-sec="rechner">Mehrere Rechner</a>
         <a href="#/einstellungen/schnittstellen" data-sec="schnittstellen">API &amp; Webhooks</a>
         <a href="#/einstellungen/smarthome" data-sec="smarthome">Smart Home</a>
+        <a href="#/einstellungen/streaming" data-sec="streaming">Twitch &amp; YouTube</a>
         <a href="#/einstellungen/backups" data-sec="backups">Externe Backups</a>
         <a href="#/einstellungen/steam" data-sec="steam">Steam-Konto</a>
         <a href="#/einstellungen/panel" data-sec="panel">Panel &amp; Updates</a>
@@ -897,6 +898,63 @@
       <p class="err" id="shErr" role="alert" hidden></p>
       <div class="dlg-actions"><button type="button" class="btn-line" id="shCancel" hidden>Abbrechen</button><button type="submit" class="btn-accent" id="shSave">Hinzufügen</button></div>
     </form>
+  </div>
+  <div id="tvBlock" class="set-block admin-only" data-sec="streaming">
+    <h2>Twitch &amp; YouTube</h2>
+    <p class="muted small">Deine Zuschauer greifen ins Spiel ein: Mit <code>!gewitter</code> im Chat, Kanalpunkten, Bits oder einem Super Chat lösen sie Befehle auf deinem Server aus, z. B. ein Gewitter, Zombies neben dir oder ein Diamant für dich. Neue Abos und Raids können eine Nachricht im Spiel zeigen. Was Zuschauer schreiben, wird vorher streng gefiltert.</p>
+    <form id="tvCfg" autocomplete="off">
+      <div class="sh-conn">
+        <div class="sh-card">
+          <h3>Twitch</h3>
+          <p class="small" id="tvTwState"></p>
+          <label class="field"><span>Kanal</span><input id="tvTwCh" placeholder="z. B. meinkanal oder twitch.tv/meinkanal" spellcheck="false"></label>
+          <label class="check"><input type="checkbox" id="tvTwOn"> Chat mitlesen</label>
+          <p class="small muted">Kein Login nötig: Das Panel liest den Chat anonym mit. Kanalpunkte-Belohnungen werden erkannt, wenn sie eine Texteingabe verlangen.</p>
+        </div>
+        <div class="sh-card">
+          <h3>YouTube</h3>
+          <p class="small" id="tvYtState"></p>
+          <label class="field"><span>API-Schlüssel (YouTube Data API v3)</span><input id="tvYtKey" type="password" autocomplete="off" spellcheck="false"></label>
+          <label class="field"><span>Link zum laufenden Stream</span><input id="tvYtVideo" placeholder="https://www.youtube.com/live/…" spellcheck="false"></label>
+          <label class="check"><input type="checkbox" id="tvYtOn"> Live-Chat mitlesen</label>
+          <p class="small muted">Schlüssel kostenlos in der Google Cloud Console (YouTube Data API v3 aktivieren → Anmeldedaten → API-Schlüssel). Das Panel fragt höchstens alle 10 Sekunden nach neuen Nachrichten, damit das Tageskontingent für lange Streams reicht. Den Link bei jedem neuen Stream neu eintragen.</p>
+        </div>
+      </div>
+      <label class="field" style="max-width:340px"><span>Dein Spielername im Spiel</span><input id="tvStreamer" maxlength="32" spellcheck="false" placeholder="für {{streamer}} in den Befehlen"></label>
+      <div class="dlg-actions"><button type="submit" class="btn-accent">Speichern und verbinden</button></div>
+    </form>
+    <h3 class="ik-h2">Aktionen für Zuschauer</h3>
+    <div id="tvRules" class="wh-list"></div>
+    <form id="tvForm" autocomplete="off" class="sh-form">
+      <h4 id="tvFormTitle">Aktion hinzufügen</h4>
+      <div class="vars">
+        <label class="field"><span>Auslöser</span><select id="tvTrig">
+          <option value="command">Chat-Befehl (z. B. !gewitter)</option>
+          <option value="reward">Kanalpunkte-Belohnung (Twitch)</option>
+          <option value="bits">Bits ab einer Menge (Twitch)</option>
+          <option value="superchat">Super Chat ab einem Betrag (YouTube)</option>
+          <option value="sub">Neues Abo oder Mitglied</option>
+          <option value="raid">Raid (Twitch)</option>
+        </select></label>
+        <label class="field" id="tvMatchWrap"><span id="tvMatchLabel">Befehl</span><input id="tvMatch" spellcheck="false" placeholder="gewitter"></label>
+        <label class="field" id="tvAmtWrap"><span id="tvAmtLabel">Mindestens</span><input id="tvAmt" type="number" min="0" step="1" value="100"></label>
+        <label class="field"><span>Plattform</span><select id="tvSrc"><option value="any">Twitch und YouTube</option><option value="twitch">nur Twitch</option><option value="youtube">nur YouTube</option></select></label>
+        <label class="field"><span>Wer darf</span><select id="tvWho"><option value="all">alle Zuschauer</option><option value="subs">nur Abonnenten/Mitglieder</option><option value="mods">nur Moderatoren</option></select></label>
+        <label class="field"><span>Server</span><select id="tvServer"></select></label>
+      </div>
+      <div id="tvRewards" class="small" hidden></div>
+      <label class="field full"><span>Befehle in der Konsole <span class="muted">(einer pro Zeile)</span></span><textarea id="tvCmds" rows="3" class="mono" spellcheck="false" placeholder="weather thunder 60"></textarea>
+        <small>Platzhalter: {{user}} Zuschauer, {{streamer}} dein Spielername, {{amount}} Bits/Cent/Zuschauer, {{text}} Text des Zuschauers (nur Buchstaben, Zahlen und einfache Satzzeichen). <select id="tvPreset" aria-label="Vorlage"><option value="">Vorlage für Minecraft einfügen …</option></select></small></label>
+      <label class="field full"><span>Nachricht an alle im Spiel <span class="muted">(optional)</span></span><input id="tvSay" maxlength="200" placeholder="{{user}} hat ein Gewitter bestellt!"></label>
+      <div class="vars">
+        <label class="field"><span>Abklingzeit (Sekunden)</span><input id="tvCd" type="number" min="0" step="1" value="30"></label>
+        <label class="field"><span>Pro Zuschauer (Sekunden)</span><input id="tvUcd" type="number" min="0" step="1" value="120"></label>
+      </div>
+      <p class="err" id="tvErr" role="alert" hidden></p>
+      <div class="dlg-actions"><button type="button" class="btn-line" id="tvCancel" hidden>Abbrechen</button><button type="submit" class="btn-accent" id="tvSave">Hinzufügen</button></div>
+    </form>
+    <h3 class="ik-h2">Live</h3>
+    <ul class="nk-list st-feed" id="tvFeed"></ul>
   </div>
   <div id="upBlock" class="set-block admin-only" data-sec="panel">
     <h2>Panel &amp; Updates</h2>

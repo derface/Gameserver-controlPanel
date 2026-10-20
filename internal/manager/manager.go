@@ -979,6 +979,7 @@ func (m *Manager) Run(ctx context.Context) {
 	go m.runStats(ctx)
 	go m.runGeo(ctx)
 	go m.runModUpdates(ctx)
+	go m.ApplyStreaming()
 	t := time.NewTicker(3 * time.Second)
 	defer t.Stop()
 	for {

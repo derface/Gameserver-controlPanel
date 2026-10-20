@@ -522,5 +522,25 @@
  [
   "zuletzt (heute|gestern|morgen) (.+)",
   "last {0} {1}"
+ ],
+ [
+  "Abklingzeit (\\d+) s",
+  "cooldown {0} s"
+ ],
+ [
+  "pro Zuschauer (\\d+) s",
+  "per viewer {0} s"
+ ],
+ [
+  "Test: (.+)",
+  "Test: {0}"
+ ],
+ [
+  "Abklingzeit, noch (\\d+) s",
+  "cooldown, {0} s left"
+ ],
+ [
+  "ausgeführt \\((\\d+) Befehle?\\)",
+  "done ({0} commands)"
  ]
 ]

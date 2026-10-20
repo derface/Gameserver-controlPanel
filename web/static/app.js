@@ -1330,6 +1330,129 @@ rest_command:
   });
   $('#shHADel').addEventListener('click', async () => { if (await confirmBox('Home Assistant trennen?', 'Regeln mit Home Assistant tun danach nichts mehr.', 'Trennen')) { SH.d = await api('DELETE', '/api/smarthome/ha'); loadSmart(); } });
 
+  /* ---------------- Twitch & YouTube ---------------- */
+  const STR = { d: null, edit: null, timer: null };
+  const ST_PRESETS = [
+    ['Gewitter (!gewitter)', { trigger: 'command', match: 'gewitter', commands: ['weather thunder 120'], say: '{{user}} hat ein Gewitter bestellt!' }],
+    ['Nacht (!nacht)', { trigger: 'command', match: 'nacht', commands: ['time set night'], say: '{{user}} macht das Licht aus!' }],
+    ['Zombies neben dem Streamer (!zombie)', { trigger: 'command', match: 'zombie', commands: ['execute at {{streamer}} run summon zombie ~3 ~ ~', 'execute at {{streamer}} run summon zombie ~-3 ~ ~'], say: '{{user}} schickt Zombies!' }],
+    ['Creeper (!creeper)', { trigger: 'command', match: 'creeper', commands: ['execute at {{streamer}} run summon creeper ~4 ~ ~'], say: 'Psst … {{user}} hat einen Creeper bestellt.' }],
+    ['Diamant für den Streamer (Kanalpunkte)', { trigger: 'reward', commands: ['give {{streamer}} diamond 1'], say: '{{user}} schenkt einen Diamanten!' }],
+    ['Speed-Schub (!speed)', { trigger: 'command', match: 'speed', commands: ['effect give {{streamer}} speed 30 2'], say: '{{user}}: schneller!' }],
+    ['Danke fürs Abo (Kuchen)', { trigger: 'sub', commands: ['give {{streamer}} cake 1'], say: 'Danke {{user}} fürs Abo!' }],
+    ['Raid: Feuerwerk', { trigger: 'raid', commands: ['execute at {{streamer}} run summon firework_rocket ~ ~1 ~'], say: 'Raid von {{user}} mit {{amount}} Leuten!' }],
+    ['Bits: Gewitter ab 100', { trigger: 'bits', amount: 100, commands: ['weather thunder 300'], say: '{{user}} spendiert {{amount}} Bits für ein Gewitter!' }],
+  ];
+  $('#tvPreset').innerHTML += ST_PRESETS.map(([t], i) => `<option value="${i}">${esc(t)}</option>`).join('');
+  const ST_TRIG = { command: 'Chat-Befehl', reward: 'Kanalpunkte', bits: 'Bits', superchat: 'Super Chat', sub: 'Abo', raid: 'Raid' };
+  async function loadStreaming() {
+    clearTimeout(STR.timer);
+    try { STR.d = await api('GET', '/api/streaming'); } catch (e) { toast(e.message, 'bad'); return; }
+    renderStreaming();
+    if (location.hash.includes('/streaming')) STR.timer = setTimeout(loadStreaming, 5000);
+  }
+  function stConn(c, on) {
+    if (!c || !c.on) return '<span class="muted">Aus.</span>';
+    return c.ok ? `<span class="on-ok">${esc(c.msg || 'verbunden')}</span>` : `<span class="bad-txt">${esc(c.msg || 'verbinde …')}</span>`;
+  }
+  function renderStreaming() {
+    const d = STR.d, c = d.config, stt = d.state || {};
+    if (!$('#tvCfg').contains(document.activeElement)) {
+      $('#tvTwCh').value = c.twitch_channel || ''; $('#tvTwOn').checked = !!c.twitch_on;
+      $('#tvYtVideo').value = c.yt_video || ''; $('#tvYtOn').checked = !!c.yt_on; $('#tvStreamer').value = c.streamer || '';
+      $('#tvYtKey').placeholder = d.yt_key_set ? 'gesetzt, bleibt unverändert' : '';
+    }
+    $('#tvTwState').innerHTML = stConn(stt.twitch); $('#tvYtState').innerHTML = stConn(stt.youtube);
+    const srvName = id => { const x = byId(id); return x ? x.name : id; };
+    $('#tvRules').innerHTML = (c.rules || []).length ? c.rules.map(r => {
+      const trig = r.trigger === 'command' ? '!' + r.match : r.trigger === 'reward' ? 'Kanalpunkte' : (ST_TRIG[r.trigger] + (r.min_amount ? ' ab ' + (r.trigger === 'superchat' ? (r.min_amount / 100).toFixed(2).replace('.', DEC) + ' €' : r.min_amount) : ''));
+      const what = [...(r.commands || []), r.say ? '„' + r.say + '“' : ''].filter(Boolean).join(' · ');
+      return `<div class="wh-item${r.enabled ? '' : ' off'}" data-st="${esc(r.id)}"><label class="check" title="Aktiv"><input type="checkbox" data-st-on ${r.enabled ? 'checked' : ''} aria-label="Aktion aktiv"></label>
+        <div class="wh-main"><b>${esc(trig)}</b> → ${esc(srvName(r.server))}<div class="small mono" data-noi18n>${esc(what)}</div>
+        <div class="small muted">${{ all: 'alle', subs: 'nur Abonnenten', mods: 'nur Mods' }[r.who] || 'alle'} · Abklingzeit ${r.cooldown || 0} s${r.user_cooldown ? `, pro Zuschauer ${r.user_cooldown} s` : ''}${r.last_at && !String(r.last_at).startsWith('0001') ? ' · zuletzt ' + esc(fmtWhen(r.last_at)) : ''}</div></div>
+        <div class="wh-act"><button type="button" class="btn-line sm" data-st-test>Testen</button><button type="button" class="btn-line sm" data-st-edit>Bearbeiten</button><button type="button" class="btn-line sm" data-st-del>Löschen</button></div></div>`;
+    }).join('') : '<p class="small muted">Noch keine Aktionen. Unten eine anlegen, z. B. aus einer Vorlage.</p>';
+    const feed = (stt.feed || []).slice().reverse();
+    $('#tvFeed').innerHTML = feed.length ? feed.map(f => `<li><span><span class="mono small">${esc(new Date(f.time).toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit', second: '2-digit' }))}</span> <b data-noi18n>${esc(f.user || '?')}</b> <span class="small muted">${esc(f.source)} · ${esc(f.kind)}${f.amount ? ' ' + f.amount : ''}</span>${f.text ? ` <span class="small" data-noi18n>${esc(f.text)}</span>` : ''}</span><span class="small">${f.rule ? esc(f.rule) + ': ' : ''}${esc(f.result || '')}</span></li>`).join('')
+      : '<li class="small muted">Hier erscheint, was deine Zuschauer auslösen.</li>';
+    const rw = stt.rewards || [];
+    $('#tvRewards').hidden = $('#tvTrig').value !== 'reward';
+    $('#tvRewards').innerHTML = rw.length ? 'Zuletzt eingelöste Belohnungen: ' + rw.map(x => `<button type="button" class="btn-line sm" data-rw="${esc(x.rule)}">${esc(x.user)}: „${esc(x.text || '…')}“</button>`).join(' ')
+      : 'Noch keine Belohnung gesehen: Lege in Twitch eine Kanalpunkte-Belohnung mit Texteingabe an und löse sie einmal selbst ein. Sie erscheint dann hier zum Auswählen.';
+    if (!$('#tvServer').options.length || $('#tvServer').dataset.n != (S.servers || []).length) {
+      $('#tvServer').innerHTML = (S.servers || []).filter(x => !x.node && x.created_by !== 'selbsttest').map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+      $('#tvServer').dataset.n = (S.servers || []).length;
+    }
+  }
+  function stFields() {
+    const t = $('#tvTrig').value;
+    $('#tvMatchWrap').hidden = !(t === 'command' || t === 'reward');
+    $('#tvMatchLabel').textContent = t === 'reward' ? 'Belohnungs-ID' : 'Befehl (ohne !)';
+    $('#tvMatch').placeholder = t === 'reward' ? 'unten auswählen' : 'gewitter';
+    $('#tvAmtWrap').hidden = !(t === 'bits' || t === 'superchat' || t === 'raid');
+    $('#tvAmtLabel').textContent = t === 'bits' ? 'Mindestens Bits' : t === 'superchat' ? 'Mindestens Euro' : 'Mindestens Zuschauer';
+    $('#tvRewards').hidden = t !== 'reward';
+  }
+  function stFill(r) {
+    STR.edit = r && r.id ? r.id : null;
+    r = r || {};
+    $('#tvFormTitle').textContent = STR.edit ? 'Aktion bearbeiten' : 'Aktion hinzufügen';
+    $('#tvSave').textContent = STR.edit ? 'Speichern' : 'Hinzufügen'; $('#tvCancel').hidden = !STR.edit;
+    $('#tvTrig').value = r.trigger || 'command'; $('#tvMatch').value = r.match || ''; $('#tvSrc').value = r.source || 'any'; $('#tvWho').value = r.who || 'all';
+    const amt = r.min_amount != null ? r.min_amount : 100;
+    $('#tvAmt').value = (r.trigger === 'superchat') ? amt / 100 : amt;
+    if (r.server) $('#tvServer').value = r.server;
+    $('#tvCmds').value = (r.commands || []).join('\n'); $('#tvSay').value = r.say || '';
+    $('#tvCd').value = r.cooldown != null ? r.cooldown : 30; $('#tvUcd').value = r.user_cooldown != null ? r.user_cooldown : 120;
+    stFields(); showErr($('#tvErr'));
+  }
+  async function stSaveRules(rules, ok) {
+    try { STR.d = await api('PUT', '/api/streaming/rules', { rules }); renderStreaming(); if (ok) toast(ok, 'ok'); return true; }
+    catch (err) { showErr($('#tvErr'), err.message); toast(err.message, 'bad'); return false; }
+  }
+  $('#tvTrig').addEventListener('change', stFields);
+  $('#tvPreset').addEventListener('change', () => {
+    const p = ST_PRESETS[+$('#tvPreset').value]; $('#tvPreset').value = ''; if (!p) return;
+    const r = p[1];
+    $('#tvTrig').value = r.trigger; $('#tvMatch').value = r.match || ''; $('#tvCmds').value = r.commands.join('\n'); $('#tvSay').value = r.say || '';
+    if (r.amount) $('#tvAmt').value = r.amount;
+    const mc = (S.servers || []).find(x => /minecraft/i.test(x.template_name || '') && !x.node); if (mc) $('#tvServer').value = mc.id;
+    stFields();
+    if (!$('#tvStreamer').value && r.commands.some(c => c.includes('{{streamer}}'))) toast('Tipp: oben deinen Spielernamen eintragen, sonst wissen die Befehle nicht, wo du bist', 'bad');
+  });
+  $('#tvRewards').addEventListener('click', e => { const b = e.target.closest('[data-rw]'); if (b) { $('#tvMatch').value = b.dataset.rw; toast('Belohnung übernommen', 'ok'); } });
+  $('#tvForm').addEventListener('submit', async e => {
+    e.preventDefault(); showErr($('#tvErr'));
+    const t = $('#tvTrig').value;
+    let amt = Math.max(0, Math.round(+$('#tvAmt').value || 0)); if (t === 'superchat') amt = Math.round(+$('#tvAmt').value * 100);
+    if (!['bits', 'superchat', 'raid'].includes(t)) amt = 0;
+    const r = { id: STR.edit || '', enabled: true, trigger: t, match: $('#tvMatch').value, source: $('#tvSrc').value, who: $('#tvWho').value, server: $('#tvServer').value,
+      min_amount: amt, commands: $('#tvCmds').value.split('\n'), say: $('#tvSay').value, cooldown: +$('#tvCd').value || 0, user_cooldown: +$('#tvUcd').value || 0 };
+    const list = (STR.d.config.rules || []).map(x => ({ ...x }));
+    if (STR.edit) { const i = list.findIndex(x => x.id === STR.edit); r.enabled = list[i].enabled; list[i] = r; } else list.push(r);
+    if (await stSaveRules(list, STR.edit ? 'Gespeichert' : 'Aktion angelegt. Mit „Testen“ probierst du sie ohne Zuschauer aus.')) stFill(null);
+  });
+  $('#tvCancel').addEventListener('click', () => stFill(null));
+  $('#tvRules').addEventListener('click', async e => {
+    const it = e.target.closest('[data-st]'); if (!it) return;
+    const r = STR.d.config.rules.find(x => x.id === it.dataset.st); if (!r) return;
+    if (e.target.closest('[data-st-edit]')) { stFill(r); $('#tvForm').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (e.target.closest('[data-st-del]')) { if (await confirmBox('Aktion löschen?', '', 'Löschen')) stSaveRules(STR.d.config.rules.filter(x => x.id !== r.id)); return; }
+    const tb = e.target.closest('[data-st-test]');
+    if (tb) { tb.disabled = true; try { const x = await api('POST', `/api/streaming/rules/${r.id}/test`); toast('Test: ' + x.result, /Fehler|läuft nicht/.test(x.result) ? 'bad' : 'ok'); } catch (err) { toast(err.message, 'bad'); } tb.disabled = false; loadStreaming(); }
+  });
+  $('#tvRules').addEventListener('change', e => {
+    if (!e.target.matches('[data-st-on]')) return;
+    const list = STR.d.config.rules.map(x => ({ ...x })); const r = list.find(x => x.id === e.target.closest('[data-st]').dataset.st); r.enabled = e.target.checked; stSaveRules(list);
+  });
+  $('#tvCfg').addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      STR.d = await api('PUT', '/api/streaming', { twitch_channel: $('#tvTwCh').value, twitch_on: $('#tvTwOn').checked, yt_key: $('#tvYtKey').value, yt_video: $('#tvYtVideo').value, yt_on: $('#tvYtOn').checked, streamer: $('#tvStreamer').value });
+      $('#tvYtKey').value = ''; toast('Gespeichert, verbinde …', 'ok'); renderStreaming(); setTimeout(loadStreaming, 2500);
+    } catch (err) { toast(err.message, 'bad'); }
+  });
+
   /* ---- Handy-Widget (KWGT) ---- */
   const WG = { url: '', key: '' };
   async function wgPreview() {
@@ -1645,7 +1768,7 @@ rest_command:
 
   /* ---------------- Einstellungen ---------------- */
   function openSettings(sec) { go('#/einstellungen' + (typeof sec === 'string' && sec ? '/' + sec : '')); }
-  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'schnittstellen', 'smarthome', 'backups', 'steam', 'panel'];
+  const SEC = ['konto', 'https', 'router', 'ki', 'benachrichtigungen', 'statusseite', 'discord', 'speicher', 'rechner', 'schnittstellen', 'smarthome', 'streaming', 'backups', 'steam', 'panel'];
   async function enterSettings(sec) {
     if (!can('admin') || !SEC.includes(sec)) sec = 'konto';
     $$('#pageSettings [data-sec]').forEach(el => {
@@ -1664,6 +1787,7 @@ rest_command:
     if (sec === 'discord') return loadDiscord();
     if (sec === 'speicher') { perfLoad($('#perfHost'), '_host'); return loadStorage(false); }
     if (sec === 'rechner') return loadNodes();
+    if (sec === 'streaming') { STR.edit = null; await loadStreaming(); if (STR.d) stFill(null); return; }
     if (sec === 'smarthome') { SH.edit = null; await loadSmart(); if (SH.d) shFill(null); return; }
     if (sec === 'schnittstellen') { IK.edit = null; $('#ikShow').hidden = true; $('#wgShow').hidden = true; $('#wgCreate').textContent = 'Widget einrichten'; wgPreview(); return loadIntegrations(); }
     if (sec === 'backups') {

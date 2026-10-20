@@ -41,7 +41,11 @@ type fakeCalls struct {
 }
 
 func (f *fakeCalls) add(s string) { f.mu.Lock(); f.calls = append(f.calls, s); f.mu.Unlock() }
-func (f *fakeCalls) all() string  { f.mu.Lock(); defer f.mu.Unlock(); return strings.Join(f.calls, "\n") }
+func (f *fakeCalls) all() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return strings.Join(f.calls, "\n")
+}
 
 func TestHueAndHomeAssistant(t *testing.T) {
 	var hue fakeCalls

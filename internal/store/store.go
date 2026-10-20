@@ -287,6 +287,36 @@ type Data struct {
 	PushKeys PushKeys           `json:"push_keys,omitempty"` // VAPID key pair for web push
 	PushSubs []PushSub          `json:"push_subs,omitempty"` // devices that get push messages
 	Smart    SmartHome          `json:"smart_home,omitempty"`
+	Stream   Streaming          `json:"streaming,omitempty"`
+}
+
+// Streaming lets Twitch and YouTube viewers trigger things in a game.
+type Streaming struct {
+	TwitchChannel string       `json:"twitch_channel,omitempty"`
+	TwitchOn      bool         `json:"twitch_on,omitempty"`
+	YTKey         string       `json:"yt_key,omitempty"`   // YouTube Data API key
+	YTVideo       string       `json:"yt_video,omitempty"` // link or id of the current live stream
+	YTOn          bool         `json:"yt_on,omitempty"`
+	Streamer      string       `json:"streamer,omitempty"` // the streamer's in-game name, {{streamer}}
+	Rules         []StreamRule `json:"rules,omitempty"`
+}
+
+// StreamRule: when viewers do Trigger, run Commands on Server.
+type StreamRule struct {
+	ID           string    `json:"id"`
+	Enabled      bool      `json:"enabled"`
+	Name         string    `json:"name,omitempty"`
+	Source       string    `json:"source"`                  // twitch | youtube | any
+	Trigger      string    `json:"trigger"`                 // command | reward | bits | superchat | sub | raid
+	Match        string    `json:"match,omitempty"`         // command word (without !) or reward id
+	MinAmount    int       `json:"min_amount,omitempty"`    // bits, cents for super chats, viewers for raids
+	Who          string    `json:"who,omitempty"`           // all | subs | mods
+	Cooldown     int       `json:"cooldown,omitempty"`      // seconds between two runs
+	UserCooldown int       `json:"user_cooldown,omitempty"` // seconds per viewer
+	Server       string    `json:"server"`
+	Commands     []string  `json:"commands,omitempty"` // console commands, {{user}} {{text}} {{amount}} {{streamer}}
+	Say          string    `json:"say,omitempty"`      // message to all players in the game
+	LastAt       time.Time `json:"last_at,omitempty"`
 }
 
 // SmartHome connects Philips Hue and Home Assistant to panel events.

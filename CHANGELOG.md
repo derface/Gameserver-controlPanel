@@ -2,6 +2,10 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.4.0 – 2026-10-20
+
+- **Twitch & YouTube**: Twitch-Chat wird anonym mitgelesen (IRC), YouTube-Live-Chat über die Data API (höchstens alle 10 s). Aktionen für Chat-Befehle, Kanalpunkte (mit Texteingabe), Bits, Super Chats, Abos und Raids führen Konsolenbefehle aus und/oder schreiben allen im Spiel; Platzhalter {{user}} {{streamer}} {{amount}} {{text}} (Zuschauertext streng gefiltert), Abklingzeiten global und je Zuschauer, Vorlagen für Minecraft, Live-Ansicht und Test-Knopf. / Twitch & YouTube viewer actions.
+
 ## v1.3.0 – 2026-10-20
 
 - **Sprachsteuerung**: Mikrofon-Knopf (oder Alt+V) im Panel und in der Handy-App. Versteht Starten, Stoppen, Neustart, Update, Backup, „Wer spielt?“, Status und „Öffne …“ auf Deutsch und Englisch, findet den Server am Namen oder Spiel, fragt bei Stopp/Neustart/Update nach und liest die Antwort vor; Unbekanntes geht an den KI-Assistenten. / Voice control.

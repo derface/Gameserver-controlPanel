@@ -37,6 +37,7 @@ Gameserver für Freunde heißt meist: SSH, Portfreigaben, Update-Skripte und vie
 | **Spieler** | Online-Liste, Kick/Bann/Whitelist/OP wo das Spiel es kann, Spielzeit-Statistik, Karte, von wo Spieler verbinden. |
 | **Mehrere Rechner** | Weitere Rechner koppeln und alle Server von einem Panel aus verwalten; Server zwischen Rechnern umziehen. |
 | **Sicherheit** | Rollen (Admin, Betreiber, Zuschauer) je Server, Zwei-Faktor-Anmeldung, Protokoll, HTTPS (selbst signiert, Let's Encrypt, eigenes Zertifikat oder Reverse Proxy). |
+| **Twitch & YouTube** | Zuschauer lösen mit Chat-Befehlen, Kanalpunkten, Bits, Super Chats, Abos und Raids etwas im Spiel aus: Gewitter, Zombies neben dem Streamer, ein Diamant. Minecraft-Vorlagen, Abklingzeiten, gefilterte Eingaben. |
 | **Sprachsteuerung** | „Starte Valheim“, „Wer spielt gerade?“: Mikrofon-Knopf im Browser und in der Handy-App, Antworten werden vorgelesen, alles andere geht an den KI-Assistenten. |
 | **Smart Home** | Philips Hue und Home Assistant reagieren auf Ereignisse: Lampe blinkt grün, wenn ein Freund beitritt, pulsiert rot bei einem Absturz, Alexa oder ein Lautsprecher sagt an, wer online ist. |
 | **Handy** | Als App installierbar, Push-Nachrichten je Gerät (Abstürze, Updates, Spieler kommen), Zahl der Probleme auf dem App-Symbol, Android-Widget über KWGT. |

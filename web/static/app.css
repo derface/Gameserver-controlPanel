@@ -1021,3 +1021,9 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .voice.on .voice-orb i:nth-child(2){animation:vpulse 1.4s ease-out .45s infinite}
 @keyframes vpulse{from{transform:scale(.45);opacity:.5}to{transform:scale(1.15);opacity:0}}
 @media (prefers-reduced-motion:reduce){.voice.on .voice-orb i{animation:none}}
+
+/* Twitch & YouTube */
+.st-feed li{align-items:flex-start}
+.st-feed li > span:last-child{text-align:right;max-width:45%}
+#tvRewards{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 10px}
+#tvPreset{margin-top:6px;max-width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:var(--r-sm);padding:4px 8px}

@@ -356,6 +356,27 @@ sudo systemctl start docker</pre>
 <p class="small">Works in Chrome, Edge and Safari (also as an app on the phone), not in Firefox. Chrome and Edge send the recording to Google or Microsoft for recognition.</p>` }
   },
   {
+    id: 'streaming', tags: 'twitch youtube stream zuschauer chat kanalpunkte bits super chat abo raid streamer',
+    de: { t: 'Twitch und YouTube: Zuschauer im Spiel', b: `
+<p>Unter Einstellungen → Twitch &amp; YouTube.</p>
+<ul>
+<li><b>Twitch:</b> Kanalnamen eintragen, „Chat mitlesen“ an. Kein Login nötig.</li>
+<li><b>YouTube:</b> kostenloser API-Schlüssel (Google Cloud Console, YouTube Data API v3) und der Link zum laufenden Stream.</li>
+<li><b>Aktionen:</b> Auslöser (z. B. <code>!gewitter</code>, Kanalpunkte, Bits ab 100, Super Chat ab 2 €, Abo, Raid), Server, Konsolenbefehle und eine Nachricht im Spiel. Für Minecraft gibt es Vorlagen (Gewitter, Nacht, Zombies, Creeper, Diamant, Speed). <code>{{streamer}}</code> ist dein Spielername.</li>
+<li><b>Sicherheit:</b> Was Zuschauer schreiben, kommt nur gefiltert in Befehle (Buchstaben, Zahlen, einfache Satzzeichen). Ein Befehl darf nicht mit <code>{{text}}</code> beginnen. Abklingzeiten verhindern Spam.</li>
+<li>Unter „Live“ siehst du, was ausgelöst wurde. „Testen“ probiert eine Aktion ohne Zuschauer aus.</li>
+</ul>` },
+    en: { t: 'Twitch and YouTube: viewers in the game', b: `
+<p>Under Settings → Twitch &amp; YouTube.</p>
+<ul>
+<li><b>Twitch:</b> enter the channel name, turn on “Read chat”. No login needed.</li>
+<li><b>YouTube:</b> a free API key (Google Cloud Console, YouTube Data API v3) and the link to the live stream.</li>
+<li><b>Actions:</b> trigger (e.g. <code>!storm</code>, channel points, bits from 100, super chat from 2 €, sub, raid), server, console commands and a message in the game. There are templates for Minecraft (storm, night, zombies, creeper, diamond, speed). <code>{{streamer}}</code> is your player name.</li>
+<li><b>Safety:</b> what viewers write only reaches commands filtered (letters, digits, simple punctuation). A command must not start with <code>{{text}}</code>. Cooldowns prevent spam.</li>
+<li>“Live” shows what was triggered. “Test” tries an action without viewers.</li>
+</ul>` }
+  },
+  {
     id: 'performance', tags: 'cpu leistung langsam lag bad performance proxmox kerne',
     match: /Bad Performance/i,
     de: { t: 'Leistung und CPU-Anzeige', b: `
