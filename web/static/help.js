@@ -335,6 +335,27 @@ sudo systemctl start docker</pre>
 </ul>` }
   },
   {
+    id: 'voice', tags: 'sprache sprachsteuerung mikrofon voice sprechen befehl',
+    de: { t: 'Sprachsteuerung', b: `
+<p>Mikrofon-Knopf neben der Suche (am Handy oben rechts) oder <kbd>Alt</kbd>+<kbd>V</kbd>, dann sprechen:</p>
+<ul>
+<li>„Starte Valheim“, „Stoppe Minecraft“, „Starte Enshrouded neu“, „Update für Palworld“, „Backup von 7 Days“</li>
+<li>„Wer spielt gerade?“, „Wer ist auf Valheim?“, „Wie ist der Status?“</li>
+<li>„Öffne Minecraft“ springt zum Server.</li>
+</ul>
+<p>Stoppen, Neustart und Update fragen vorher nach. Was das Panel nicht versteht, geht an den KI-Assistenten, wenn einer eingerichtet ist. Die Antwort wird vorgelesen.</p>
+<p class="small">Geht in Chrome, Edge und Safari (auch als App am Handy), nicht in Firefox. Chrome und Edge schicken die Aufnahme zur Erkennung an Google bzw. Microsoft.</p>` },
+    en: { t: 'Voice control', b: `
+<p>Microphone button next to search (top right on phones) or <kbd>Alt</kbd>+<kbd>V</kbd>, then speak:</p>
+<ul>
+<li>“Start Valheim”, “Stop Minecraft”, “Restart Enshrouded”, “Update Palworld”, “Backup 7 Days”</li>
+<li>“Who is playing?”, “Who is on Valheim?”, “What's the status?”</li>
+<li>“Open Minecraft” jumps to the server.</li>
+</ul>
+<p>Stop, restart and update ask first. Anything the panel does not understand goes to the AI assistant if one is set up. The answer is read aloud.</p>
+<p class="small">Works in Chrome, Edge and Safari (also as an app on the phone), not in Firefox. Chrome and Edge send the recording to Google or Microsoft for recognition.</p>` }
+  },
+  {
     id: 'performance', tags: 'cpu leistung langsam lag bad performance proxmox kerne',
     match: /Bad Performance/i,
     de: { t: 'Leistung und CPU-Anzeige', b: `

@@ -1003,3 +1003,21 @@ body:not([data-role="admin"]) .set-layout{grid-template-columns:minmax(0,1fr)}
 .sh-card h3{margin:0}
 .sh-form{border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;margin-top:8px}
 .sh-form h4{margin:0 0 8px}
+
+/* Sprachsteuerung */
+.side-search-row{display:flex;gap:6px}
+.side-search-row .side-search{flex:1;min-width:0}
+.side-search-row .voice-btn{width:38px;height:38px;flex-shrink:0}
+.voice{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:14px;width:min(520px,calc(100vw - 32px));padding:14px 16px;border-radius:18px;background:var(--panel);border:1px solid var(--line);box-shadow:0 18px 50px -18px rgba(0,0,0,.6)}
+.voice[hidden]{display:none}
+.voice-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.voice-txt span{overflow-wrap:anywhere}
+#voiceHeard{font-size:15px}
+#voiceAnswer{color:var(--muted)}
+.voice-orb{position:relative;width:38px;height:38px;flex-shrink:0;display:grid;place-items:center}
+.voice-orb i{position:absolute;inset:0;border-radius:50%;background:var(--accent);opacity:.25;transform:scale(.55)}
+.voice-orb i:last-child{opacity:1;transform:scale(.42)}
+.voice.on .voice-orb i:nth-child(1){animation:vpulse 1.4s ease-out infinite}
+.voice.on .voice-orb i:nth-child(2){animation:vpulse 1.4s ease-out .45s infinite}
+@keyframes vpulse{from{transform:scale(.45);opacity:.5}to{transform:scale(1.15);opacity:0}}
+@media (prefers-reduced-motion:reduce){.voice.on .voice-orb i{animation:none}}

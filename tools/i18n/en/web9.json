@@ -193,5 +193,8 @@
   "Event beginnt oder endet": "Event starts or ends",
   "Hue-Lampe": "Hue lamp",
   "Lampe (Home Assistant)": "Lamp (Home Assistant)",
-  "Ansage": "Announcement"
+  "Ansage": "Announcement",
+  "Ich höre zu …": "Listening …",
+  "Sprachsteuerung": "Voice control",
+  "Sprachsteuerung (Alt+V)": "Voice control (Alt+V)"
 }

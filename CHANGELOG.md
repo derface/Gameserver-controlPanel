@@ -2,6 +2,10 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.3.0 – 2026-10-20
+
+- **Sprachsteuerung**: Mikrofon-Knopf (oder Alt+V) im Panel und in der Handy-App. Versteht Starten, Stoppen, Neustart, Update, Backup, „Wer spielt?“, Status und „Öffne …“ auf Deutsch und Englisch, findet den Server am Namen oder Spiel, fragt bei Stopp/Neustart/Update nach und liest die Antwort vor; Unbekanntes geht an den KI-Assistenten. / Voice control.
+
 ## v1.2.0 – 2026-10-20
 
 - **Smart Home**: Philips Hue (lokale Bridge, Koppeln per Knopfdruck) und Home Assistant (Lampen, Alexa- und Lautsprecher-Ansagen, Handy-Benachrichtigungen, beliebige Dienste) reagieren per Regel auf Ereignisse: Spieler kommt oder geht, Server online oder gestoppt, Absturz, Fehler, Update, Backup, Event, Wunsch. Lampen kehren nach Blinken/Pulsieren in den vorherigen Zustand zurück. / Smart home: Hue and Home Assistant rules.

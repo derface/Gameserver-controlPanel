@@ -658,6 +658,144 @@
       setTimeout(() => { const s = byId(id); if (S.consoleId === id && !S.es && s && isOn(s)) connectConsole(id); else if (S.consoleId === id && !S.es) S.reconnect = id; }, 4000);
     }
   }
+  /* ---------------- Sprachsteuerung ---------------- */
+  // Push-to-talk with the browser's speech recognition (Chrome, Edge,
+  // Safari; Chrome sends the audio to Google for recognition). Commands are
+  // understood here; anything else goes to the AI assistant if it is set up.
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const VC = { rec: null, busy: false };
+  const vEN = () => helpLang() === 'en';
+  if (SR) { $('#voiceBtn').hidden = false; $('#voiceBtn2').hidden = false; }
+  function say(text) {
+    $('#voiceAnswer').textContent = text;
+    if (!window.speechSynthesis) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = vEN() ? 'en-US' : 'de-DE';
+      speechSynthesis.speak(u);
+    } catch (e) { /* stumm */ }
+  }
+  const vNorm = t => t.toLowerCase().replace(/[.,!?;:„“"'()]/g, ' ').replace(/\s+/g, ' ').trim();
+  // best matching server for the words heard (name, game, in-game name)
+  function vServer(t) {
+    const words = vNorm(t).split(' ').filter(w => w.length >= 3);
+    let best = null, bestScore = 0;
+    for (const s of S.servers || []) {
+      const names = [s.name, s.template_name, s.game_name].filter(Boolean).map(vNorm);
+      const toks = [...new Set(names.join(' ').split(' ').filter(x => x.length >= 2))];
+      let score = 0;
+      for (const n of names) if (n.length >= 3 && vNorm(t).includes(n)) score += 3;
+      for (const w of words) for (const k of toks) if (k.length >= 3 && (k.startsWith(w.slice(0, 5)) || w.startsWith(k.slice(0, 5)))) score++;
+      if (score > bestScore) { best = s; bestScore = score; }
+    }
+    return best;
+  }
+  // \b does not work before umlauts, so words are bounded by letters (Unicode)
+  const vRe = body => new RegExp('(?<![\\p{L}\\d])(' + body + ')(?![\\p{L}\\d])', 'u');
+  const INTENTS = [
+    ['restart', vRe(String.raw`neu ?start\w*|restart\w*|reboot\w*|starte? \S+( \S+)? neu`)],
+    ['stop', vRe(String.raw`stopp\w*|stop\w*|beende\w*|herunterfahr\w*|fahr\w* .*runter|ausschalt\w*|schalt\w* .*aus|mach\w* .*aus|shut ?down|turn .*off`)],
+    ['update', vRe(String.raw`update\w*|aktualisier\w*`)],
+    ['backup', vRe(String.raw`backup\w*|sicherung|sichere\w*`)],
+    ['start', vRe(String.raw`start\w*|hochfahr\w*|fahr\w* .*hoch|einschalt\w*|schalt\w* .*ein|mach\w* .*an|turn .*on|boot\w*`)],
+    ['players', vRe(String.raw`wer|wie ?viele|spieler|spielt|spielen|players?|who|online`)],
+    ['open', vRe(String.raw`öffne\w*|zeig\w*|geh\w* zu|open|show`)],
+    ['status', vRe(String.raw`status|wie läuft|wie geht|übersicht|alles (ok|gut)|overview|how`)],
+  ];
+  async function vRun(text) {
+    const t = vNorm(text), en = vEN();
+    const intent = (INTENTS.find(([, re]) => re.test(t)) || [null])[0];
+    const s = vServer(text);
+    const list = S.servers || [];
+    if (!intent) {
+      if (S.settings && S.settings.ai_provider) { say(en ? 'Asking the AI assistant.' : 'Ich frage den KI-Assistenten.'); go('#/ki'); setTimeout(() => ask(text), 300); return; }
+      say(en ? 'Sorry, I did not get that. Try: start Valheim.' : 'Das habe ich nicht verstanden. Sag zum Beispiel: Starte Valheim.'); return;
+    }
+    if (intent === 'status' || (intent === 'players' && !s)) {
+      const on = list.filter(isOn), pl = on.reduce((n, x) => n + Math.max(0, x.players || 0), 0), bad = list.filter(x => x.status === 'error');
+      if (intent === 'players') {
+        const who = on.filter(x => x.players > 0);
+        say(!pl ? (en ? 'Nobody is playing right now.' : 'Gerade spielt niemand.')
+          : (en ? `${pl} playing: ` : `Gerade spielen ${pl}: `) + who.map(x => `${x.players} ${en ? 'on' : 'auf'} ${x.name}`).join(', ') + '.');
+      } else {
+        say(en ? `${on.length} of ${list.length} servers running, ${pl} players online${bad.length ? `, problems with ${bad.map(x => x.name).join(', ')}` : ', no problems'}.`
+          : `${on.length} von ${list.length} Servern laufen, ${pl} Spieler online${bad.length ? `, Probleme bei ${bad.map(x => x.name).join(', ')}` : ', keine Probleme'}.`);
+      }
+      return;
+    }
+    if (!s) {
+      const target = list.length === 1 ? list[0] : null;
+      if (!target) { say(en ? 'Which server? ' + list.map(x => x.name).join(', ') : 'Welcher Server? ' + list.map(x => x.name).join(', ')); return; }
+      return vDo(intent, target, en);
+    }
+    return vDo(intent, s, en);
+  }
+  async function vDo(intent, s, en) {
+    if (intent === 'open') { say(s.name); select(s.id); return; }
+    if (intent === 'players') {
+      if (!isOn(s)) { say(en ? `${s.name} is off.` : `${s.name} ist aus.`); return; }
+      let names = [];
+      try { const p = await api('GET', `/api/servers/${s.id}/players`); names = (p.online || []).map(x => x.name).filter(Boolean); } catch (e) { /* nur Zahl */ }
+      const n = names.length || Math.max(0, s.players || 0);
+      say(!n ? (en ? `Nobody is on ${s.name}.` : `Auf ${s.name} ist gerade niemand.`)
+        : (en ? `${n} on ${s.name}` : `Auf ${s.name} ${n === 1 ? 'ist' : 'sind'} ${n}`) + (names.length ? ': ' + names.join(', ') : '') + '.');
+      return;
+    }
+    if (!can('operator')) { say(en ? 'You do not have the rights for that.' : 'Dafür fehlen dir die Rechte.'); return; }
+    if (intent === 'start') {
+      if (isOn(s)) { say(en ? `${s.name} is already running.` : `${s.name} läuft schon.`); return; }
+      say(en ? `Starting ${s.name}.` : `Ich starte ${s.name}.`); act(s, 'start'); return;
+    }
+    if (intent === 'backup') {
+      say(en ? `Backing up ${s.name}.` : `Ich sichere ${s.name}.`);
+      try { await api('POST', `/api/servers/${s.id}/backups`, {}); } catch (e) { say(e.message); }
+      return;
+    }
+    if ((intent === 'stop' || intent === 'restart') && !isOn(s)) {
+      if (intent === 'restart') { say(en ? `${s.name} is off, starting it.` : `${s.name} ist aus, ich starte ihn.`); act(s, 'start'); }
+      else say(en ? `${s.name} is already off.` : `${s.name} ist schon aus.`);
+      return;
+    }
+    const label = { stop: en ? 'Stop' : 'Stoppen', restart: en ? 'Restart' : 'Neu starten', update: en ? 'Update' : 'Aktualisieren' }[intent];
+    const pl = Math.max(0, s.players || 0);
+    say(en ? `${label} ${s.name}? Please confirm.` : `${s.name} ${label.toLowerCase()}? Bitte bestätigen.`);
+    if (!await confirmBox(`${s.name}: ${label}?`, pl ? (en ? `${pl} players are online.` : `${pl} Spieler sind online.`) : '', label)) { say(en ? 'Cancelled.' : 'Abgebrochen.'); return; }
+    say(en ? 'Done.' : 'Mache ich.');
+    act(s, intent);
+  }
+  function voiceStart() {
+    if (!SR) return;
+    if (VC.rec) { VC.rec.stop(); return; }
+    const rec = new SR();
+    rec.lang = vEN() ? 'en-US' : 'de-DE';
+    rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
+    VC.rec = rec; let final = '';
+    $('#voice').hidden = false; $('#voice').classList.add('on');
+    $('#voiceState').textContent = vEN() ? 'Listening …' : 'Ich höre zu …';
+    $('#voiceHeard').textContent = ''; $('#voiceAnswer').textContent = vEN() ? 'e.g. “Start Valheim”, “Who is playing?”' : 'z. B. „Starte Valheim“, „Wer spielt gerade?“';
+    rec.onresult = e => {
+      let txt = '';
+      for (const r of e.results) { txt += r[0].transcript; if (r.isFinal) final = txt; }
+      $('#voiceHeard').textContent = '„' + txt + '“';
+    };
+    rec.onerror = e => {
+      const m = { 'not-allowed': vEN() ? 'Microphone not allowed. Allow it in the browser settings.' : 'Mikrofon nicht erlaubt. In den Browser-Einstellungen erlauben.', 'no-speech': vEN() ? 'I heard nothing.' : 'Ich habe nichts gehört.', network: vEN() ? 'Speech recognition needs an internet connection.' : 'Die Spracherkennung braucht eine Internetverbindung.' }[e.error];
+      if (m) $('#voiceAnswer').textContent = m;
+    };
+    rec.onend = () => {
+      VC.rec = null; $('#voice').classList.remove('on');
+      $('#voiceState').textContent = final ? (vEN() ? 'Understood' : 'Verstanden') : (vEN() ? 'Done' : 'Fertig');
+      if (final) vRun(final);
+      clearTimeout(VC.hide); VC.hide = setTimeout(() => { if (!VC.rec) $('#voice').hidden = true; }, 7000);
+    };
+    try { rec.start(); } catch (e) { VC.rec = null; }
+  }
+  $('#voiceBtn').addEventListener('click', voiceStart);
+  $('#voiceBtn2').addEventListener('click', voiceStart);
+  $('#voiceClose').addEventListener('click', () => { if (VC.rec) VC.rec.abort(); $('#voice').hidden = true; });
+  document.addEventListener('keydown', e => { if (e.altKey && (e.key === 'v' || e.key === 'V') && SR && !$('#app').hidden) { e.preventDefault(); voiceStart(); } });
+
   /* ---------------- Hilfe ---------------- */
   const HELP = window.GP_HELP || [];
   const helpLang = () => (window.I18N && I18N.lang === 'en') ? 'en' : 'de';
