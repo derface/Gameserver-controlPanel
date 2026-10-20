@@ -115,6 +115,7 @@ func (a *API) Handler() http.Handler {
 	a.routesPush(mux)
 	a.routesSmart(mux)
 	a.routesStreaming(mux)
+	mux.HandleFunc("GET /api/ai/last-error", a.need(auth.Admin, func(w http.ResponseWriter, r *http.Request) { writeJSON(w, 200, ai.LastBad) }))
 	a.routesGameEvents(mux)
 	a.routesDiscord(mux)
 	a.routesGeo(mux)

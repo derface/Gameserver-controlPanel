@@ -228,6 +228,12 @@ func complete(ctx context.Context, s store.Settings, system, user string) (strin
 }
 
 func completeN(ctx context.Context, s store.Settings, system, user string, maxTokens int) (string, error) {
+	txt, _, err := completeFull(ctx, s, system, user, maxTokens)
+	return txt, err
+}
+
+// completeFull also reports whether the answer was cut off at maxTokens.
+func completeFull(ctx context.Context, s store.Settings, system, user string, maxTokens int) (string, bool, error) {
 	model := s.AIModel
 	if model == "" {
 		model = DefaultModel(s.AIProvider)
@@ -235,13 +241,14 @@ func completeN(ctx context.Context, s store.Settings, system, user string, maxTo
 	switch s.AIProvider {
 	case "anthropic":
 		if s.AnthropicKey == "" {
-			return "", errors.New("Kein Anthropic-API-Key hinterlegt")
+			return "", false, errors.New("Kein Anthropic-API-Key hinterlegt")
 		}
 		var out struct {
 			Content []struct {
 				Type string `json:"type"`
 				Text string `json:"text"`
 			} `json:"content"`
+			StopReason string `json:"stop_reason"`
 		}
 		err := post(ctx, "https://api.anthropic.com/v1/messages", map[string]string{
 			"x-api-key": s.AnthropicKey, "anthropic-version": "2023-06-01",
@@ -250,7 +257,7 @@ func completeN(ctx context.Context, s store.Settings, system, user string, maxTo
 			"messages": []map[string]string{{"role": "user", "content": user}},
 		}, &out)
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
 		var sb strings.Builder
 		for _, c := range out.Content {
@@ -258,31 +265,32 @@ func completeN(ctx context.Context, s store.Settings, system, user string, maxTo
 				sb.WriteString(c.Text)
 			}
 		}
-		return sb.String(), nil
+		return sb.String(), out.StopReason == "max_tokens", nil
 	case "openai":
 		if s.OpenAIKey == "" {
-			return "", errors.New("Kein OpenAI-API-Key hinterlegt")
+			return "", false, errors.New("Kein OpenAI-API-Key hinterlegt")
 		}
 		var out struct {
 			Choices []struct {
 				Message struct {
 					Content string `json:"content"`
 				} `json:"message"`
+				Finish string `json:"finish_reason"`
 			} `json:"choices"`
 		}
 		err := post(ctx, "https://api.openai.com/v1/chat/completions", map[string]string{
 			"Authorization": "Bearer " + s.OpenAIKey,
 		}, map[string]any{
-			"model": model, "response_format": map[string]string{"type": "json_object"},
+			"model": model, "response_format": map[string]string{"type": "json_object"}, "max_completion_tokens": maxTokens,
 			"messages": []map[string]string{{"role": "system", "content": system}, {"role": "user", "content": user}},
 		}, &out)
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
 		if len(out.Choices) == 0 {
-			return "", errors.New("Leere Antwort vom KI-Anbieter")
+			return "", false, errors.New("Leere Antwort vom KI-Anbieter")
 		}
-		return out.Choices[0].Message.Content, nil
+		return out.Choices[0].Message.Content, out.Choices[0].Finish == "length", nil
 	case "ollama":
 		base := strings.TrimRight(s.OllamaURL, "/")
 		if base == "" {
@@ -297,9 +305,9 @@ func completeN(ctx context.Context, s store.Settings, system, user string, maxTo
 			"model": model, "stream": false, "format": "json",
 			"messages": []map[string]string{{"role": "system", "content": system}, {"role": "user", "content": user}},
 		}, &out)
-		return out.Message.Content, err
+		return out.Message.Content, false, err
 	}
-	return "", errors.New("Kein KI-Anbieter eingerichtet. Bitte in den Einstellungen auswählen")
+	return "", false, errors.New("Kein KI-Anbieter eingerichtet. Bitte in den Einstellungen auswählen")
 }
 
 // MakePlan asks the provider for a plan and validates the template id.
@@ -320,16 +328,32 @@ func MakePlan(ctx context.Context, s store.Settings, tpls *templates.Set, c Cont
 		}
 		user = "Bisheriges Gespräch:\n" + h + "\n\nNeue Nachricht: " + prompt
 	}
-	txt, err := completeN(ctx, s, systemPrompt(tpls.All(), c), user, 1800)
+	system := systemPrompt(tpls.All(), c)
+	txt, cut, err := completeFull(ctx, s, system, user, 4000)
 	if err != nil {
 		return p, err
 	}
-	i, j := strings.Index(txt, "{"), strings.LastIndex(txt, "}")
-	if i < 0 || j <= i {
-		return p, errors.New("Die KI hat keinen Plan geliefert. Bitte anders formulieren")
+	if cut { // a long change list ran out of room: once more with more room
+		if t2, cut2, err2 := completeFull(ctx, s, system, user, 8000); err2 == nil && !cut2 {
+			txt = t2
+		}
 	}
-	if err := json.Unmarshal([]byte(txt[i:j+1]), &p); err != nil {
-		return p, errors.New("Die Antwort der KI war unlesbar. Bitte erneut versuchen")
+	perr := parsePlan(txt, &p)
+	if perr != nil {
+		// one repair round: show the model its answer and the problem
+		fix := user + "\n\nDeine letzte Antwort war kein gültiges JSON (" + perr.Error() + "). Antworte jetzt NUR mit dem korrigierten JSON-Objekt, ohne Text davor oder danach. Deine Antwort war:\n" + trimTo(txt, 6000)
+		if t2, _, err2 := completeFull(ctx, s, system, fix, 4000); err2 == nil {
+			p = Plan{}
+			if parsePlan(t2, &p) == nil {
+				perr = nil
+			} else {
+				txt = t2
+			}
+		}
+	}
+	if perr != nil {
+		LastBad = BadAnswer{Time: time.Now(), Prompt: prompt, Answer: trimTo(txt, 20000), Error: perr.Error()}
+		return p, errors.New("Die Antwort der KI war unlesbar, auch nach einem zweiten Versuch. Bitte anders formulieren, z. B. mit dem Servernamen")
 	}
 	if p.Question != "" {
 		return p, nil
@@ -364,4 +388,120 @@ func MakePlan(ctx context.Context, s store.Settings, tpls *templates.Set, c Cont
 func Test(ctx context.Context, s store.Settings) error {
 	_, err := complete(ctx, s, "Antworte nur mit {\"ok\":true}", "Test")
 	return err
+}
+
+// BadAnswer keeps the last answer that could not be read, for the support
+// log (GET /api/ai/last-error).
+type BadAnswer struct {
+	Time   time.Time `json:"time"`
+	Prompt string    `json:"prompt"`
+	Answer string    `json:"answer"`
+	Error  string    `json:"error"`
+}
+
+var LastBad BadAnswer
+
+func trimTo(s string, n int) string {
+	if len(s) > n {
+		return s[:n]
+	}
+	return s
+}
+
+// extractJSON returns the first complete JSON object in txt (models
+// sometimes add text or a second object after it).
+func extractJSON(txt string) (string, error) {
+	i := strings.Index(txt, "{")
+	if i < 0 {
+		return "", errors.New("kein JSON-Objekt")
+	}
+	depth, inStr, esc := 0, false, false
+	for j := i; j < len(txt); j++ {
+		c := txt[j]
+		switch {
+		case esc:
+			esc = false
+		case c == '\\' && inStr:
+			esc = true
+		case c == '"':
+			inStr = !inStr
+		case inStr:
+		case c == '{':
+			depth++
+		case c == '}':
+			depth--
+			if depth == 0 {
+				return txt[i : j+1], nil
+			}
+		}
+	}
+	return "", errors.New("JSON bricht ab (Antwort unvollständig)")
+}
+
+// parsePlan reads a plan tolerantly: numbers as text, text as numbers,
+// "true"/"false" as text, a list of steps given as one text.
+func parsePlan(txt string, p *Plan) error {
+	js, err := extractJSON(txt)
+	if err != nil {
+		return err
+	}
+	if json.Unmarshal([]byte(js), p) == nil {
+		return nil
+	}
+	var raw map[string]any
+	if err := json.Unmarshal([]byte(js), &raw); err != nil {
+		return fmt.Errorf("kein gültiges JSON: %v", err)
+	}
+	str := func(k string) string {
+		switch v := raw[k].(type) {
+		case string:
+			return v
+		case float64:
+			return strconv.FormatFloat(v, 'f', -1, 64)
+		case bool:
+			return strconv.FormatBool(v)
+		}
+		return ""
+	}
+	*p = Plan{Action: str("action"), Server: str("server"), Template: str("template"), Name: str("name"), Reply: str("reply"),
+		Question: str("question"), Start: str("start"), End: str("end")}
+	if n, err := strconv.ParseFloat(strings.TrimSpace(str("memory_mb")), 64); err == nil {
+		p.MemoryMB = int(n)
+	}
+	p.Weekly = str("weekly") == "true"
+	if m, ok := raw["vars"].(map[string]any); ok {
+		p.Vars = StrMap{}
+		flatten(m, "", p.Vars)
+	}
+	switch f := raw["files"].(type) {
+	case map[string]any:
+		p.Files = map[string]StrMap{}
+		for k, v := range f {
+			if m, ok := v.(map[string]any); ok {
+				sm := StrMap{}
+				flatten(m, "", sm)
+				p.Files[k] = sm
+			}
+		}
+	case []any: // [{...}, {...}] → "0", "1"
+		p.Files = map[string]StrMap{}
+		for i, v := range f {
+			if m, ok := v.(map[string]any); ok {
+				sm := StrMap{}
+				flatten(m, "", sm)
+				p.Files[strconv.Itoa(i)] = sm
+			}
+		}
+	}
+	switch st := raw["steps"].(type) {
+	case []any:
+		for _, x := range st {
+			if t, ok := x.(string); ok {
+				p.Steps = append(p.Steps, t)
+			}
+		}
+	case string:
+		p.Steps = []string{st}
+	}
+	return nil
 }

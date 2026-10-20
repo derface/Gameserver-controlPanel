@@ -2,6 +2,10 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.4.1 – 2026-10-20
+
+- KI-Assistent: „Die Antwort der KI war unlesbar“ kommt kaum noch. Mehr Platz für lange Änderungslisten (4000 statt 1800 Token, bei Abbruch noch einmal mit 8000), JSON wird auch mit Text dahinter, Zahlen als Text, Listen statt Objekten usw. gelesen, und bei kaputtem JSON bekommt die KI einmal die Chance, es zu korrigieren. Klappt es trotzdem nicht, sehen Admins die Rohantwort. / More robust AI answers.
+
 ## v1.4.0 – 2026-10-20
 
 - **Twitch & YouTube**: Twitch-Chat wird anonym mitgelesen (IRC), YouTube-Live-Chat über die Data API (höchstens alle 10 s). Aktionen für Chat-Befehle, Kanalpunkte (mit Texteingabe), Bits, Super Chats, Abos und Raids führen Konsolenbefehle aus und/oder schreiben allen im Spiel; Platzhalter {{user}} {{streamer}} {{amount}} {{text}} (Zuschauertext streng gefiltert), Abklingzeiten global und je Zuschauer, Vorlagen für Minecraft, Live-Ansicht und Test-Knopf. / Twitch & YouTube viewer actions.

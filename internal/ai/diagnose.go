@@ -93,15 +93,15 @@ func Diagnose(ctx context.Context, s store.Settings, in DiagInput) (Diagnosis, e
 	if in.Log != "" {
 		b.WriteString("\nKonsole (Auszug, Fehler und letzte Zeilen):\n" + in.Log + "\n")
 	}
-	txt, err := completeN(ctx, s, diagSystem, b.String(), 1800)
+	txt, err := completeN(ctx, s, diagSystem, b.String(), 3000)
 	if err != nil {
 		return d, err
 	}
-	i, j := strings.Index(txt, "{"), strings.LastIndex(txt, "}")
-	if i < 0 || j <= i {
+	js, err := extractJSON(txt)
+	if err != nil {
 		return d, errors.New("Die KI hat keine Diagnose geliefert. Bitte erneut versuchen")
 	}
-	if err := json.Unmarshal([]byte(txt[i:j+1]), &d); err != nil {
+	if err := json.Unmarshal([]byte(js), &d); err != nil {
 		return d, errors.New("Die Antwort der KI war unlesbar. Bitte erneut versuchen")
 	}
 	switch d.Severity {

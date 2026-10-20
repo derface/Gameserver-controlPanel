@@ -2657,7 +2657,15 @@ rest_command:
       else if (r.plan.action === 'event') { addMsg('KI', r.plan.reply || 'So würde ich das Event planen.'); showChange(r.plan, r.changes || [], r.notes || [], r.server, r.event); }
       else if (r.plan.action === 'change') { addMsg('KI', r.plan.reply || 'Das würde ich ändern.'); showChange(r.plan, r.changes || [], r.notes || [], r.server); }
       else { addMsg('KI', r.plan.reply || 'Hier ist mein Vorschlag.'); showPlan(r.plan, r.template, r.warning); }
-    } catch (e) { addMsg('KI', e.message, 'bad'); }
+    } catch (e) {
+      addMsg('KI', e.message, 'bad');
+      if (/zweiten Versuch|second attempt/.test(e.message) && can('admin')) {
+        const m = $('#chat').lastElementChild, btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'linkbtn small'; btn.textContent = 'Antwort der KI anzeigen';
+        btn.onclick = async () => { try { const r = await api('GET', '/api/ai/last-error'); const pre = document.createElement('pre'); pre.className = 'mono small ik-pre'; pre.dataset.noi18n = ''; pre.textContent = r.error + '\n\n' + r.answer; btn.replaceWith(pre); } catch (err) { toast(err.message, 'bad'); } };
+        m.appendChild(btn);
+      }
+    }
     finally { KI.busy = false; setCore('idle'); }
   }
   function showPlan(plan, tpl, warning) {

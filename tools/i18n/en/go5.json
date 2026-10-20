@@ -72,5 +72,6 @@
   "YouTube: der Stream ist beendet": "YouTube: the stream has ended",
   "YouTube: Tageskontingent der API aufgebraucht, morgen geht es weiter": "YouTube: daily API quota used up, it continues tomorrow",
   "Twitch nicht erreichbar (%v)": "Twitch not reachable (%v)",
-  "YouTube nicht erreichbar (%v)": "YouTube not reachable (%v)"
+  "YouTube nicht erreichbar (%v)": "YouTube not reachable (%v)",
+  "Die Antwort der KI war unlesbar, auch nach einem zweiten Versuch. Bitte anders formulieren, z. B. mit dem Servernamen": "The AI's answer could not be read, even after a second attempt. Please rephrase, e.g. with the server name"
 }
