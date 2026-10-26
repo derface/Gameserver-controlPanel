@@ -493,10 +493,11 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 			cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, m.SteamAuthDir()+":/home/steam/Steam")
 		}
 		wsUser := ""
-		if !tpl.SteamLogin && m.steamUser() != "" && fileExists(m.wsListFile(sv.ID)) {
-			// Workshop items some games only hand out to owners: second try
-			// with the panel's Steam account (its own home, so the server's
-			// anonymous SteamCMD state stays as it is)
+		if !tpl.SteamLogin && m.steamUser() != "" {
+			// second try with the panel's Steam account (its own home, so
+			// the server's anonymous SteamCMD state stays as it is): for
+			// Workshop items some games only hand out to owners, and for
+			// updates while anonymous logins fail on Steam's side
 			wsUser = m.steamUser()
 			cfg.HostConfig.Binds = append(cfg.HostConfig.Binds, m.SteamAuthDir()+":/gp-steam-acct")
 		}

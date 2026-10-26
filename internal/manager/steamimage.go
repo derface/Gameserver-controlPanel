@@ -106,7 +106,11 @@ if [ -n "${NEED}" ]; then
   if [ -n "${GP_BETA}" ]; then BETA="-beta ${GP_BETA}"; fi
   MOD=""
   if [ -n "${GP_MOD}" ]; then MOD="+app_set_config 90 mod ${GP_MOD}"; fi
-  for i in 1 2 3 4; do
+  # an update (not the first install) gives up sooner: the server then
+  # starts with the files it has, e.g. while Steam itself has problems
+  TRIES="1 2 3 4"
+  if [ -f /data/server/.gp-installed ] && [ "${NEED}" != "install" ]; then TRIES="1 2"; fi
+  for i in ${TRIES}; do
     if [ -n "${GP_BASE_APP}" ]; then
       echo "[panel] SteamCMD: Basis-App ${GP_BASE_APP} nach ${GP_BASE_DIR}"
       mkdir -p "/data/server/${GP_BASE_DIR}"
@@ -127,6 +131,18 @@ if [ -n "${NEED}" ]; then
       echo "[panel] SteamCMD: Mod ${GP_MOD} fehlt noch"
     else
       steam_repair "${GP_APP_ID}" /data/server
+      # anonymous logins sometimes fail on Steam's side while accounts
+      # still work: try once with the panel's Steam account, if one is set
+      if [ "${LOGIN}" = "anonymous" ] && [ -n "${GP_WS_USER}" ] && [ -d /gp-steam-acct ]; then
+        echo "[panel] SteamCMD: anonyme Anmeldung klappt nicht, neuer Versuch mit dem Steam-Konto des Panels (${GP_WS_USER})"
+        mkdir -p /tmp/wsacct && ln -sfn /gp-steam-acct /tmp/wsacct/Steam
+        if HOME=/tmp/wsacct /opt/steamcmd/steamcmd.sh ${PLATFORM} +force_install_dir /data/server +login "${GP_WS_USER}" ${MOD} +app_update "${GP_APP_ID}" ${BETA} ${VALIDATE} +quit < /dev/null 2>&1 | tee /tmp/gp-steamcmd.log && [ "${PIPESTATUS[0]}" = "0" ] && ! grep -qiE "cached credentials not found|login failure|invalid password|two-factor code|steam ?guard code|account logon denied|not been authenticated" /tmp/gp-steamcmd.log; then
+          touch /data/server/.gp-installed
+          echo "[panel] SteamCMD: mit dem Steam-Konto erfolgreich"
+          break
+        fi
+        echo "[panel] SteamCMD: auch mit dem Steam-Konto nicht geklappt"
+      fi
     fi
     echo "[panel] SteamCMD Versuch ${i} fehlgeschlagen, neuer Versuch in 10 s"
     sleep 10
@@ -134,6 +150,9 @@ if [ -n "${NEED}" ]; then
   if [ ! -f /data/server/.gp-installed ]; then
     echo "[panel] Installation fehlgeschlagen"
     exit 1
+  fi
+  if [ "${NEED}" = "update" ] && ! grep -q "Success! App" /tmp/gp-steamcmd.log 2>/dev/null && ! grep -q "erfolgreich" /tmp/gp-steamcmd.log 2>/dev/null; then
+    echo "[panel] Update nicht möglich (Steam gestört?). Der Server startet mit dem vorhandenen Stand."
   fi
 fi
 # Spiele speichern oft im Home-Verzeichnis (Zomboid, 7 Days to Die,

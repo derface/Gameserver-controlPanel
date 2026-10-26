@@ -2,6 +2,10 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.4.2 – 2026-10-26
+
+- SteamCMD: Schlägt die anonyme Anmeldung fehl (z. B. bei Steam-Störungen), versucht das Panel das Update einmal mit dem eigenen Steam-Konto (Einstellungen → Steam-Konto), sofern eines angemeldet ist. Updates eines schon installierten Servers geben nach 2 statt 4 Versuchen auf; der Server startet dann mit dem vorhandenen Stand und sagt das in der Konsole. / Fallback to the panel's Steam account when anonymous login fails; faster start when updates fail.
+
 ## v1.4.1 – 2026-10-20
 
 - KI-Assistent: „Die Antwort der KI war unlesbar“ kommt kaum noch. Mehr Platz für lange Änderungslisten (4000 statt 1800 Token, bei Abbruch noch einmal mit 8000), JSON wird auch mit Text dahinter, Zahlen als Text, Listen statt Objekten usw. gelesen, und bei kaputtem JSON bekommt die KI einmal die Chance, es zu korrigieren. Klappt es trotzdem nicht, sehen Admins die Rohantwort. / More robust AI answers.
