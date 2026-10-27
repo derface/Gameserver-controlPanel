@@ -131,6 +131,7 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("POST /api/notify/test", a.need(auth.Admin, a.notifyTest))
 
 	files := http.FileServer(http.FS(a.Web))
+	static := &staticCache{}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/import/") {
 			fail(w, http.StatusNotFound, errors.New("Unbekannter Pfad"))
@@ -140,6 +141,13 @@ func (a *API) Handler() http.Handler {
 			if _, err := fs.Stat(a.Web, strings.TrimPrefix(r.URL.Path, "/")); err != nil {
 				r.URL.Path = "/"
 			}
+		}
+		name := strings.TrimPrefix(r.URL.Path, "/")
+		if name == "" {
+			name = "index.html"
+		}
+		if (r.Method == http.MethodGet || r.Method == http.MethodHead) && !strings.HasSuffix(name, "/") && static.serve(w, r, a.Web, name) {
+			return
 		}
 		if r.URL.Path == "/" {
 			w.Header().Set("Cache-Control", "no-cache")

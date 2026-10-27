@@ -15,6 +15,7 @@
     "ONLINE_MODE": "{{online_mode}}",
     "MODRINTH_PROJECTS": "{{mods}}",
     "ENABLE_RCON": "true",
+    "USE_AIKAR_FLAGS": "true",
     "TZ": "Europe/Berlin",
     "MODRINTH_DOWNLOAD_DEPENDENCIES": "required"
   },

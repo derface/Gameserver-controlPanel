@@ -2,6 +2,13 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.5.0 – 2026-10-27
+
+- **Schnelleres Panel**: Oberfläche, Skripte und Styles werden komprimiert ausgeliefert (gzip, ca. 70 % weniger Daten) und mit ETag zwischengespeichert; Bilder und Bibliotheken bleiben eine Woche im Browser-Cache. Die 3D-Bibliothek lädt erst nach dem Anmelden im Hintergrund, die Seite ist dadurch sofort bedienbar. / Compressed & cached static files, lazy-loaded 3D.
+- **Minecraft Java**: Startet jetzt mit den Aikar-Flags (optimierte Java-Garbage-Collection, weniger Ruckler). Bestehende Minecraft-Server werden beim nächsten Start einmal neu angelegt, Welt und Einstellungen bleiben erhalten. / Aikar's JVM flags.
+- **Windows-Spiele unter Wine** (z. B. Enshrouded): Wine-Debug-Ausgaben sind abgeschaltet, nur echte Fehler landen noch im Log. Weniger Log-Flut und etwas weniger CPU. / Quieter Wine logs.
+- Ändert sich die Vorlage eines Spiels (Image, Startbefehl, Umgebung), legt das Panel den Container beim nächsten Start automatisch passend neu an.
+
 ## v1.4.2 – 2026-10-26
 
 - SteamCMD: Schlägt die anonyme Anmeldung fehl (z. B. bei Steam-Störungen), versucht das Panel das Update einmal mit dem eigenen Steam-Konto (Einstellungen → Steam-Konto), sofern eines angemeldet ist. Updates eines schon installierten Servers geben nach 2 statt 4 Versuchen auf; der Server startet dann mit dem vorhandenen Stand und sagt das in der Konsole. / Fallback to the panel's Steam account when anonymous login fails; faster start when updates fail.

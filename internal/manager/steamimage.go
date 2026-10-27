@@ -167,7 +167,7 @@ cp -f /opt/steamcmd/linux64/steamclient.so ~/.steam/sdk64/ 2>/dev/null || true
 cp -f /opt/steamcmd/linux32/steamclient.so ~/.steam/sdk32/ 2>/dev/null || true
 cd /data/server
 if [ "${GP_PLATFORM}" = "windows" ]; then
-  export WINEPREFIX=/data/home/.wine WINEDEBUG=fixme-all WINEARCH=win64
+  export WINEPREFIX=/data/home/.wine WINEDEBUG=-all,err+module WINEARCH=win64
   # own virtual screen without access control: xvfb-run's Xauthority does
   # not always reach Wine in the container ("no driver could be loaded")
   if [ -z "${DISPLAY}" ] && command -v Xvfb >/dev/null; then

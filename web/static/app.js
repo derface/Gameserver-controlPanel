@@ -19,7 +19,17 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const gb = mb => (mb / 1024).toFixed(mb >= 10240 ? 0 : 1).replace('.', DEC);
-  const hasGL = !!window.THREE && (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } })();
+  // WebGL is there? The 3D library itself (600 KB) loads only when a 3D
+  // view is first shown, so pages without 3D open faster.
+  const hasGL = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { return false; } })();
+  let threeP = null;
+  const loadThree = () => threeP || (threeP = new Promise(res => {
+    if (window.THREE) return res(true);
+    const sc = document.createElement('script');
+    sc.src = 'vendor/three.min.js'; sc.async = true;
+    sc.onload = () => res(!!window.THREE); sc.onerror = () => res(false);
+    document.head.appendChild(sc);
+  }));
 
   const S = {
     user: '', role: '', twoFactor: false, update: null, version: '', settings: null,
@@ -4254,7 +4264,7 @@ rest_command:
     $('#authPass').autocomplete = setup ? 'new-password' : 'current-password';
     $('#authBtn').textContent = setup ? 'Konto anlegen' : code ? 'Bestätigen' : 'Anmelden';
     showErr($('#authErr'));
-    if (hasGL && !AuthBg) { try { AuthBg = makeCore($('#authBg'), 9); } catch (e) { AuthBg = null; } }
+    if (hasGL && !AuthBg) loadThree().then(ok => { if (ok && !AuthBg && !$('#auth').hidden) { try { AuthBg = makeCore($('#authBg'), 9); } catch (e) { AuthBg = null; } } });
     setTimeout(() => (code ? $('#authCode') : $('#authName')).focus(), 50);
   }
   $('#authForm').addEventListener('submit', async e => {
@@ -4380,10 +4390,16 @@ rest_command:
     $('#auth').hidden = true; $('#app').hidden = false;
     const [tpls, set] = await Promise.all([api('GET', '/api/templates'), can('admin') ? api('GET', '/api/settings') : Promise.resolve({ settings: { public_host: S.publicHost } })]);
     S.tpls = tpls; S.tplById = Object.fromEntries(tpls.map(t => [t.id, t])); S.settings = set.settings;
-    if (hasGL && !L.renderer) { try { initLand(); } catch (e) { console.error(e); } }
-    if (!L.renderer && !$('.nogl')) $('#stage').insertAdjacentHTML('beforeend', '<div class="nogl">Die 3D-Ansicht braucht WebGL. Die Liste daneben funktioniert trotzdem.</div>');
-    if (hasGL && !KI.core) { try { KI.core = makeCore($('#core')); } catch (e) { KI.core = null; } }
-    if (!KI.core) $('#core').style.height = '24px';
+    const noGL = () => {
+      if (!L.renderer && !$('.nogl')) $('#stage').insertAdjacentHTML('beforeend', '<div class="nogl">Die 3D-Ansicht braucht WebGL. Die Liste daneben funktioniert trotzdem.</div>');
+      if (!KI.core) $('#core').style.height = '24px';
+    };
+    if (!hasGL) noGL();
+    else loadThree().then(ok => {
+      if (ok && !L.renderer) { try { initLand(); renderAll(); } catch (e) { console.error(e); } }
+      if (ok && !KI.core) { try { KI.core = makeCore($('#core')); if (KI.fake) KI.core.set(KI.fake.state || 'idle'); } catch (e) { KI.core = null; } }
+      noGL();
+    });
     renderVersion(); renderKI();
     await Promise.all([loadServers(), loadHost()]);
     const vis = fn => () => { if (!document.hidden) fn(); };

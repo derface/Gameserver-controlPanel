@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -452,7 +454,7 @@ func (m *Manager) containerConfig(sv store.Server, tpl templates.Template) docke
 		hostPorts[i] = p.Host
 	}
 	cfg := docker.ContainerConfig{
-		Labels:      map[string]string{"gamepanel.id": sv.ID, "gamepanel.template": tpl.ID, "gamepanel.logs": logLimitTag},
+		Labels:      map[string]string{"gamepanel.id": sv.ID, "gamepanel.template": tpl.ID, "gamepanel.logs": logLimitTag, "gamepanel.tpl": tplHash(tpl)},
 		OpenStdin:   true,
 		StopTimeout: tpl.StopTimeout,
 		StopSignal:  tpl.StopSignal,
@@ -686,7 +688,27 @@ func (m *Manager) outdated(ctx context.Context, sv store.Server) bool {
 	if labels["gamepanel.logs"] != logLimitTag {
 		return true // from before the log limit: the console log could fill the disk
 	}
+	if labels["gamepanel.tpl"] != tplHash(tpl) {
+		return true // the template's container settings changed (e.g. Java flags)
+	}
 	return tpl.Kind == "steam" && (img != SteamImageFor(tpl) || labels["gamepanel.script"] != runScriptHash)
+}
+
+// tplHash fingerprints what a template puts into the container (image,
+// environment, command), so servers pick up template improvements at their
+// next start.
+func tplHash(t templates.Template) string {
+	keys := make([]string, 0, len(t.Env))
+	for k := range t.Env {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	h := sha256.New()
+	fmt.Fprintf(h, "%s|%s|%v|", t.Image, t.Start, t.Cmd)
+	for _, k := range keys {
+		fmt.Fprintf(h, "%s=%s;", k, t.Env[k])
+	}
+	return hex.EncodeToString(h.Sum(nil))[:12]
 }
 
 // Docker keeps at most 3 × 20 MB of console output per server. Without a

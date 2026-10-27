@@ -79,7 +79,7 @@ func TestSteamLoginDocker(t *testing.T) {
 	if strings.Contains(strings.Join(cfg.Env, " "), "GP_STEAM_USER=max") || len(cfg.HostConfig.Binds) != 1 {
 		t.Fatal("anonymes Spiel bekommt das Konto")
 	}
-	if lc := cfg.HostConfig.LogConfig; lc == nil || lc.Config["max-size"] != "20m" || lc.Config["max-file"] != "3" || cfg.Labels["gamepanel.logs"] != logLimitTag {
+	if lc := cfg.HostConfig.LogConfig; lc == nil || lc.Config["max-size"] != "20m" || lc.Config["max-file"] != "3" || cfg.Labels["gamepanel.logs"] != logLimitTag || cfg.Labels["gamepanel.tpl"] != tplHash(valheim) {
 		t.Fatalf("Log-Grenze fehlt: %+v %v", lc, cfg.Labels)
 	}
 
