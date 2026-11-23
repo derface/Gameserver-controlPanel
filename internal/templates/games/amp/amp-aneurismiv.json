@@ -78,6 +78,6 @@
       "settings": []
     }
   ],
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+  "status": "defekt",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Selbsttest 23.11.2026: stürzt beim Start ab (IL2CPP)."
 }

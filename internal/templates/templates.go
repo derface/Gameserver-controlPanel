@@ -254,6 +254,9 @@ type Template struct {
 	Status      string            `json:"status"`          // stabil | beta | experimentell | defekt (hidden)
 	DiskGB      int               `json:"disk_gb,omitempty"`
 	Notes       string            `json:"notes,omitempty"`
+	// TestSkip: the self-test cannot check this game (e.g. it needs keys
+	// from the game's own hosting portal) and skips it with this reason.
+	TestSkip string `json:"test_skip,omitempty"`
 	Custom      bool              `json:"custom,omitempty"`    // user supplies app id, start and ports
 	Query       *Query            `json:"query,omitempty"`     // how to read the player count
 	Packages    []string          `json:"packages,omitempty"`  // extra Debian packages (steam)

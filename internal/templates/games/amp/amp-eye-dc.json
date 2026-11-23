@@ -608,6 +608,6 @@
       "settings": []
     }
   ],
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+  "status": "beta",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), im Selbsttest vom 23.11.2026 bestanden. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
 }

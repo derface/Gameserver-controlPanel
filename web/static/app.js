@@ -3912,6 +3912,9 @@ rest_command:
     }
     $('#tkAtWrap').hidden = k === 'every'; $('#tkEveryWrap').hidden = k !== 'every'; $('#tkDays').hidden = k !== 'days';
     $('#tkQuietWrap').hidden = k === 'every' || !d.can_query;
+    const quiet = !$('#tkQuietWrap').hidden && $('#tkQuiet').checked;
+    $('#tkAtWrap span').textContent = quiet ? 'Wunschzeit' : 'Uhrzeit';
+    $('#tkAtWrap').title = quiet ? 'Sind mehrere Stunden gleich ruhig, nimmt das Panel die, die dieser Uhrzeit am nächsten liegt. Bis genug Statistik da ist, läuft die Aufgabe genau zu dieser Uhrzeit.' : '';
     const warnable = ['restart', 'update', 'stop'].includes(a);
     $('#tkEmptyWrap').hidden = !warnable || !d.can_query;
     $('#tkIfUpdWrap').hidden = !['restart', 'update'].includes(a) || !(d.can_check_update || d.can_mod_check);
@@ -3920,7 +3923,7 @@ rest_command:
     $('#tkWarnWrap').hidden = !warnable || !d.can_broadcast;
     $('#tkNote').textContent = warnable && !d.can_broadcast ? 'Dieses Spiel kann vom Panel aus keine Nachricht an die Spieler schicken, deshalb gibt es keine Vorwarnung.' : '';
   }
-  ['tkAction', 'tkKind'].forEach(x => $('#' + x).addEventListener('change', tkFormFields));
+  ['tkAction', 'tkKind', 'tkQuiet'].forEach(x => $('#' + x).addEventListener('change', tkFormFields));
   async function saveTasks(tasks, okMsg) {
     try { TK.data = await api('PUT', `/api/servers/${MG.id}/tasks`, { tasks }); renderTasks(); if (okMsg) toast(okMsg, 'ok'); return true; }
     catch (e) { toast(e.message, 'bad'); loadTasks(); return false; }

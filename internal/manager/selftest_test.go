@@ -104,3 +104,12 @@ func TestSelfTestDocker(t *testing.T) {
 		t.Errorf("alte Ergebnisse: %d, erwartet 4", len(r.Results))
 	}
 }
+
+func TestNotOwned(t *testing.T) {
+	if !notOwned([]string{"ok", "ERROR! Failed to install app '7940' (No subscription)"}) {
+		t.Fatal("No subscription nicht erkannt")
+	}
+	if notOwned([]string{"ERROR! Failed to install app '17585' (Missing configuration)"}) {
+		t.Fatal("falscher Treffer")
+	}
+}

@@ -305,7 +305,7 @@ func (m *Manager) Stats(id string) (StatsView, error) {
 		}
 		if best >= 0 {
 			if bestAvg == 0 {
-				v.Insights = append(v.Insights, fmt.Sprintf("Um %02d:00 Uhr war in den letzten %d Tagen nie jemand online. Gut für Neustarts und Updates.", best, v.Days))
+				v.Insights = append(v.Insights, fmt.Sprintf("Um %02d:00 Uhr war an keinem der %d gemessenen Tage jemand online. Gut für Neustarts und Updates.", best, hourN[best]))
 			} else {
 				v.Insights = append(v.Insights, fmt.Sprintf("Am ruhigsten ist es um %02d:00 Uhr (im Schnitt %s Spieler). Gut für Neustarts und Updates.", best, deNum(bestAvg)))
 			}

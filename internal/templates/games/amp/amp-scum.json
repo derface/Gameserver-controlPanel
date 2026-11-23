@@ -41,8 +41,8 @@
       "default": ""
     }
   ],
-  "memory_mb": 6144,
-  "min_memory_mb": 2048,
+  "memory_mb": 16384,
+  "min_memory_mb": 10240,
   "console": "stdin",
   "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogSCUM: Global Stats:.*$",
   "query": {
@@ -63,5 +63,5 @@
     }
   ],
   "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Läuft über Wine."
 }

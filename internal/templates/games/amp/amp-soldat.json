@@ -43,6 +43,6 @@
   "min_memory_mb": 2048,
   "console": "stdin",
   "ready": "^\\s*\\[\\*\\] Done$",
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+  "status": "beta",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), im Selbsttest vom 23.11.2026 bestanden."
 }

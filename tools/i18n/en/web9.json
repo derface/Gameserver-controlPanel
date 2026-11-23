@@ -1,5 +1,7 @@
 {
-  "(die Stunde mit den wenigsten Spielern, aus der Statistik; bis dahin die Uhrzeit)": "(the hour with the fewest players, from the statistics; until then the time)",
+  "(die Stunde mit den wenigsten Spielern aus der Statistik; sind mehrere gleich ruhig, die nächste zur Wunschzeit)": "(the hour with the fewest players from the statistics; if several are equally quiet, the one closest to the preferred time)",
+  "Wunschzeit": "Preferred time",
+  "Sind mehrere Stunden gleich ruhig, nimmt das Panel die, die dieser Uhrzeit am nächsten liegt. Bis genug Statistik da ist, läuft die Aufgabe genau zu dieser Uhrzeit.": "If several hours are equally quiet, the panel picks the one closest to this time. Until there are enough statistics, the task runs exactly at this time.",
   "(keiner gewählt = alle)": "(none selected = all)",
   "(nur jetzt sichtbar, gut aufheben):": "(shown only now, keep it safe):",
   "API & Webhooks": "API & Webhooks",

@@ -28,7 +28,7 @@ func TestStatsInsights(t *testing.T) {
 		t.Fatal(err)
 	}
 	all := strings.Join(v.Insights, "\n")
-	if v.Days < 9 || !strings.Contains(all, "nie jemand online") || !strings.Contains(all, "um 20:00 trifft oft Spieler") {
+	if v.Days < 9 || !strings.Contains(all, "jemand online. Gut für") || !strings.Contains(all, "um 20:00 trifft oft Spieler") {
 		t.Fatalf("%d %s", v.Days, all)
 	}
 	if len(v.Players) != 2 || v.Players[0].Seconds == 0 || v.Players[0].Sessions < 9 {

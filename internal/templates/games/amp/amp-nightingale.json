@@ -56,6 +56,6 @@
   "min_memory_mb": 2048,
   "console": "stdin",
   "ready": "^\\[[\\d.]+-[\\d.:]+\\]\\[[\\d ]+\\]LogNWXGameMode: GameModeAwaiter became ready\\.$",
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+  "status": "beta",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), im Selbsttest vom 23.11.2026 bestanden."
 }

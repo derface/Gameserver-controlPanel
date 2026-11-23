@@ -88,6 +88,6 @@
       ]
     }
   ],
-  "status": "defekt",
-  "notes": "Automatisch aus LinuxGSM übernommen. Selbsttest 01.10.2026: gameinfo.txt nicht gefunden."
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Im Selbsttest vom 23.11.2026 bestanden."
 }

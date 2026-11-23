@@ -36,6 +36,6 @@
       "settings": []
     }
   ],
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+  "status": "defekt",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Läuft über Wine. Selbsttest 23.11.2026: stürzt unter Wine ab (GnuTLS error)."
 }

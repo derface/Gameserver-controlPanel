@@ -102,5 +102,6 @@
   "console": "stdin",
   "ready": "^(LogInit: Display: Starting Game\\.)|(LogOnline: GotoState: NewState: Playing)$",
   "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT).",
+  "test_skip": "Braucht Customer Key und Identifier aus dem Last-Oasis-Hosting-Portal von Donkey Crew; ohne sie meldet sich der Server nicht an."
 }

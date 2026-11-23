@@ -333,6 +333,10 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 		return
 	}
 
+	if tpl.TestSkip != "" {
+		res.Result, res.Error = "übersprungen", tpl.TestSkip
+		return
+	}
 	if tpl.SteamLogin && m.steamUser() == "" {
 		res.Result, res.Error = "übersprungen", "Braucht ein Steam-Konto (Einstellungen → Steam-Konto)"
 		return
@@ -366,6 +370,9 @@ func (m *Manager) testOne(ctx context.Context, tpl templates.Template) (res Test
 		}
 		if res.Result != "ok" || len(res.Log) == 0 {
 			res.Log = lastRun(full, 40)
+		}
+		if res.Result == "fehler" && notOwned(full) {
+			res.Result, res.Error = "übersprungen", "Das Steam-Konto besitzt dieses Spiel nicht (No subscription). Der Server lässt sich nur mit einem Konto installieren, das das Spiel gekauft hat."
 		}
 		m.testStep("Wird gelöscht")
 		dctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -731,6 +738,17 @@ func lastRun(lines []string, n int) []string {
 func (m *Manager) gameStarted(id string) bool {
 	for _, l := range lastRun(m.testLog(id, 3000), 3000) {
 		if strings.Contains(l, "[panel] Start:") {
+			return true
+		}
+	}
+	return false
+}
+
+// notOwned reports whether SteamCMD refused the download because the
+// account does not own the game: no panel fault, the test is skipped.
+func notOwned(log []string) bool {
+	for _, l := range log {
+		if strings.Contains(l, "(No subscription)") {
 			return true
 		}
 	}

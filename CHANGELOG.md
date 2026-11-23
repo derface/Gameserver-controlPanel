@@ -2,6 +2,13 @@
 
 Alle Versionen von Bytewise Panel, neueste zuerst. Ausführlich beschrieben sind die Funktionen im [Handbuch](docs/handbuch.md).
 
+## v1.5.1 – 2026-11-23
+
+- **Spielekatalog nach Selbsttest vom 23.11.**: 32 weitere Spiele haben bestanden und sind jetzt „Beta“ (u. a. Icarus, Conan Exiles, Empyrion, Nightingale, The Forest, Arma 3, Dota 2, CS2, Garry's Mod). Nuclear Dawn läuft wieder, Barotrauma ist zurück als „experimentell“. Sieben Spiele, die zum zweiten Mal abgestürzt sind (ANEURISM IV, Arma Reforger, Assetto Corsa, ACC, Astroneer, Blackwake, Blade Symphony), sind ausgeblendet. / Catalogue updated from the self-test.
+- **Spiele, die man besitzen muss** (OpenTTD, Stormworks, CoD4, MX Bikes, Carrier Command 2 u. a.): Hinweis in der Vorlage; der Selbsttest wertet „No subscription“ als übersprungen statt als Fehler. / Games that must be owned are marked.
+- SCUM und Dead Matter bekommen mehr Arbeitsspeicher (16 bzw. 12 GB), Last Oasis wird im Selbsttest übersprungen (braucht Schlüssel aus dem Hosting-Portal).
+- Statistik-Hinweis genauer: „an keinem der 19 gemessenen Tage“ statt „in den letzten 19 Tagen“. Bei Aufgaben „Zur ruhigsten Zeit“ heißt das Zeitfeld jetzt „Wunschzeit“ und erklärt sich. / Clearer quiet-hour wording.
+
 ## v1.5.0 – 2026-10-27
 
 - **Schnelleres Panel**: Oberfläche, Skripte und Styles werden komprimiert ausgeliefert (gzip, ca. 70 % weniger Daten) und mit ETag zwischengespeichert; Bilder und Bibliotheken bleiben eine Woche im Browser-Cache. Die 3D-Bibliothek lädt erst nach dem Anmelden im Hintergrund, die Seite ist dadurch sofort bedienbar. / Compressed & cached static files, lazy-loaded 3D.

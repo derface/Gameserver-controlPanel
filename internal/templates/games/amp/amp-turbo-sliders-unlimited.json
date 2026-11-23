@@ -69,6 +69,6 @@
     "type": "a2s",
     "port": 1
   },
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+  "status": "beta",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), im Selbsttest vom 23.11.2026 bestanden."
 }

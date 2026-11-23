@@ -30,6 +30,6 @@
   "min_memory_mb": 2048,
   "console": "stdin",
   "ready": "^(Server started|\\[[\\d:]+ INF\\] Starting update loop with an update rate of \\d+hz)$",
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+  "status": "defekt",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto). Selbsttest 23.11.2026: stürzt nach der Installation ohne Meldung ab."
 }

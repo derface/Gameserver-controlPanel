@@ -61,8 +61,8 @@
       "default": "false"
     }
   ],
-  "memory_mb": 6144,
-  "min_memory_mb": 2048,
+  "memory_mb": 12288,
+  "min_memory_mb": 8192,
   "console": "stdin",
   "ready": "^\\[\\d{4}\\.\\d{2}\\.\\d{2}-\\d{2}\\.\\d{2}\\.\\d{2}:\\d{3}\\]\\[.+\\d+\\]LogOnline: STEAM: AUTH: Revoking all tickets\\.$",
   "query": {
@@ -83,5 +83,5 @@
     }
   ],
   "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Läuft über Wine."
 }

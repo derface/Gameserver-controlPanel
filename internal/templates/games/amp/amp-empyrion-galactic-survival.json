@@ -41,6 +41,6 @@
       "auto": false
     }
   ],
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
+  "status": "beta",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), im Selbsttest vom 23.11.2026 bestanden. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
 }

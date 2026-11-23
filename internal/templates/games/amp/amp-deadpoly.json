@@ -19,6 +19,6 @@
   "min_memory_mb": 2048,
   "console": "stdin",
   "ready": "^\\[[\\d.]+-[\\d\\.:]+\\]\\[[\\d ]+\\]LogRedpointEOS: Verbose: CreateSession: Successfully created session '.*' with ID '.*'$",
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine."
+  "status": "beta",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), im Selbsttest vom 23.11.2026 bestanden. Läuft über Wine."
 }

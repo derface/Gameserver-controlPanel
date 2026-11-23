@@ -69,9 +69,9 @@
     "server/garrysmod/cfg",
     "server/garrysmod/addons"
   ],
-  "status": "experimentell",
+  "status": "beta",
   "disk_gb": 5,
-  "notes": " Selbsttest 01.10.2026: startet, meldet aber nicht „bereit“, wird noch untersucht.",
+  "notes": "Im Selbsttest vom 23.11.2026 bestanden.",
   "packages": [
     "libtinfo5:i386"
   ],

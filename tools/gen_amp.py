@@ -42,8 +42,21 @@ AMP_IMPORT = {
 INI_FROM_SETTINGS = {"archean"}
 
 # Testergebnisse späterer Selbsttests: Vorlage bleibt drin, Status passt sich an
-PASSED = set()
-BROKEN = {}
+PASSED = set("""amp-archean amp-conan-exiles amp-cubic-odyssey amp-deadpoly amp-dota2 amp-empyrion-galactic-survival amp-eye-dc amp-icarus amp-longvinter-wine amp-myth-of-empires amp-nebulous-fleet-command amp-nightingale amp-no-one-survived amp-nuclear-option amp-pixark amp-plains-of-pain amp-puck amp-rising-storm2-vietnam amp-sapiens amp-smalland amp-soldat amp-star-rupture amp-the-forest amp-turbo-sliders-unlimited amp-vein amp-wurm-unlimited""".split())  # Selbsttest 23.11.2026
+BROKEN = {
+    "amp-aneurismiv": "Selbsttest 23.11.2026: stürzt beim Start ab (IL2CPP)",
+    "amp-assetto-corsa": "Selbsttest 23.11.2026: stürzt nach der Installation ohne Meldung ab",
+    "amp-assetto-corsa-comp": "Selbsttest 23.11.2026: stürzt nach der Anmeldung in der Lobby ab",
+    "amp-arma-reforger": "Selbsttest 23.11.2026: stürzt nach dem Laden ab",
+    "amp-blackwake": "Selbsttest 23.11.2026: stürzt beim Laden ab",
+    "amp-astroneer": "Selbsttest 23.11.2026: stürzt unter Wine ab (GnuTLS error)"
+}
+# eigene RAM-Werte (Selbsttest: Absturz bei vollem Speicher)
+MEMORY = {"scum": (16384, 10240), "deadmatter": (12288, 8192)}
+# Steam liefert sie nur an Konten, die das Spiel besitzen ("No subscription")
+PURCHASE = set("openttd project5-sightseer synergy tmodloader call-of-duty4mw carrier-command2 mxbikes stormworks wolfenstein-et".split())
+# Spiele, die der Selbsttest nicht prüfen kann
+TEST_SKIP = {"last-oasis": "Braucht Customer Key und Identifier aus dem Last-Oasis-Hosting-Portal von Donkey Crew; ohne sie meldet sich der Server nicht an."}
 
 
 def load(p):
@@ -641,8 +654,9 @@ def build(base):
     t["vars"] = vars_
     if base in AMP_IMPORT:
         t["amp_import"] = AMP_IMPORT[base]
-    t["memory_mb"] = 6144 if wine else 4096
-    t["min_memory_mb"] = 2048
+    t["memory_mb"], t["min_memory_mb"] = MEMORY.get(base, (6144 if wine else 4096, 2048))
+    if base in TEST_SKIP:
+        t["test_skip"] = TEST_SKIP[base]
     t["console"] = "stdin"
     ready = m.get("Console.AppReadyRegex", "")
     if ready and ready not in ("^$", ".*", "^.*$") and not re.search(r"\(\?<?[=!]", ready):
@@ -658,13 +672,15 @@ def build(base):
     if configs:
         t["config"] = configs
     t["status"] = "beta" if tid in PASSED else ("defekt" if tid in BROKEN else "experimentell")
-    notes = "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft."
+    notes = "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT)" + (", im Selbsttest vom 23.11.2026 bestanden." if tid in PASSED else ".")
     if wine:
         notes += " Läuft über Wine."
     if unused:
         notes += " Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner."
     if t.get("steam_login"):
         notes += " Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+    if base in PURCHASE:
+        notes += " Das Spiel muss im Steam-Konto des Panels gekauft sein (Einstellungen → Steam-Konto), sonst lehnt Steam den Download ab („No subscription“)."
     if tid in BROKEN:
         notes += " " + BROKEN[tid]
     t["notes"] = notes

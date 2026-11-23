@@ -46,9 +46,9 @@
   "backup_include": [
     "server/tf/cfg"
   ],
-  "status": "experimentell",
+  "status": "beta",
   "disk_gb": 15,
-  "notes": "Läuft als 64-Bit-Server; die alte 32-Bit-Datei replay_srv.so wird vor dem Start entfernt.",
+  "notes": "Läuft als 64-Bit-Server; die alte 32-Bit-Datei replay_srv.so wird vor dem Start entfernt. Im Selbsttest vom 23.11.2026 bestanden.",
   "broadcast": "say {{msg}}",
   "config": [
     {

@@ -84,5 +84,5 @@
     }
   ],
   "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Läuft über Wine. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto). Das Spiel muss im Steam-Konto des Panels gekauft sein (Einstellungen → Steam-Konto), sonst lehnt Steam den Download ab („No subscription“)."
 }

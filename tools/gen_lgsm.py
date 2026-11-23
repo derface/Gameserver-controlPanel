@@ -32,9 +32,8 @@ BROKEN = {
     "ios": "Selbsttest 01.10.2026: Segmentation fault beim Start",
     "zps": "Selbsttest 01.10.2026: Segmentation fault beim Start",
     "dys": "Selbsttest 01.10.2026: Segmentation fault beim Start",
-    "nd": "Selbsttest 01.10.2026: gameinfo.txt nicht gefunden",
-    "bt": "Selbsttest 10.10.2026: Startdatei DedicatedServer fehlt im Steam-Download",
     "ti": "Selbsttest 01.10.2026: stürzt beim Laden der Plugins ab",
+    "bs": "Selbsttest 23.11.2026: stürzt beim Start ab (gameinfo.txt nicht gefunden)",
 }
 
 # Im Selbsttest vom 01.10.2026 bestanden (Download, Start, Spielerabfrage).
@@ -46,6 +45,8 @@ PASSED |= set("cmw ck cscz csgo dod dmc l4d2 mh ns2 opfor pvr ricochet tf2c tfc 
 PASSED |= set("kf2 rw squad unt".split())
 # vierter Lauf 10.10.2026
 PASSED |= set("av nec".split())
+# Selbsttest 23.11.2026
+PASSED |= set("arma3 ahl2 nd".split())
 
 # Nacharbeiten, die LinuxGSM in seinen fix_*.sh macht, als Befehle vor dem Start
 # (laufen im Ordner des Programms). Platzhalter: SC32/SC64 = steamclient.so.

@@ -30,7 +30,7 @@
 "Trägt deinen Spielernamen auf die Whitelist der Gameserver ein": "Adds your player name to the game servers' whitelist",
 "UDP lässt sich ohne das Spiel nicht von außen testen": "UDP cannot be tested from outside without the game",
 "Uhrzeit bitte als HH:MM angeben": "Please enter the time as HH:MM",
-"Um %02d:00 Uhr war in den letzten %d Tagen nie jemand online. Gut für Neustarts und Updates.": "At %02d:00 nobody was online in the last %d days. Good for restarts and updates.",
+"Um %02d:00 Uhr war an keinem der %d gemessenen Tage jemand online. Gut für Neustarts und Updates.": "At %02d:00 nobody was online on any of the %d days measured. Good for restarts and updates.",
 "Unbekannte Aktion": "Unknown action",
 "Unbekannte HTTPS-Art": "Unknown HTTPS mode",
 "Unbekannte Liste": "Unknown list",

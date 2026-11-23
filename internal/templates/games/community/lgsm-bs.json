@@ -96,6 +96,6 @@
       ]
     }
   ],
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen. Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen."
+  "status": "defekt",
+  "notes": "Automatisch aus LinuxGSM übernommen. Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen. Selbsttest 23.11.2026: stürzt beim Start ab (gameinfo.txt nicht gefunden)."
 }

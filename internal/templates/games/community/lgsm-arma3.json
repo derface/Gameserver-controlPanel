@@ -48,8 +48,8 @@
     "type": "a2s",
     "port": 1
   },
-  "status": "experimentell",
-  "notes": "Automatisch aus LinuxGSM übernommen. Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen.",
+  "status": "beta",
+  "notes": "Automatisch aus LinuxGSM übernommen. Braucht ein Steam-Konto (Einstellungen → Steam-Konto); bei manchen Spielen muss das Konto das Spiel besitzen. Im Selbsttest vom 23.11.2026 bestanden.",
   "config": [
     {
       "title": "Arma 3 (server.cfg)",

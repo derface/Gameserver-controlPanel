@@ -37,6 +37,6 @@
       "auto": false
     }
   ],
-  "status": "experimentell",
-  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT), noch nicht im Selbsttest geprüft. Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto)."
+  "status": "defekt",
+  "notes": "Aus den AMP-Vorlagen von CubeCoders erzeugt (MIT). Läuft über Wine. Einige Ports stehen nur in der Spielkonfiguration: Standard-Ports, nur ein Server pro Rechner. Braucht ein angemeldetes Steam-Konto (Einstellungen → Steam-Konto). Selbsttest 23.11.2026: stürzt nach der Anmeldung in der Lobby ab."
 }

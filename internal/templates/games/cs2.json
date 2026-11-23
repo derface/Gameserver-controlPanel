@@ -73,9 +73,9 @@
   "backup_include": [
     "server/game/csgo/cfg"
   ],
-  "status": "experimentell",
+  "status": "beta",
   "disk_gb": 60,
-  "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend. Braucht während der Installation rund 60 GB freien Platz.",
+  "notes": "Der erste Download ist rund 35 GB groß und dauert entsprechend. Braucht während der Installation rund 60 GB freien Platz. Im Selbsttest vom 23.11.2026 bestanden.",
   "broadcast": "say {{msg}}",
   "config": [
     {
